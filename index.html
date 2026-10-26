@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2D 放置掛機遊戲 - 純邏輯原型</title>
+    
+    <!-- 引入 Phaser 3 最新穩定版 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+    
+    <!-- 引入外部 CSS 檔案 -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- 頂部狀態列 -->
+    <div id="ui-top">
+        <span id="player-level">Lv.1</span>
+        <span id="player-gold">金幣: 0</span>
+    </div>
+
+    <!-- 中間遊戲畫面容器 -->
+    <div id="game-container"></div>
+
+    <!-- 底部日誌容器 -->
+    <div id="ui-bottom">
+        <div id="log-content"></div>
+    </div>
+
+    <!-- 引入外部 JS 檔案 -->
+    <script src="main.js"></script>
+</body>
+</html>
