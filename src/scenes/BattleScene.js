@@ -40,10 +40,6 @@ export class BattleScene extends Phaser.Scene {
     this.playerMaxHp = 240;
     this.heroAttackTimer = 0;
     this.slotCdTimers = [99999, 99999, 99999];
-    this.basicComboStep = 0;
-    this.warriorGuardStacks = 0;
-    this.arcaneChargeStacks = 0;
-    this.mageShieldHp = this.getState().classId === 'mage' ? Math.round(stats.maxHp * 0.15) : 0;
     this.bossTimeLeft = 0;
     this.isBossWave = false;
     this.isTransitioning = false;
