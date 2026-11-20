@@ -3,13 +3,7 @@ import { RARITIES } from '../data/items.js';
 import { createWaveMonster } from '../data/monsters.js';
 import { formatNum } from '../logic/statCalc.js';
 
-const ZONE_THEMES = [
-  { wall: 0x0b0e14, pillar: 0x141a26, floor: 0x161a24, line: 0x2d3548, torch: 0xf59e0b, ember: 0xfbbf24 },
-  { wall: 0x09110d, pillar: 0x111f18, floor: 0x121d18, line: 0x243b2f, torch: 0x10b981, ember: 0x34d399 },
-  { wall: 0x0b0e17, pillar: 0x14192b, floor: 0x151926, line: 0x2f3854, torch: 0x38bdf8, ember: 0x7dd3fc },
-  { wall: 0x140a09, pillar: 0x241210, floor: 0x1f1210, line: 0x4a251d, torch: 0xf97316, ember: 0xfb923c },
-  { wall: 0x120916, pillar: 0x211129, floor: 0x1b1021, line: 0x452354, torch: 0xc084fc, ember: 0xe879f9 },
-];
+const ZONE_EMBERS = [0xfbbf24, 0x34d399, 0x38bdf8, 0xf97316, 0xe879f9];
 
 export class BattleScene extends Phaser.Scene {
   constructor() {
@@ -26,9 +20,6 @@ export class BattleScene extends Phaser.Scene {
     this.bossTimeLeft = 0;
     this.isTransitioning = false;
     this.isPaused = true;
-    this.floorScrollOffset = 0;
-    this.isScrollingFloor = false;
-    this.torchLights = [];
     this.lastZoneIdx = -1;
   }
 
@@ -45,6 +36,9 @@ export class BattleScene extends Phaser.Scene {
     this.load.image('mob_goblin', './assets/monsters/goblin.png');
     this.load.image('mob_skeleton', './assets/monsters/skeleton.png');
     this.load.image('mob_boss_demon', './assets/monsters/boss_demon.png');
+    for (let i = 0; i < 5; i++) {
+      this.load.image(`bg_zone_${i}`, `./assets/bg/zone_${i}.jpg`);
+    }
   }
 
   create() {
@@ -52,16 +46,17 @@ export class BattleScene extends Phaser.Scene {
     const h = this.scale.height;
 
     this.generateFxTextures();
-    this.bgGraphics = this.add.graphics().setDepth(0);
-    this.floorGraphics = this.add.graphics().setDepth(1);
-    this.torchGroup = this.add.group();
-    this.redrawBackdrop(w, h);
+    this.floorY = Math.round(h * 0.78);
+
+    this.bgImage = this.add.image(w / 2, h / 2, 'bg_zone_0').setDepth(0);
+    this.bgShade = this.add.rectangle(w / 2, h / 2, w, h, 0x05060a, 0.22).setDepth(1);
+    this.fitBackground(w, h);
 
     this.createCharacters(w);
     this.createHudBars(w);
 
     this.time.addEvent({
-      delay: 320,
+      delay: 280,
       loop: true,
       callback: () => {
         if (!this.isPaused) this.spawnAmbientEmber();
@@ -74,7 +69,7 @@ export class BattleScene extends Phaser.Scene {
         const stats = this.getStats();
         const tapDmg = Math.max(2, Math.round(stats.atk * 0.45));
         this.applyDamageToMonster(tapDmg, false, true);
-        this.spawnArcSlash(this.monsterSprite.x, this.monsterSprite.y - 12, 0xfbbf24, 38);
+        this.spawnArcSlash(this.monsterSprite.x, this.monsterSprite.y - 16, 0xfbbf24, 42);
       }
     });
 
@@ -86,7 +81,6 @@ export class BattleScene extends Phaser.Scene {
     const cls = CLASSES[this.getState().classId] || CLASSES.warrior;
     this.playerMaxHp = stats.maxHp;
     this.playerHp = stats.maxHp;
-    // 開局滿能量，進場就能馬上施放第一次大招
     this.skillCooldownTimer = cls.skill.cooldownMs;
     this.spawnWaveMonster();
   }
@@ -105,6 +99,27 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
+  fitBackground(w, h) {
+    if (!this.bgImage) return;
+    const scale = Math.max(w / 1280, h / 720) * 1.06;
+    this.bgImage.setPosition(w / 2, h / 2).setScale(scale);
+    this.bgShade.setPosition(w / 2, h / 2).setSize(w, h);
+  }
+
+  getZoneIdx() {
+    const stage = this.getState()?.stage || 1;
+    return Math.floor((stage - 1) / 3) % 5;
+  }
+
+  updateZoneBackground() {
+    const idx = this.getZoneIdx();
+    if (idx !== this.lastZoneIdx && this.bgImage) {
+      this.lastZoneIdx = idx;
+      this.bgImage.setTexture(`bg_zone_${idx}`);
+      this.fitBackground(this.scale.width, this.scale.height);
+    }
+  }
+
   setPaused(paused) {
     this.isPaused = paused;
   }
@@ -118,105 +133,44 @@ export class BattleScene extends Phaser.Scene {
     return true;
   }
 
-  getTheme() {
-    const stage = this.getState()?.stage || 1;
-    const idx = Math.floor((stage - 1) / 3) % ZONE_THEMES.length;
-    return { idx, theme: ZONE_THEMES[idx] };
-  }
-
-  redrawBackdrop(w, h) {
-    this.floorY = Math.round(h * 0.72);
-    const { idx, theme } = this.getTheme();
-    this.lastZoneIdx = idx;
-
-    const g = this.bgGraphics;
-    g.clear();
-    g.fillStyle(theme.wall, 1);
-    g.fillRect(0, 0, w, this.floorY);
-
-    this.torchGroup.clear(true, true);
-    this.torchLights = [];
-
-    for (let x = 56; x < w; x += 155) {
-      g.fillStyle(theme.pillar, 1);
-      g.fillRect(x, 34, 30, this.floorY - 34);
-      g.fillStyle(theme.line, 0.8);
-      g.fillRect(x - 5, 34, 40, 12);
-
-      const ty = Math.round(this.floorY * 0.45);
-      const glow = this.add.image(x + 15, ty, 'fx_glow').setTint(theme.torch).setScale(1.6).setAlpha(0.35).setBlendMode(Phaser.BlendModes.ADD).setDepth(2);
-      const flame = this.add.circle(x + 15, ty, 6, theme.ember, 0.9).setDepth(3);
-      this.torchGroup.add(glow);
-      this.torchGroup.add(flame);
-      this.torchLights.push(glow, flame);
-      this.tweens.add({
-        targets: glow,
-        scale: 1.95,
-        alpha: 0.55,
-        duration: Phaser.Math.Between(500, 820),
-        yoyo: true,
-        repeat: -1,
-      });
-    }
-
-    this.drawFloor(w, h, theme);
-  }
-
-  drawFloor(w, h, theme) {
-    const fg = this.floorGraphics;
-    fg.clear();
-    fg.fillStyle(theme.floor, 1);
-    fg.fillRect(0, this.floorY, w, h - this.floorY);
-    fg.lineStyle(2, theme.line, 0.95);
-    fg.lineBetween(0, this.floorY, w, this.floorY);
-
-    fg.lineStyle(1, theme.line, 0.55);
-    const step = 64;
-    const off = ((this.floorScrollOffset % step) + step) % step;
-    for (let x = -step; x < w + step; x += step) {
-      const drawX = x - off;
-      fg.lineBetween(drawX, this.floorY, drawX - 36, h);
-    }
-  }
-
   spawnAmbientEmber() {
     if (!this.scale) return;
     const w = this.scale.width;
-    const { theme } = this.getTheme();
-    const px = Phaser.Math.Between(20, Math.max(40, w - 20));
-    const py = Phaser.Math.Between(this.floorY - 40, this.floorY + 25);
-    const dot = this.add.image(px, py, 'fx_glow').setTint(theme.ember).setScale(0.18).setAlpha(0.7).setBlendMode(Phaser.BlendModes.ADD).setDepth(4);
+    const color = ZONE_EMBERS[this.getZoneIdx()];
+    const px = Phaser.Math.Between(30, Math.max(60, w - 30));
+    const py = Phaser.Math.Between(this.floorY - 60, this.floorY + 30);
+    const dot = this.add.image(px, py, 'fx_glow').setTint(color).setScale(0.22).setAlpha(0.75).setBlendMode(Phaser.BlendModes.ADD).setDepth(4);
     this.tweens.add({
       targets: dot,
-      y: py - Phaser.Math.Between(45, 95),
-      x: px + Phaser.Math.Between(-20, 20),
+      y: py - Phaser.Math.Between(60, 130),
+      x: px + Phaser.Math.Between(-28, 28),
       alpha: 0,
-      duration: Phaser.Math.Between(1200, 2000),
+      duration: Phaser.Math.Between(1400, 2200),
       onComplete: () => dot.destroy(),
     });
   }
 
   createCharacters(w) {
     const cls = CLASSES[this.getState().classId] || CLASSES.warrior;
-    this.heroShadow = this.add.ellipse(w * 0.24, this.floorY + 12, 92, 22, 0x000000, 0.5).setDepth(4);
-    this.mobShadow = this.add.ellipse(w * 0.74, this.floorY + 12, 100, 24, 0x000000, 0.5).setDepth(4);
+    this.heroShadow = this.add.ellipse(w * 0.30, this.floorY + 14, 118, 26, 0x000000, 0.55).setDepth(4);
+    this.mobShadow = this.add.ellipse(w * 0.70, this.floorY + 14, 128, 28, 0x000000, 0.55).setDepth(4);
 
-    this.hero = this.add.image(w * 0.24, this.floorY - 68, cls.spriteKey).setScale(0.58).setDepth(6);
+    this.hero = this.add.image(w * 0.30, this.floorY - 80, cls.spriteKey).setScale(0.72).setDepth(6);
     this.tweens.add({
       targets: this.hero,
-      scaleY: 0.60,
-      scaleX: 0.56,
+      scaleY: 0.74,
+      scaleX: 0.70,
       duration: 750,
       yoyo: true,
       repeat: -1,
       ease: 'Sine.easeInOut',
     });
 
-    this.monsterSprite = this.add.image(w * 0.74, this.floorY - 72, 'mob_goblin')
-      .setScale(0.56).setDepth(6).setVisible(false);
+    this.monsterSprite = this.add.image(w * 0.70, this.floorY - 82, 'mob_goblin')
+      .setScale(0.70).setDepth(6).setVisible(false);
     this.tweens.add({
       targets: this.monsterSprite,
-      y: '+=5',
+      y: '+=6',
       duration: 820,
       yoyo: true,
       repeat: -1,
@@ -225,27 +179,27 @@ export class BattleScene extends Phaser.Scene {
   }
 
   createHudBars(w) {
-    this.heroHpBg = this.add.rectangle(w * 0.24, this.floorY - 155, 110, 10, 0x0f172a).setStrokeStyle(1, 0x475569).setDepth(10);
-    this.heroHpFill = this.add.rectangle(w * 0.24 - 55, this.floorY - 155, 110, 8, 0x22c55e).setOrigin(0, 0.5).setDepth(11);
-    this.heroHpText = this.add.text(w * 0.24, this.floorY - 170, '', {
-      fontSize: '12px', color: '#e2e8f0', fontFamily: 'sans-serif', fontStyle: 'bold',
-      stroke: '#000000', strokeThickness: 3,
-    }).setOrigin(0.5).setDepth(12);
-
-    this.mobHpBg = this.add.rectangle(w * 0.74, this.floorY - 165, 140, 12, 0x0f172a).setStrokeStyle(1, 0x64748b).setDepth(10);
-    this.mobHpFill = this.add.rectangle(w * 0.74 - 70, this.floorY - 165, 140, 10, 0xef4444).setOrigin(0, 0.5).setDepth(11);
-    this.mobNameText = this.add.text(w * 0.74, this.floorY - 186, '', {
+    this.heroHpBg = this.add.rectangle(w * 0.30, this.floorY - 190, 136, 12, 0x0b0e14).setStrokeStyle(1.5, 0xc89b3c).setDepth(10);
+    this.heroHpFill = this.add.rectangle(w * 0.30 - 68, this.floorY - 190, 136, 10, 0x22c55e).setOrigin(0, 0.5).setDepth(11);
+    this.heroHpText = this.add.text(w * 0.30, this.floorY - 208, '', {
       fontSize: '13px', color: '#f8fafc', fontFamily: 'sans-serif', fontStyle: 'bold',
       stroke: '#000000', strokeThickness: 3,
     }).setOrigin(0.5).setDepth(12);
-    this.mobHpText = this.add.text(w * 0.74, this.floorY - 165, '', {
-      fontSize: '10px', color: '#ffffff', fontFamily: 'sans-serif', fontStyle: 'bold',
-      stroke: '#000000', strokeThickness: 2,
+
+    this.mobHpBg = this.add.rectangle(w * 0.70, this.floorY - 202, 168, 14, 0x0b0e14).setStrokeStyle(1.5, 0xc89b3c).setDepth(10);
+    this.mobHpFill = this.add.rectangle(w * 0.70 - 84, this.floorY - 202, 168, 12, 0xef4444).setOrigin(0, 0.5).setDepth(11);
+    this.mobNameText = this.add.text(w * 0.70, this.floorY - 224, '', {
+      fontSize: '14px', color: '#fde68a', fontFamily: 'sans-serif', fontStyle: 'bold',
+      stroke: '#000000', strokeThickness: 4,
+    }).setOrigin(0.5).setDepth(12);
+    this.mobHpText = this.add.text(w * 0.70, this.floorY - 202, '', {
+      fontSize: '11px', color: '#ffffff', fontFamily: 'sans-serif', fontStyle: 'bold',
+      stroke: '#000000', strokeThickness: 3,
     }).setOrigin(0.5).setDepth(13);
 
-    this.bossTimerText = this.add.text(w * 0.5, 26, '', {
-      fontSize: '15px', color: '#fb923c', fontFamily: 'sans-serif', fontStyle: 'bold',
-      stroke: '#000000', strokeThickness: 4,
+    this.bossTimerText = this.add.text(w * 0.5, 34, '', {
+      fontSize: '17px', color: '#fb923c', fontFamily: 'sans-serif', fontStyle: 'bold',
+      stroke: '#000000', strokeThickness: 5,
     }).setOrigin(0.5).setDepth(15).setVisible(false);
   }
 
@@ -269,31 +223,27 @@ export class BattleScene extends Phaser.Scene {
   }
 
   spawnWaveMonster() {
+    this.updateZoneBackground();
     const state = this.getState();
-    const { idx } = this.getTheme();
-    if (idx !== this.lastZoneIdx) {
-      this.redrawBackdrop(this.scale.width, this.scale.height);
-    }
-
     this.currentMonster = createWaveMonster(state.stage, state.wave);
     this.isTransitioning = false;
-    this.isScrollingFloor = false;
     this.mobAttackTimer = 0;
     this.bossTimeLeft = this.currentMonster.isBoss ? this.currentMonster.timeLimitSec : 0;
 
     const w = this.scale.width;
+    const baseScale = this.currentMonster.scale * 1.25;
     this.monsterSprite
       .setTexture(this.currentMonster.spriteKey)
-      .setScale(this.currentMonster.scale)
-      .setPosition(w + 80, this.floorY - (this.currentMonster.isBoss ? 92 : 68))
+      .setScale(baseScale)
+      .setPosition(w + 90, this.floorY - (this.currentMonster.isBoss ? 110 : 82))
       .setAlpha(1)
       .clearTint()
       .setVisible(true);
 
     this.tweens.add({
       targets: this.monsterSprite,
-      x: w * 0.74,
-      duration: 360,
+      x: w * 0.70,
+      duration: 380,
       ease: 'Cubic.easeOut',
     });
 
@@ -303,11 +253,6 @@ export class BattleScene extends Phaser.Scene {
 
   update(time, delta) {
     if (this.isPaused) return;
-
-    if (this.isScrollingFloor) {
-      this.floorScrollOffset += delta * 0.24;
-      this.drawFloor(this.scale.width, this.scale.height, this.getTheme().theme);
-    }
 
     const cls = CLASSES[this.getState().classId] || CLASSES.warrior;
     this.skillCooldownTimer = Math.min(cls.skill.cooldownMs, this.skillCooldownTimer + delta);
@@ -362,7 +307,7 @@ export class BattleScene extends Phaser.Scene {
         const boltDmg = Math.max(1, Math.round(stats.atk * 0.45));
         this.time.delayedCall(110, () => {
           if (this.currentMonster && this.currentMonster.hp > 0) {
-            this.spawnLightningChain(this.hero.x + 20, this.hero.y - 30, this.monsterSprite.x, this.monsterSprite.y - 10);
+            this.spawnLightningChain(this.hero.x + 25, this.hero.y - 36, this.monsterSprite.x, this.monsterSprite.y - 12);
             this.applyDamageToMonster(boltDmg, false, false, '#60a5fa', '⚡');
           }
         });
@@ -374,16 +319,16 @@ export class BattleScene extends Phaser.Scene {
     };
 
     if (classId === 'warrior') {
-      this.tweens.add({ targets: this.hero, x: w * 0.36, duration: 95, yoyo: true, ease: 'Power2' });
-      this.spawnArcSlash(this.monsterSprite.x - 16, this.monsterSprite.y - 12, isCrit ? 0xfacc15 : 0xf97316, isCrit ? 64 : 48);
-      this.spawnSparkBurst(this.monsterSprite.x, this.monsterSprite.y - 10, 0xfb923c, 6);
+      this.tweens.add({ targets: this.hero, x: w * 0.44, duration: 95, yoyo: true, ease: 'Power2' });
+      this.spawnArcSlash(this.monsterSprite.x - 18, this.monsterSprite.y - 14, isCrit ? 0xfacc15 : 0xf97316, isCrit ? 74 : 56);
+      this.spawnSparkBurst(this.monsterSprite.x, this.monsterSprite.y - 12, 0xfb923c, 7);
       finishHit();
     } else if (classId === 'ranger') {
-      this.tweens.add({ targets: this.hero, x: w * 0.22, duration: 70, yoyo: true });
-      this.spawnProjectile(this.hero.x + 30, this.hero.y - 16, this.monsterSprite.x, this.monsterSprite.y - 14, 0x34d399, 'arrow', finishHit);
+      this.tweens.add({ targets: this.hero, x: w * 0.28, duration: 70, yoyo: true });
+      this.spawnProjectile(this.hero.x + 36, this.hero.y - 20, this.monsterSprite.x, this.monsterSprite.y - 18, 0x34d399, 'arrow', finishHit);
     } else {
-      this.tweens.add({ targets: this.hero, y: '-=8', duration: 90, yoyo: true });
-      this.spawnProjectile(this.hero.x + 32, this.hero.y - 24, this.monsterSprite.x, this.monsterSprite.y - 14, 0xc084fc, 'orb', finishHit);
+      this.tweens.add({ targets: this.hero, y: '-=10', duration: 90, yoyo: true });
+      this.spawnProjectile(this.hero.x + 38, this.hero.y - 28, this.monsterSprite.x, this.monsterSprite.y - 18, 0xc084fc, 'orb', finishHit);
     }
   }
 
@@ -392,29 +337,28 @@ export class BattleScene extends Phaser.Scene {
     const sk = cls.skill;
     const w = this.scale.width;
 
-    // 顯眼技能宣言橫幅與英雄高光蓄力
-    const banner = this.add.text(w * 0.5, 62, `⚡ 【${sk.name}】`, {
-      fontSize: '20px', color: '#fde047', fontFamily: 'sans-serif', fontStyle: 'bold',
-      stroke: '#000000', strokeThickness: 5,
+    const banner = this.add.text(w * 0.5, 76, `⚡ 【${sk.name}】`, {
+      fontSize: '24px', color: '#fde047', fontFamily: 'sans-serif', fontStyle: 'bold',
+      stroke: '#000000', strokeThickness: 6,
     }).setOrigin(0.5).setDepth(35);
-    this.tweens.add({ targets: banner, y: 40, alpha: 0, duration: 950, onComplete: () => banner.destroy() });
+    this.tweens.add({ targets: banner, y: 48, alpha: 0, duration: 950, onComplete: () => banner.destroy() });
 
     const heroAura = this.add.image(this.hero.x, this.hero.y, 'fx_glow')
-      .setTint(sk.fxColor).setScale(3.2).setAlpha(0.75).setBlendMode(Phaser.BlendModes.ADD).setDepth(5);
-    this.tweens.add({ targets: heroAura, scale: 4.5, alpha: 0, duration: 420, onComplete: () => heroAura.destroy() });
+      .setTint(sk.fxColor).setScale(4.0).setAlpha(0.8).setBlendMode(Phaser.BlendModes.ADD).setDepth(5);
+    this.tweens.add({ targets: heroAura, scale: 5.5, alpha: 0, duration: 420, onComplete: () => heroAura.destroy() });
 
     if (sk.type === 'whirlwind') {
       this.tweens.add({ targets: this.hero, angle: 360, duration: 400, ease: 'Cubic.easeOut' });
       const mx = this.monsterSprite.x;
       const my = this.monsterSprite.y;
       const glowRing = this.add.image(mx, my, 'fx_glow')
-        .setTint(0xff6b35).setScale(2.8).setAlpha(0.95).setBlendMode(Phaser.BlendModes.ADD).setDepth(21);
-      const shock = this.add.circle(mx, my, 24, 0xff6b35, 0)
-        .setStrokeStyle(6, 0xfde047, 1).setBlendMode(Phaser.BlendModes.ADD).setDepth(22);
-      this.tweens.add({ targets: glowRing, scale: 5.5, alpha: 0, duration: 450, onComplete: () => glowRing.destroy() });
-      this.tweens.add({ targets: shock, scale: 4.2, alpha: 0, duration: 420, onComplete: () => shock.destroy() });
-      this.spawnArcSlash(mx, my, 0xfacc15, 86);
-      this.spawnSparkBurst(mx, my, 0xfde047, 18);
+        .setTint(0xff6b35).setScale(3.6).setAlpha(1).setBlendMode(Phaser.BlendModes.ADD).setDepth(21);
+      const shock = this.add.circle(mx, my, 28, 0xff6b35, 0)
+        .setStrokeStyle(7, 0xfde047, 1).setBlendMode(Phaser.BlendModes.ADD).setDepth(22);
+      this.tweens.add({ targets: glowRing, scale: 6.5, alpha: 0, duration: 460, onComplete: () => glowRing.destroy() });
+      this.tweens.add({ targets: shock, scale: 4.8, alpha: 0, duration: 440, onComplete: () => shock.destroy() });
+      this.spawnArcSlash(mx, my, 0xfacc15, 98);
+      this.spawnSparkBurst(mx, my, 0xfde047, 20);
 
       const dmg = Math.round(stats.atk * sk.mult);
       this.applyDamageToMonster(dmg, true, false, '#fb923c', '💥');
@@ -425,22 +369,22 @@ export class BattleScene extends Phaser.Scene {
         this.time.delayedCall(i * 110, () => {
           if (!this.currentMonster || this.currentMonster.hp <= 0) return;
           this.spawnProjectile(
-            this.hero.x + 30,
-            this.hero.y - 28 + i * 14,
+            this.hero.x + 36,
+            this.hero.y - 32 + i * 16,
             this.monsterSprite.x,
-            this.monsterSprite.y - 24 + i * 14,
+            this.monsterSprite.y - 26 + i * 16,
             0x34d399,
             'beam',
             () => {
               if (!this.currentMonster || this.currentMonster.hp <= 0) return;
-              const burst = this.add.image(this.monsterSprite.x, this.monsterSprite.y - 10, 'fx_glow')
-                .setTint(0x34d399).setScale(2.6).setAlpha(0.9).setBlendMode(Phaser.BlendModes.ADD).setDepth(22);
-              this.tweens.add({ targets: burst, scale: 4.0, alpha: 0, duration: 260, onComplete: () => burst.destroy() });
+              const burst = this.add.image(this.monsterSprite.x, this.monsterSprite.y - 12, 'fx_glow')
+                .setTint(0x34d399).setScale(3.0).setAlpha(0.95).setBlendMode(Phaser.BlendModes.ADD).setDepth(22);
+              this.tweens.add({ targets: burst, scale: 4.5, alpha: 0, duration: 280, onComplete: () => burst.destroy() });
               const isCrit = Math.random() * 100 < (stats.critRate + sk.bonusCrit);
               let dmg = stats.atk * sk.mult;
               if (isCrit) dmg *= stats.critDmg / 100;
               this.applyDamageToMonster(Math.round(dmg), isCrit, false, '#34d399', '🏹');
-              this.spawnSparkBurst(this.monsterSprite.x, this.monsterSprite.y - 10, 0x34d399, 8);
+              this.spawnSparkBurst(this.monsterSprite.x, this.monsterSprite.y - 12, 0x34d399, 9);
             }
           );
         });
@@ -448,12 +392,12 @@ export class BattleScene extends Phaser.Scene {
     } else if (sk.type === 'meteor') {
       const mx = this.monsterSprite.x;
       const my = this.monsterSprite.y;
-      const sigil = this.add.ellipse(mx, this.floorY + 10, 150, 42, 0xa855f7, 0.35)
+      const sigil = this.add.ellipse(mx, this.floorY + 12, 175, 48, 0xa855f7, 0.35)
         .setStrokeStyle(3, 0xe879f9, 1).setBlendMode(Phaser.BlendModes.ADD).setDepth(17);
-      const meteorCore = this.add.circle(mx - 95, -40, 26, 0xf97316, 1)
+      const meteorCore = this.add.circle(mx - 110, -45, 30, 0xf97316, 1)
         .setStrokeStyle(5, 0xfde047, 1).setDepth(22);
-      const meteorHalo = this.add.image(mx - 95, -40, 'fx_glow')
-        .setTint(0xe879f9).setScale(3.0).setBlendMode(Phaser.BlendModes.ADD).setDepth(21);
+      const meteorHalo = this.add.image(mx - 110, -45, 'fx_glow')
+        .setTint(0xe879f9).setScale(3.5).setBlendMode(Phaser.BlendModes.ADD).setDepth(21);
 
       this.tweens.add({
         targets: [meteorCore, meteorHalo],
@@ -463,7 +407,7 @@ export class BattleScene extends Phaser.Scene {
         ease: 'Quad.easeIn',
         onUpdate: () => {
           const trail = this.add.image(meteorCore.x, meteorCore.y, 'fx_glow')
-            .setTint(0xc084fc).setScale(1.4).setAlpha(0.75).setBlendMode(Phaser.BlendModes.ADD).setDepth(20);
+            .setTint(0xc084fc).setScale(1.6).setAlpha(0.75).setBlendMode(Phaser.BlendModes.ADD).setDepth(20);
           this.tweens.add({ targets: trail, scale: 0.2, alpha: 0, duration: 220, onComplete: () => trail.destroy() });
         },
         onComplete: () => {
@@ -471,11 +415,11 @@ export class BattleScene extends Phaser.Scene {
           meteorHalo.destroy();
           sigil.destroy();
           const blast = this.add.image(mx, my, 'fx_glow')
-            .setTint(0xf97316).setScale(4.8).setAlpha(1).setBlendMode(Phaser.BlendModes.ADD).setDepth(23);
-          const ring = this.add.circle(mx, my, 24, 0xe879f9, 0.35)
+            .setTint(0xf97316).setScale(5.5).setAlpha(1).setBlendMode(Phaser.BlendModes.ADD).setDepth(23);
+          const ring = this.add.circle(mx, my, 28, 0xe879f9, 0.35)
             .setStrokeStyle(5, 0xfde047).setBlendMode(Phaser.BlendModes.ADD).setDepth(24);
-          this.tweens.add({ targets: [blast, ring], scale: 5.5, alpha: 0, duration: 380, onComplete: () => { blast.destroy(); ring.destroy(); } });
-          this.spawnSparkBurst(mx, my, 0xe879f9, 20);
+          this.tweens.add({ targets: [blast, ring], scale: 6.2, alpha: 0, duration: 400, onComplete: () => { blast.destroy(); ring.destroy(); } });
+          this.spawnSparkBurst(mx, my, 0xe879f9, 22);
           if (!this.currentMonster || this.currentMonster.hp <= 0) return;
           const dmg = Math.round(stats.atk * sk.mult);
           this.applyDamageToMonster(dmg, true, false, '#e879f9', '☄️');
@@ -485,7 +429,7 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
-  spawnArcSlash(x, y, color, radius = 48) {
+  spawnArcSlash(x, y, color, radius = 56) {
     const g = this.add.graphics().setDepth(18).setBlendMode(Phaser.BlendModes.ADD);
     g.lineStyle(6, color, 1);
     g.beginPath();
@@ -497,11 +441,11 @@ export class BattleScene extends Phaser.Scene {
   spawnProjectile(sx, sy, tx, ty, color, style, onHit) {
     let proj;
     if (style === 'arrow') {
-      proj = this.add.rectangle(sx, sy, 32, 4, color, 1).setBlendMode(Phaser.BlendModes.ADD).setDepth(18);
+      proj = this.add.rectangle(sx, sy, 36, 4, color, 1).setBlendMode(Phaser.BlendModes.ADD).setDepth(18);
     } else if (style === 'beam') {
-      proj = this.add.rectangle(sx, sy, 62, 8, color, 1).setBlendMode(Phaser.BlendModes.ADD).setDepth(19);
+      proj = this.add.rectangle(sx, sy, 74, 9, color, 1).setBlendMode(Phaser.BlendModes.ADD).setDepth(19);
     } else {
-      proj = this.add.image(sx, sy, 'fx_glow').setTint(color).setScale(0.9).setBlendMode(Phaser.BlendModes.ADD).setDepth(18);
+      proj = this.add.image(sx, sy, 'fx_glow').setTint(color).setScale(1.0).setBlendMode(Phaser.BlendModes.ADD).setDepth(18);
     }
     this.tweens.add({
       targets: proj,
@@ -536,8 +480,8 @@ export class BattleScene extends Phaser.Scene {
   spawnSparkBurst(x, y, color, count = 8) {
     for (let i = 0; i < count; i++) {
       const ang = (Math.PI * 2 * i) / count + Math.random() * 0.4;
-      const dist = Phaser.Math.Between(28, 76);
-      const p = this.add.image(x, y, 'fx_glow').setTint(color).setScale(0.32).setBlendMode(Phaser.BlendModes.ADD).setDepth(20);
+      const dist = Phaser.Math.Between(30, 86);
+      const p = this.add.image(x, y, 'fx_glow').setTint(color).setScale(0.36).setBlendMode(Phaser.BlendModes.ADD).setDepth(20);
       this.tweens.add({
         targets: p,
         x: x + Math.cos(ang) * dist,
@@ -554,10 +498,10 @@ export class BattleScene extends Phaser.Scene {
     if (!this.currentMonster || this.currentMonster.hp <= 0) return;
     const w = this.scale.width;
 
-    this.tweens.add({ targets: this.monsterSprite, x: w * 0.62, duration: 100, yoyo: true });
+    this.tweens.add({ targets: this.monsterSprite, x: w * 0.56, duration: 100, yoyo: true });
 
     if (Math.random() * 100 < stats.dodge) {
-      this.spawnFloatingText(this.hero.x, this.hero.y - 75, 'MISS', '#94a3b8', 15);
+      this.spawnFloatingText(this.hero.x, this.hero.y - 90, 'MISS', '#94a3b8', 16);
       return;
     }
 
@@ -567,7 +511,7 @@ export class BattleScene extends Phaser.Scene {
 
     this.hero.setTintFill(0xff4444);
     this.time.delayedCall(90, () => this.hero && this.hero.clearTint());
-    this.spawnFloatingText(this.hero.x, this.hero.y - 75, `-${formatNum(dmg)}`, '#f87171', 15);
+    this.spawnFloatingText(this.hero.x, this.hero.y - 90, `-${formatNum(dmg)}`, '#f87171', 16);
     this.updateHpBars();
 
     if (this.playerHp <= 0) {
@@ -584,17 +528,17 @@ export class BattleScene extends Phaser.Scene {
 
     this.tweens.add({
       targets: this.monsterSprite,
-      x: this.scale.width * 0.74 + (isCrit ? 12 : 6),
+      x: this.scale.width * 0.70 + (isCrit ? 14 : 7),
       duration: 55,
       yoyo: true,
     });
 
     const color = customColor || (isTap ? '#fde047' : (isCrit ? '#facc15' : '#ffffff'));
-    const size = isCrit ? 22 : (isTap ? 14 : 16);
+    const size = isCrit ? 24 : (isTap ? 15 : 18);
     const label = `${prefix}${isCrit ? '💥' : ''}-${formatNum(dmg)}${isCrit ? '!' : ''}`;
     this.spawnFloatingText(
-      this.monsterSprite.x + Phaser.Math.Between(-24, 24),
-      this.monsterSprite.y - 65,
+      this.monsterSprite.x + Phaser.Math.Between(-28, 28),
+      this.monsterSprite.y - 80,
       label,
       color,
       size
@@ -623,23 +567,33 @@ export class BattleScene extends Phaser.Scene {
       this.healHero(Math.round(this.playerMaxHp * 0.08));
     }
 
-    this.spawnSparkBurst(this.monsterSprite.x, this.monsterSprite.y, defeated.isBoss ? 0xfb923c : 0x94a3b8, 12);
+    this.spawnSparkBurst(this.monsterSprite.x, this.monsterSprite.y, defeated.isBoss ? 0xfb923c : 0x94a3b8, 14);
 
     this.tweens.add({
       targets: this.monsterSprite,
       alpha: 0,
-      y: this.monsterSprite.y + 18,
+      y: this.monsterSprite.y + 20,
       duration: 280,
       onComplete: () => this.monsterSprite.setVisible(false),
     });
 
     const dropResult = this.callbacks.onMonsterKilled(defeated);
     if (dropResult && dropResult.item) {
-      this.spawnLootBeam(this.monsterSprite.x, this.floorY + 6, dropResult.item);
+      this.spawnLootBeam(this.monsterSprite.x, this.floorY + 8, dropResult.item);
     }
 
-    this.isScrollingFloor = true;
-    this.time.delayedCall(680, () => {
+    // 背景微微視差滑動模擬前進感
+    if (this.bgImage) {
+      this.tweens.add({
+        targets: this.bgImage,
+        x: '-=18',
+        duration: 500,
+        yoyo: true,
+        ease: 'Sine.easeInOut',
+      });
+    }
+
+    this.time.delayedCall(650, () => {
       this.spawnWaveMonster();
     });
   }
@@ -655,11 +609,11 @@ export class BattleScene extends Phaser.Scene {
 
   spawnLootBeam(x, y, item) {
     const r = RARITIES[item.rarity] || RARITIES.common;
-    const beam = this.add.rectangle(x, y - 95, 18, 190, r.beam, 0.65).setBlendMode(Phaser.BlendModes.ADD).setDepth(18);
-    const orb = this.add.circle(x, y - 6, 9, r.beam, 1).setStrokeStyle(2, 0xffffff).setDepth(19);
-    const tag = this.add.text(x, y - 36, `[${r.label}] ${item.name}`, {
-      fontSize: '12px', color: r.color, fontFamily: 'sans-serif', fontStyle: 'bold',
-      stroke: '#000000', strokeThickness: 3,
+    const beam = this.add.rectangle(x, y - 105, 20, 210, r.beam, 0.65).setBlendMode(Phaser.BlendModes.ADD).setDepth(18);
+    const orb = this.add.circle(x, y - 8, 10, r.beam, 1).setStrokeStyle(2, 0xffffff).setDepth(19);
+    const tag = this.add.text(x, y - 40, `[${r.label}] ${item.name}`, {
+      fontSize: '13px', color: r.color, fontFamily: 'sans-serif', fontStyle: 'bold',
+      stroke: '#000000', strokeThickness: 4,
     }).setOrigin(0.5).setDepth(20);
 
     this.tweens.add({
@@ -672,7 +626,7 @@ export class BattleScene extends Phaser.Scene {
     });
     this.tweens.add({
       targets: tag,
-      y: y - 76,
+      y: y - 85,
       alpha: 0,
       duration: 1400,
       delay: 300,
@@ -692,7 +646,7 @@ export class BattleScene extends Phaser.Scene {
 
     this.tweens.add({
       targets: txt,
-      y: y - 42,
+      y: y - 46,
       alpha: 0,
       duration: 720,
       ease: 'Cubic.easeOut',
@@ -703,35 +657,36 @@ export class BattleScene extends Phaser.Scene {
   updateHpBars() {
     if (!this.heroHpFill) return;
     const hRatio = Math.max(0, Math.min(1, this.playerHp / Math.max(1, this.playerMaxHp)));
-    this.heroHpFill.width = 110 * hRatio;
+    this.heroHpFill.width = 136 * hRatio;
     this.heroHpText.setText(`${formatNum(this.playerHp)} / ${formatNum(this.playerMaxHp)}`);
 
     if (this.currentMonster) {
       const mRatio = Math.max(0, Math.min(1, this.currentMonster.hp / Math.max(1, this.currentMonster.maxHp)));
-      this.mobHpFill.width = 140 * mRatio;
+      this.mobHpFill.width = 168 * mRatio;
       this.mobNameText.setText(this.currentMonster.name);
       this.mobHpText.setText(`${formatNum(this.currentMonster.hp)} / ${formatNum(this.currentMonster.maxHp)}`);
     }
   }
 
   handleResize(w, h) {
-    this.redrawBackdrop(w, h);
+    this.floorY = Math.round(h * 0.78);
+    this.fitBackground(w, h);
     if (this.hero) {
-      this.hero.setPosition(w * 0.24, this.floorY - 68);
-      this.heroShadow.setPosition(w * 0.24, this.floorY + 12);
-      this.heroHpBg.setPosition(w * 0.24, this.floorY - 155);
-      this.heroHpFill.setPosition(w * 0.24 - 55, this.floorY - 155);
-      this.heroHpText.setPosition(w * 0.24, this.floorY - 170);
+      this.hero.setPosition(w * 0.30, this.floorY - 80);
+      this.heroShadow.setPosition(w * 0.30, this.floorY + 14);
+      this.heroHpBg.setPosition(w * 0.30, this.floorY - 190);
+      this.heroHpFill.setPosition(w * 0.30 - 68, this.floorY - 190);
+      this.heroHpText.setPosition(w * 0.30, this.floorY - 208);
     }
     if (this.monsterSprite) {
-      const my = this.floorY - (this.currentMonster?.isBoss ? 92 : 68);
-      this.monsterSprite.setPosition(w * 0.74, my);
-      this.mobShadow.setPosition(w * 0.74, this.floorY + 12);
-      this.mobHpBg.setPosition(w * 0.74, this.floorY - 165);
-      this.mobHpFill.setPosition(w * 0.74 - 70, this.floorY - 165);
-      this.mobNameText.setPosition(w * 0.74, this.floorY - 186);
-      this.mobHpText.setPosition(w * 0.74, this.floorY - 165);
+      const my = this.floorY - (this.currentMonster?.isBoss ? 110 : 82);
+      this.monsterSprite.setPosition(w * 0.70, my);
+      this.mobShadow.setPosition(w * 0.70, this.floorY + 14);
+      this.mobHpBg.setPosition(w * 0.70, this.floorY - 202);
+      this.mobHpFill.setPosition(w * 0.70 - 84, this.floorY - 202);
+      this.mobNameText.setPosition(w * 0.70, this.floorY - 224);
+      this.mobHpText.setPosition(w * 0.70, this.floorY - 202);
     }
-    if (this.bossTimerText) this.bossTimerText.setPosition(w * 0.5, 26);
+    if (this.bossTimerText) this.bossTimerText.setPosition(w * 0.5, 34);
   }
 }

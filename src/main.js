@@ -1,6 +1,6 @@
 import { CLASSES } from './data/classes.js';
 import { RARITIES } from './data/items.js';
-import { generateLoot, getSalvageReward } from './logic/lootGen.js';
+import { generateLoot, getSalvageReward, calcItemPower } from './logic/lootGen.js';
 import { recalcPlayerStats, getExpToNext, getUpgradeCost, formatNum } from './logic/statCalc.js';
 import { createInitialState, loadGame, saveGame, calcOfflineProgress } from './logic/saveSystem.js';
 import {
@@ -10,7 +10,6 @@ import {
   getCurrentUser,
   loadCloudSave,
   saveCloudData,
-  isFirebaseConfigured,
 } from './auth/firebase.js';
 import { BattleScene } from './scenes/BattleScene.js';
 import { DashboardUI } from './ui/DashboardUI.js';
@@ -170,6 +169,10 @@ function handleLootDrop(item) {
     return null;
   }
   gameState.inventory.unshift(item);
+  const equipped = gameState.equipment[item.slot];
+  if (calcItemPower(item) > calcItemPower(equipped)) {
+    ui.markBagUpgradeDot();
+  }
   const r = RARITIES[item.rarity];
   if (item.rarity === 'legendary' || item.rarity === 'rare') {
     ui.addLog(`✨ 掉落 [${r.label}] ${item.name} (戰力 ${item.powerScore})！`, 'victory');
@@ -177,16 +180,17 @@ function handleLootDrop(item) {
   return item;
 }
 
-// --- 歡迎大廳：Google 登入 → 選職業 → 開始遊戲 ---
-const lobbyModal = document.getElementById('modal-lobby');
-const lobbyAuthStep = document.getElementById('lobby-step-auth');
-const lobbyClassStep = document.getElementById('lobby-step-class');
-const lobbyAuthStatus = document.getElementById('lobby-auth-status');
-const lobbyClassGrid = document.getElementById('lobby-class-grid');
-const lobbySaveSummary = document.getElementById('lobby-save-summary');
+// --- 全螢幕暗黑歡迎頁：Google 登入 → 選職 → 踏入深淵 ---
+const welcomeScreen = document.getElementById('welcome-screen');
+const gameScreen = document.getElementById('game-screen');
+const welcomeAuthStep = document.getElementById('welcome-step-auth');
+const welcomeClassStep = document.getElementById('welcome-step-class');
+const welcomeAuthStatus = document.getElementById('welcome-auth-status');
+const welcomeClassGrid = document.getElementById('welcome-class-grid');
+const welcomeSaveSummary = document.getElementById('welcome-save-summary');
 
-function renderLobbyClasses() {
-  lobbyClassGrid.innerHTML = '';
+function renderWelcomeClasses() {
+  welcomeClassGrid.innerHTML = '';
   Object.values(CLASSES).forEach((cls) => {
     const card = document.createElement('div');
     card.className = `class-card ${selectedLobbyClass === cls.id ? 'selected' : ''}`;
@@ -199,26 +203,29 @@ function renderLobbyClasses() {
     `;
     card.onclick = () => {
       selectedLobbyClass = cls.id;
-      renderLobbyClasses();
+      renderWelcomeClasses();
     };
-    lobbyClassGrid.appendChild(card);
+    welcomeClassGrid.appendChild(card);
   });
 }
 
-function enterLobbyClassStep(userLabel) {
-  lobbyAuthStep.classList.add('hidden');
-  lobbyClassStep.classList.remove('hidden');
-  lobbySaveSummary.textContent = `${userLabel} ｜ 存檔進度：Lv.${gameState.level}・第 ${gameState.stage} 關・金幣 ${formatNum(gameState.gold)}`;
+function enterWelcomeClassStep(userLabel) {
+  welcomeAuthStep.classList.add('hidden');
+  welcomeClassStep.classList.remove('hidden');
+  welcomeSaveSummary.textContent = `${userLabel} ｜ 存檔進度：Lv.${gameState.level}・第 ${gameState.stage} 關・金幣 ${formatNum(gameState.gold)}`;
   selectedLobbyClass = gameState.classId || 'warrior';
-  renderLobbyClasses();
+  renderWelcomeClasses();
 }
 
 function startAdventure() {
   gameState.classId = selectedLobbyClass;
   gameStarted = true;
-  lobbyModal.classList.add('hidden');
+  welcomeScreen.classList.add('hidden');
+  gameScreen.classList.remove('hidden');
+
   refreshStatsAndUI();
   if (battleScene) {
+    battleScene.scale.resize(window.innerWidth, window.innerHeight - 122);
     battleScene.refreshHeroClass(gameState.classId);
     battleScene.setPaused(false);
   }
@@ -237,16 +244,16 @@ function startAdventure() {
 }
 
 document.getElementById('btn-google-login')?.addEventListener('click', async () => {
-  lobbyAuthStatus.textContent = '正在連線 Google 帳號...';
+  welcomeAuthStatus.textContent = '正在連線 Google 帳號...';
   try {
     await signInWithGoogle();
   } catch (err) {
-    lobbyAuthStatus.textContent = err.message || 'Google 登入失敗，請檢查 Firebase 設定。';
+    welcomeAuthStatus.textContent = err.message || 'Google 登入失敗，請稍後再試。';
   }
 });
 
 document.getElementById('btn-guest-play')?.addEventListener('click', () => {
-  enterLobbyClassStep('本機離線試玩');
+  enterWelcomeClassStep('本機離線試玩');
 });
 
 document.getElementById('btn-start-game')?.addEventListener('click', () => {
@@ -258,12 +265,12 @@ document.getElementById('btn-cloud-logout')?.addEventListener('click', async () 
   await signOutGoogle();
   gameStarted = false;
   if (battleScene) battleScene.setPaused(true);
-  lobbyClassStep.classList.add('hidden');
-  lobbyAuthStep.classList.remove('hidden');
-  lobbyModal.classList.remove('hidden');
+  gameScreen.classList.add('hidden');
+  welcomeClassStep.classList.add('hidden');
+  welcomeAuthStep.classList.remove('hidden');
+  welcomeScreen.classList.remove('hidden');
 });
 
-// 主動點擊 / 空白鍵施放技能
 function triggerManualSkill() {
   if (!battleScene) return;
   battleScene.castSkillManual();
@@ -276,13 +283,12 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
-// 啟動 Phaser 場景
 const config = {
   type: Phaser.AUTO,
   parent: 'phaser-stage',
-  width: 640,
-  height: 520,
-  backgroundColor: '#0b0d13',
+  width: window.innerWidth,
+  height: Math.max(400, window.innerHeight - 122),
+  backgroundColor: '#090b10',
   scale: {
     mode: Phaser.Scale.RESIZE,
     autoCenter: Phaser.Scale.CENTER_BOTH,
@@ -337,15 +343,14 @@ game.events.once('ready', () => {
 
 refreshStatsAndUI();
 
-// 初始化 Google 帳號狀態
-initCloudAuth(async (user, status) => {
+initCloudAuth(async (user) => {
   const cloudBadge = document.getElementById('hud-cloud-status');
   const logoutBtn = document.getElementById('btn-cloud-logout');
 
   if (user) {
     if (cloudBadge) cloudBadge.textContent = `☁️ ${user.displayName || user.email}`;
     if (logoutBtn) logoutBtn.classList.remove('hidden');
-    lobbyAuthStatus.textContent = '已登入，正在同步雲端存檔...';
+    welcomeAuthStatus.textContent = '已登入，正在同步雲端存檔...';
     const cloudData = await loadCloudSave(user.uid);
     if (cloudData && (!gameState.lastSavedAt || (cloudData.lastSavedAt || 0) >= gameState.lastSavedAt)) {
       const base = createInitialState(cloudData.classId || 'warrior');
@@ -360,14 +365,12 @@ initCloudAuth(async (user, status) => {
       refreshStatsAndUI();
     }
     if (!gameStarted) {
-      enterLobbyClassStep(`☁️ ${user.displayName || user.email}`);
+      enterWelcomeClassStep(`☁️ ${user.displayName || user.email}`);
     }
   } else {
-    if (cloudBadge) cloudBadge.textContent = isFirebaseConfigured() ? '☁️ 未登入' : '☁️ 本機模式';
+    if (cloudBadge) cloudBadge.textContent = '☁️ 本機模式';
     if (logoutBtn) logoutBtn.classList.add('hidden');
-    lobbyAuthStatus.textContent = isFirebaseConfigured()
-      ? '請先登入 Google 帳號以同步雲端存檔。'
-      : '提示：尚未於 src/auth/firebase.js 填入 apiKey，目前可先用本機試玩。';
+    welcomeAuthStatus.textContent = '請使用 Google 帳號登入，或選擇本機離線試玩。';
   }
 });
 

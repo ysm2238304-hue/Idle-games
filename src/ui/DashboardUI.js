@@ -30,20 +30,63 @@ function resolveItemIcon(item) {
 export class DashboardUI {
   constructor(handlers) {
     this.handlers = handlers;
-    this.activeTab = 'gear';
+    this.activeDrawer = null;
     this.selectedItemUid = null;
-    this.bindTabs();
+    this.bindDockAndDrawer();
     this.bindGlobalButtons();
   }
 
-  bindTabs() {
-    document.querySelectorAll('.tab-btn').forEach((btn) => {
+  bindDockAndDrawer() {
+    const drawer = document.getElementById('rpg-drawer');
+    document.querySelectorAll('.dock-btn[data-drawer]').forEach((btn) => {
       btn.addEventListener('click', () => {
-        this.activeTab = btn.dataset.tab;
-        document.querySelectorAll('.tab-btn').forEach((b) => b.classList.toggle('active', b === btn));
-        document.querySelectorAll('.tab-panel').forEach((p) => p.classList.toggle('active', p.id === `tab-${this.activeTab}`));
+        const target = btn.dataset.drawer;
+        if (this.activeDrawer === target) {
+          this.closeDrawer();
+          return;
+        }
+        this.openDrawer(target);
       });
     });
+
+    document.getElementById('btn-close-drawer')?.addEventListener('click', () => {
+      this.closeDrawer();
+    });
+  }
+
+  openDrawer(tabName) {
+    this.activeDrawer = tabName;
+    const drawer = document.getElementById('rpg-drawer');
+    drawer.classList.remove('hidden');
+
+    document.querySelectorAll('.dock-btn[data-drawer]').forEach((b) => {
+      b.classList.toggle('active', b.dataset.drawer === tabName);
+    });
+    document.querySelectorAll('.tab-panel').forEach((p) => {
+      p.classList.toggle('active', p.id === `tab-${tabName}`);
+    });
+
+    const titles = { gear: '🛡️ 角色與裝備', bag: '🎒 戰利品背包', upgrade: '🔥 屬性強化', log: '📜 戰鬥日誌' };
+    document.getElementById('drawer-title').textContent = titles[tabName] || '';
+
+    const insp = document.getElementById('item-inspector');
+    if (insp) insp.classList.toggle('hidden', tabName !== 'gear' && tabName !== 'bag');
+
+    if (tabName === 'bag') {
+      document.getElementById('bag-dot')?.classList.add('hidden');
+    }
+  }
+
+  closeDrawer() {
+    this.activeDrawer = null;
+    document.getElementById('rpg-drawer')?.classList.add('hidden');
+    document.querySelectorAll('.dock-btn[data-drawer]').forEach((b) => b.classList.remove('active'));
+  }
+
+  markBagUpgradeDot() {
+    if (this.activeDrawer !== 'bag') {
+      document.getElementById('bag-dot')?.classList.remove('hidden');
+    }
   }
 
   bindGlobalButtons() {
@@ -198,7 +241,7 @@ export class DashboardUI {
 
   renderInventory(state) {
     const invCount = document.getElementById('inv-count');
-    if (invCount) invCount.textContent = `${state.inventory.length} / 60`;
+    if (invCount) invCount.textContent = `${state.inventory.length}/60`;
 
     ['common', 'magic', 'rare'].forEach((rar) => {
       const cb = document.getElementById(`auto-salvage-${rar}`);

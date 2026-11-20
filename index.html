@@ -4,23 +4,67 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>暗黑桌面掛機：深淵刷寶 ARPG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./style.css" />
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
 </head>
 <body>
-  <div id="app-shell">
-    <!-- 頂部全域資源列 -->
+  <!-- 1. 全螢幕暗黑歡迎頁 -->
+  <section id="welcome-screen">
+    <div class="welcome-backdrop"></div>
+    <div class="welcome-vignette"></div>
+    <div class="welcome-content">
+      <div class="welcome-crest">
+        <div class="crest-sub">ABYSSAL IDLE ARPG</div>
+        <h1 class="crest-title">暗黑桌面掛機</h1>
+        <p class="crest-desc">放置刷寶・隨機詞條・無限深淵挑戰</p>
+      </div>
+
+      <!-- 步驟 1：Google 登入 -->
+      <div id="welcome-step-auth" class="welcome-panel">
+        <div class="auth-actions">
+          <button id="btn-google-login" class="btn-gold-lg">🔐 使用 Google 帳號登入並連動存檔</button>
+          <button id="btn-guest-play" class="btn-ghost-lg">本機離線試玩</button>
+        </div>
+        <div id="welcome-auth-status" class="auth-status-text">正在檢查 Google 登入狀態...</div>
+      </div>
+
+      <!-- 步驟 2：選職業開始遊戲 -->
+      <div id="welcome-step-class" class="welcome-panel hidden">
+        <div class="welcome-class-header">
+          <div id="welcome-save-summary" class="save-summary-pill"></div>
+          <button id="btn-start-game" class="btn-gold-lg">⚔️ 踏入深淵（開始遊戲）</button>
+        </div>
+        <div id="welcome-class-grid"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. 主遊戲畫面（全幅戰鬥 ＋ 底部小圖示列） -->
+  <section id="game-screen" class="hidden">
     <header id="top-hud">
       <div class="hud-left">
         <span class="brand-title">⚔️ 暗黑桌面掛機</span>
         <span id="hud-class-badge" class="badge">狂戰士 Lv.1</span>
         <span id="hud-dps" class="badge dps">DPS 0</span>
-        <button id="btn-switch-class" class="btn-ghost">切換職業</button>
       </div>
+
+      <div class="hud-center-stage">
+        <button id="btn-stage-prev" class="btn-stage">◀</button>
+        <div class="stage-info">
+          <span id="hud-stage-title">第 1 關・腐朽邊境營地</span>
+          <span id="hud-wave-badge" class="wave-pill">波次 1 / 5</span>
+        </div>
+        <button id="btn-stage-next" class="btn-stage">▶</button>
+      </div>
+
       <div class="hud-exp-wrap">
         <div id="hud-exp-bar"></div>
         <span id="hud-exp-text">EXP 0 / 45</span>
       </div>
+
       <div class="hud-right">
         <span id="hud-cloud-status" class="cloud-badge">☁️ 未登入</span>
         <button id="btn-cloud-logout" class="btn-ghost hidden">登出</button>
@@ -29,100 +73,92 @@
       </div>
     </header>
 
-    <!-- 電腦版雙欄主體 -->
-    <main id="desktop-main">
-      <!-- 左側：Phaser 戰鬥舞台 -->
-      <section id="stage-column">
-        <div id="stage-banner">
-          <button id="btn-stage-prev" class="btn-stage">◀</button>
-          <div class="stage-info">
-            <span id="hud-stage-title">第 1 關・腐朽邊境營地</span>
-            <span id="hud-wave-badge" class="wave-pill">波次 1 / 5</span>
+    <!-- 全幅戰鬥舞台 -->
+    <main id="battle-viewport">
+      <div id="phaser-stage"></div>
+
+      <!-- 右側懸浮暗黑抽屜（點擊底部圖示展開） -->
+      <aside id="rpg-drawer" class="hidden">
+        <div class="drawer-header">
+          <h3 id="drawer-title">🛡️ 角色與裝備</h3>
+          <button id="btn-close-drawer" class="btn-ghost">✕</button>
+        </div>
+
+        <div class="drawer-body">
+          <div id="tab-gear" class="tab-panel">
+            <div id="equip-slots-grid"></div>
+            <div class="section-subtitle">角色即時戰鬥屬性</div>
+            <div id="char-stats-list"></div>
           </div>
-          <button id="btn-stage-next" class="btn-stage">▶</button>
-        </div>
 
-        <div id="phaser-stage"></div>
-
-        <div id="skill-bar">
-          <button id="btn-cast-skill" class="skill-btn">
-            <span>⚡ <strong id="skill-name-label">旋風重斬</strong> [Space]</span>
-            <div class="skill-cd-track"><div id="skill-cd-fill"></div></div>
-          </button>
-          <div class="tap-hint">💡 點擊怪物可輔助攻擊；技能就緒時可點擊或按空白鍵施放</div>
-        </div>
-      </section>
-
-      <!-- 右側：暗黑風 RPG 管理面板 -->
-      <aside id="rpg-column">
-        <nav id="rpg-tabs">
-          <button class="tab-btn active" data-tab="gear">🛡️ 角色與裝備</button>
-          <button class="tab-btn" data-tab="bag">🎒 背包 (<span id="inv-count">0 / 60</span>)</button>
-          <button class="tab-btn" data-tab="upgrade">🔥 屬性強化</button>
-          <button class="tab-btn" data-tab="log">📜 戰鬥日誌</button>
-        </nav>
-
-        <div id="tab-gear" class="tab-panel active">
-          <div id="equip-slots-grid"></div>
-          <div class="section-subtitle">角色即時戰鬥屬性</div>
-          <div id="char-stats-list"></div>
-        </div>
-
-        <div id="tab-bag" class="tab-panel">
-          <div class="bag-toolbar">
-            <div class="auto-salvage-group">
-              <span>自動分解：</span>
-              <label><input type="checkbox" id="auto-salvage-common" /> 普通</label>
-              <label><input type="checkbox" id="auto-salvage-magic" /> 魔法</label>
-              <label><input type="checkbox" id="auto-salvage-rare" /> 稀有</label>
+          <div id="tab-bag" class="tab-panel">
+            <div class="bag-toolbar">
+              <div class="auto-salvage-group">
+                <span>自動分解：</span>
+                <label><input type="checkbox" id="auto-salvage-common" /> 普通</label>
+                <label><input type="checkbox" id="auto-salvage-magic" /> 魔法</label>
+                <label><input type="checkbox" id="auto-salvage-rare" /> 稀有</label>
+              </div>
+              <button id="btn-salvage-junk" class="btn-danger-sm">一鍵分解</button>
             </div>
-            <button id="btn-salvage-junk" class="btn-danger-sm">一鍵分解白/藍裝</button>
+            <div id="inventory-grid"></div>
           </div>
-          <div id="inventory-grid"></div>
+
+          <div id="tab-upgrade" class="tab-panel">
+            <div class="section-subtitle">金幣永久訓練</div>
+            <div id="gold-upgrades-list"></div>
+          </div>
+
+          <div id="tab-log" class="tab-panel">
+            <div id="log-content"></div>
+          </div>
         </div>
 
-        <div id="tab-upgrade" class="tab-panel">
-          <div class="section-subtitle">金幣永久訓練</div>
-          <div id="gold-upgrades-list"></div>
-        </div>
-
-        <div id="tab-log" class="tab-panel">
-          <div id="log-content"></div>
-        </div>
-
-        <!-- 底部共用裝備詞條檢視器 -->
         <div id="item-inspector">
           <div class="empty-tip">點擊裝備或背包物品查看詳細詞條</div>
         </div>
       </aside>
     </main>
-  </div>
 
-  <!-- 開局歡迎大廳：Google 登入 → 選職業 → 開始遊戲 -->
-  <div id="modal-lobby" class="modal-overlay">
-    <div class="modal-card modal-wide">
-      <div id="lobby-step-auth" class="lobby-step">
-        <h2 style="color:#f59e0b;margin-bottom:8px;">⚔️ 暗黑桌面掛機：深淵刷寶 ARPG</h2>
-        <p style="color:#cbd5e1;font-size:14px;margin-bottom:18px;">登入 Google 帳號以連動雲端存檔，隨時在不同電腦接續刷寶。</p>
-        <div class="lobby-auth-actions">
-          <button id="btn-google-login" class="btn-google">🔐 使用 Google 帳號登入並連動存檔</button>
-          <button id="btn-guest-play" class="btn-ghost">先用本機離線試玩</button>
+    <!-- 底部小圖示快捷選項列 -->
+    <footer id="bottom-dock">
+      <button id="btn-cast-skill" class="dock-skill-btn" title="施放主動技能 (空白鍵)">
+        <span class="dock-icon">⚡</span>
+        <div class="dock-skill-meta">
+          <strong id="skill-name-label">旋風重斬</strong>
+          <div class="skill-cd-track"><div id="skill-cd-fill"></div></div>
         </div>
-        <div id="lobby-auth-status" class="auth-status-text">正在檢查登入狀態...</div>
-      </div>
+      </button>
 
-      <div id="lobby-step-class" class="lobby-step hidden">
-        <div class="modal-header">
-          <div>
-            <h2>選擇出戰職業</h2>
-            <div id="lobby-save-summary" style="font-size:12px;color:#38bdf8;margin-top:4px;"></div>
-          </div>
-          <button id="btn-start-game" class="btn-primary btn-lg">⚔️ 開始遊戲</button>
-        </div>
-        <div id="lobby-class-grid"></div>
-      </div>
-    </div>
-  </div>
+      <div class="dock-divider"></div>
+
+      <button class="dock-btn" data-drawer="gear" title="角色與裝備">
+        <span class="dock-icon">🛡️</span>
+        <span class="dock-label">裝備</span>
+      </button>
+
+      <button class="dock-btn" data-drawer="bag" title="戰利品背包">
+        <span class="dock-icon">🎒</span>
+        <span class="dock-label">背包 <small id="inv-count">0/60</small></span>
+        <span id="bag-dot" class="notify-dot hidden"></span>
+      </button>
+
+      <button class="dock-btn" data-drawer="upgrade" title="屬性強化">
+        <span class="dock-icon">🔥</span>
+        <span class="dock-label">強化</span>
+      </button>
+
+      <button id="btn-switch-class" class="dock-btn" title="切換冒險職業">
+        <span class="dock-icon">⚔️</span>
+        <span class="dock-label">職業</span>
+      </button>
+
+      <button class="dock-btn" data-drawer="log" title="戰鬥日誌">
+        <span class="dock-icon">📜</span>
+        <span class="dock-label">日誌</span>
+      </button>
+    </footer>
+  </section>
 
   <!-- 遊戲內切換職業彈窗 -->
   <div id="modal-class" class="modal-overlay hidden">
