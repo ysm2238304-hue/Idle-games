@@ -687,3 +687,82 @@ button { font-family: inherit; }
 .tt-diff { margin-top: 6px; padding-top: 5px; border-top: 1px dashed #334155; font-size: 11.5px; font-weight: 700; }
 .tt-up { color: #4ade80; }
 .tt-down { color: #f87171; }
+
+
+/* ========== v21 世界大地圖選關頁面 ========== */
+.modal-world {
+  width: 1080px;
+  max-width: 96vw;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+.world-map-layout {
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  gap: 14px;
+  min-height: 0;
+}
+.world-map-canvas {
+  position: relative;
+  border: 1.5px solid #c89b3c;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #07080c;
+  aspect-ratio: 16 / 9;
+}
+.world-map-canvas img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.map-pin {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  background: rgba(12, 14, 22, 0.9);
+  border: 1.5px solid #c89b3c;
+  color: #fde68a;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 900;
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.85);
+  transition: transform 0.12s, background 0.15s;
+}
+.map-pin:hover:not(:disabled) { transform: translate(-50%, -50%) scale(1.08); background: #2b2112; }
+.map-pin.active { border-color: #4ade80; color: #4ade80; box-shadow: 0 0 14px rgba(74, 222, 128, 0.6); }
+.map-pin:disabled { opacity: 0.45; border-color: #475569; color: #94a3b8; cursor: not-allowed; }
+
+.world-substage-panel {
+  background: rgba(12, 14, 20, 0.95);
+  border: 1px solid #523e1e;
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+}
+.substage-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.substage-btn {
+  background: linear-gradient(180deg, #1b1e29 0%, #11131b 100%);
+  border: 1px solid #473923;
+  border-radius: 8px;
+  padding: 8px 10px;
+  color: #e2e8f0;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.substage-btn:hover:not(:disabled) { border-color: #e0a63b; background: #262015; }
+.substage-btn.current { border-color: #4ade80; box-shadow: 0 0 10px rgba(74, 222, 128, 0.3); }
+.substage-btn:disabled { opacity: 0.4; cursor: not-allowed; }

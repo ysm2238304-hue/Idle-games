@@ -3,7 +3,7 @@ import { WARRIOR_SKILLS } from '../data/warriorSkills.js';
 import { RANGER_SKILLS } from '../data/rangerSkills.js';
 import { MAGE_SKILLS } from '../data/mageSkills.js';
 import { EQUIP_SLOTS, RARITIES, BASE_ITEMS } from '../data/items.js';
-import { getZoneName, getStageLabel, getSubStage } from '../data/monsters.js';
+import { STAGE_ZONES, getZoneName, getStageLabel, getSubStage, getChapterIdx } from '../data/monsters.js';
 import { SKILL_BRANCHES, SKILL_TREE_NODES, isNodeUnlocked } from '../data/skillTree.js';
 import { calcItemPower, getSalvageReward } from '../logic/lootGen.js';
 import { formatNum, getExpToNext, getUpgradeCost, calcRebirthCrystals } from '../logic/statCalc.js';
@@ -114,6 +114,75 @@ export class DashboardUI {
     });
   }
 
+
+  openWorldMapModal(state) {
+    const modal = document.getElementById('modal-world-map');
+    const pinsEl = document.getElementById('world-map-pins');
+    if (!modal || !pinsEl) return;
+
+    const coords = [
+      [21, 19], [49, 17], [19, 50], [39, 44], [57, 38],
+      [83, 30], [21, 80], [44, 80], [64, 77], [85, 78],
+    ];
+    let selectedCh = getChapterIdx(state.stage || 1);
+    const maxStage = state.maxStageReached || 1;
+    const maxCh = getChapterIdx(maxStage);
+
+    const renderPinsAndSubs = () => {
+      pinsEl.innerHTML = '';
+      STAGE_ZONES.forEach((zName, chIdx) => {
+        const [px, py] = coords[chIdx];
+        const unlocked = chIdx <= maxCh;
+        const btn = document.createElement('button');
+        btn.className = `map-pin ${chIdx === selectedCh ? 'active' : ''}`;
+        btn.style.left = `${px}%`;
+        btn.style.top = `${py}%`;
+        btn.disabled = !unlocked;
+        btn.textContent = unlocked ? `第${chIdx + 1}章・${zName}` : `🔒 第${chIdx + 1}章`;
+        btn.onclick = () => {
+          selectedCh = chIdx;
+          renderPinsAndSubs();
+        };
+        pinsEl.appendChild(btn);
+      });
+
+      const panel = document.getElementById('world-substage-panel');
+      if (!panel) return;
+      const zName = STAGE_ZONES[selectedCh];
+      panel.innerHTML = `
+        <div style="border-bottom:1px solid #3a2e1a;padding-bottom:8px;">
+          <div style="font-size:16px;font-weight:900;color:#fde68a;">第 ${selectedCh + 1} 章・${zName}</div>
+          <div style="font-size:12px;color:#94a3b8;">選擇已解鎖小關傳送開刷（每小關皆有小王）</div>
+        </div>
+        <div class="substage-grid" id="substage-grid-inner"></div>
+      `;
+      const grid = document.getElementById('substage-grid-inner');
+      for (let sub = 1; sub <= 10; sub++) {
+        const stNum = selectedCh * 10 + sub;
+        const unlocked = stNum <= maxStage;
+        const isCur = stNum === state.stage;
+        const b = document.createElement('button');
+        b.className = `substage-btn ${isCur ? 'current' : ''}`;
+        b.disabled = !unlocked;
+        b.innerHTML = `
+          <strong style="color:${sub === 10 ? '#fb923c' : '#fde68a'};font-size:13px;">
+            ${selectedCh + 1}-${sub} ${sub === 10 ? '💀 章節首領' : '🔥 菁英小王'}
+          </strong>
+          <small style="color:#94a3b8;font-size:11px;">${unlocked ? (isCur ? '目前所在關卡' : '點擊傳送開刷') : '尚未解鎖'}</small>
+        `;
+        b.onclick = () => {
+          modal.classList.add('hidden');
+          this.handlers.onJumpStage(stNum);
+        };
+        grid.appendChild(b);
+      }
+    };
+
+    renderPinsAndSubs();
+    document.getElementById('btn-close-world-map').onclick = () => modal.classList.add('hidden');
+    modal.classList.remove('hidden');
+  }
+
   openClassModal(isSwitching = false) {
     const modal = document.getElementById('modal-class');
     const grid = document.getElementById('class-select-grid');
@@ -187,7 +256,7 @@ export class DashboardUI {
     const sLabel = getStageLabel(state.stage);
     const sub = getSubStage(state.stage);
     document.getElementById('hud-stage-title').textContent = `第 ${sLabel} 關・${getZoneName(state.stage)}`;
-    document.getElementById('hud-wave-badge').textContent = sub >= 10 ? '💀 章節大首領' : '⚔️ 橫向全清';
+    document.getElementById('hud-wave-badge').textContent = sub >= 10 ? '💀 章節大首領' : '⚔️ 全清小王';
     document.getElementById('btn-stage-next').disabled = state.stage >= state.maxStageReached;
     document.getElementById('btn-stage-prev').disabled = state.stage <= 1;
 

@@ -231,6 +231,16 @@ const ui = new DashboardUI({
     persistAll(true);
   },
 
+  onJumpStage: (targetStage) => {
+    const target = Math.max(1, Math.min(100, Math.min(gameState.maxStageReached, targetStage)));
+    gameState.stage = target;
+    gameState.wave = 1;
+    ui.addLog(`傳送至第 ${getStageLabel(target)} 關刷寶。`, 'system');
+    refreshStatsAndUI();
+    if (battleScene) battleScene.spawnWaveSquad();
+    persistAll(true);
+  },
+
   onChangeStage: (delta) => {
     const target = Math.max(1, Math.min(100, Math.min(gameState.maxStageReached, gameState.stage + delta)));
     if (target === gameState.stage) return;
@@ -316,24 +326,67 @@ function initPhaserGame() {
         const keptItem = handleLootDrop(dropped);
 
         if (waveCleared) {
-          if (mob.stage) {
-            const clearedLabel = getStageLabel(gameState.stage);
-            ui.addLog(`🏆 成功擊破第 ${clearedLabel} 關小王／首領！`, 'victory');
-            if (gameState.stage < 100) {
-              gameState.stage += 1;
-            } else {
-              ui.addLog('🌟 已抵達 10-10 混沌星界虛空終極關卡！可持續刷寶或進行深淵輪迴。', 'victory');
-            }
-            gameState.wave = 1;
-            gameState.maxStageReached = Math.min(100, Math.max(gameState.maxStageReached, gameState.stage));
-            persistAll(true);
-          } else {
-            gameState.wave += 1;
-          }
+          const clearedLabel = getStageLabel(gameState.stage);
+          ui.addLog(`🏆 成功全清第 ${clearedLabel} 關！`, 'victory');
+          const nextUnlock = Math.min(100, gameState.stage + 1);
+          gameState.maxStageReached = Math.max(gameState.maxStageReached || 1, nextUnlock);
+          persistAll(true);
         }
 
         refreshStatsAndUI();
         return { item: keptItem || dropped };
+      },
+      onStageCleared: (clearedStage) => {
+        const modal = document.getElementById('modal-stage-clear');
+        const titleEl = document.getElementById('clear-modal-title');
+        const descEl = document.getElementById('clear-modal-desc');
+        const nextBtn = document.getElementById('btn-clear-next');
+        const repBtn = document.getElementById('btn-clear-repeat');
+        const chkAuto = document.getElementById('chk-auto-repeat');
+        const cdEl = document.getElementById('clear-countdown');
+        if (!modal) {
+          battleScene?.spawnWaveSquad();
+          return;
+        }
+        const curLbl = getStageLabel(clearedStage);
+        const hasNext = clearedStage < 100;
+        const nextStage = hasNext ? clearedStage + 1 : 100;
+        const nextLbl = getStageLabel(nextStage);
+        titleEl.textContent = `🏆 第 ${curLbl} 關全清通關！`;
+        descEl.textContent = hasNext
+          ? `已解鎖第 ${nextLbl} 關！要直接挑戰下一關，還是留在第 ${curLbl} 關重複刷寶？`
+          : '已通關終極關卡 10-10！可重複刷本關或進行深淵輪迴。';
+        nextBtn.textContent = hasNext ? `➡ 前往第 ${nextLbl} 關` : '🌟 重刷 10-10';
+        repBtn.textContent = `🔄 重複刷第 ${curLbl} 關`;
+
+        if (window.__clearTimer) clearInterval(window.__clearTimer);
+        const finishChoice = (goNext) => {
+          if (window.__clearTimer) { clearInterval(window.__clearTimer); window.__clearTimer = null; }
+          modal.classList.add('hidden');
+          gameState.stage = goNext ? nextStage : clearedStage;
+          gameState.wave = 1;
+          refreshStatsAndUI();
+          battleScene?.spawnWaveSquad();
+          persistAll(true);
+        };
+        nextBtn.onclick = () => finishChoice(true);
+        repBtn.onclick = () => finishChoice(false);
+
+        let sec = 5;
+        const updateCd = () => {
+          const modeTxt = chkAuto?.checked ? '重複刷本關' : (hasNext ? `前往 ${nextLbl}` : '重複刷本關');
+          cdEl.textContent = `${sec} 秒後自動${modeTxt}`;
+        };
+        updateCd();
+        modal.classList.remove('hidden');
+        window.__clearTimer = setInterval(() => {
+          sec -= 1;
+          if (sec <= 0) {
+            finishChoice(!chkAuto?.checked && hasNext);
+          } else {
+            updateCd();
+          }
+        }, 1000);
       },
       onPlayerDefeated: (reason) => {
         gameState.wave = 1;
@@ -451,6 +504,8 @@ function toggleAutoMoveMode() {
 
 document.getElementById('btn-toggle-auto')?.addEventListener('click', toggleAutoMoveMode);
 document.getElementById('btn-potion')?.addEventListener('click', () => battleScene?.usePotion(true));
+document.getElementById('btn-world-map')?.addEventListener('click', () => ui.openWorldMapModal(gameState));
+document.getElementById('hud-stage-title')?.addEventListener('click', () => ui.openWorldMapModal(gameState));
 [0, 1, 2].forEach((i) => {
   document.getElementById(`skill-slot-${i}`)?.addEventListener('click', () => battleScene?.castSkillSlot(i, true));
 });
@@ -470,6 +525,9 @@ window.addEventListener('keydown', (e) => {
     toggleAutoMoveMode();
   } else if (e.code === 'KeyH') {
     battleScene?.usePotion(true);
+  } else if (e.code === 'KeyM') {
+    const wm = document.getElementById('modal-world-map');
+    wm?.classList.contains('hidden') ? ui.openWorldMapModal(gameState) : wm.classList.add('hidden');
   } else if (e.code === 'KeyI') {
     ui.activeDrawer === 'gear' ? ui.closeDrawer() : ui.openDrawer('gear');
   } else if (e.code === 'KeyQ') {
@@ -477,6 +535,7 @@ window.addEventListener('keydown', (e) => {
   } else if (e.code === 'Escape') {
     ui.closeDrawer();
     document.getElementById('modal-class')?.classList.add('hidden');
+    document.getElementById('modal-world-map')?.classList.add('hidden');
   } else if (e.key === '1') {
     ui.activeDrawer === 'gear' ? ui.closeDrawer() : ui.openDrawer('gear');
   } else if (e.key === '2') {

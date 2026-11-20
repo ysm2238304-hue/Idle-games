@@ -6,8 +6,8 @@ import { RARITIES } from '../data/items.js';
 import { createStageEncounters, getChapterIdx, getStageLabel, ZONE_OBSTACLES } from '../data/monsters.js';
 import { formatNum } from '../logic/statCalc.js';
 
-const MAP_W = 12000;
-const MAP_H = 1200;
+const MAP_W = 4096;
+const MAP_H = 2304;
 const ZONE_EMBERS = [0xfbbf24, 0x34d399, 0x38bdf8, 0xf97316, 0xe879f9, 0x7dd3fc, 0x4ade80, 0xfacc15, 0xf87171, 0xc084fc];
 const FX_NAMES = [
   'fx_slash', 'fx_cross', 'fx_whirlwind', 'fx_crack',
@@ -136,7 +136,8 @@ export class BattleScene extends Phaser.Scene {
     this.generateFxTextures();
     this.createClassAnims();
 
-    this.bgImage = this.add.tileSprite(MAP_W / 2, MAP_H / 2, MAP_W, MAP_H, 'map_zone_0')
+    this.bgImage = this.add.image(MAP_W / 2, MAP_H / 2, 'map_zone_0')
+      .setDisplaySize(MAP_W, MAP_H)
       .setDepth(0);
 
     this.cameras.main.setBounds(0, 0, MAP_W, MAP_H);
@@ -256,8 +257,8 @@ export class BattleScene extends Phaser.Scene {
 
   createHero() {
     const cid = this.getState().classId || 'warrior';
-    const cx = 340;
-    const cy = 620;
+    const cx = MAP_W / 2;
+    const cy = MAP_H / 2;
     const texKey = cid === 'warrior' ? 'wf_down_walk_0' : (cid === 'ranger' ? 'rf_down_walk_0' : 'mf_down_walk_0');
 
     this.heroGroundShadow = this.add.image(cx, cy + 44, 'fx_glow')
@@ -281,8 +282,8 @@ export class BattleScene extends Phaser.Scene {
   }
 
   createMinimap() {
-    this.miniW = 264;
-    this.miniH = 42;
+    this.miniW = 168;
+    this.miniH = 96;
     this.miniX = 16;
     this.miniY = 16;
     this.miniBg = this.add.rectangle(this.miniX, this.miniY, this.miniW, this.miniH, 0x090b12, 0.78)
@@ -331,7 +332,7 @@ export class BattleScene extends Phaser.Scene {
     const idx = this.getZoneIdx();
     if (idx !== this.lastZoneIdx && this.bgImage) {
       this.lastZoneIdx = idx;
-      this.bgImage.setTexture(`map_zone_${idx}`);
+      this.bgImage.setTexture(`map_zone_${idx}`).setDisplaySize(MAP_W, MAP_H);
       this.rebuildZoneObstacles(idx);
     }
   }
@@ -350,14 +351,15 @@ export class BattleScene extends Phaser.Scene {
       return seed / 233280;
     };
 
+    const cx = MAP_W / 2;
+    const cy = MAP_H / 2;
     let attempts = 0;
-    while (this.obstacles.length < 34 && attempts < 280) {
+    while (this.obstacles.length < 22 && attempts < 220) {
       attempts++;
-      const ox = 850 + rand() * (MAP_W - 1500);
-      const oy = 300 + rand() * 680;
-      if (Math.hypot(ox - 340, oy - 620) < 380) continue;
-      if (Math.hypot(ox - 10350, oy - 640) < 460) continue;
-      if (this.obstacles.some((o) => Math.hypot(o.x - ox, o.y - oy) < 320)) continue;
+      const ox = 380 + rand() * (MAP_W - 760);
+      const oy = 320 + rand() * (MAP_H - 640);
+      if (Math.hypot(ox - cx, oy - cy) < 380) continue;
+      if (this.obstacles.some((o) => Math.hypot(o.x - ox, o.y - oy) < 360)) continue;
 
       const key = pool[this.obstacles.length % pool.length];
       const sc = 0.62 + rand() * 0.22;
@@ -590,8 +592,8 @@ export class BattleScene extends Phaser.Scene {
     this.clearAllMonsters();
 
     if (this.hero) {
-      this.hero.setPosition(340, 620);
-      this.heroDir = 'right';
+      this.hero.setPosition(MAP_W / 2, MAP_H / 2);
+      this.heroDir = 'down';
       this.heroFlipX = false;
     }
 
@@ -624,7 +626,7 @@ export class BattleScene extends Phaser.Scene {
       this.waveInfoText.setText(`🔥 第 ${lbl} 關首領激戰！剩餘 ${rem} 隻・倒數: ${Math.max(0, this.bossTimeLeft).toFixed(1)}s`);
     } else {
       this.waveInfoText.setColor('#fde68a');
-      this.waveInfoText.setText(`⚔️ 第 ${lbl} 關橫向推進・剩餘怪物: ${rem} / ${this.stageTotalMonsters}（需全數擊殺）`);
+      this.waveInfoText.setText(`⚔️ 第 ${lbl} 關・剩餘怪物: ${rem} / ${this.stageTotalMonsters}（需全數擊殺）`);
     }
   }
 
@@ -773,8 +775,8 @@ export class BattleScene extends Phaser.Scene {
               // 邊界推離，防止退到牆角被圍
               if (this.hero.x < 360) repX += 0.9;
               if (this.hero.x > MAP_W - 360) repX -= 0.9;
-              if (this.hero.y < 340) repY += 0.9;
-              if (this.hero.y > MAP_H - 250) repY -= 0.9;
+              if (this.hero.y < 320) repY += 0.9;
+              if (this.hero.y > MAP_H - 320) repY -= 0.9;
               const rLen = Math.hypot(repX, repY) || 1;
               // 加入少許側向切線方便滑步風箏
               const nx = repX / rLen;
@@ -835,8 +837,8 @@ export class BattleScene extends Phaser.Scene {
       this.smoothVy = 0;
     }
 
-    this.hero.x = Phaser.Math.Clamp(this.hero.x + this.smoothVx * dt, 180, MAP_W - 180);
-    this.hero.y = Phaser.Math.Clamp(this.hero.y + this.smoothVy * dt, 260, MAP_H - 180);
+    this.hero.x = Phaser.Math.Clamp(this.hero.x + this.smoothVx * dt, 200, MAP_W - 200);
+    this.hero.y = Phaser.Math.Clamp(this.hero.y + this.smoothVy * dt, 220, MAP_H - 200);
     this.resolveObstacleCollision(this.hero, 28);
     this.hero.setDepth(this.hero.y);
 
@@ -935,17 +937,13 @@ export class BattleScene extends Phaser.Scene {
       const dx = this.hero.x - m.sprite.x;
       const dy = this.hero.y - m.sprite.y;
       const dist = Math.hypot(dx, dy) || 1;
-      const aggroRange = m.isBoss ? 900 : 1020;
-      if (dist > aggroRange && m.hp >= m.maxHp) {
-        continue;
-      }
       const stopRange = m.isBoss ? 94 : (m.isRanged ? 260 : 70);
 
       if (dist > stopRange) {
         const mx = (dx / dist + Math.cos(m.jitterAngle) * 0.16) * m.speed * slowFactor * dt;
         const my = (dy / dist + Math.sin(m.jitterAngle) * 0.16) * m.speed * slowFactor * dt;
         m.sprite.x = Phaser.Math.Clamp(m.sprite.x + mx, 120, MAP_W - 120);
-        m.sprite.y = Phaser.Math.Clamp(m.sprite.y + my, 250, MAP_H - 170);
+        m.sprite.y = Phaser.Math.Clamp(m.sprite.y + my, 180, MAP_H - 180);
         this.resolveObstacleCollision(m.sprite, m.isBoss ? 34 : 24);
       }
 
@@ -1877,8 +1875,12 @@ export class BattleScene extends Phaser.Scene {
     if (waveCleared) {
       this.potionCharges = Math.min(this.potionMaxCharges, this.potionCharges + 1);
       this.isTransitioning = true;
-      this.time.delayedCall(650, () => {
-        this.spawnWaveSquad();
+      this.time.delayedCall(550, () => {
+        if (this.callbacks?.onStageCleared) {
+          this.callbacks.onStageCleared(m.stage);
+        } else {
+          this.spawnWaveSquad();
+        }
       });
     }
   }

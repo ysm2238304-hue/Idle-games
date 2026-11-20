@@ -50,7 +50,7 @@
       <div class="hud-center-stage">
         <button id="btn-stage-prev" class="btn-stage">◀</button>
         <div class="stage-info">
-          <span id="hud-stage-title">第 1 關・腐朽邊境營地</span>
+          <span id="hud-stage-title" style="cursor:pointer;" title="點擊開啟世界地圖選關">第 1-1 關・腐朽邊境營地</span>
           <span id="hud-wave-badge" class="wave-pill">波次 1 / 5</span>
         </div>
         <button id="btn-stage-next" class="btn-stage">▶</button>
@@ -179,6 +179,7 @@
         </div>
 
         <div class="altar-menu-row">
+          <button id="btn-world-map" class="dock-btn-sm" title="開啟 10 大關世界選關地圖 (M)">🗺️ 地圖[M]</button>
           <button class="dock-btn-sm" data-drawer="gear" title="角色與裝備紙娃娃 (1 / I)">🛡️ 裝備[I]</button>
           <button class="dock-btn-sm" data-drawer="bag" title="暗黑網格物品欄 (2)">
             🎒 物品欄[2] <small id="inv-count">0/60</small>
@@ -221,6 +222,38 @@
   </section>
 
   <div id="diablo-tooltip" class="diablo-tooltip hidden"></div>
+
+
+  <div id="modal-world-map" class="modal-overlay hidden">
+    <div class="modal-card modal-world">
+      <div class="modal-header">
+        <h2>🗺️ 暗黑世界大陸・10 大章節選關傳送門</h2>
+        <button id="btn-close-world-map" class="btn-ghost">關閉 [Esc]</button>
+      </div>
+      <div class="world-map-layout">
+        <div class="world-map-canvas" id="world-map-canvas">
+          <img src="./assets/bg/world_map.jpg" alt="世界地圖" />
+          <div id="world-map-pins"></div>
+        </div>
+        <div class="world-substage-panel" id="world-substage-panel"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-stage-clear" class="modal-overlay hidden">
+    <div class="modal-card" style="width:480px;text-align:center;">
+      <h2 id="clear-modal-title">🏆 通關成功！</h2>
+      <p id="clear-modal-desc" style="color:#cbd5e1;font-size:13px;margin:10px 0 16px;"></p>
+      <div style="display:flex;gap:12px;justify-content:center;margin-bottom:14px;">
+        <button id="btn-clear-next" class="btn-gold-lg" style="flex:1;padding:11px 14px;">➡ 前往下一關</button>
+        <button id="btn-clear-repeat" class="btn-ghost-lg" style="flex:1;padding:11px 14px;">🔄 重複刷本關</button>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:10px;font-size:12px;color:#94a3b8;">
+        <label style="cursor:pointer;"><input type="checkbox" id="chk-auto-repeat" /> 掛機自動重複刷本關</label>
+        <span id="clear-countdown" style="color:#fde047;font-weight:700;"></span>
+      </div>
+    </div>
+  </div>
 
   <div id="modal-class" class="modal-overlay hidden">
     <div class="modal-card modal-wide">
