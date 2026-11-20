@@ -143,7 +143,7 @@
           <div class="mmo-hotbar">
             <button id="btn-potion" class="mmo-slot mmo-potion" data-tip="生命藥水 [H]：立即回復 45% 最大生命（每 12 秒或過關補充）">
               <span class="mmo-hotkey">H</span>
-              <span class="mmo-glyph">🧪</span>
+              <img class="mmo-ui-img" src="./assets/ui/ui_potion.png" alt="藥水" />
               <span class="mmo-badge-br" id="potion-count">3</span>
             </button>
 
@@ -176,27 +176,27 @@
 
             <button id="btn-toggle-auto" class="mmo-slot mmo-auto active" data-tip="自動巡邏／手動模式切換 [T]（可隨時按 WASD 介入）">
               <span class="mmo-hotkey">T</span>
-              <span class="mmo-glyph">🏃</span>
+              <img class="mmo-ui-img" src="./assets/ui/ui_auto.png" alt="自動" />
               <span class="mmo-badge-br" id="auto-mode-label">自動</span>
             </button>
           </div>
 
           <div class="mmo-micro-menu">
-            <button id="btn-world-map" class="mmo-micro-btn" data-tip="世界大地圖選關 [M]"><span>🗺️</span><small>M</small></button>
-            <button class="mmo-micro-btn" data-drawer="gear" data-tip="角色紙娃娃與裝備 [I / 1]"><span>🛡️</span><small>I</small></button>
+            <button id="btn-world-map" class="mmo-micro-btn" data-tip="世界大地圖選關 [M]"><img class="mmo-ui-img" src="./assets/ui/ui_worldmap.png" alt="地圖" /><small>M</small></button>
+            <button class="mmo-micro-btn" data-drawer="gear" data-tip="角色紙娃娃與裝備 [I / 1]"><img class="mmo-ui-img" src="./assets/ui/ui_gear.png" alt="裝備" /><small>I</small></button>
             <button class="mmo-micro-btn" data-drawer="bag" data-tip="暗黑網格物品欄 [2]">
-              <span>🎒</span><small id="inv-count">0</small>
+              <img class="mmo-ui-img" src="./assets/ui/ui_bag.png" alt="背包" /><small id="inv-count">0</small>
               <span id="bag-dot" class="notify-dot hidden"></span>
             </button>
-            <button class="mmo-micro-btn" data-drawer="upgrade" data-tip="金幣屬性強化 [3]"><span>🔥</span><small>3</small></button>
+            <button class="mmo-micro-btn" data-drawer="upgrade" data-tip="金幣屬性強化 [3]"><img class="mmo-ui-img" src="./assets/ui/ui_upgrade.png" alt="強化" /><small>3</small></button>
             <button class="mmo-micro-btn" data-drawer="tree" data-tip="深淵技能樹 [4]">
-              <span>🌳</span><small>4</small>
+              <img class="mmo-ui-img" src="./assets/ui/ui_tree.png" alt="技能樹" /><small>4</small>
               <span id="tree-sp-badge" class="sp-badge hidden">0</span>
             </button>
-            <button class="mmo-micro-btn" data-drawer="skills" data-tip="職業技能配置頁 [6]"><span>⚡</span><small>6</small></button>
-            <button class="mmo-micro-btn" data-drawer="rebirth" data-tip="深淵輪迴轉生 [5]"><span>🌀</span><small>5</small></button>
-            <button id="btn-switch-class" class="mmo-micro-btn" data-tip="切換冒險職業"><span>⚔️</span><small>職</small></button>
-            <button class="mmo-micro-btn" data-drawer="log" data-tip="戰鬥日誌"><span>📜</span><small>誌</small></button>
+            <button class="mmo-micro-btn" data-drawer="skills" data-tip="職業技能配置頁 [6]"><img class="mmo-ui-img" src="./assets/ui/ui_skills.png" alt="技能頁" /><small>6</small></button>
+            <button class="mmo-micro-btn" data-drawer="rebirth" data-tip="深淵輪迴轉生 [5]"><img class="mmo-ui-img" src="./assets/ui/ui_rebirth.png" alt="輪迴" /><small>5</small></button>
+            <button id="btn-switch-class" class="mmo-micro-btn" data-tip="切換冒險職業"><img class="mmo-ui-img" src="./assets/ui/ui_class.png" alt="職業" /><small>職</small></button>
+            <button class="mmo-micro-btn" data-drawer="log" data-tip="戰鬥日誌"><img class="mmo-ui-img" src="./assets/ui/ui_log.png" alt="日誌" /><small>誌</small></button>
           </div>
         </div>
 
@@ -218,7 +218,7 @@
           <div class="orb-gloss"></div>
           <div class="orb-readout">
             <span id="orb-mp-text">100 / 100</span>
-            <small>MANA</small>
+            <small id="orb-mp-label">MANA</small>
           </div>
         </div>
       </div>

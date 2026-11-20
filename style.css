@@ -1026,3 +1026,58 @@ button { font-family: inherit; }
   border-radius: 999px;
   z-index: 3;
 }
+
+
+/* ========== v25 放大下方祭壇 (144px / 132px雙球 / 62px技能 / 44px選單) ＋ 職業能量球配色 ========== */
+#diablo-hud {
+  height: 144px;
+  gap: 18px;
+  padding: 8px 24px 10px;
+}
+.orb-wrap {
+  width: 132px;
+  height: 132px;
+  margin-top: -20px;
+}
+.orb-readout span { font-size: 15px; }
+.orb-readout small { font-size: 10.5px; letter-spacing: 2px; }
+
+.orb-wrap.orb-warrior .orb-mp-liquid {
+  background: linear-gradient(180deg, #fb923c 0%, #ea580c 45%, #7c2d12 100%);
+  box-shadow: 0 -4px 18px rgba(249, 115, 22, 0.72);
+}
+.orb-wrap.orb-ranger .orb-mp-liquid {
+  background: linear-gradient(180deg, #34d399 0%, #059669 45%, #064e3b 100%);
+  box-shadow: 0 -4px 18px rgba(16, 185, 129, 0.72);
+}
+
+#altar-center {
+  max-width: 1020px;
+  gap: 8px;
+}
+.mmo-hotbar { gap: 9px; padding: 5px 10px; }
+.mmo-slot {
+  width: 62px;
+  height: 62px;
+  border-radius: 8px;
+}
+.mmo-hotkey { font-size: 10.5px; padding: 1px 4px; }
+.mmo-badge-br, .mmo-mp-cost { font-size: 11px; padding: 1px 4px; }
+.mmo-cd-sec { font-size: 16px; }
+.mmo-micro-menu { gap: 7px; padding: 5px 9px; }
+.mmo-micro-btn {
+  width: 44px;
+  height: 44px;
+  padding: 2px;
+  border-radius: 6px;
+}
+.mmo-micro-btn small { font-size: 9.5px; padding: 0 3px; }
+.mmo-ui-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  border-radius: 4px;
+}
+.diablo-exp-bar { height: 18px; }
+.diablo-exp-text { font-size: 11.5px; }

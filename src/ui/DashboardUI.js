@@ -280,6 +280,16 @@ export class DashboardUI {
       spDot.classList.toggle('hidden', (state.skillPoints || 0) <= 0);
     }
 
+    const mpOrb = document.getElementById('orb-mp');
+    const mpLbl = document.getElementById('orb-mp-label');
+    if (mpOrb) {
+      mpOrb.classList.toggle('orb-warrior', state.classId === 'warrior');
+      mpOrb.classList.toggle('orb-ranger', state.classId === 'ranger');
+      mpOrb.title = state.classId === 'warrior' ? '怒氣能量 (ENERGY)' : (state.classId === 'ranger' ? '疾風精力 (STAMINA)' : '魔力值 (MANA)');
+    }
+    if (mpLbl) {
+      mpLbl.textContent = state.classId === 'warrior' ? 'ENERGY' : (state.classId === 'ranger' ? 'STAMINA' : 'MANA');
+    }
     this.renderDockSkillSlots(state);
   }
 
@@ -419,7 +429,7 @@ export class DashboardUI {
           if (!tt) return;
           tt.innerHTML = `
             <div class="tt-title" style="color:#fde047">${sk.name} [${keyLabels[i]}]</div>
-            <div class="tt-meta">Lv.${lvl} • 冷卻 ${(sk.cooldownMs / 1000).toFixed(1)}s • 消耗 ${mpCost} MP</div>
+            <div class="tt-meta">Lv.${lvl} • 冷卻 ${(sk.cooldownMs / 1000).toFixed(1)}s • 消耗 ${mpCost} ${cid === 'warrior' ? '能量' : (cid === 'ranger' ? '精力' : 'MP')}</div>
             <div class="tt-affix">${sk.getDetail(lvl)}</div>
           `;
           tt.style.borderColor = '#e0a63b';

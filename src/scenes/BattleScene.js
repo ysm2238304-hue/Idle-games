@@ -477,7 +477,11 @@ export class BattleScene extends Phaser.Scene {
     const tree = this.getState().skillTree || {};
     const freeAstral = (this.getState().classId === 'mage' && (tree.m_key_astral || 0) > 0 && Math.random() < 0.35);
     if (!freeAstral && this.playerMp < cost) {
-      if (isManual) this.spawnFloatingText(this.hero.x, this.hero.y - 90, '魔力不足!', '#60a5fa', 14);
+      if (isManual) {
+        const rName = this.getState().classId === 'warrior' ? '能量不足!' : (this.getState().classId === 'ranger' ? '精力不足!' : '魔力不足!');
+        const rCol = this.getState().classId === 'warrior' ? '#fb923c' : (this.getState().classId === 'ranger' ? '#34d399' : '#60a5fa');
+        this.spawnFloatingText(this.hero.x, this.hero.y - 90, rName, rCol, 14);
+      }
       return false;
     }
     if (!freeAstral) this.playerMp = Math.max(0, this.playerMp - cost);
