@@ -56,11 +56,6 @@
         <button id="btn-stage-next" class="btn-stage">▶</button>
       </div>
 
-      <div class="hud-exp-wrap">
-        <div id="hud-exp-bar"></div>
-        <span id="hud-exp-text">EXP 0 / 90</span>
-      </div>
-
       <div class="hud-right">
         <span id="hud-cloud-status" class="cloud-badge">☁️ 未登入</span>
         <button id="btn-cloud-logout" class="btn-ghost hidden">登出</button>
@@ -81,7 +76,7 @@
 
         <div class="drawer-body">
           <div id="tab-gear" class="tab-panel">
-            <div id="equip-slots-grid"></div>
+            <div id="paper-doll-stage" class="paper-doll-stage"></div>
             <div class="section-subtitle">角色即時戰鬥屬性</div>
             <div id="char-stats-list"></div>
           </div>
@@ -96,7 +91,8 @@
               </div>
               <button id="btn-salvage-junk" class="btn-danger-sm">一鍵分解 [Q]</button>
             </div>
-            <div id="inventory-grid"></div>
+            <div class="bag-hint">提示：滑鼠懸停對比屬性、雙擊直接穿戴</div>
+            <div id="inventory-grid" class="diablo-inv-grid"></div>
           </div>
 
           <div id="tab-upgrade" class="tab-panel">
@@ -127,82 +123,104 @@
       </aside>
     </main>
 
-    <!-- 底部三格技能槽 ＋ 小圖示快捷列 -->
-    <footer id="bottom-dock">
-      <div class="dock-skills-group">
-        <button id="skill-slot-0" class="dock-skill-btn" title="主動技能 1 (Space)">
-          <img class="sk-slot-img hidden" src="" alt="" />
-          <div class="dock-skill-meta">
-            <strong class="sk-slot-name">旋風重斬 [Space]</strong>
-            <div class="skill-cd-track"><div class="skill-cd-fill"></div></div>
+    <!-- 暗黑破壞神經典雙球血魔祭壇 HUD ＋ 10 格刻度經驗條 -->
+    <footer id="diablo-hud">
+      <div class="orb-wrap orb-left" id="orb-hp" title="生命值 (HP)">
+        <div class="orb-ring"></div>
+        <div class="orb-glass">
+          <div class="orb-liquid orb-hp-liquid" id="orb-hp-fill"></div>
+          <div class="orb-wave"></div>
+          <div class="orb-gloss"></div>
+          <div class="orb-readout">
+            <span id="orb-hp-text">240 / 240</span>
+            <small>LIFE</small>
           </div>
-        </button>
-        <button id="skill-slot-1" class="dock-skill-btn" title="主動技能 2 (E)">
-          <img class="sk-slot-img hidden" src="" alt="" />
-          <div class="dock-skill-meta">
-            <strong class="sk-slot-name">空技能槽 [E]</strong>
-            <div class="skill-cd-track"><div class="skill-cd-fill"></div></div>
-          </div>
-        </button>
-        <button id="skill-slot-2" class="dock-skill-btn" title="主動技能 3 (R)">
-          <img class="sk-slot-img hidden" src="" alt="" />
-          <div class="dock-skill-meta">
-            <strong class="sk-slot-name">空技能槽 [R]</strong>
-            <div class="skill-cd-track"><div class="skill-cd-fill"></div></div>
-          </div>
-        </button>
+        </div>
       </div>
 
-      <button id="btn-toggle-auto" class="dock-btn active" title="WASD 移動 / T 鍵切換自動與手動">
-        <span class="dock-icon">🏃</span>
-        <span class="dock-label" id="auto-mode-label">自動[T]</span>
-      </button>
+      <div id="altar-center">
+        <div class="altar-skills-row">
+          <button id="btn-potion" class="altar-potion-btn" title="喝生命藥水回復 45% 生命 (H)">
+            <span class="pot-icon">🧪</span>
+            <div class="pot-meta">
+              <strong id="potion-count">3 / 3</strong>
+              <small>藥水 [H]</small>
+            </div>
+          </button>
 
-      <div class="dock-divider"></div>
+          <div class="dock-skills-group">
+            <button id="skill-slot-0" class="dock-skill-btn" title="主動技能 1 (Space)">
+              <img class="sk-slot-img hidden" src="" alt="" />
+              <div class="dock-skill-meta">
+                <strong class="sk-slot-name">旋風重斬 [Space]</strong>
+                <div class="skill-cd-track"><div class="skill-cd-fill"></div></div>
+              </div>
+            </button>
+            <button id="skill-slot-1" class="dock-skill-btn" title="主動技能 2 (E)">
+              <img class="sk-slot-img hidden" src="" alt="" />
+              <div class="dock-skill-meta">
+                <strong class="sk-slot-name">空技能槽 [E]</strong>
+                <div class="skill-cd-track"><div class="skill-cd-fill"></div></div>
+              </div>
+            </button>
+            <button id="skill-slot-2" class="dock-skill-btn" title="主動技能 3 (R)">
+              <img class="sk-slot-img hidden" src="" alt="" />
+              <div class="dock-skill-meta">
+                <strong class="sk-slot-name">空技能槽 [R]</strong>
+                <div class="skill-cd-track"><div class="skill-cd-fill"></div></div>
+              </div>
+            </button>
+          </div>
 
-      <button class="dock-btn" data-drawer="gear" title="角色與裝備 (1)">
-        <span class="dock-icon">🛡️</span>
-        <span class="dock-label">裝備[1]</span>
-      </button>
+          <button id="btn-toggle-auto" class="altar-auto-btn active" title="WASD 移動 / T 鍵切換自動與手動">
+            <span>🏃</span>
+            <small id="auto-mode-label">自動[T]</small>
+          </button>
+        </div>
 
-      <button class="dock-btn" data-drawer="bag" title="戰利品背包 (2)">
-        <span class="dock-icon">🎒</span>
-        <span class="dock-label">背包[2] <small id="inv-count">0/60</small></span>
-        <span id="bag-dot" class="notify-dot hidden"></span>
-      </button>
+        <div class="altar-menu-row">
+          <button class="dock-btn-sm" data-drawer="gear" title="角色與裝備紙娃娃 (1 / I)">🛡️ 裝備[I]</button>
+          <button class="dock-btn-sm" data-drawer="bag" title="暗黑網格物品欄 (2)">
+            🎒 物品欄[2] <small id="inv-count">0/60</small>
+            <span id="bag-dot" class="notify-dot hidden"></span>
+          </button>
+          <button class="dock-btn-sm" data-drawer="upgrade" title="屬性強化 (3)">🔥 強化[3]</button>
+          <button class="dock-btn-sm" data-drawer="tree" title="深淵技能樹 (4)">
+            🌳 技能樹[4]
+            <span id="tree-sp-badge" class="sp-badge hidden">0</span>
+          </button>
+          <button class="dock-btn-sm" data-drawer="skills" title="技能選擇配置 (6)">⚡ 技能頁[6]</button>
+          <button class="dock-btn-sm" data-drawer="rebirth" title="深淵輪迴 (5)">🌀 輪迴[5]</button>
+          <button id="btn-switch-class" class="dock-btn-sm" title="切換冒險職業">⚔️ 職業</button>
+          <button class="dock-btn-sm" data-drawer="log" title="戰鬥日誌">📜 日誌</button>
+        </div>
 
-      <button class="dock-btn" data-drawer="upgrade" title="屬性強化 (3)">
-        <span class="dock-icon">🔥</span>
-        <span class="dock-label">強化[3]</span>
-      </button>
+        <div class="diablo-exp-bar" id="diablo-exp-bar" title="經驗值進度 (10 格暗金刻度)">
+          <div class="diablo-exp-fill" id="diablo-exp-fill"></div>
+          <div class="diablo-exp-ticks">
+            <span></span><span></span><span></span><span></span><span></span>
+            <span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <span class="diablo-exp-text" id="diablo-exp-text">Lv.1 • EXP 0 / 90 (0%)</span>
+        </div>
+      </div>
 
-      <button class="dock-btn" data-drawer="tree" title="深淵技能樹 (4)">
-        <span class="dock-icon">🌳</span>
-        <span class="dock-label">技能樹[4]</span>
-        <span id="tree-sp-badge" class="sp-badge hidden">0</span>
-      </button>
-
-      <button class="dock-btn" data-drawer="skills" title="技能選擇配置 (6)">
-        <span class="dock-icon">⚡</span>
-        <span class="dock-label">技能頁[6]</span>
-      </button>
-
-      <button class="dock-btn" data-drawer="rebirth" title="深淵輪迴 (5)">
-        <span class="dock-icon">🌀</span>
-        <span class="dock-label">輪迴[5]</span>
-      </button>
-
-      <button id="btn-switch-class" class="dock-btn" title="切換冒險職業">
-        <span class="dock-icon">⚔️</span>
-        <span class="dock-label">職業</span>
-      </button>
-
-      <button class="dock-btn" data-drawer="log" title="戰鬥日誌">
-        <span class="dock-icon">📜</span>
-        <span class="dock-label">日誌</span>
-      </button>
+      <div class="orb-wrap orb-right" id="orb-mp" title="魔力值 (MP)">
+        <div class="orb-ring"></div>
+        <div class="orb-glass">
+          <div class="orb-liquid orb-mp-liquid" id="orb-mp-fill"></div>
+          <div class="orb-wave"></div>
+          <div class="orb-gloss"></div>
+          <div class="orb-readout">
+            <span id="orb-mp-text">100 / 100</span>
+            <small>MANA</small>
+          </div>
+        </div>
+      </div>
     </footer>
   </section>
+
+  <div id="diablo-tooltip" class="diablo-tooltip hidden"></div>
 
   <div id="modal-class" class="modal-overlay hidden">
     <div class="modal-card modal-wide">

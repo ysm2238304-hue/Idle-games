@@ -304,6 +304,7 @@ function initPhaserGame() {
     getStats: () => computedStats,
     callbacks: {
       onSkillTicks: (ratios) => ui.updateSkillProgress(ratios),
+      onVitalsTick: (vitals) => ui.updateVitals(vitals),
       onMonsterKilled: (mob, waveCleared) => {
         const goldGain = Math.round(mob.gold * (1 + computedStats.goldFind / 100));
         gameState.gold += goldGain;
@@ -443,6 +444,7 @@ function toggleAutoMoveMode() {
 }
 
 document.getElementById('btn-toggle-auto')?.addEventListener('click', toggleAutoMoveMode);
+document.getElementById('btn-potion')?.addEventListener('click', () => battleScene?.usePotion(true));
 [0, 1, 2].forEach((i) => {
   document.getElementById(`skill-slot-${i}`)?.addEventListener('click', () => battleScene?.castSkillSlot(i, true));
 });
@@ -460,6 +462,10 @@ window.addEventListener('keydown', (e) => {
     battleScene?.castSkillSlot(2, true);
   } else if (e.code === 'KeyT') {
     toggleAutoMoveMode();
+  } else if (e.code === 'KeyH') {
+    battleScene?.usePotion(true);
+  } else if (e.code === 'KeyI') {
+    ui.activeDrawer === 'gear' ? ui.closeDrawer() : ui.openDrawer('gear');
   } else if (e.code === 'KeyQ') {
     document.getElementById('btn-salvage-junk')?.click();
   } else if (e.code === 'Escape') {

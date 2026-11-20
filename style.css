@@ -378,3 +378,312 @@ button { font-family: inherit; }
 .sk-lib-detail { font-size: 11px; color: #fbbf24; font-weight: 700; }
 .sk-lib-actions { display: flex; gap: 6px; margin-top: 4px; }
 .btn-eq-sk { padding: 4px 8px; font-size: 11px; }
+
+
+/* ========== v17 暗黑破壞神雙球血魔祭壇 HUD ＋ 10 格刻度經驗條 ========== */
+#diablo-hud {
+  height: 112px;
+  background: linear-gradient(180deg, #171412 0%, #0b0a09 100%);
+  border-top: 2px solid #785928;
+  box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(253, 230, 138, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  padding: 6px 18px 8px;
+  position: relative;
+  z-index: 25;
+}
+
+.orb-wrap {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  flex-shrink: 0;
+  margin-top: -14px;
+}
+.orb-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, #785928, #e0a63b, #523e1e, #c89b3c, #785928);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.9), 0 0 14px rgba(200, 155, 60, 0.25);
+}
+.orb-glass {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  background: radial-gradient(circle at 35% 30%, #1c1215 0%, #070507 85%);
+  border: 2px solid #2b2114;
+  box-shadow: inset 0 10px 22px rgba(0, 0, 0, 0.92), inset 0 -8px 16px rgba(0, 0, 0, 0.85);
+}
+.orb-liquid {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 100%;
+  transition: height 0.18s ease-out;
+}
+.orb-hp-liquid {
+  background: linear-gradient(180deg, #ef4444 0%, #b91c1c 45%, #450a0a 100%);
+  box-shadow: 0 -4px 16px rgba(239, 68, 68, 0.65);
+}
+.orb-mp-liquid {
+  background: linear-gradient(180deg, #38bdf8 0%, #1d4ed8 45%, #0c1942 100%);
+  box-shadow: 0 -4px 16px rgba(56, 189, 248, 0.65);
+}
+.orb-wave {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.16), transparent 60%);
+  pointer-events: none;
+}
+.orb-gloss {
+  position: absolute;
+  top: 7px;
+  left: 16px;
+  width: 34px;
+  height: 20px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0));
+  transform: rotate(-22deg);
+  pointer-events: none;
+}
+.orb-readout {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-shadow: 0 1px 4px #000, 0 0 8px #000;
+  pointer-events: none;
+}
+.orb-readout span {
+  font-size: 12px;
+  font-weight: 900;
+  color: #fff;
+}
+.orb-readout small {
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  color: #fde68a;
+  opacity: 0.85;
+}
+.orb-wrap.low-hp .orb-glass {
+  animation: orbLowPulse 0.7s infinite alternate;
+}
+@keyframes orbLowPulse {
+  from { box-shadow: inset 0 0 18px rgba(239, 68, 68, 0.6); }
+  to   { box-shadow: inset 0 0 32px rgba(248, 113, 113, 1), 0 0 18px rgba(239, 68, 68, 0.9); }
+}
+
+#altar-center {
+  flex: 1;
+  max-width: 820px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.altar-skills-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.altar-potion-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 44px;
+  padding: 0 10px;
+  background: linear-gradient(180deg, #3b1218 0%, #1c090c 100%);
+  border: 1px solid #dc2626;
+  border-radius: 8px;
+  color: #fecaca;
+  cursor: pointer;
+}
+.altar-potion-btn:hover:not(:disabled) { filter: brightness(1.18); border-color: #fca5a5; }
+.altar-potion-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+.pot-icon { font-size: 18px; }
+.pot-meta { display: flex; flex-direction: column; text-align: left; line-height: 1.15; }
+.pot-meta strong { font-size: 12px; color: #fff; }
+.pot-meta small { font-size: 10px; color: #fca5a5; }
+
+.altar-auto-btn {
+  height: 44px;
+  padding: 0 10px;
+  background: #171a24;
+  border: 1px solid #473923;
+  border-radius: 8px;
+  color: #cbd5e1;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+}
+.altar-auto-btn.active {
+  border-color: #c89b3c;
+  color: #fde68a;
+  background: linear-gradient(180deg, #2b2112 0%, #15110a 100%);
+}
+
+.altar-menu-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.dock-btn-sm {
+  position: relative;
+  background: linear-gradient(180deg, #1d1a16 0%, #110f0d 100%);
+  border: 1px solid #4d3c23;
+  border-radius: 5px;
+  color: #cbd5e1;
+  padding: 3px 9px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.dock-btn-sm:hover, .dock-btn-sm.active {
+  border-color: #e0a63b;
+  color: #fde68a;
+  background: #282015;
+}
+
+.diablo-exp-bar {
+  position: relative;
+  width: 100%;
+  height: 14px;
+  background: #0c0a08;
+  border: 1px solid #785928;
+  border-radius: 3px;
+  overflow: hidden;
+  box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.9);
+}
+.diablo-exp-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #92400e 0%, #d97706 60%, #fde047 100%);
+  transition: width 0.25s ease;
+}
+.diablo-exp-ticks {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  pointer-events: none;
+}
+.diablo-exp-ticks span {
+  border-right: 1px solid rgba(15, 12, 8, 0.85);
+}
+.diablo-exp-ticks span:last-child { border-right: none; }
+.diablo-exp-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 900;
+  color: #fef3c7;
+  text-shadow: 0 1px 2px #000;
+  pointer-events: none;
+}
+
+/* ========== 紙娃娃裝備 ＋ 暗黑網格物品欄 ＋ 懸停對比 Tooltip ========== */
+.paper-doll-stage {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 10px;
+  background: radial-gradient(circle at center, rgba(120, 89, 40, 0.16) 0%, rgba(10, 12, 18, 0.92) 75%);
+  border: 1px solid #523e1e;
+  border-radius: 10px;
+  margin-bottom: 12px;
+}
+.doll-slot {
+  min-height: 68px;
+  background: rgba(14, 16, 24, 0.9);
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  text-align: center;
+  transition: transform 0.1s, box-shadow 0.15s;
+}
+.doll-slot:hover { transform: translateY(-1px); box-shadow: 0 0 12px rgba(200, 155, 60, 0.35); }
+.doll-slot img { width: 34px; height: 34px; border-radius: 4px; object-fit: contain; }
+.doll-slot .doll-lbl { font-size: 10px; color: #94a3b8; }
+.doll-slot .doll-name { font-size: 11px; font-weight: 700; line-height: 1.15; }
+.doll-center-crest {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle, rgba(200, 155, 60, 0.12), transparent);
+  border: 1px dashed #473923;
+  border-radius: 8px;
+  padding: 6px;
+}
+.doll-center-crest img { width: 54px; height: 54px; object-fit: contain; filter: drop-shadow(0 4px 10px #000); }
+.doll-center-crest span { font-size: 11px; font-weight: 900; color: #fde68a; margin-top: 2px; }
+
+.bag-hint {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-bottom: 8px;
+}
+.diablo-inv-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+  background: #090b10;
+  border: 1px solid #3a2e1a;
+  border-radius: 8px;
+  padding: 8px;
+}
+.diablo-inv-grid .inv-cell {
+  aspect-ratio: 1 / 1;
+  position: relative;
+  border-radius: 6px;
+  border: 1.5px solid #334155;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.diablo-inv-grid .inv-cell.selected {
+  box-shadow: 0 0 0 2px #fde047, 0 0 12px rgba(253, 224, 71, 0.5);
+}
+
+.diablo-tooltip {
+  position: fixed;
+  z-index: 9999;
+  width: 265px;
+  background: rgba(10, 11, 16, 0.97);
+  border: 1.5px solid #c89b3c;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.95);
+  border-radius: 8px;
+  padding: 10px 12px;
+  pointer-events: none;
+  font-size: 12px;
+  line-height: 1.45;
+}
+.tt-title { font-size: 14px; font-weight: 900; margin-bottom: 2px; }
+.tt-meta { font-size: 11px; color: #94a3b8; margin-bottom: 6px; border-bottom: 1px solid #27272a; padding-bottom: 4px; }
+.tt-affix { color: #cbd5e1; font-size: 11.5px; }
+.tt-diff { margin-top: 6px; padding-top: 5px; border-top: 1px dashed #334155; font-size: 11.5px; font-weight: 700; }
+.tt-up { color: #4ade80; }
+.tt-down { color: #f87171; }

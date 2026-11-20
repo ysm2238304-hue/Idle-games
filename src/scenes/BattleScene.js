@@ -39,6 +39,11 @@ export class BattleScene extends Phaser.Scene {
     this.projectiles = [];
     this.playerHp = 240;
     this.playerMaxHp = 240;
+    this.playerMp = 100;
+    this.playerMaxMp = 100;
+    this.potionCharges = 3;
+    this.potionMaxCharges = 3;
+    this.potionRechargeTimer = 0;
     this.heroAttackTimer = 0;
     this.slotCdTimers = [99999, 99999, 99999];
     this.bossTimeLeft = 0;
@@ -174,6 +179,8 @@ export class BattleScene extends Phaser.Scene {
     const stats = this.getStats();
     this.playerMaxHp = stats.maxHp;
     this.playerHp = stats.maxHp;
+    this.playerMaxMp = stats.maxMp || 100;
+    this.playerMp = this.playerMaxMp;
     this.spawnWaveSquad();
   }
 
@@ -330,7 +337,8 @@ export class BattleScene extends Phaser.Scene {
       const lvl = state.skillTree?.[sk.treeNodeId] || 0;
       if (lvl <= 0) return null;
       const cd = Math.round(sk.cooldownMs * (this.getStats().cdrMult || 1));
-      return { id: sid, name: sk.name, cooldownMs: cd, level: lvl, cid };
+      const mpCost = (sid === 'bladestorm' || sid === 'phantombow' || sid === 'void_beam') ? 26 : 18;
+      return { id: sid, name: sk.name, cooldownMs: cd, level: lvl, cid, mpCost };
     }
     if (slotIdx > 0) return null;
     const cls = CLASSES[cid] || CLASSES.mage;
@@ -394,6 +402,12 @@ export class BattleScene extends Phaser.Scene {
     if (!info) return false;
     if (this.slotCdTimers[slotIdx] < info.cooldownMs) return false;
     if (!isManual && !this.shouldAutoCastSkill(info.id)) return false;
+    const cost = info.mpCost || 18;
+    if (this.playerMp < cost) {
+      if (isManual) this.spawnFloatingText(this.hero.x, this.hero.y - 90, '魔力不足!', '#60a5fa', 14);
+      return false;
+    }
+    this.playerMp = Math.max(0, this.playerMp - cost);
     this.slotCdTimers[slotIdx] = 0;
 
     if (info.cid === 'warrior') {
@@ -406,10 +420,29 @@ export class BattleScene extends Phaser.Scene {
     return true;
   }
 
+  usePotion(isManual = true) {
+    if (this.isPaused || this.isTransitioning) return false;
+    if (this.potionCharges <= 0) {
+      if (isManual && this.hero) this.spawnFloatingText(this.hero.x, this.hero.y - 88, '藥水冷卻中!', '#fca5a5', 14);
+      return false;
+    }
+    if (this.playerHp >= this.playerMaxHp) return false;
+    this.potionCharges -= 1;
+    const healAmt = Math.max(15, Math.round(this.playerMaxHp * 0.45));
+    this.healHero(healAmt);
+    if (this.hero) {
+      this.playFxSprite('wfx_blood_ring', this.hero.x, this.hero.y, 0.72, 0, 320);
+      this.spawnFloatingText(this.hero.x, this.hero.y - 88, `+${formatNum(healAmt)} 🧪`, '#4ade80', 16);
+    }
+    return true;
+  }
+
   refreshHeroClass() {
     const stats = this.getStats();
     this.playerMaxHp = stats.maxHp;
     this.playerHp = stats.maxHp;
+    this.playerMaxMp = stats.maxMp || 100;
+    this.playerMp = this.playerMaxMp;
     this.slotCdTimers = [99999, 99999, 99999];
     this.basicComboStep = 0;
     this.warriorGuardStacks = 0;
@@ -423,6 +456,8 @@ export class BattleScene extends Phaser.Scene {
     const stats = this.getStats();
     const diff = stats.maxHp - this.playerMaxHp;
     this.playerMaxHp = stats.maxHp;
+    this.playerMaxMp = stats.maxMp || 100;
+    this.playerMp = Math.min(this.playerMaxMp, this.playerMp);
     if (diff > 0) this.playerHp = Math.min(this.playerMaxHp, this.playerHp + diff);
     else this.playerHp = Math.min(this.playerMaxHp, this.playerHp);
     this.updateHeroHpBar();
@@ -543,8 +578,32 @@ export class BattleScene extends Phaser.Scene {
         ratios[i] = this.slotCdTimers[i] / info.cooldownMs;
       }
     }
+    const stForMp = this.getStats();
+    const dtSec = delta / 1000;
+    this.playerMaxMp = stForMp.maxMp || 100;
+    this.playerMp = Math.min(this.playerMaxMp, this.playerMp + (stForMp.mpRegenPerSec || 8) * dtSec);
+    if (this.potionCharges < this.potionMaxCharges) {
+      this.potionRechargeTimer += delta;
+      if (this.potionRechargeTimer >= 12000) {
+        this.potionRechargeTimer = 0;
+        this.potionCharges += 1;
+      }
+    }
+    if (this.autoMoveEnabled && this.potionCharges > 0 && this.playerHp > 0 && this.playerHp < this.playerMaxHp * 0.35) {
+      this.usePotion(false);
+    }
     if (this.callbacks?.onSkillTicks) {
       this.callbacks.onSkillTicks(ratios);
+    }
+    if (this.callbacks?.onVitalsTick) {
+      this.callbacks.onVitalsTick({
+        hp: this.playerHp,
+        maxHp: this.playerMaxHp,
+        mp: this.playerMp,
+        maxMp: this.playerMaxMp,
+        potions: this.potionCharges,
+        maxPotions: this.potionMaxCharges,
+      });
     }
 
     this.updateMinimap();
@@ -931,6 +990,8 @@ export class BattleScene extends Phaser.Scene {
   performHeroAttack(time, stats, classId, target) {
     this.faceHeroToward(target.sprite.x, target.sprite.y);
     this.heroAttackAnimUntil = time + 290;
+    const mpGain = classId === 'mage' ? 7 : (classId === 'ranger' ? 5 : 4);
+    this.playerMp = Math.min(this.playerMaxMp, this.playerMp + mpGain);
     const baseAngle = Math.atan2(target.sprite.y - this.hero.y, target.sprite.x - this.hero.x);
 
     const calcRollDmg = (mob, mult = 1, bonusCrit = 0) => {
@@ -1718,6 +1779,7 @@ export class BattleScene extends Phaser.Scene {
     this.updateWaveBanner();
 
     if (waveCleared) {
+      this.potionCharges = Math.min(this.potionMaxCharges, this.potionCharges + 1);
       this.isTransitioning = true;
       this.time.delayedCall(650, () => {
         this.spawnWaveSquad();

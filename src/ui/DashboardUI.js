@@ -41,7 +41,7 @@ export class DashboardUI {
   }
 
   bindDockAndDrawer() {
-    document.querySelectorAll('.dock-btn[data-drawer]').forEach((btn) => {
+    document.querySelectorAll('[data-drawer]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const target = btn.dataset.drawer;
         if (this.activeDrawer === target) {
@@ -61,7 +61,7 @@ export class DashboardUI {
     this.activeDrawer = tabName;
     document.getElementById('rpg-drawer')?.classList.remove('hidden');
 
-    document.querySelectorAll('.dock-btn[data-drawer]').forEach((b) => {
+    document.querySelectorAll('[data-drawer]').forEach((b) => {
       b.classList.toggle('active', b.dataset.drawer === tabName);
     });
     document.querySelectorAll('.tab-panel').forEach((p) => {
@@ -90,7 +90,7 @@ export class DashboardUI {
   closeDrawer() {
     this.activeDrawer = null;
     document.getElementById('rpg-drawer')?.classList.add('hidden');
-    document.querySelectorAll('.dock-btn[data-drawer]').forEach((b) => b.classList.remove('active'));
+    document.querySelectorAll('[data-drawer]').forEach((b) => b.classList.remove('active'));
   }
 
   markBagUpgradeDot() {
@@ -179,8 +179,10 @@ export class DashboardUI {
 
     const need = getExpToNext(state.level);
     const expPct = Math.min(100, Math.round((state.exp / need) * 100));
-    document.getElementById('hud-exp-bar').style.width = `${expPct}%`;
-    document.getElementById('hud-exp-text').textContent = `EXP ${formatNum(state.exp)} / ${formatNum(need)}`;
+    const fillEl = document.getElementById('diablo-exp-fill');
+    const txtEl = document.getElementById('diablo-exp-text');
+    if (fillEl) fillEl.style.width = `${expPct}%`;
+    if (txtEl) txtEl.textContent = `Lv.${state.level} • EXP ${formatNum(state.exp)} / ${formatNum(need)} (${expPct}%)`;
 
     document.getElementById('hud-stage-title').textContent = `第 ${state.stage} 關・${getZoneName(state.stage)}`;
     document.getElementById('hud-wave-badge').textContent = state.wave >= 5 ? '🔥 BOSS 圍攻' : `波次 ${state.wave} / 5`;
@@ -194,6 +196,96 @@ export class DashboardUI {
     }
 
     this.renderDockSkillSlots(state);
+  }
+
+
+  updateVitals({ hp, maxHp, mp, maxMp, potions, maxPotions }) {
+    const hpPct = Math.max(0, Math.min(100, (hp / Math.max(1, maxHp)) * 100));
+    const mpPct = Math.max(0, Math.min(100, (mp / Math.max(1, maxMp)) * 100));
+    const hpFill = document.getElementById('orb-hp-fill');
+    const hpTxt = document.getElementById('orb-hp-text');
+    const hpOrb = document.getElementById('orb-hp');
+    const mpFill = document.getElementById('orb-mp-fill');
+    const mpTxt = document.getElementById('orb-mp-text');
+    const potTxt = document.getElementById('potion-count');
+    const potBtn = document.getElementById('btn-potion');
+    if (hpFill) hpFill.style.height = `${hpPct.toFixed(1)}%`;
+    if (hpTxt) hpTxt.textContent = `${formatNum(hp)} / ${formatNum(maxHp)}`;
+    if (hpOrb) hpOrb.classList.toggle('low-hp', hpPct > 0 && hpPct < 35);
+    if (mpFill) mpFill.style.height = `${mpPct.toFixed(1)}%`;
+    if (mpTxt) mpTxt.textContent = `${formatNum(mp)} / ${formatNum(maxMp)}`;
+    if (potTxt) potTxt.textContent = `${potions} / ${maxPotions}`;
+    if (potBtn) potBtn.disabled = potions <= 0;
+  }
+
+  collectItemStatMap(item) {
+    const map = {};
+    if (!item) return map;
+    const upgMult = 1 + (item.upgradeLevel || 0) * 0.12;
+    if (item.baseStat) {
+      map[item.baseStat.key] = (map[item.baseStat.key] || 0) + Math.round(item.baseStat.value * upgMult);
+    }
+    for (const af of item.affixes || []) {
+      map[af.key] = (map[af.key] || 0) + Math.round(af.value * upgMult * 10) / 10;
+    }
+    return map;
+  }
+
+  showCompareTooltip(e, item, isEquipped, state) {
+    const tt = document.getElementById('diablo-tooltip');
+    if (!tt || !item) return;
+    const r = RARITIES[item.rarity];
+    const eq = state.equipment[item.slot];
+    const pwr = calcItemPower(item);
+    const eqPwr = calcItemPower(eq);
+
+    const affixesHtml = (item.affixes || []).map((a) =>
+      `<div class="tt-affix">+ ${a.label} ${a.value}${a.unit}</div>`
+    ).join('');
+
+    let diffHtml = '';
+    if (!isEquipped) {
+      const myMap = this.collectItemStatMap(item);
+      const eqMap = this.collectItemStatMap(eq);
+      const keys = new Set([...Object.keys(myMap), ...Object.keys(eqMap)]);
+      const lines = [];
+      const pDiff = pwr - eqPwr;
+      if (pDiff !== 0) {
+        lines.push(`<div class="${pDiff > 0 ? 'tt-up' : 'tt-down'}">${pDiff > 0 ? '▲' : '▼'} 戰力 ${pDiff > 0 ? '+' : ''}${pDiff}</div>`);
+      }
+      keys.forEach((k) => {
+        const d = Math.round(((myMap[k] || 0) - (eqMap[k] || 0)) * 10) / 10;
+        if (d !== 0) {
+          lines.push(`<div class="${d > 0 ? 'tt-up' : 'tt-down'}">${d > 0 ? '▲' : '▼'} ${STAT_LABELS[k] || k} ${d > 0 ? '+' : ''}${d}</div>`);
+        }
+      });
+      diffHtml = `<div class="tt-diff">與目前裝備對比：${lines.join('') || '<div style="color:#94a3b8">屬性相同</div>'}</div>`;
+    }
+
+    tt.innerHTML = `
+      <div class="tt-title" style="color:${r.color}">[${r.label}] ${item.name}${item.upgradeLevel ? ` +${item.upgradeLevel}` : ''}</div>
+      <div class="tt-meta">${EQUIP_SLOTS[item.slot].label} • Lv.${item.level} • 戰力 ${pwr}</div>
+      <div class="tt-affix" style="color:#fde68a;">基礎：${STAT_LABELS[item.baseStat.key] || item.baseStat.key} +${item.baseStat.value}</div>
+      ${affixesHtml}
+      ${item.legendaryEffect ? `<div style="color:#fb923c;margin-top:4px;font-size:11px;">★ ${item.legendaryEffect.name}：${item.legendaryEffect.desc}</div>` : ''}
+      ${diffHtml}
+    `;
+    tt.style.borderColor = r.border;
+    tt.classList.remove('hidden');
+    this.moveCompareTooltip(e);
+  }
+
+  moveCompareTooltip(e) {
+    const tt = document.getElementById('diablo-tooltip');
+    if (!tt || tt.classList.contains('hidden')) return;
+    const x = Math.min(window.innerWidth - 280, e.clientX + 16);
+    const y = Math.min(window.innerHeight - tt.offsetHeight - 16, Math.max(12, e.clientY - 20));
+    tt.style.left = `${x}px`;
+    tt.style.top = `${y}px`;
+  }
+
+  hideCompareTooltip() {
+    document.getElementById('diablo-tooltip')?.classList.add('hidden');
   }
 
   renderDockSkillSlots(state) {
@@ -258,45 +350,60 @@ export class DashboardUI {
   }
 
   renderGearAndStats(state, stats) {
-    const slotsEl = document.getElementById('equip-slots-grid');
-    slotsEl.innerHTML = '';
-
-    Object.values(EQUIP_SLOTS).forEach((slotMeta) => {
-      const item = state.equipment[slotMeta.id];
-      const card = document.createElement('div');
-      card.className = `equip-slot-card ${item ? `rarity-${item.rarity}` : ''}`;
-
-      if (item) {
-        const r = RARITIES[item.rarity];
-        card.style.borderColor = r.border;
-        card.style.background = r.bg;
-        const upgStr = item.upgradeLevel > 0 ? ` +${item.upgradeLevel}` : '';
-        card.innerHTML = `
-          <div class="slot-row">
-            <img class="slot-item-icon" src="${resolveItemIcon(item)}" alt="${item.name}" />
-            <div class="slot-info">
-              <div class="slot-header">
-                <span>${slotMeta.label}</span>
-                <span style="color:${r.color};font-size:11px;">戰力 ${calcItemPower(item)}</span>
-              </div>
-              <div class="item-title" style="color:${r.color}">${item.name}${upgStr}</div>
-              <div class="item-sub">${STAT_LABELS[item.baseStat.key] || item.baseStat.key} +${item.baseStat.value}</div>
-            </div>
-          </div>
-        `;
-        card.onclick = () => this.renderItemInspector(item, true, state);
-      } else {
-        card.innerHTML = `
-          <div class="slot-header"><span>${slotMeta.icon} ${slotMeta.label}</span></div>
-          <div class="item-empty">尚未裝備</div>
-        `;
-      }
-      slotsEl.appendChild(card);
-    });
+    const dollEl = document.getElementById('paper-doll-stage');
+    if (dollEl) {
+      dollEl.innerHTML = '';
+      const cls = CLASSES[state.classId] || CLASSES.warrior;
+      const layout = [
+        { type: 'slot', id: 'weapon' },
+        { type: 'slot', id: 'helm' },
+        { type: 'slot', id: 'amulet' },
+        { type: 'slot', id: 'armor' },
+        { type: 'crest' },
+        { type: 'slot', id: 'ring' },
+        { type: 'empty' },
+        { type: 'slot', id: 'boots' },
+        { type: 'empty' },
+      ];
+      layout.forEach((cell) => {
+        if (cell.type === 'crest') {
+          const crest = document.createElement('div');
+          crest.className = 'doll-center-crest';
+          crest.innerHTML = `<img src="${cls.spritePath}" alt="${cls.name}" /><span style="color:${cls.color}">${cls.name}</span>`;
+          dollEl.appendChild(crest);
+        } else if (cell.type === 'empty') {
+          const emp = document.createElement('div');
+          dollEl.appendChild(emp);
+        } else {
+          const slotMeta = EQUIP_SLOTS[cell.id];
+          const item = state.equipment[cell.id];
+          const box = document.createElement('div');
+          box.className = 'doll-slot';
+          if (item) {
+            const r = RARITIES[item.rarity];
+            box.style.borderColor = r.border;
+            box.style.background = r.bg;
+            box.style.boxShadow = `inset 0 0 10px ${r.border}44`;
+            const upgStr = item.upgradeLevel > 0 ? ` +${item.upgradeLevel}` : '';
+            box.innerHTML = `
+              <img src="${resolveItemIcon(item)}" alt="${item.name}" />
+              <div class="doll-name" style="color:${r.color}">${item.name}${upgStr}</div>
+            `;
+            box.onclick = () => this.renderItemInspector(item, true, state);
+            box.onmouseenter = (e) => this.showCompareTooltip(e, item, true, state);
+            box.onmousemove = (e) => this.moveCompareTooltip(e);
+            box.onmouseleave = () => this.hideCompareTooltip();
+          } else {
+            box.innerHTML = `<span style="font-size:18px;opacity:0.5;">${slotMeta.icon}</span><div class="doll-lbl">${slotMeta.label}</div>`;
+          }
+          dollEl.appendChild(box);
+        }
+      });
+    }
 
     const statsEl = document.getElementById('char-stats-list');
     statsEl.innerHTML = `
-      <div class="stat-row"><span>生命上限</span><strong>${formatNum(stats.maxHp)}</strong></div>
+      <div class="stat-row"><span>生命 / 魔力上限</span><strong>${formatNum(stats.maxHp)} / ${formatNum(stats.maxMp || 100)}</strong></div>
       <div class="stat-row"><span>攻擊力</span><strong>${formatNum(stats.atk)}</strong></div>
       <div class="stat-row"><span>攻擊間隔</span><strong>${(stats.atkIntervalMs / 1000).toFixed(2)}s</strong></div>
       <div class="stat-row"><span>暴擊率 / 暴傷</span><strong>${stats.critRate}% / ${stats.critDmg}%</strong></div>
@@ -347,6 +454,13 @@ export class DashboardUI {
         this.renderInventory(state);
         this.renderItemInspector(item, false, state);
       };
+      cell.ondblclick = () => {
+        this.hideCompareTooltip();
+        this.handlers.onEquipItem(item.uid);
+      };
+      cell.onmouseenter = (e) => this.showCompareTooltip(e, item, false, state);
+      cell.onmousemove = (e) => this.moveCompareTooltip(e);
+      cell.onmouseleave = () => this.hideCompareTooltip();
       grid.appendChild(cell);
     });
   }

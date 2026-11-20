@@ -115,8 +115,14 @@ export function recalcPlayerStats(state) {
     (atk * (1 + (critRate / 100) * ((critDmg - 100) / 100))) / (atkIntervalMs / 1000)
   );
 
+  const baseMp = state.classId === 'mage' ? 160 : (state.classId === 'ranger' ? 120 : 100);
+  const maxMp = Math.round(baseMp + lvlBonus * 4);
+  const mpRegenPerSec = state.classId === 'mage' ? 13 : (state.classId === 'ranger' ? 9 : 7);
+
   return {
     maxHp,
+    maxMp,
+    mpRegenPerSec,
     atk,
     atkIntervalMs,
     critRate,
