@@ -3,17 +3,31 @@ import { RARITIES } from './data/items.js';
 import { generateLoot, getSalvageReward } from './logic/lootGen.js';
 import { recalcPlayerStats, getExpToNext, getUpgradeCost, formatNum } from './logic/statCalc.js';
 import { createInitialState, loadGame, saveGame, calcOfflineProgress } from './logic/saveSystem.js';
+import {
+  initCloudAuth,
+  signInWithGoogle,
+  signOutGoogle,
+  getCurrentUser,
+  loadCloudSave,
+  saveCloudData,
+  isFirebaseConfigured,
+} from './auth/firebase.js';
 import { BattleScene } from './scenes/BattleScene.js';
 import { DashboardUI } from './ui/DashboardUI.js';
 
-let gameState = loadGame();
-const isFirstLaunch = !gameState;
-if (!gameState) {
-  gameState = createInitialState('warrior');
-}
-
+let gameState = loadGame() || createInitialState('warrior');
 let computedStats = recalcPlayerStats(gameState);
 let battleScene = null;
+let selectedLobbyClass = gameState.classId || 'warrior';
+let gameStarted = false;
+
+function persistAll(syncCloud = false) {
+  saveGame(gameState);
+  const user = getCurrentUser();
+  if (syncCloud && user) {
+    saveCloudData(user.uid, gameState);
+  }
+}
 
 function refreshStatsAndUI() {
   computedStats = recalcPlayerStats(gameState);
@@ -25,11 +39,12 @@ function refreshStatsAndUI() {
 const ui = new DashboardUI({
   onSelectClass: (classId) => {
     gameState.classId = classId;
+    selectedLobbyClass = classId;
     const cls = CLASSES[classId];
     ui.addLog(`切換職業為【${cls.name}】！`, 'system');
     refreshStatsAndUI();
     if (battleScene) battleScene.refreshHeroClass(classId);
-    saveGame(gameState);
+    persistAll(true);
   },
 
   onEquipItem: (uid) => {
@@ -44,7 +59,7 @@ const ui = new DashboardUI({
     ui.addLog(`裝備了 [${RARITIES[item.rarity].label}] ${item.name}`, 'system');
     refreshStatsAndUI();
     ui.renderItemInspector(item, true, gameState);
-    saveGame(gameState);
+    persistAll(true);
   },
 
   onUpgradeItem: (uid, isEquipped, cost) => {
@@ -62,7 +77,7 @@ const ui = new DashboardUI({
     ui.addLog(`強化成功！${item.name} 升至 +${item.upgradeLevel}`, 'victory');
     refreshStatsAndUI();
     ui.renderItemInspector(item, isEquipped, gameState);
-    saveGame(gameState);
+    persistAll(true);
   },
 
   onSalvageItem: (uid) => {
@@ -77,7 +92,7 @@ const ui = new DashboardUI({
     ui.renderItemInspector(null, false, gameState);
     ui.addLog(`分解 ${item.name}：+${rew.gold} 金幣、+${rew.dust} 粉塵`, 'normal');
     refreshStatsAndUI();
-    saveGame(gameState);
+    persistAll();
   },
 
   onSalvageAllJunk: () => {
@@ -102,7 +117,7 @@ const ui = new DashboardUI({
       ui.renderItemInspector(null, false, gameState);
       ui.addLog(`一鍵分解 ${count} 件普通/魔法裝備：+${totalGold} 金幣、+${totalDust} 粉塵`, 'system');
       refreshStatsAndUI();
-      saveGame(gameState);
+      persistAll(true);
     } else {
       ui.addLog('背包內沒有可分解的普通/魔法裝備。', 'normal');
     }
@@ -110,7 +125,7 @@ const ui = new DashboardUI({
 
   onToggleAutoSalvage: (rarity, checked) => {
     gameState.autoSalvage[rarity] = checked;
-    saveGame(gameState);
+    persistAll();
   },
 
   onBuyUpgrade: (key) => {
@@ -119,7 +134,7 @@ const ui = new DashboardUI({
     gameState.gold -= cost;
     gameState.upgrades[key] = (gameState.upgrades[key] || 0) + 1;
     refreshStatsAndUI();
-    saveGame(gameState);
+    persistAll(true);
   },
 
   onChangeStage: (delta) => {
@@ -130,7 +145,7 @@ const ui = new DashboardUI({
     ui.addLog(`切換至第 ${target} 關刷寶。`, 'system');
     refreshStatsAndUI();
     if (battleScene) battleScene.spawnWaveMonster();
-    saveGame(gameState);
+    persistAll();
   },
 });
 
@@ -162,6 +177,106 @@ function handleLootDrop(item) {
   return item;
 }
 
+// --- 歡迎大廳：Google 登入 → 選職業 → 開始遊戲 ---
+const lobbyModal = document.getElementById('modal-lobby');
+const lobbyAuthStep = document.getElementById('lobby-step-auth');
+const lobbyClassStep = document.getElementById('lobby-step-class');
+const lobbyAuthStatus = document.getElementById('lobby-auth-status');
+const lobbyClassGrid = document.getElementById('lobby-class-grid');
+const lobbySaveSummary = document.getElementById('lobby-save-summary');
+
+function renderLobbyClasses() {
+  lobbyClassGrid.innerHTML = '';
+  Object.values(CLASSES).forEach((cls) => {
+    const card = document.createElement('div');
+    card.className = `class-card ${selectedLobbyClass === cls.id ? 'selected' : ''}`;
+    card.innerHTML = `
+      <img src="${cls.spritePath}" alt="${cls.name}" />
+      <div class="class-name" style="color:${cls.color}">${cls.name}</div>
+      <div class="class-title">${cls.title}</div>
+      <p class="class-desc">${cls.desc}</p>
+      <div class="class-skill"><strong>專屬技能：${cls.skill.name}</strong><br>${cls.skill.desc}</div>
+    `;
+    card.onclick = () => {
+      selectedLobbyClass = cls.id;
+      renderLobbyClasses();
+    };
+    lobbyClassGrid.appendChild(card);
+  });
+}
+
+function enterLobbyClassStep(userLabel) {
+  lobbyAuthStep.classList.add('hidden');
+  lobbyClassStep.classList.remove('hidden');
+  lobbySaveSummary.textContent = `${userLabel} ｜ 存檔進度：Lv.${gameState.level}・第 ${gameState.stage} 關・金幣 ${formatNum(gameState.gold)}`;
+  selectedLobbyClass = gameState.classId || 'warrior';
+  renderLobbyClasses();
+}
+
+function startAdventure() {
+  gameState.classId = selectedLobbyClass;
+  gameStarted = true;
+  lobbyModal.classList.add('hidden');
+  refreshStatsAndUI();
+  if (battleScene) {
+    battleScene.refreshHeroClass(gameState.classId);
+    battleScene.setPaused(false);
+  }
+  persistAll(true);
+
+  const offline = calcOfflineProgress(gameState, computedStats);
+  if (offline) {
+    ui.showOfflineModal(offline, () => {
+      gameState.gold += offline.goldEarned;
+      grantExp(offline.expEarned);
+      offline.itemsFound.forEach((it) => handleLootDrop(it));
+      refreshStatsAndUI();
+      persistAll(true);
+    });
+  }
+}
+
+document.getElementById('btn-google-login')?.addEventListener('click', async () => {
+  lobbyAuthStatus.textContent = '正在連線 Google 帳號...';
+  try {
+    await signInWithGoogle();
+  } catch (err) {
+    lobbyAuthStatus.textContent = err.message || 'Google 登入失敗，請檢查 Firebase 設定。';
+  }
+});
+
+document.getElementById('btn-guest-play')?.addEventListener('click', () => {
+  enterLobbyClassStep('本機離線試玩');
+});
+
+document.getElementById('btn-start-game')?.addEventListener('click', () => {
+  startAdventure();
+});
+
+document.getElementById('btn-cloud-logout')?.addEventListener('click', async () => {
+  persistAll(true);
+  await signOutGoogle();
+  gameStarted = false;
+  if (battleScene) battleScene.setPaused(true);
+  lobbyClassStep.classList.add('hidden');
+  lobbyAuthStep.classList.remove('hidden');
+  lobbyModal.classList.remove('hidden');
+});
+
+// 主動點擊 / 空白鍵施放技能
+function triggerManualSkill() {
+  if (!battleScene) return;
+  battleScene.castSkillManual();
+}
+document.getElementById('btn-cast-skill')?.addEventListener('click', triggerManualSkill);
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'Space' && gameStarted) {
+    e.preventDefault();
+    triggerManualSkill();
+  }
+});
+
+// 啟動 Phaser 場景
 const config = {
   type: Phaser.AUTO,
   parent: 'phaser-stage',
@@ -180,7 +295,11 @@ game.scene.start('BattleScene', {
   getState: () => gameState,
   getStats: () => computedStats,
   callbacks: {
-    onSkillTick: (ratio) => ui.updateSkillProgress(ratio),
+    onSkillTick: (ratio) => {
+      ui.updateSkillProgress(ratio);
+      const btn = document.getElementById('btn-cast-skill');
+      if (btn) btn.classList.toggle('ready', ratio >= 1);
+    },
     onMonsterKilled: (mob) => {
       const goldGain = Math.round(mob.gold * (1 + computedStats.goldFind / 100));
       gameState.gold += goldGain;
@@ -195,6 +314,7 @@ game.scene.start('BattleScene', {
         gameState.stage += 1;
         gameState.wave = 1;
         gameState.maxStageReached = Math.max(gameState.maxStageReached, gameState.stage);
+        persistAll(true);
       } else {
         gameState.wave += 1;
       }
@@ -212,27 +332,49 @@ game.scene.start('BattleScene', {
 
 game.events.once('ready', () => {
   battleScene = game.scene.getScene('BattleScene');
+  battleScene.setPaused(!gameStarted);
 });
 
-// 啟動與離線收益檢查
 refreshStatsAndUI();
-if (isFirstLaunch) {
-  ui.openClassModal(false);
-} else {
-  const offline = calcOfflineProgress(gameState, computedStats);
-  if (offline) {
-    ui.showOfflineModal(offline, () => {
-      gameState.gold += offline.goldEarned;
-      grantExp(offline.expEarned);
-      offline.itemsFound.forEach((it) => handleLootDrop(it));
-      refreshStatsAndUI();
-      saveGame(gameState);
-    });
-  }
-}
 
-setInterval(() => saveGame(gameState), 10000);
-window.addEventListener('beforeunload', () => saveGame(gameState));
+// 初始化 Google 帳號狀態
+initCloudAuth(async (user, status) => {
+  const cloudBadge = document.getElementById('hud-cloud-status');
+  const logoutBtn = document.getElementById('btn-cloud-logout');
+
+  if (user) {
+    if (cloudBadge) cloudBadge.textContent = `☁️ ${user.displayName || user.email}`;
+    if (logoutBtn) logoutBtn.classList.remove('hidden');
+    lobbyAuthStatus.textContent = '已登入，正在同步雲端存檔...';
+    const cloudData = await loadCloudSave(user.uid);
+    if (cloudData && (!gameState.lastSavedAt || (cloudData.lastSavedAt || 0) >= gameState.lastSavedAt)) {
+      const base = createInitialState(cloudData.classId || 'warrior');
+      gameState = {
+        ...base,
+        ...cloudData,
+        upgrades: { ...base.upgrades, ...(cloudData.upgrades || {}) },
+        equipment: { ...base.equipment, ...(cloudData.equipment || {}) },
+        autoSalvage: { ...base.autoSalvage, ...(cloudData.autoSalvage || {}) },
+        inventory: Array.isArray(cloudData.inventory) ? cloudData.inventory : [],
+      };
+      refreshStatsAndUI();
+    }
+    if (!gameStarted) {
+      enterLobbyClassStep(`☁️ ${user.displayName || user.email}`);
+    }
+  } else {
+    if (cloudBadge) cloudBadge.textContent = isFirebaseConfigured() ? '☁️ 未登入' : '☁️ 本機模式';
+    if (logoutBtn) logoutBtn.classList.add('hidden');
+    lobbyAuthStatus.textContent = isFirebaseConfigured()
+      ? '請先登入 Google 帳號以同步雲端存檔。'
+      : '提示：尚未於 src/auth/firebase.js 填入 apiKey，目前可先用本機試玩。';
+  }
+});
+
+setInterval(() => {
+  if (gameStarted) persistAll(true);
+}, 15000);
+window.addEventListener('beforeunload', () => persistAll(true));
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden') saveGame(gameState);
+  if (document.visibilityState === 'hidden') persistAll(true);
 });

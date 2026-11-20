@@ -22,7 +22,7 @@ export const CLASSES = {
     perLevel: { hp: 28, atk: 3.2, armor: 1.5 },
     skill: {
       name: '旋風重斬',
-      cooldownMs: 7000,
+      cooldownMs: 4800,
       desc: '造成 240% 攻擊傷害，並回復 12% 最大生命。',
       type: 'whirlwind',
       mult: 2.4,
@@ -53,7 +53,7 @@ export const CLASSES = {
     perLevel: { hp: 18, atk: 2.6, armor: 0.8 },
     skill: {
       name: '穿透連射',
-      cooldownMs: 6000,
+      cooldownMs: 4200,
       desc: '連續射出 3 箭，每箭造成 95% 傷害且暴擊率 +25%。',
       type: 'volley',
       hits: 3,
@@ -85,7 +85,7 @@ export const CLASSES = {
     perLevel: { hp: 15, atk: 4.0, armor: 0.6 },
     skill: {
       name: '深淵隕石',
-      cooldownMs: 8000,
+      cooldownMs: 5200,
       desc: '召喚隕石轟擊目標造成 320% 毀滅傷害並附加灼燒。',
       type: 'meteor',
       mult: 3.2,

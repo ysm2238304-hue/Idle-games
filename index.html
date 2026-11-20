@@ -22,6 +22,8 @@
         <span id="hud-exp-text">EXP 0 / 45</span>
       </div>
       <div class="hud-right">
+        <span id="hud-cloud-status" class="cloud-badge">☁️ 未登入</span>
+        <button id="btn-cloud-logout" class="btn-ghost hidden">登出</button>
         <div class="res-pill">💰 <span id="hud-gold">0</span></div>
         <div class="res-pill">💎 <span id="hud-dust">0</span></div>
       </div>
@@ -43,11 +45,11 @@
         <div id="phaser-stage"></div>
 
         <div id="skill-bar">
-          <div class="skill-slot">
-            <span>⚡ 主動技能：<strong id="skill-name-label">旋風重斬</strong></span>
+          <button id="btn-cast-skill" class="skill-btn">
+            <span>⚡ <strong id="skill-name-label">旋風重斬</strong> [Space]</span>
             <div class="skill-cd-track"><div id="skill-cd-fill"></div></div>
-          </div>
-          <div class="tap-hint">💡 提示：點擊右側怪物可進行額外輔助點擊攻擊</div>
+          </button>
+          <div class="tap-hint">💡 點擊怪物可輔助攻擊；技能就緒時可點擊或按空白鍵施放</div>
         </div>
       </section>
 
@@ -96,11 +98,37 @@
     </main>
   </div>
 
-  <!-- 職業選擇彈窗 -->
+  <!-- 開局歡迎大廳：Google 登入 → 選職業 → 開始遊戲 -->
+  <div id="modal-lobby" class="modal-overlay">
+    <div class="modal-card modal-wide">
+      <div id="lobby-step-auth" class="lobby-step">
+        <h2 style="color:#f59e0b;margin-bottom:8px;">⚔️ 暗黑桌面掛機：深淵刷寶 ARPG</h2>
+        <p style="color:#cbd5e1;font-size:14px;margin-bottom:18px;">登入 Google 帳號以連動雲端存檔，隨時在不同電腦接續刷寶。</p>
+        <div class="lobby-auth-actions">
+          <button id="btn-google-login" class="btn-google">🔐 使用 Google 帳號登入並連動存檔</button>
+          <button id="btn-guest-play" class="btn-ghost">先用本機離線試玩</button>
+        </div>
+        <div id="lobby-auth-status" class="auth-status-text">正在檢查登入狀態...</div>
+      </div>
+
+      <div id="lobby-step-class" class="lobby-step hidden">
+        <div class="modal-header">
+          <div>
+            <h2>選擇出戰職業</h2>
+            <div id="lobby-save-summary" style="font-size:12px;color:#38bdf8;margin-top:4px;"></div>
+          </div>
+          <button id="btn-start-game" class="btn-primary btn-lg">⚔️ 開始遊戲</button>
+        </div>
+        <div id="lobby-class-grid"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 遊戲內切換職業彈窗 -->
   <div id="modal-class" class="modal-overlay hidden">
     <div class="modal-card modal-wide">
       <div class="modal-header">
-        <h2>選擇你的暗黑冒險職業</h2>
+        <h2>切換冒險職業（保留裝備與進度）</h2>
         <button id="btn-close-class-modal" class="btn-ghost">關閉</button>
       </div>
       <div id="class-select-grid"></div>
