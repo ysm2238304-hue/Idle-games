@@ -38,6 +38,7 @@ export class DashboardUI {
     this.selectedItemUid = null;
     this.bindDockAndDrawer();
     this.bindGlobalButtons();
+    this.bindHotbarTooltips();
   }
 
   bindDockAndDrawer() {
@@ -285,7 +286,7 @@ export class DashboardUI {
     if (hpOrb) hpOrb.classList.toggle('low-hp', hpPct > 0 && hpPct < 35);
     if (mpFill) mpFill.style.height = `${mpPct.toFixed(1)}%`;
     if (mpTxt) mpTxt.textContent = `${formatNum(mp)} / ${formatNum(maxMp)}`;
-    if (potTxt) potTxt.textContent = `${potions} / ${maxPotions}`;
+    if (potTxt) potTxt.textContent = `${potions}`;
     if (potBtn) potBtn.disabled = potions <= 0;
   }
 
@@ -359,6 +360,21 @@ export class DashboardUI {
     document.getElementById('diablo-tooltip')?.classList.add('hidden');
   }
 
+  bindHotbarTooltips() {
+    document.querySelectorAll('[data-tip]').forEach((el) => {
+      el.addEventListener('mouseenter', (e) => {
+        const tt = document.getElementById('diablo-tooltip');
+        if (!tt) return;
+        tt.innerHTML = `<div style="color:#fde68a;font-weight:700;">${el.dataset.tip}</div>`;
+        tt.style.borderColor = '#c89b3c';
+        tt.classList.remove('hidden');
+        this.moveCompareTooltip(e);
+      });
+      el.addEventListener('mousemove', (e) => this.moveCompareTooltip(e));
+      el.addEventListener('mouseleave', () => this.hideCompareTooltip());
+    });
+  }
+
   renderDockSkillSlots(state) {
     const keyLabels = ['Space', 'E', 'R'];
     const cid = state.classId || 'warrior';
@@ -369,44 +385,64 @@ export class DashboardUI {
       const btn = document.getElementById(`skill-slot-${i}`);
       if (!btn) continue;
       const iconEl = btn.querySelector('.sk-slot-img');
-      const nameEl = btn.querySelector('.sk-slot-name');
+      const plusEl = btn.querySelector('.mmo-empty-plus');
+      const mpEl = btn.querySelector('.mmo-mp-cost');
 
-      if (book) {
-        const sid = eqList[i];
-        const sk = sid ? book[sid] : null;
-        const lvl = sk ? (state.skillTree?.[sk.treeNodeId] || 0) : 0;
-        if (sk && lvl > 0) {
-          iconEl.src = sk.icon;
-          iconEl.classList.remove('hidden');
-          nameEl.textContent = `${sk.name} [${keyLabels[i]}]`;
-          btn.disabled = false;
-        } else {
-          iconEl.classList.add('hidden');
-          nameEl.textContent = `空技能槽 [${keyLabels[i]}]`;
-          btn.disabled = true;
-        }
+      const sid = eqList[i];
+      const sk = sid ? book[sid] : null;
+      const lvl = sk ? (state.skillTree?.[sk.treeNodeId] || 0) : 0;
+      if (sk && lvl > 0) {
+        const mpCost = (sid === 'bladestorm' || sid === 'phantombow' || sid === 'void_beam') ? 26 : 18;
+        iconEl.src = sk.icon;
+        iconEl.classList.remove('hidden');
+        if (plusEl) plusEl.classList.add('hidden');
+        if (mpEl) mpEl.textContent = `${mpCost}`;
+        btn.disabled = false;
+        btn.onmouseenter = (e) => {
+          const tt = document.getElementById('diablo-tooltip');
+          if (!tt) return;
+          tt.innerHTML = `
+            <div class="tt-title" style="color:#fde047">${sk.name} [${keyLabels[i]}]</div>
+            <div class="tt-meta">Lv.${lvl} • 冷卻 ${(sk.cooldownMs / 1000).toFixed(1)}s • 消耗 ${mpCost} MP</div>
+            <div class="tt-affix">${sk.getDetail(lvl)}</div>
+          `;
+          tt.style.borderColor = '#e0a63b';
+          tt.classList.remove('hidden');
+          this.moveCompareTooltip(e);
+        };
+        btn.onmousemove = (e) => this.moveCompareTooltip(e);
+        btn.onmouseleave = () => this.hideCompareTooltip();
       } else {
-        if (i === 0) {
-          const cls = CLASSES[cid];
-          iconEl.classList.add('hidden');
-          nameEl.textContent = `${cls.skill.name} [Space]`;
-          btn.disabled = false;
-        } else {
-          iconEl.classList.add('hidden');
-          nameEl.textContent = `— [${keyLabels[i]}]`;
-          btn.disabled = true;
-        }
+        iconEl.classList.add('hidden');
+        if (plusEl) plusEl.classList.remove('hidden');
+        if (mpEl) mpEl.textContent = '';
+        btn.disabled = true;
+        btn.onmouseenter = (e) => {
+          const tt = document.getElementById('diablo-tooltip');
+          if (!tt) return;
+          tt.innerHTML = `<div style="color:#94a3b8;">空技能槽 [${keyLabels[i]}]：請至「⚡ 技能頁 [6]」裝備技能</div>`;
+          tt.style.borderColor = '#475569';
+          tt.classList.remove('hidden');
+          this.moveCompareTooltip(e);
+        };
+        btn.onmousemove = (e) => this.moveCompareTooltip(e);
+        btn.onmouseleave = () => this.hideCompareTooltip();
       }
     }
   }
 
-  updateSkillProgress(ratios) {
+  updateSkillProgress(ratios, cdDetails = []) {
     for (let i = 0; i < 3; i++) {
       const btn = document.getElementById(`skill-slot-${i}`);
       if (!btn) continue;
-      const fill = btn.querySelector('.skill-cd-fill');
-      const r = ratios[i] || 0;
-      if (fill) fill.style.width = `${Math.round(r * 100)}%`;
+      const curtain = btn.querySelector('.mmo-cd-curtain');
+      const secEl = btn.querySelector('.mmo-cd-sec');
+      const det = cdDetails[i];
+      const r = det ? det.ratio : (ratios[i] || 0);
+      if (curtain) curtain.style.height = btn.disabled ? '0%' : `${Math.round((1 - r) * 100)}%`;
+      if (secEl) {
+        secEl.textContent = (!btn.disabled && det && det.remMs > 80) ? `${(det.remMs / 1000).toFixed(1)}` : '';
+      }
       btn.classList.toggle('ready', !btn.disabled && r >= 1);
     }
   }
@@ -487,7 +523,7 @@ export class DashboardUI {
 
   renderInventory(state) {
     const invCount = document.getElementById('inv-count');
-    if (invCount) invCount.textContent = `${state.inventory.length}/60`;
+    if (invCount) invCount.textContent = `${state.inventory.length}`;
 
     ['common', 'magic', 'rare'].forEach((rar) => {
       const cb = document.getElementById(`auto-salvage-${rar}`);

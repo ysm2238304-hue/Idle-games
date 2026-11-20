@@ -648,11 +648,14 @@ export class BattleScene extends Phaser.Scene {
     if (this.isPaused) return;
 
     const ratios = [0, 0, 0];
+    const cdDetails = [null, null, null];
     for (let i = 0; i < 3; i++) {
       const info = this.getSlotSkillInfo(i);
       if (info) {
         this.slotCdTimers[i] = Math.min(info.cooldownMs, this.slotCdTimers[i] + delta);
-        ratios[i] = this.slotCdTimers[i] / info.cooldownMs;
+        const r = this.slotCdTimers[i] / info.cooldownMs;
+        ratios[i] = r;
+        cdDetails[i] = { ratio: r, remMs: Math.max(0, info.cooldownMs - this.slotCdTimers[i]), mpCost: info.mpCost || 18 };
       }
     }
     const stForMp = this.getStats();
@@ -670,7 +673,7 @@ export class BattleScene extends Phaser.Scene {
       this.usePotion(false);
     }
     if (this.callbacks?.onSkillTicks) {
-      this.callbacks.onSkillTicks(ratios);
+      this.callbacks.onSkillTicks(ratios, cdDetails);
     }
     if (this.callbacks?.onVitalsTick) {
       this.callbacks.onVitalsTick({

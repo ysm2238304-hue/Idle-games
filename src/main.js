@@ -314,7 +314,7 @@ function initPhaserGame() {
     getState: () => gameState,
     getStats: () => computedStats,
     callbacks: {
-      onSkillTicks: (ratios) => ui.updateSkillProgress(ratios),
+      onSkillTicks: (ratios, cdDetails) => ui.updateSkillProgress(ratios, cdDetails),
       onVitalsTick: (vitals) => ui.updateVitals(vitals),
       onMonsterKilled: (mob, waveCleared) => {
         const goldGain = Math.round(mob.gold * (1 + computedStats.goldFind / 100));
@@ -497,7 +497,7 @@ function toggleAutoMoveMode() {
   const isAuto = battleScene.toggleAutoMove();
   const label = document.getElementById('auto-mode-label');
   const btn = document.getElementById('btn-toggle-auto');
-  if (label) label.textContent = isAuto ? '自動[T]' : '手動[T]';
+  if (label) label.textContent = isAuto ? '自動' : '手動';
   if (btn) btn.classList.toggle('active', isAuto);
   ui.addLog(isAuto ? '切換為【自動巡邏模式】(按 WASD 可隨時介入走位)' : '切換為【純手動走位模式】(WASD / 方向鍵移動)', 'system');
 }

@@ -766,3 +766,146 @@ button { font-family: inherit; }
 .substage-btn:hover:not(:disabled) { border-color: #e0a63b; background: #262015; }
 .substage-btn.current { border-color: #4ade80; box-shadow: 0 0 10px rgba(74, 222, 128, 0.3); }
 .substage-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+
+/* ========== v22 MMORPG 純圖示技能快捷格 ＋ 微型系統圖示列 ========== */
+#altar-center {
+  max-width: 880px;
+  gap: 7px;
+}
+.mmo-bar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.mmo-hotbar {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 4px 8px;
+  background: linear-gradient(180deg, #1b1713 0%, #0d0b09 100%);
+  border: 1.5px solid #6b4e23;
+  border-radius: 8px;
+  box-shadow: inset 0 1px 0 rgba(253, 230, 138, 0.2), 0 4px 14px rgba(0, 0, 0, 0.85);
+}
+.mmo-slot {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border-radius: 6px;
+  border: 1.5px solid #523e1e;
+  background: radial-gradient(circle at 50% 35%, #1e1c1a 0%, #090808 100%);
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.9);
+  cursor: pointer;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.1s, border-color 0.15s, box-shadow 0.15s;
+}
+.mmo-slot:hover:not(:disabled) { transform: translateY(-2px); border-color: #fde047; }
+.mmo-slot:disabled { opacity: 0.55; cursor: not-allowed; }
+.mmo-slot.ready {
+  border-color: #e0a63b;
+  box-shadow: 0 0 12px rgba(224, 166, 59, 0.45), inset 0 0 8px rgba(253, 224, 71, 0.18);
+}
+.mmo-potion { border-color: #b91c1c; background: radial-gradient(circle, #381014 0%, #120608 100%); }
+.mmo-auto.active { border-color: #22c55e; box-shadow: 0 0 10px rgba(34, 197, 94, 0.35); }
+.mmo-slot .sk-slot-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.mmo-slot .sk-slot-img.hidden { display: none; }
+.mmo-empty-plus { font-size: 18px; color: #475569; font-weight: 900; }
+.mmo-glyph { font-size: 22px; line-height: 1; }
+.mmo-hotkey {
+  position: absolute;
+  top: 2px;
+  left: 3px;
+  z-index: 4;
+  font-size: 9px;
+  font-weight: 900;
+  color: #fde68a;
+  background: rgba(0, 0, 0, 0.78);
+  padding: 0 3px;
+  border-radius: 3px;
+  line-height: 1.25;
+}
+.mmo-badge-br, .mmo-mp-cost {
+  position: absolute;
+  bottom: 2px;
+  right: 3px;
+  z-index: 4;
+  font-size: 10px;
+  font-weight: 900;
+  padding: 0 3px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.8);
+  line-height: 1.2;
+}
+.mmo-badge-br { color: #fef08a; }
+.mmo-mp-cost { color: #60a5fa; }
+.mmo-cd-curtain {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 0%;
+  background: rgba(5, 7, 12, 0.72);
+  z-index: 2;
+  pointer-events: none;
+}
+.mmo-cd-sec {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 1px 4px #000;
+  pointer-events: none;
+}
+
+.mmo-micro-menu {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 7px;
+  background: rgba(15, 13, 11, 0.92);
+  border: 1px solid #4d3c23;
+  border-radius: 7px;
+}
+.mmo-micro-btn {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  border-radius: 5px;
+  border: 1px solid #473923;
+  background: linear-gradient(180deg, #211d18 0%, #110f0c 100%);
+  color: #e2e8f0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: transform 0.1s, border-color 0.15s;
+}
+.mmo-micro-btn:hover, .mmo-micro-btn.active {
+  transform: translateY(-2px);
+  border-color: #e0a63b;
+  background: #2d2417;
+  box-shadow: 0 0 10px rgba(224, 166, 59, 0.35);
+}
+.mmo-micro-btn small {
+  position: absolute;
+  bottom: 1px;
+  right: 2px;
+  font-size: 8.5px;
+  font-weight: 900;
+  color: #cbd5e1;
+  background: rgba(0, 0, 0, 0.75);
+  padding: 0 2px;
+  border-radius: 2px;
+  line-height: 1.1;
+}
