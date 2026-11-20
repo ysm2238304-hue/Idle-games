@@ -1,4 +1,5 @@
 import { CLASSES } from './data/classes.js';
+import { getStageLabel } from './data/monsters.js';
 import { WARRIOR_SKILLS } from './data/warriorSkills.js';
 import { RANGER_SKILLS } from './data/rangerSkills.js';
 import { MAGE_SKILLS } from './data/mageSkills.js';
@@ -231,11 +232,11 @@ const ui = new DashboardUI({
   },
 
   onChangeStage: (delta) => {
-    const target = Math.max(1, Math.min(gameState.maxStageReached, gameState.stage + delta));
+    const target = Math.max(1, Math.min(100, Math.min(gameState.maxStageReached, gameState.stage + delta)));
     if (target === gameState.stage) return;
     gameState.stage = target;
     gameState.wave = 1;
-    ui.addLog(`切換至第 ${target} 關刷寶。`, 'system');
+    ui.addLog(`切換至第 ${getStageLabel(target)} 關刷寶。`, 'system');
     refreshStatsAndUI();
     if (battleScene) battleScene.spawnWaveSquad();
     persistAll();
@@ -315,11 +316,16 @@ function initPhaserGame() {
         const keptItem = handleLootDrop(dropped);
 
         if (waveCleared) {
-          if (mob.stage && gameState.wave >= 5) {
-            ui.addLog(`🏆 成功擊破第 ${gameState.stage} 關首領圍攻！`, 'victory');
-            gameState.stage += 1;
+          if (mob.stage && gameState.wave >= 2) {
+            const clearedLabel = getStageLabel(gameState.stage);
+            ui.addLog(`🏆 成功擊破第 ${clearedLabel} 關小王／首領！`, 'victory');
+            if (gameState.stage < 100) {
+              gameState.stage += 1;
+            } else {
+              ui.addLog('🌟 已抵達 10-10 混沌星界虛空終極關卡！可持續刷寶或進行深淵輪迴。', 'victory');
+            }
             gameState.wave = 1;
-            gameState.maxStageReached = Math.max(gameState.maxStageReached, gameState.stage);
+            gameState.maxStageReached = Math.min(100, Math.max(gameState.maxStageReached, gameState.stage));
             persistAll(true);
           } else {
             gameState.wave += 1;
@@ -378,7 +384,7 @@ function renderWelcomeClasses() {
 function enterWelcomeClassStep(userLabel) {
   welcomeAuthStep.classList.add('hidden');
   welcomeClassStep.classList.remove('hidden');
-  welcomeSaveSummary.textContent = `${userLabel} ｜ Lv.${gameState.level}・第 ${gameState.stage} 關・魂晶 ${gameState.soulCrystals || 0}`;
+  welcomeSaveSummary.textContent = `${userLabel} ｜ Lv.${gameState.level}・第 ${getStageLabel(gameState.stage)} 關・魂晶 ${gameState.soulCrystals || 0}`;
   selectedLobbyClass = gameState.classId || 'warrior';
   renderWelcomeClasses();
 }

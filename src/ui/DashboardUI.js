@@ -3,7 +3,7 @@ import { WARRIOR_SKILLS } from '../data/warriorSkills.js';
 import { RANGER_SKILLS } from '../data/rangerSkills.js';
 import { MAGE_SKILLS } from '../data/mageSkills.js';
 import { EQUIP_SLOTS, RARITIES, BASE_ITEMS } from '../data/items.js';
-import { getZoneName } from '../data/monsters.js';
+import { getZoneName, getStageLabel, getSubStage } from '../data/monsters.js';
 import { SKILL_BRANCHES, SKILL_TREE_NODES, isNodeUnlocked } from '../data/skillTree.js';
 import { calcItemPower, getSalvageReward } from '../logic/lootGen.js';
 import { formatNum, getExpToNext, getUpgradeCost, calcRebirthCrystals } from '../logic/statCalc.js';
@@ -184,8 +184,10 @@ export class DashboardUI {
     if (fillEl) fillEl.style.width = `${expPct}%`;
     if (txtEl) txtEl.textContent = `Lv.${state.level} • EXP ${formatNum(state.exp)} / ${formatNum(need)} (${expPct}%)`;
 
-    document.getElementById('hud-stage-title').textContent = `第 ${state.stage} 關・${getZoneName(state.stage)}`;
-    document.getElementById('hud-wave-badge').textContent = state.wave >= 5 ? '🔥 BOSS 圍攻' : `波次 ${state.wave} / 5`;
+    const sLabel = getStageLabel(state.stage);
+    const sub = getSubStage(state.stage);
+    document.getElementById('hud-stage-title').textContent = `第 ${sLabel} 關・${getZoneName(state.stage)}`;
+    document.getElementById('hud-wave-badge').textContent = state.wave >= 2 ? (sub >= 10 ? '💀 章節首領' : '🔥 小王登場') : '波次 1 / 2';
     document.getElementById('btn-stage-next').disabled = state.stage >= state.maxStageReached;
     document.getElementById('btn-stage-prev').disabled = state.stage <= 1;
 

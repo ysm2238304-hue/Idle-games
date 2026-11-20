@@ -93,17 +93,17 @@ export const MONSTER_TEMPLATES = {
     id: 'boss_demon',
     name: '深淵魔王・馬爾薩斯',
     spriteKey: 'mob_boss_demon',
-    scale: 0.70,
-    speed: 82,
-    hpMult: 5.5,
-    atkMult: 1.75,
-    goldMult: 6.0,
-    expMult: 5.0,
+    scale: 0.72,
+    speed: 84,
+    hpMult: 6.2,
+    atkMult: 1.85,
+    goldMult: 6.5,
+    expMult: 5.5,
     isBoss: true,
     isRanged: false,
     moveStyle: 'heavy',
     atkStyle: 'boss_cleave',
-    timeLimitSec: 32,
+    timeLimitSec: 36,
   },
 };
 
@@ -113,6 +113,11 @@ export const STAGE_ZONES = [
   '白骨墓穴長廊',
   '焦土熔岩裂谷',
   '深淵魔王聖殿',
+  '永凍冰霜凍原',
+  '劇毒腐蝕沼澤',
+  '雷鳴風暴高塔',
+  '血色修道院廢墟',
+  '混沌星界虛空',
 ];
 
 const ZONE_POOLS = [
@@ -121,26 +126,58 @@ const ZONE_POOLS = [
   ['skeleton', 'necromancer', 'spider'],
   ['imp', 'orc', 'skeleton', 'necromancer'],
   ['imp', 'necromancer', 'orc', 'skeleton'],
+  ['skeleton', 'orc', 'necromancer'],
+  ['spider', 'imp', 'necromancer'],
+  ['imp', 'skeleton', 'orc', 'necromancer'],
+  ['skeleton', 'orc', 'imp', 'necromancer'],
+  ['imp', 'necromancer', 'orc', 'skeleton'],
 ];
 
+export const ZONE_OBSTACLES = [
+  ['obs_2', 'obs_1', 'obs_0'],
+  ['obs_2', 'obs_1', 'obs_4'],
+  ['obs_4', 'obs_0', 'obs_1'],
+  ['obs_3', 'obs_1', 'obs_0'],
+  ['obs_3', 'obs_0', 'obs_7'],
+  ['obs_5', 'obs_1', 'obs_0'],
+  ['obs_6', 'obs_2', 'obs_1'],
+  ['obs_0', 'obs_7', 'obs_1'],
+  ['obs_4', 'obs_3', 'obs_0'],
+  ['obs_7', 'obs_3', 'obs_1'],
+];
+
+export function getChapterIdx(stage) {
+  return Math.min(9, Math.max(0, Math.floor((Math.max(1, stage) - 1) / 10)));
+}
+
+export function getSubStage(stage) {
+  return ((Math.max(1, stage) - 1) % 10) + 1;
+}
+
+export function getStageLabel(stage) {
+  const ch = getChapterIdx(stage) + 1;
+  const sub = getSubStage(stage);
+  return `${ch}-${sub}`;
+}
+
 export function getZoneName(stage) {
-  const idx = Math.floor((stage - 1) / 3) % STAGE_ZONES.length;
-  return STAGE_ZONES[idx];
+  return STAGE_ZONES[getChapterIdx(stage)];
 }
 
 export function getWaveTargetKills(stage, wave) {
-  if (wave >= 5) return 1; // 第 5 波擊殺 BOSS 即通關
-  return 10 + Math.min(14, Math.floor((stage - 1) * 0.7) + wave * 2);
+  if (wave >= 2) return 1; // 第 2 波擊殺小王或章節首領即通關此小關
+  return 8 + Math.min(10, Math.floor((stage - 1) * 0.14));
 }
 
 export function createWaveSquad(stage, wave) {
-  const zoneIdx = Math.floor((stage - 1) / 3) % ZONE_POOLS.length;
-  const pool = ZONE_POOLS[zoneIdx];
+  const chIdx = getChapterIdx(stage);
+  const sub = getSubStage(stage);
+  const pool = ZONE_POOLS[chIdx];
   const squad = [];
-  const scaleFactor = 1 + (stage - 1) * 0.24 + (wave - 1) * 0.08;
+  const scaleFactor = 1 + (stage - 1) * 0.22 + (wave - 1) * 0.08;
 
-  const isBossWave = wave >= 5;
-  const count = isBossWave ? 4 : Math.min(12, 6 + Math.floor(stage * 0.35) + wave);
+  const isBossWave = wave >= 2;
+  const count = isBossWave ? 3 : Math.min(12, 6 + Math.floor(sub * 0.5));
 
   for (let i = 0; i < count; i++) {
     const key = pool[i % pool.length];
@@ -149,27 +186,46 @@ export function createWaveSquad(stage, wave) {
   }
 
   if (isBossWave) {
-    squad.push(buildMonster(MONSTER_TEMPLATES.boss_demon, stage, scaleFactor, 999));
+    if (sub >= 10) {
+      const boss = buildMonster(MONSTER_TEMPLATES.boss_demon, stage, scaleFactor, 999);
+      boss.name = `【第${chIdx + 1}章首領】${boss.name}`;
+      squad.push(boss);
+    } else {
+      const eliteKey = pool[(sub - 1) % pool.length];
+      const tpl = MONSTER_TEMPLATES[eliteKey];
+      const mini = buildMonster({
+        ...tpl,
+        name: `【${getStageLabel(stage)} 小王】${tpl.name}`,
+        scale: tpl.scale * 1.45,
+        hpMult: tpl.hpMult * 3.4,
+        atkMult: tpl.atkMult * 1.45,
+        goldMult: tpl.goldMult * 3.5,
+        expMult: tpl.expMult * 3.2,
+        isBoss: true,
+        isMiniBoss: true,
+      }, stage, scaleFactor, 998);
+      squad.push(mini);
+    }
   }
 
   return squad;
 }
 
-export function spawnSingleMonster(stage, wave, allowElite = false) {
-  const zoneIdx = Math.floor((stage - 1) / 3) % ZONE_POOLS.length;
-  const pool = ZONE_POOLS[zoneIdx];
-  const scaleFactor = 1 + (stage - 1) * 0.24 + (wave - 1) * 0.08;
+export function spawnSingleMonster(stage, wave) {
+  const chIdx = getChapterIdx(stage);
+  const pool = ZONE_POOLS[chIdx];
+  const scaleFactor = 1 + (stage - 1) * 0.22 + (wave - 1) * 0.08;
   const key = pool[Math.floor(Math.random() * pool.length)];
   const tpl = MONSTER_TEMPLATES[key];
   const uid = Date.now() + Math.random();
-  return buildMonster(tpl, stage, scaleFactor, uid, allowElite);
+  return buildMonster(tpl, stage, scaleFactor, uid);
 }
 
 function buildMonster(tpl, stage, scaleFactor, idx) {
   const baseHp = 48 * scaleFactor;
-  const baseAtk = 6.5 * (1 + (stage - 1) * 0.19);
-  const baseGold = 7 * (1 + (stage - 1) * 0.28);
-  const baseExp = 12 * (1 + (stage - 1) * 0.24);
+  const baseAtk = 6.5 * (1 + (stage - 1) * 0.17);
+  const baseGold = 8 * (1 + (stage - 1) * 0.25);
+  const baseExp = 13 * (1 + (stage - 1) * 0.22);
 
   return {
     uid: `m_${Date.now()}_${idx}_${Math.random().toString(36).slice(2, 6)}`,
@@ -178,8 +234,9 @@ function buildMonster(tpl, stage, scaleFactor, idx) {
     spriteKey: tpl.spriteKey,
     scale: tpl.scale,
     speed: tpl.speed,
-    isBoss: tpl.isBoss,
-    isRanged: tpl.isRanged,
+    isBoss: !!tpl.isBoss,
+    isMiniBoss: !!tpl.isMiniBoss,
+    isRanged: !!tpl.isRanged,
     moveStyle: tpl.moveStyle || 'hop',
     atkStyle: tpl.atkStyle || 'claw',
     maxHp: Math.round(baseHp * tpl.hpMult),
