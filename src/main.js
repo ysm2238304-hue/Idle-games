@@ -234,7 +234,6 @@ function handleLootDrop(item) {
   return item;
 }
 
-// 延後到 #game-screen 顯示後才初始化 Phaser，徹底根治 0x0 黑屏
 function initPhaserGame() {
   if (phaserGame) {
     battleScene?.setPaused(false);
@@ -393,15 +392,44 @@ document.getElementById('btn-cloud-logout')?.addEventListener('click', async () 
   welcomeScreen.classList.remove('hidden');
 });
 
-function triggerManualSkill() {
+// 手動/自動模式切換與全套快捷鍵
+function toggleAutoMoveMode() {
   if (!battleScene) return;
-  battleScene.castSkillManual();
+  const isAuto = battleScene.toggleAutoMove();
+  const label = document.getElementById('auto-mode-label');
+  const btn = document.getElementById('btn-toggle-auto');
+  if (label) label.textContent = isAuto ? '自動[T]' : '手動[T]';
+  if (btn) btn.classList.toggle('active', isAuto);
+  ui.addLog(isAuto ? '切換為【自動巡邏模式】(按 WASD 可隨時介入走位)' : '切換為【純手動走位模式】(WASD / 方向鍵移動)', 'system');
 }
-document.getElementById('btn-cast-skill')?.addEventListener('click', triggerManualSkill);
+
+document.getElementById('btn-toggle-auto')?.addEventListener('click', toggleAutoMoveMode);
+document.getElementById('btn-cast-skill')?.addEventListener('click', () => battleScene?.castSkillManual());
+
 window.addEventListener('keydown', (e) => {
-  if (e.code === 'Space' && gameStarted) {
+  if (!gameStarted) return;
+  if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
+
+  if (e.code === 'Space') {
     e.preventDefault();
-    triggerManualSkill();
+    battleScene?.castSkillManual();
+  } else if (e.code === 'KeyT') {
+    toggleAutoMoveMode();
+  } else if (e.code === 'KeyQ') {
+    document.getElementById('btn-salvage-junk')?.click();
+  } else if (e.code === 'Escape') {
+    ui.closeDrawer();
+    document.getElementById('modal-class')?.classList.add('hidden');
+  } else if (e.key === '1') {
+    ui.activeDrawer === 'gear' ? ui.closeDrawer() : ui.openDrawer('gear');
+  } else if (e.key === '2') {
+    ui.activeDrawer === 'bag' ? ui.closeDrawer() : ui.openDrawer('bag');
+  } else if (e.key === '3') {
+    ui.activeDrawer === 'upgrade' ? ui.closeDrawer() : ui.openDrawer('upgrade');
+  } else if (e.key === '4') {
+    ui.activeDrawer === 'tree' ? ui.closeDrawer() : ui.openDrawer('tree');
+  } else if (e.key === '5') {
+    ui.activeDrawer === 'rebirth' ? ui.closeDrawer() : ui.openDrawer('rebirth');
   }
 });
 

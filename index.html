@@ -19,7 +19,7 @@
       <div class="welcome-crest">
         <div class="crest-sub">2.5D ABYSSAL IDLE ARPG</div>
         <h1 class="crest-title">暗黑桌面掛機</h1>
-        <p class="crest-desc">2.5D 大地圖自動刷寶・群怪圍攻・技能樹・深淵輪迴</p>
+        <p class="crest-desc">2.5D 大地圖自動/WASD走位・群怪圍攻・技能樹・深淵輪迴</p>
       </div>
 
       <div id="welcome-step-auth" class="welcome-panel">
@@ -78,7 +78,7 @@
       <aside id="rpg-drawer" class="hidden">
         <div class="drawer-header">
           <h3 id="drawer-title">🛡️ 角色與裝備</h3>
-          <button id="btn-close-drawer" class="btn-ghost">✕</button>
+          <button id="btn-close-drawer" class="btn-ghost">✕ [Esc]</button>
         </div>
 
         <div class="drawer-body">
@@ -96,7 +96,7 @@
                 <label><input type="checkbox" id="auto-salvage-magic" /> 魔法</label>
                 <label><input type="checkbox" id="auto-salvage-rare" /> 稀有</label>
               </div>
-              <button id="btn-salvage-junk" class="btn-danger-sm">一鍵分解</button>
+              <button id="btn-salvage-junk" class="btn-danger-sm">一鍵分解 [Q]</button>
             </div>
             <div id="inventory-grid"></div>
           </div>
@@ -135,33 +135,38 @@
         </div>
       </button>
 
-      <div class="dock-divider"></div>
-
-      <button class="dock-btn" data-drawer="gear" title="角色與裝備">
-        <span class="dock-icon">🛡️</span>
-        <span class="dock-label">裝備</span>
+      <button id="btn-toggle-auto" class="dock-btn active" title="WASD 移動 / T 鍵切換自動與手動">
+        <span class="dock-icon">🏃</span>
+        <span class="dock-label" id="auto-mode-label">自動[T]</span>
       </button>
 
-      <button class="dock-btn" data-drawer="bag" title="戰利品背包">
+      <div class="dock-divider"></div>
+
+      <button class="dock-btn" data-drawer="gear" title="角色與裝備 (1)">
+        <span class="dock-icon">🛡️</span>
+        <span class="dock-label">裝備[1]</span>
+      </button>
+
+      <button class="dock-btn" data-drawer="bag" title="戰利品背包 (2)">
         <span class="dock-icon">🎒</span>
-        <span class="dock-label">背包 <small id="inv-count">0/60</small></span>
+        <span class="dock-label">背包[2] <small id="inv-count">0/60</small></span>
         <span id="bag-dot" class="notify-dot hidden"></span>
       </button>
 
-      <button class="dock-btn" data-drawer="upgrade" title="屬性強化">
+      <button class="dock-btn" data-drawer="upgrade" title="屬性強化 (3)">
         <span class="dock-icon">🔥</span>
-        <span class="dock-label">強化</span>
+        <span class="dock-label">強化[3]</span>
       </button>
 
-      <button class="dock-btn" data-drawer="tree" title="深淵技能樹">
+      <button class="dock-btn" data-drawer="tree" title="深淵技能樹 (4)">
         <span class="dock-icon">🌳</span>
-        <span class="dock-label">技能樹</span>
+        <span class="dock-label">技能樹[4]</span>
         <span id="tree-sp-badge" class="sp-badge hidden">0</span>
       </button>
 
-      <button class="dock-btn" data-drawer="rebirth" title="深淵輪迴">
+      <button class="dock-btn" data-drawer="rebirth" title="深淵輪迴 (5)">
         <span class="dock-icon">🌀</span>
-        <span class="dock-label">輪迴</span>
+        <span class="dock-label">輪迴[5]</span>
       </button>
 
       <button id="btn-switch-class" class="dock-btn" title="切換冒險職業">
@@ -173,6 +178,8 @@
         <span class="dock-icon">📜</span>
         <span class="dock-label">日誌</span>
       </button>
+
+      <span class="hotkey-hint">WASD 移動 • Space 大招 • Q 分解</span>
     </footer>
   </section>
 
