@@ -1,0 +1,38 @@
+export const WARRIOR_SKILLS = {
+  whirlwind: {
+    id: 'whirlwind',
+    treeNodeId: 'w_whirlwind',
+    name: '旋風重斬',
+    icon: './assets/skills/sk_whirlwind.png',
+    cooldownMs: 5000,
+    desc: '高速旋轉烈焰巨劍 1.1 秒，持續絞殺半徑 230px 內所有敵人並回復生命。',
+    getDetail: (lvl) => `4 段旋轉斬擊，每段造成 ${80 + lvl * 18}% 攻擊傷害，每段回復 2.5% 最大生命。`,
+  },
+  earthshatter: {
+    id: 'earthshatter',
+    treeNodeId: 'w_earthshatter',
+    name: '裂地猛擊',
+    icon: './assets/skills/sk_earthshatter.png',
+    cooldownMs: 6500,
+    desc: '重劍猛砸大地引發岩漿衝擊波，擊飛並暈眩半徑 240px 內敵人 1.2 秒。',
+    getDetail: (lvl) => `造成 ${210 + lvl * 35}% 攻擊傷害並留下燃燒裂紋，暈眩敵人 1.2 秒。`,
+  },
+  bloodcharge: {
+    id: 'bloodcharge',
+    treeNodeId: 'w_bloodcharge',
+    name: '血怒衝鋒',
+    icon: './assets/skills/sk_bloodcharge.png',
+    cooldownMs: 5500,
+    desc: '化作赤紅殘影高速衝入敵陣，沿途留下火焰軌跡撞飛敵人並大量吸血。',
+    getDetail: (lvl) => `衝刺造成 ${180 + lvl * 30}% 攻擊傷害，並立即回復 ${10 + lvl * 2}% 最大生命。`,
+  },
+  bladestorm: {
+    id: 'bladestorm',
+    treeNodeId: 'w_bladestorm',
+    name: '烈焰劍氣波',
+    icon: './assets/skills/sk_bladestorm.png',
+    cooldownMs: 7200,
+    desc: '朝前方扇形劈出 3 道巨大烈焰劍氣波，貫穿整排敵軍並引發爆裂星芒。',
+    getDetail: (lvl) => `發射 3 道貫穿劍氣，每道造成 ${145 + lvl * 28}% 攻擊傷害。`,
+  },
+};

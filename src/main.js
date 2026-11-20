@@ -1,4 +1,5 @@
 import { CLASSES } from './data/classes.js';
+import { WARRIOR_SKILLS } from './data/warriorSkills.js';
 import { RARITIES } from './data/items.js';
 import { SKILL_TREE_NODES, isNodeUnlocked } from './data/skillTree.js';
 import { generateLoot, getSalvageReward, calcItemPower } from './logic/lootGen.js';
@@ -45,6 +46,20 @@ const ui = new DashboardUI({
     ui.addLog(`切換職業為【${cls.name}】！`, 'system');
     refreshStatsAndUI();
     if (battleScene) battleScene.refreshHeroClass(classId);
+    persistAll(true);
+  },
+
+  onEquipSkill: (slotIdx, skillId) => {
+    const eq = [...(gameState.equippedSkills || ['whirlwind', null, null])];
+    // 若該技能已裝在其他槽位，先交換/清空
+    const existIdx = eq.indexOf(skillId);
+    if (existIdx !== -1 && existIdx !== slotIdx) {
+      eq[existIdx] = eq[slotIdx];
+    }
+    eq[slotIdx] = skillId;
+    gameState.equippedSkills = eq;
+    ui.addLog(`已將【${WARRIOR_SKILLS[skillId]?.name}】裝備至技能槽 ${slotIdx + 1}`, 'system');
+    refreshStatsAndUI();
     persistAll(true);
   },
 
@@ -149,16 +164,30 @@ const ui = new DashboardUI({
     gameState.skillPoints -= 1;
     tree[nodeId] = cur + 1;
     gameState.skillTree = tree;
+
+    // 若解鎖新戰士主動技能且有空槽位，自動幫忙裝上
+    const unlockedSk = Object.values(WARRIOR_SKILLS).find((s) => s.treeNodeId === nodeId);
+    if (unlockedSk && cur === 0) {
+      const eq = [...(gameState.equippedSkills || ['whirlwind', null, null])];
+      const emptySlot = eq.indexOf(null);
+      if (emptySlot !== -1 && !eq.includes(unlockedSk.id)) {
+        eq[emptySlot] = unlockedSk.id;
+        gameState.equippedSkills = eq;
+      }
+    }
+
     ui.addLog(`技能樹升級：【${node.name}】Lv.${cur + 1}`, 'system');
     refreshStatsAndUI();
     persistAll(true);
   },
 
   onResetSkillTree: () => {
-    const spent = Object.values(gameState.skillTree || {}).reduce((s, v) => s + v, 0);
+    const tree = gameState.skillTree || {};
+    const spent = Object.values(tree).reduce((s, v) => s + v, 0) - 1;
     if (spent <= 0) return;
     gameState.skillPoints = (gameState.skillPoints || 0) + spent;
-    gameState.skillTree = {};
+    gameState.skillTree = { w_whirlwind: 1 };
+    gameState.equippedSkills = ['whirlwind', null, null];
     ui.addLog(`已重置技能樹並返還 ${spent} 點技能點。`, 'system');
     refreshStatsAndUI();
     persistAll(true);
@@ -171,8 +200,9 @@ const ui = new DashboardUI({
     gameState.rebirthCount = (gameState.rebirthCount || 0) + 1;
     gameState.level = 1;
     gameState.exp = 0;
-    gameState.skillPoints = 0;
-    gameState.skillTree = {};
+    gameState.skillPoints = 1;
+    gameState.skillTree = { w_whirlwind: 1 };
+    gameState.equippedSkills = ['whirlwind', null, null];
     gameState.gold = 0;
     gameState.stage = 1;
     gameState.wave = 1;
@@ -262,11 +292,7 @@ function initPhaserGame() {
     getState: () => gameState,
     getStats: () => computedStats,
     callbacks: {
-      onSkillTick: (ratio) => {
-        ui.updateSkillProgress(ratio);
-        const btn = document.getElementById('btn-cast-skill');
-        if (btn) btn.classList.toggle('ready', ratio >= 1);
-      },
+      onSkillTicks: (ratios) => ui.updateSkillProgress(ratios),
       onMonsterKilled: (mob, waveCleared) => {
         const goldGain = Math.round(mob.gold * (1 + computedStats.goldFind / 100));
         gameState.gold += goldGain;
@@ -392,7 +418,6 @@ document.getElementById('btn-cloud-logout')?.addEventListener('click', async () 
   welcomeScreen.classList.remove('hidden');
 });
 
-// 手動/自動模式切換與全套快捷鍵
 function toggleAutoMoveMode() {
   if (!battleScene) return;
   const isAuto = battleScene.toggleAutoMove();
@@ -404,7 +429,9 @@ function toggleAutoMoveMode() {
 }
 
 document.getElementById('btn-toggle-auto')?.addEventListener('click', toggleAutoMoveMode);
-document.getElementById('btn-cast-skill')?.addEventListener('click', () => battleScene?.castSkillManual());
+[0, 1, 2].forEach((i) => {
+  document.getElementById(`skill-slot-${i}`)?.addEventListener('click', () => battleScene?.castSkillSlot(i));
+});
 
 window.addEventListener('keydown', (e) => {
   if (!gameStarted) return;
@@ -412,7 +439,11 @@ window.addEventListener('keydown', (e) => {
 
   if (e.code === 'Space') {
     e.preventDefault();
-    battleScene?.castSkillManual();
+    battleScene?.castSkillSlot(0);
+  } else if (e.code === 'KeyE') {
+    battleScene?.castSkillSlot(1);
+  } else if (e.code === 'KeyR') {
+    battleScene?.castSkillSlot(2);
   } else if (e.code === 'KeyT') {
     toggleAutoMoveMode();
   } else if (e.code === 'KeyQ') {
@@ -430,6 +461,8 @@ window.addEventListener('keydown', (e) => {
     ui.activeDrawer === 'tree' ? ui.closeDrawer() : ui.openDrawer('tree');
   } else if (e.key === '5') {
     ui.activeDrawer === 'rebirth' ? ui.closeDrawer() : ui.openDrawer('rebirth');
+  } else if (e.key === '6') {
+    ui.activeDrawer === 'skills' ? ui.closeDrawer() : ui.openDrawer('skills');
   }
 });
 
@@ -452,7 +485,10 @@ initCloudAuth(async (user) => {
         upgrades: { ...base.upgrades, ...(cloudData.upgrades || {}) },
         equipment: { ...base.equipment, ...(cloudData.equipment || {}) },
         autoSalvage: { ...base.autoSalvage, ...(cloudData.autoSalvage || {}) },
-        skillTree: { ...(cloudData.skillTree || {}) },
+        skillTree: { w_whirlwind: 1, ...(cloudData.skillTree || {}) },
+        equippedSkills: Array.isArray(cloudData.equippedSkills) && cloudData.equippedSkills.length === 3
+          ? cloudData.equippedSkills
+          : ['whirlwind', null, null],
         inventory: Array.isArray(cloudData.inventory) ? cloudData.inventory : [],
       };
       refreshStatsAndUI();

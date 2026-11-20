@@ -1,4 +1,5 @@
 import { CLASSES } from '../data/classes.js';
+import { WARRIOR_SKILLS } from '../data/warriorSkills.js';
 import { RARITIES } from '../data/items.js';
 import { createWaveSquad, spawnSingleMonster, getWaveTargetKills } from '../data/monsters.js';
 import { formatNum } from '../logic/statCalc.js';
@@ -10,6 +11,10 @@ const FX_NAMES = [
   'fx_slash', 'fx_cross', 'fx_whirlwind', 'fx_crack',
   'fx_arrow', 'fx_beam', 'fx_lightning', 'fx_crit',
   'fx_orb', 'fx_sigil', 'fx_meteor', 'fx_explosion',
+  'wfx_cleave', 'wfx_hitflash', 'wfx_sparks', 'wfx_whirl_inner',
+  'wfx_whirl_outer', 'wfx_whirl_wind', 'wfx_slam_pillar', 'wfx_lava_ring',
+  'wfx_rubble', 'wfx_lava_crack', 'wfx_charge_aura', 'wfx_fire_trail',
+  'wfx_blood_ring', 'wfx_blade_wave', 'wfx_wave_trail', 'wfx_pierce_burst',
 ];
 
 export class BattleScene extends Phaser.Scene {
@@ -24,7 +29,7 @@ export class BattleScene extends Phaser.Scene {
     this.playerHp = 240;
     this.playerMaxHp = 240;
     this.heroAttackTimer = 0;
-    this.skillCooldownTimer = 0;
+    this.slotCdTimers = [99999, 99999, 99999];
     this.bossTimeLeft = 0;
     this.isBossWave = false;
     this.isTransitioning = false;
@@ -32,19 +37,17 @@ export class BattleScene extends Phaser.Scene {
     this.lastZoneIdx = -1;
     this.patrolTarget = { x: MAP_W / 2, y: MAP_H / 2 };
 
-    // 波次漸進湧怪狀態
     this.waveKills = 0;
     this.waveTargetKills = 12;
     this.waveElapsedSec = 0;
     this.swarmSpawnTimer = 0;
 
-    // 2.5D 方向與動作狀態
     this.heroDir = 'down';
     this.heroFlipX = false;
     this.heroAttackAnimUntil = 0;
     this.afterimageTimer = 0;
+    this.isWhirlwinding = false;
 
-    // 手動 WASD / 自動模式
     this.autoMoveEnabled = true;
     this.manualOverrideTimer = 0;
   }
@@ -56,11 +59,19 @@ export class BattleScene extends Phaser.Scene {
   }
 
   preload() {
-    const dirs = ['down', 'up', 'right'];
-    const states = ['move', 'atk'];
-    Object.keys(CLASSES).forEach((cid) => {
-      dirs.forEach((d) => {
-        states.forEach((s) => {
+    // 戰士 24 幀連續動作
+    ['down', 'up', 'right'].forEach((d) => {
+      ['walk', 'atk'].forEach((st) => {
+        for (let i = 0; i < 4; i++) {
+          this.load.image(`wf_${d}_${st}_${i}`, `./assets/heroes/warrior_frames/${d}_${st}_${i}.png`);
+        }
+      });
+    });
+
+    // 遊俠與法師 2.5D 圖
+    ['ranger', 'mage'].forEach((cid) => {
+      ['down', 'up', 'right'].forEach((d) => {
+        ['move', 'atk'].forEach((s) => {
           this.load.image(`hero_${cid}_${d}_${s}`, `./assets/heroes/${cid}_${d}_${s}.png`);
         });
       });
@@ -85,6 +96,7 @@ export class BattleScene extends Phaser.Scene {
 
   create() {
     this.generateFxTextures();
+    this.createWarriorAnims();
 
     this.bgImage = this.add.image(MAP_W / 2, MAP_H / 2, 'map_zone_0')
       .setDisplaySize(MAP_W, MAP_H)
@@ -126,7 +138,7 @@ export class BattleScene extends Phaser.Scene {
         const stats = this.getStats();
         const tapDmg = Math.max(2, Math.round(stats.atk * 0.55));
         this.damageMonster(target, tapDmg, false, true);
-        this.playFxSprite('fx_slash', target.sprite.x, target.sprite.y - 10, 0.48, Phaser.Math.FloatBetween(-0.6, 0.6), 220);
+        this.playFxSprite('wfx_cleave', target.sprite.x, target.sprite.y - 10, 0.52, Phaser.Math.FloatBetween(-0.6, 0.6), 220);
       }
     });
 
@@ -135,11 +147,30 @@ export class BattleScene extends Phaser.Scene {
     });
 
     const stats = this.getStats();
-    const cls = CLASSES[this.getState().classId] || CLASSES.warrior;
     this.playerMaxHp = stats.maxHp;
     this.playerHp = stats.maxHp;
-    this.skillCooldownTimer = cls.skill.cooldownMs;
     this.spawnWaveSquad();
+  }
+
+  createWarriorAnims() {
+    ['down', 'up', 'right'].forEach((d) => {
+      if (!this.anims.exists(`w_${d}_walk`)) {
+        this.anims.create({
+          key: `w_${d}_walk`,
+          frames: [0, 1, 2, 3].map((i) => ({ key: `wf_${d}_walk_${i}` })),
+          frameRate: 10,
+          repeat: -1,
+        });
+      }
+      if (!this.anims.exists(`w_${d}_atk`)) {
+        this.anims.create({
+          key: `w_${d}_atk`,
+          frames: [0, 1, 2, 3].map((i) => ({ key: `wf_${d}_atk_${i}` })),
+          frameRate: 15,
+          repeat: 0,
+        });
+      }
+    });
   }
 
   generateFxTextures() {
@@ -160,28 +191,19 @@ export class BattleScene extends Phaser.Scene {
     const cid = this.getState().classId || 'warrior';
     const cx = MAP_W / 2;
     const cy = MAP_H / 2;
-    const texKey = `hero_${cid}_down_move`;
+    const texKey = cid === 'warrior' ? 'wf_down_walk_0' : `hero_${cid}_down_move`;
 
     this.heroGroundShadow = this.add.image(cx, cy + 44, 'fx_glow')
-      .setTint(0x000000).setScale(1.65, 0.58).setAlpha(0.62).setDepth(2);
+      .setTint(0x000000).setScale(1.7, 0.6).setAlpha(0.62).setDepth(2);
     this.heroCastShadow = this.add.image(cx - 14, cy + 28, texKey)
-      .setTint(0x000000).setScale(0.54, 0.24).setAlpha(0.32).setDepth(3);
+      .setTint(0x000000).setScale(0.56, 0.25).setAlpha(0.32).setDepth(3);
 
-    this.hero = this.add.image(cx, cy, texKey).setScale(0.54).setDepth(cy);
+    this.hero = this.add.sprite(cx, cy, texKey).setScale(0.56).setDepth(cy);
+    if (cid === 'warrior') this.hero.play('w_down_walk');
 
-    this.tweens.add({
-      targets: this.hero,
-      scaleY: 0.56,
-      scaleX: 0.52,
-      duration: 620,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut',
-    });
-
-    this.heroHpBg = this.add.rectangle(cx, cy - 84, 108, 10, 0x0b0e14).setStrokeStyle(1.5, 0xc89b3c).setDepth(4000);
-    this.heroHpFill = this.add.rectangle(cx - 54, cy - 84, 108, 8, 0x22c55e).setOrigin(0, 0.5).setDepth(4001);
-    this.heroHpText = this.add.text(cx, cy - 99, '', {
+    this.heroHpBg = this.add.rectangle(cx, cy - 86, 108, 10, 0x0b0e14).setStrokeStyle(1.5, 0xc89b3c).setDepth(4000);
+    this.heroHpFill = this.add.rectangle(cx - 54, cy - 86, 108, 8, 0x22c55e).setOrigin(0, 0.5).setDepth(4001);
+    this.heroHpText = this.add.text(cx, cy - 101, '', {
       fontSize: '12px', color: '#f8fafc', fontFamily: 'sans-serif', fontStyle: 'bold',
       stroke: '#000000', strokeThickness: 3,
     }).setOrigin(0.5).setDepth(4002);
@@ -241,12 +263,36 @@ export class BattleScene extends Phaser.Scene {
     this.isPaused = paused;
   }
 
-  castSkillManual() {
+  getSlotSkillInfo(slotIdx) {
+    const state = this.getState();
+    const cid = state.classId || 'warrior';
+    if (cid === 'warrior') {
+      const sid = (state.equippedSkills || [])[slotIdx];
+      if (!sid || !WARRIOR_SKILLS[sid]) return null;
+      const sk = WARRIOR_SKILLS[sid];
+      const lvl = state.skillTree?.[sk.treeNodeId] || 0;
+      if (lvl <= 0) return null;
+      const cd = Math.round(sk.cooldownMs * (this.getStats().cdrMult || 1));
+      return { id: sid, name: sk.name, cooldownMs: cd, level: lvl, isWarrior: true };
+    }
+    if (slotIdx > 0) return null;
+    const cls = CLASSES[cid] || CLASSES.ranger;
+    const cd = Math.round(cls.skill.cooldownMs * (this.getStats().cdrMult || 1));
+    return { id: cls.skill.type, name: cls.skill.name, cooldownMs: cd, level: 1, isWarrior: false, cls };
+  }
+
+  castSkillSlot(slotIdx) {
     if (this.isPaused || this.isTransitioning || this.monsters.length === 0) return false;
-    const cls = CLASSES[this.getState().classId] || CLASSES.warrior;
-    if (this.skillCooldownTimer < cls.skill.cooldownMs) return false;
-    this.skillCooldownTimer = 0;
-    this.triggerClassSkill(cls, this.getStats());
+    const info = this.getSlotSkillInfo(slotIdx);
+    if (!info) return false;
+    if (this.slotCdTimers[slotIdx] < info.cooldownMs) return false;
+    this.slotCdTimers[slotIdx] = 0;
+
+    if (info.isWarrior) {
+      this.castWarriorSkill(info.id, info.level, this.getStats());
+    } else {
+      this.triggerLegacyClassSkill(info.cls, this.getStats());
+    }
     return true;
   }
 
@@ -254,9 +300,8 @@ export class BattleScene extends Phaser.Scene {
     const stats = this.getStats();
     this.playerMaxHp = stats.maxHp;
     this.playerHp = stats.maxHp;
-    const cls = CLASSES[this.getState().classId] || CLASSES.warrior;
-    this.skillCooldownTimer = cls.skill.cooldownMs;
-    this.updateHeroVisualPose(0, 0);
+    this.slotCdTimers = [99999, 99999, 99999];
+    this.updateHeroVisualPose(0, 0, this.time.now);
     this.updateHeroHpBar();
   }
 
@@ -315,6 +360,7 @@ export class BattleScene extends Phaser.Scene {
       nameText,
       attackTimer: Phaser.Math.Between(0, 900),
       jitterAngle: Math.random() * Math.PI * 2,
+      stunUntil: 0,
     });
   }
 
@@ -369,10 +415,17 @@ export class BattleScene extends Phaser.Scene {
   update(time, delta) {
     if (this.isPaused) return;
 
-    const cls = CLASSES[this.getState().classId] || CLASSES.warrior;
-    this.skillCooldownTimer = Math.min(cls.skill.cooldownMs, this.skillCooldownTimer + delta);
-    if (this.callbacks?.onSkillTick) {
-      this.callbacks.onSkillTick(this.skillCooldownTimer / cls.skill.cooldownMs);
+    // 更新 3 個技能槽冷卻
+    const ratios = [0, 0, 0];
+    for (let i = 0; i < 3; i++) {
+      const info = this.getSlotSkillInfo(i);
+      if (info) {
+        this.slotCdTimers[i] = Math.min(info.cooldownMs, this.slotCdTimers[i] + delta);
+        ratios[i] = this.slotCdTimers[i] / info.cooldownMs;
+      }
+    }
+    if (this.callbacks?.onSkillTicks) {
+      this.callbacks.onSkillTicks(ratios);
     }
 
     this.updateMinimap();
@@ -382,7 +435,6 @@ export class BattleScene extends Phaser.Scene {
     const dt = delta / 1000;
     this.waveElapsedSec += dt;
 
-    // 隨時間越湧越多怪（每 2.1 秒從四面八方增援，單批隨經過時間從 2 隻增至 5 隻）
     this.swarmSpawnTimer += delta;
     if (this.swarmSpawnTimer >= 2100) {
       this.swarmSpawnTimer = 0;
@@ -397,24 +449,27 @@ export class BattleScene extends Phaser.Scene {
       }
     }
 
-    this.updateHeroMovement(time, delta, dt, stats, cls.id);
-    this.updateMonstersAI(delta, dt, stats);
+    const cid = this.getState().classId || 'warrior';
+    this.updateHeroMovement(time, delta, dt, stats, cid);
+    this.updateMonstersAI(time, delta, dt, stats);
     this.updateProjectiles(dt, stats);
 
     const nearest = this.findNearestMonster(this.hero.x, this.hero.y);
     if (nearest) {
-      const atkRange = cls.id === 'warrior' ? 160 : (cls.id === 'ranger' ? 430 : 370);
+      const atkRange = cid === 'warrior' ? 165 : (cid === 'ranger' ? 430 : 370);
       const dist = Phaser.Math.Distance.Between(this.hero.x, this.hero.y, nearest.sprite.x, nearest.sprite.y);
 
-      if (this.skillCooldownTimer >= cls.skill.cooldownMs && dist <= Math.max(250, atkRange)) {
-        this.skillCooldownTimer = 0;
-        this.triggerClassSkill(cls, stats, nearest);
+      // 自動施放就緒的主動技能
+      if (dist <= Math.max(260, atkRange)) {
+        for (let i = 0; i < 3; i++) {
+          if (this.castSkillSlot(i)) break;
+        }
       }
 
       this.heroAttackTimer += delta;
       if (this.heroAttackTimer >= stats.atkIntervalMs && dist <= atkRange) {
         this.heroAttackTimer = 0;
-        this.performHeroAttack(time, stats, cls.id, nearest);
+        this.performHeroAttack(time, stats, cid, nearest);
       }
     }
 
@@ -491,24 +546,26 @@ export class BattleScene extends Phaser.Scene {
 
     if (Math.hypot(vx, vy) > 25) {
       this.afterimageTimer += delta;
-      if (this.afterimageTimer >= 135) {
+      if (this.afterimageTimer >= 140) {
         this.afterimageTimer = 0;
         const ghost = this.add.image(this.hero.x, this.hero.y, this.hero.texture.key)
-          .setScale(0.53).setFlipX(this.heroFlipX).setAlpha(0.28).setTint(0x93c5fd).setDepth(this.hero.y - 1);
-        this.tweens.add({ targets: ghost, alpha: 0, duration: 240, onComplete: () => ghost.destroy() });
+          .setScale(0.54).setFlipX(this.heroFlipX).setAlpha(0.24).setTint(0xfbbf24).setDepth(this.hero.y - 1);
+        this.tweens.add({ targets: ghost, alpha: 0, duration: 220, onComplete: () => ghost.destroy() });
       }
     }
 
     this.heroGroundShadow.setPosition(this.hero.x, this.hero.y + 44);
     this.heroCastShadow.setPosition(this.hero.x - 14, this.hero.y + 28).setFlipX(this.heroFlipX);
-    this.heroHpBg.setPosition(this.hero.x, this.hero.y - 84);
-    this.heroHpFill.setPosition(this.hero.x - 54, this.hero.y - 84);
-    this.heroHpText.setPosition(this.hero.x, this.hero.y - 99);
+    this.heroCastShadow.setTexture(this.hero.texture.key);
+    this.heroHpBg.setPosition(this.hero.x, this.hero.y - 86);
+    this.heroHpFill.setPosition(this.hero.x - 54, this.hero.y - 86);
+    this.heroHpText.setPosition(this.hero.x, this.hero.y - 101);
   }
 
   updateHeroVisualPose(vx, vy, time = 0) {
     const cid = this.getState().classId || 'warrior';
-    if (Math.abs(vx) > 8 || Math.abs(vy) > 8) {
+    const isMoving = Math.abs(vx) > 8 || Math.abs(vy) > 8;
+    if (isMoving) {
       if (Math.abs(vy) > Math.abs(vx) * 1.15) {
         this.heroDir = vy < 0 ? 'up' : 'down';
         this.heroFlipX = false;
@@ -517,12 +574,23 @@ export class BattleScene extends Phaser.Scene {
         this.heroFlipX = vx < 0;
       }
     }
-    const isAttacking = time < this.heroAttackAnimUntil;
-    const state = isAttacking ? 'atk' : 'move';
-    const key = `hero_${cid}_${this.heroDir}_${state}`;
-    if (this.hero.texture.key !== key) this.hero.setTexture(key);
-    if (this.heroCastShadow.texture.key !== key) this.heroCastShadow.setTexture(key);
     this.hero.setFlipX(this.heroFlipX);
+
+    const isAttacking = time < this.heroAttackAnimUntil;
+    if (cid === 'warrior') {
+      const animKey = `w_${this.heroDir}_${isAttacking ? 'atk' : 'walk'}`;
+      if (this.hero.anims.currentAnim?.key !== animKey || (!this.hero.anims.isPlaying && isAttacking)) {
+        this.hero.play(animKey, true);
+      }
+      if (!isAttacking && !isMoving && this.hero.anims.isPlaying) {
+        this.hero.anims.pause(this.hero.anims.currentAnim.frames[0]);
+      } else if (!isAttacking && isMoving && this.hero.anims.isPaused) {
+        this.hero.anims.resume();
+      }
+    } else {
+      const key = `hero_${cid}_${this.heroDir}_${isAttacking ? 'atk' : 'move'}`;
+      if (this.hero.texture.key !== key) this.hero.setTexture(key);
+    }
   }
 
   faceHeroToward(tx, ty) {
@@ -535,11 +603,14 @@ export class BattleScene extends Phaser.Scene {
       this.heroDir = 'right';
       this.heroFlipX = dx < 0;
     }
+    this.hero.setFlipX(this.heroFlipX);
   }
 
-  updateMonstersAI(delta, dt, stats) {
+  updateMonstersAI(time, delta, dt, stats) {
     for (const m of this.monsters) {
       if (m.hp <= 0) continue;
+      if (time < (m.stunUntil || 0)) continue;
+
       const dx = this.hero.x - m.sprite.x;
       const dy = this.hero.y - m.sprite.y;
       const dist = Math.hypot(dx, dy) || 1;
@@ -567,7 +638,7 @@ export class BattleScene extends Phaser.Scene {
         if (m.attackTimer >= m.atkIntervalMs) {
           m.attackTimer = 0;
           if (m.isRanged) {
-            this.fireEnemyBolt(m, stats);
+            this.fireEnemyBolt(m);
           } else {
             this.performMonsterAttack(m, stats);
           }
@@ -576,7 +647,7 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
-  fireEnemyBolt(m, stats) {
+  fireEnemyBolt(m) {
     const ang = Math.atan2(this.hero.y - m.sprite.y, this.hero.x - m.sprite.x);
     const spr = this.add.image(m.sprite.x, m.sprite.y - 10, 'fx_glow')
       .setTint(0x22c55e).setScale(0.55).setBlendMode(Phaser.BlendModes.ADD).setDepth(4500);
@@ -587,14 +658,12 @@ export class BattleScene extends Phaser.Scene {
       vy: Math.sin(ang) * 290,
       lifeMs: 1800,
       mob: m,
-      dmg: m.atk,
     });
   }
 
-  // 重寫三職業近/遠程戰鬥方式
   performHeroAttack(time, stats, classId, target) {
     this.faceHeroToward(target.sprite.x, target.sprite.y);
-    this.heroAttackAnimUntil = time + 260;
+    this.heroAttackAnimUntil = time + 290;
     const baseAngle = Math.atan2(target.sprite.y - this.hero.y, target.sprite.x - this.hero.x);
 
     const calcRollDmg = (mob) => {
@@ -606,21 +675,21 @@ export class BattleScene extends Phaser.Scene {
     };
 
     if (classId === 'warrior') {
-      // 狂戰士：130° 扇形重劍順劈斬 ＋ 微擊退
-      const cx = this.hero.x + Math.cos(baseAngle) * 52;
-      const cy = this.hero.y + Math.sin(baseAngle) * 52;
-      this.playFxSprite('fx_slash', cx, cy, 0.85, baseAngle, 240);
+      const cx = this.hero.x + Math.cos(baseAngle) * 58;
+      const cy = this.hero.y + Math.sin(baseAngle) * 58;
+      this.playFxSprite('wfx_cleave', cx, cy, 0.92, baseAngle, 250);
+      this.playFxSprite('wfx_sparks', cx, cy, 0.65, Math.random() * Math.PI, 260);
 
       let hitAny = false;
       this.monsters.filter((m) => m.hp > 0).forEach((m) => {
         const d = Phaser.Math.Distance.Between(this.hero.x, this.hero.y, m.sprite.x, m.sprite.y);
-        if (d <= 168) {
+        if (d <= 170) {
           const mobAng = Math.atan2(m.sprite.y - this.hero.y, m.sprite.x - this.hero.x);
           const diff = Math.abs(Phaser.Math.Angle.Wrap(mobAng - baseAngle));
-          if (diff <= Phaser.Math.DegToRad(72) || d <= 65) {
+          if (diff <= Phaser.Math.DegToRad(75) || d <= 68) {
             const { dmg, isCrit } = calcRollDmg(m);
+            this.playFxSprite('wfx_hitflash', m.sprite.x, m.sprite.y - 10, 0.42, 0, 180);
             this.applyHitEffects(m, dmg, isCrit, stats);
-            // 順劈擊退（BOSS 減半）
             const kb = m.isBoss ? 10 : 28;
             m.sprite.x = Phaser.Math.Clamp(m.sprite.x + Math.cos(mobAng) * kb, 120, MAP_W - 120);
             m.sprite.y = Phaser.Math.Clamp(m.sprite.y + Math.sin(mobAng) * kb, 120, MAP_H - 120);
@@ -633,7 +702,6 @@ export class BattleScene extends Phaser.Scene {
         this.applyHitEffects(target, dmg, isCrit, stats);
       }
     } else if (classId === 'ranger') {
-      // 暗影遊俠：直線貫穿飛矢（最多穿透 3 隻怪物）
       const spr = this.add.image(this.hero.x, this.hero.y - 12, 'fx_arrow')
         .setScale(0.46).setRotation(baseAngle).setBlendMode(Phaser.BlendModes.ADD).setDepth(4508);
       this.projectiles.push({
@@ -648,7 +716,6 @@ export class BattleScene extends Phaser.Scene {
         stats,
       });
     } else {
-      // 秘法師：奧術爆裂法球（命中後 105px 小範圍爆炸濺射）
       const spr = this.add.image(this.hero.x, this.hero.y - 16, 'fx_orb')
         .setScale(0.45).setBlendMode(Phaser.BlendModes.ADD).setDepth(4508);
       this.projectiles.push({
@@ -659,6 +726,198 @@ export class BattleScene extends Phaser.Scene {
         vy: Math.sin(baseAngle) * 520,
         lifeMs: 1100,
         stats,
+      });
+    }
+  }
+
+  // 戰士 4 大主動技能多層完整特效實作
+  castWarriorSkill(skillId, skillLvl, stats) {
+    const alive = this.monsters.filter((m) => m.hp > 0);
+    if (alive.length === 0) return;
+    const sk = WARRIOR_SKILLS[skillId];
+    const target = this.findNearestMonster(this.hero.x, this.hero.y) || alive[0];
+    this.faceHeroToward(target.sprite.x, target.sprite.y);
+    this.heroAttackAnimUntil = this.time.now + 420;
+
+    const dmgMult = stats.skillDmgMult || 1;
+    const radMult = stats.skillRadiusMult || 1;
+
+    const banner = this.add.text(this.scale.width / 2, 68, `⚡ 【${sk.name}】`, {
+      fontSize: '23px', color: '#fde047', fontFamily: 'sans-serif', fontStyle: 'bold',
+      stroke: '#000000', strokeThickness: 5,
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(5000);
+    this.tweens.add({ targets: banner, y: 42, alpha: 0, duration: 920, onComplete: () => banner.destroy() });
+
+    if (skillId === 'whirlwind') {
+      const radius = 235 * radMult;
+      const inner = this.add.image(this.hero.x, this.hero.y, 'wfx_whirl_inner').setScale(1.25 * radMult).setBlendMode(Phaser.BlendModes.ADD).setDepth(4502);
+      const outer = this.add.image(this.hero.x, this.hero.y, 'wfx_whirl_outer').setScale(1.55 * radMult).setBlendMode(Phaser.BlendModes.ADD).setDepth(4503);
+      const wind = this.add.image(this.hero.x, this.hero.y + 16, 'wfx_whirl_wind').setScale(1.6 * radMult).setAlpha(0.75).setBlendMode(Phaser.BlendModes.ADD).setDepth(4500);
+
+      const spinEv = this.time.addEvent({
+        delay: 260,
+        repeat: 3,
+        callback: () => {
+          const tickDmg = Math.round(stats.atk * (0.80 + skillLvl * 0.18) * dmgMult);
+          this.monsters.filter((m) => m.hp > 0).forEach((m) => {
+            if (Phaser.Math.Distance.Between(this.hero.x, this.hero.y, m.sprite.x, m.sprite.y) <= radius) {
+              this.damageMonster(m, tickDmg, true, false, '#fb923c', '🌪️');
+            }
+          });
+          this.healHero(Math.round(this.playerMaxHp * 0.025));
+        },
+      });
+      this.tweens.add({
+        targets: [inner, wind],
+        angle: 720,
+        duration: 1050,
+        onUpdate: () => {
+          inner.setPosition(this.hero.x, this.hero.y);
+          outer.setPosition(this.hero.x, this.hero.y);
+          wind.setPosition(this.hero.x, this.hero.y + 16);
+        },
+        onComplete: () => {
+          inner.destroy(); outer.destroy(); wind.destroy();
+          if (spinEv) spinEv.remove();
+        },
+      });
+      this.tweens.add({ targets: outer, angle: -540, duration: 1050 });
+      this.cameras.main.shake(240, 0.008);
+    } else if (skillId === 'earthshatter') {
+      const mx = this.hero.x;
+      const my = this.hero.y + 10;
+      const radius = 245 * radMult;
+
+      // 地面熔岩裂紋（保留 1.5 秒）
+      const crack = this.add.image(mx, my + 12, 'wfx_lava_crack').setScale(1.4 * radMult).setDepth(5);
+      this.tweens.add({ targets: crack, alpha: 0, delay: 1100, duration: 450, onComplete: () => crack.destroy() });
+
+      this.playFxSprite('wfx_slam_pillar', mx, my - 50, 1.4 * radMult, 0, 420);
+      this.playFxSprite('wfx_lava_ring', mx, my + 10, 1.65 * radMult, 0, 520);
+      this.playFxSprite('wfx_rubble', mx, my - 10, 1.35 * radMult, 0, 480);
+
+      const dmg = Math.round(stats.atk * (2.1 + skillLvl * 0.35) * dmgMult);
+      alive.forEach((m) => {
+        const d = Phaser.Math.Distance.Between(mx, my, m.sprite.x, m.sprite.y);
+        if (d <= radius) {
+          this.damageMonster(m, dmg, true, false, '#f97316', '🌋');
+          m.stunUntil = this.time.now + 1200;
+          const ang = Math.atan2(m.sprite.y - my, m.sprite.x - mx);
+          const kb = m.isBoss ? 18 : 56;
+          m.sprite.x = Phaser.Math.Clamp(m.sprite.x + Math.cos(ang) * kb, 120, MAP_W - 120);
+          m.sprite.y = Phaser.Math.Clamp(m.sprite.y + Math.sin(ang) * kb, 120, MAP_H - 120);
+        }
+      });
+      this.cameras.main.shake(260, 0.014);
+    } else if (skillId === 'bloodcharge') {
+      const ang = Math.atan2(target.sprite.y - this.hero.y, target.sprite.x - this.hero.x);
+      const sx = this.hero.x;
+      const sy = this.hero.y;
+      const tx = Phaser.Math.Clamp(sx + Math.cos(ang) * 280, 200, MAP_W - 200);
+      const ty = Phaser.Math.Clamp(sy + Math.sin(ang) * 280, 180, MAP_H - 180);
+
+      const aura = this.add.image(sx, sy, 'wfx_charge_aura')
+        .setScale(1.15).setRotation(ang).setBlendMode(Phaser.BlendModes.ADD).setDepth(4505);
+      const trail = this.add.image((sx + tx) / 2, (sy + ty) / 2 + 12, 'wfx_fire_trail')
+        .setDisplaySize(300, 100).setRotation(ang).setBlendMode(Phaser.BlendModes.ADD).setDepth(4500);
+      this.tweens.add({ targets: trail, alpha: 0, duration: 850, onComplete: () => trail.destroy() });
+
+      this.tweens.add({
+        targets: [this.hero, aura],
+        x: tx,
+        y: ty,
+        duration: 210,
+        ease: 'Cubic.easeOut',
+        onComplete: () => {
+          aura.destroy();
+          this.playFxSprite('wfx_blood_ring', this.hero.x, this.hero.y, 1.35 * radMult, 0, 480);
+          const dmg = Math.round(stats.atk * (1.8 + skillLvl * 0.30) * dmgMult);
+          this.monsters.filter((m) => m.hp > 0).forEach((m) => {
+            if (Phaser.Math.Distance.Between(this.hero.x, this.hero.y, m.sprite.x, m.sprite.y) <= 190 * radMult) {
+              this.damageMonster(m, dmg, true, false, '#f87171', '🩸');
+            }
+          });
+          this.healHero(Math.round(this.playerMaxHp * (0.10 + skillLvl * 0.02)));
+        },
+      });
+    } else if (skillId === 'bladestorm') {
+      const baseAng = Math.atan2(target.sprite.y - this.hero.y, target.sprite.x - this.hero.x);
+      const angles = [baseAng - 0.34, baseAng, baseAng + 0.34];
+      const waveDmg = Math.round(stats.atk * (1.45 + skillLvl * 0.28) * dmgMult);
+
+      angles.forEach((ang, idx) => {
+        this.time.delayedCall(idx * 70, () => {
+          const spr = this.add.image(this.hero.x, this.hero.y - 10, 'wfx_blade_wave')
+            .setScale(0.75 * radMult).setRotation(ang).setBlendMode(Phaser.BlendModes.ADD).setDepth(4509);
+          this.projectiles.push({
+            fromEnemy: false,
+            kind: 'blade_wave',
+            sprite: spr,
+            vx: Math.cos(ang) * 620,
+            vy: Math.sin(ang) * 620,
+            lifeMs: 950,
+            fixedDmg: waveDmg,
+            hitIds: new Set(),
+            stats,
+          });
+        });
+      });
+    }
+  }
+
+  triggerLegacyClassSkill(cls, stats) {
+    const alive = this.monsters.filter((m) => m.hp > 0);
+    if (alive.length === 0) return;
+    const sk = cls.skill;
+    const target = this.findNearestMonster(this.hero.x, this.hero.y) || alive[0];
+    this.faceHeroToward(target.sprite.x, target.sprite.y);
+    this.heroAttackAnimUntil = this.time.now + 360;
+
+    const dmgMult = stats.skillDmgMult || 1;
+    const radMult = stats.skillRadiusMult || 1;
+
+    if (sk.type === 'volley') {
+      for (let i = 0; i < sk.hits; i++) {
+        this.time.delayedCall(i * 115, () => {
+          const curAlive = this.monsters.filter((m) => m.hp > 0);
+          if (curAlive.length === 0) return;
+          const tMob = curAlive[i % curAlive.length];
+          this.launchFxProjectile('fx_beam', this.hero.x, this.hero.y - 14, tMob.sprite.x, tMob.sprite.y - 12, 0.72, () => {
+            this.playFxSprite('fx_crit', tMob.sprite.x, tMob.sprite.y - 10, 0.75 * radMult, Math.random() * Math.PI, 280);
+            const isCrit = Math.random() * 100 < (stats.critRate + sk.bonusCrit);
+            let dmg = stats.atk * sk.mult * dmgMult;
+            if (isCrit) dmg *= stats.critDmg / 100;
+            this.monsters.filter((m) => m.hp > 0).forEach((m) => {
+              if (Phaser.Math.Distance.Between(tMob.sprite.x, tMob.sprite.y, m.sprite.x, m.sprite.y) <= 135 * radMult) {
+                this.damageMonster(m, Math.round(dmg), isCrit, false, '#34d399', '🏹');
+              }
+            });
+          }, 120);
+        });
+      }
+    } else if (sk.type === 'meteor') {
+      const mx = target.sprite.x;
+      const my = target.sprite.y;
+      const sigil = this.add.image(mx, my + 20, 'fx_sigil').setScale(1.15 * radMult).setBlendMode(Phaser.BlendModes.ADD).setDepth(4499);
+      const meteor = this.add.image(mx - 140, my - 300, 'fx_meteor').setScale(0.95).setBlendMode(Phaser.BlendModes.ADD).setDepth(4505);
+      this.tweens.add({
+        targets: meteor,
+        x: mx,
+        y: my,
+        duration: 330,
+        ease: 'Quad.easeIn',
+        onComplete: () => {
+          meteor.destroy();
+          sigil.destroy();
+          this.playFxSprite('fx_explosion', mx, my - 14, 1.5 * radMult, 0, 460);
+          const dmg = Math.round(stats.atk * sk.mult * dmgMult);
+          this.monsters.filter((m) => m.hp > 0).forEach((m) => {
+            if (Phaser.Math.Distance.Between(mx, my, m.sprite.x, m.sprite.y) <= 240 * radMult) {
+              this.damageMonster(m, dmg, true, false, '#e879f9', '☄️');
+            }
+          });
+          this.cameras.main.shake(220, 0.012);
+        },
       });
     }
   }
@@ -702,27 +961,33 @@ export class BattleScene extends Phaser.Scene {
       } else if (!remove && !p.fromEnemy) {
         for (const m of this.monsters) {
           if (m.hp <= 0 || (p.hitIds && p.hitIds.has(m.uid))) continue;
-          const hitR = m.isBoss ? 72 : 48;
+          const hitR = (p.kind === 'blade_wave' ? 95 : 48) + (m.isBoss ? 25 : 0);
           if (Phaser.Math.Distance.Between(p.sprite.x, p.sprite.y, m.sprite.x, m.sprite.y) <= hitR) {
-            const isCrit = Math.random() * 100 < p.stats.critRate;
-            let dmg = p.stats.atk * (0.92 + Math.random() * 0.16);
-            if (isCrit) dmg *= p.stats.critDmg / 100;
-            dmg = Math.max(1, Math.round(dmg));
-
-            if (p.kind === 'pierce_arrow') {
+            if (p.kind === 'blade_wave') {
               p.hitIds.add(m.uid);
-              this.applyHitEffects(m, dmg, isCrit, p.stats);
-              p.pierceLeft -= 1;
-              if (p.pierceLeft <= 0) { remove = true; break; }
-            } else if (p.kind === 'aoe_orb') {
-              this.playFxSprite('fx_explosion', p.sprite.x, p.sprite.y, 0.56, 0, 260);
-              this.monsters.filter((t) => t.hp > 0).forEach((t) => {
-                if (Phaser.Math.Distance.Between(p.sprite.x, p.sprite.y, t.sprite.x, t.sprite.y) <= 105) {
-                  this.applyHitEffects(t, dmg, isCrit, p.stats);
-                }
-              });
-              remove = true;
-              break;
+              this.playFxSprite('wfx_pierce_burst', m.sprite.x, m.sprite.y - 10, 0.72, Math.random() * Math.PI, 260);
+              this.applyHitEffects(m, p.fixedDmg, true, p.stats);
+            } else {
+              const isCrit = Math.random() * 100 < p.stats.critRate;
+              let dmg = p.stats.atk * (0.92 + Math.random() * 0.16);
+              if (isCrit) dmg *= p.stats.critDmg / 100;
+              dmg = Math.max(1, Math.round(dmg));
+
+              if (p.kind === 'pierce_arrow') {
+                p.hitIds.add(m.uid);
+                this.applyHitEffects(m, dmg, isCrit, p.stats);
+                p.pierceLeft -= 1;
+                if (p.pierceLeft <= 0) { remove = true; break; }
+              } else if (p.kind === 'aoe_orb') {
+                this.playFxSprite('fx_explosion', p.sprite.x, p.sprite.y, 0.56, 0, 260);
+                this.monsters.filter((t) => t.hp > 0).forEach((t) => {
+                  if (Phaser.Math.Distance.Between(p.sprite.x, p.sprite.y, t.sprite.x, t.sprite.y) <= 105) {
+                    this.applyHitEffects(t, dmg, isCrit, p.stats);
+                  }
+                });
+                remove = true;
+                break;
+              }
             }
           }
         }
@@ -732,93 +997,6 @@ export class BattleScene extends Phaser.Scene {
         p.sprite.destroy();
         this.projectiles.splice(i, 1);
       }
-    }
-  }
-
-  triggerClassSkill(cls, stats, primaryTarget = null) {
-    const alive = this.monsters.filter((m) => m.hp > 0);
-    if (alive.length === 0) return;
-    const sk = cls.skill;
-    const target = primaryTarget || this.findNearestMonster(this.hero.x, this.hero.y) || alive[0];
-    this.faceHeroToward(target.sprite.x, target.sprite.y);
-    this.heroAttackAnimUntil = this.time.now + 380;
-
-    const dmgMult = stats.skillDmgMult || 1;
-    const radMult = stats.skillRadiusMult || 1;
-
-    const banner = this.add.text(this.scale.width / 2, 68, `⚡ 【${sk.name}】`, {
-      fontSize: '23px', color: '#fde047', fontFamily: 'sans-serif', fontStyle: 'bold',
-      stroke: '#000000', strokeThickness: 5,
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(5000);
-    this.tweens.add({ targets: banner, y: 42, alpha: 0, duration: 920, onComplete: () => banner.destroy() });
-
-    if (sk.type === 'whirlwind') {
-      const radius = 230 * radMult;
-      const vortex = this.add.image(this.hero.x, this.hero.y, 'fx_whirlwind')
-        .setScale(1.4 * radMult).setBlendMode(Phaser.BlendModes.ADD).setDepth(4502);
-      this.tweens.add({ targets: vortex, angle: 360, scale: 1.85 * radMult, alpha: 0, duration: 480, onComplete: () => vortex.destroy() });
-      this.playFxSprite('fx_crack', this.hero.x, this.hero.y + 18, 1.2 * radMult, 0, 500);
-      this.playFxSprite('fx_cross', this.hero.x, this.hero.y - 10, 1.0 * radMult, 0, 360);
-
-      const dmg = Math.round(stats.atk * sk.mult * dmgMult);
-      alive.forEach((m) => {
-        if (Phaser.Math.Distance.Between(this.hero.x, this.hero.y, m.sprite.x, m.sprite.y) <= radius) {
-          this.damageMonster(m, dmg, true, false, '#fb923c', '💥');
-        }
-      });
-      this.healHero(Math.round(this.playerMaxHp * sk.healPct));
-      this.cameras.main.shake(180, 0.011);
-    } else if (sk.type === 'volley') {
-      for (let i = 0; i < sk.hits; i++) {
-        this.time.delayedCall(i * 115, () => {
-          const curAlive = this.monsters.filter((m) => m.hp > 0);
-          if (curAlive.length === 0) return;
-          const tMob = curAlive[i % curAlive.length];
-          this.launchFxProjectile('fx_beam', this.hero.x, this.hero.y - 14, tMob.sprite.x, tMob.sprite.y - 12, 0.72, () => {
-            this.playFxSprite('fx_crit', tMob.sprite.x, tMob.sprite.y - 10, 0.75 * radMult, Math.random() * Math.PI, 280);
-            const isCrit = Math.random() * 100 < (stats.critRate + sk.bonusCrit);
-            let dmg = stats.atk * sk.mult * dmgMult;
-            if (isCrit) dmg *= stats.critDmg / 100;
-            this.monsters.filter((m) => m.hp > 0).forEach((m) => {
-              if (Phaser.Math.Distance.Between(tMob.sprite.x, tMob.sprite.y, m.sprite.x, m.sprite.y) <= 135 * radMult) {
-                this.damageMonster(m, Math.round(dmg), isCrit, false, '#34d399', '🏹');
-              }
-            });
-          }, 120);
-        });
-      }
-    } else if (sk.type === 'meteor') {
-      const mx = target.sprite.x;
-      const my = target.sprite.y;
-      const radius = 240 * radMult;
-
-      const sigil = this.add.image(mx, my + 20, 'fx_sigil')
-        .setScale(1.15 * radMult).setAlpha(0.95).setBlendMode(Phaser.BlendModes.ADD).setDepth(4499);
-      this.tweens.add({ targets: sigil, angle: 90, duration: 360 });
-
-      const meteor = this.add.image(mx - 140, my - 300, 'fx_meteor')
-        .setScale(0.95).setBlendMode(Phaser.BlendModes.ADD).setDepth(4505);
-
-      this.tweens.add({
-        targets: meteor,
-        x: mx,
-        y: my,
-        duration: 330,
-        ease: 'Quad.easeIn',
-        onComplete: () => {
-          meteor.destroy();
-          sigil.destroy();
-          this.playFxSprite('fx_explosion', mx, my - 14, 1.5 * radMult, 0, 460);
-          this.playFxSprite('fx_crack', mx, my + 18, 1.15 * radMult, 0, 520);
-          const dmg = Math.round(stats.atk * sk.mult * dmgMult);
-          this.monsters.filter((m) => m.hp > 0).forEach((m) => {
-            if (Phaser.Math.Distance.Between(mx, my, m.sprite.x, m.sprite.y) <= radius) {
-              this.damageMonster(m, dmg, true, false, '#e879f9', '☄️');
-            }
-          });
-          this.cameras.main.shake(220, 0.012);
-        },
-      });
     }
   }
 

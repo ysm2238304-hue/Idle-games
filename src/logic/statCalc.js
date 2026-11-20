@@ -38,7 +38,7 @@ export function recalcPlayerStats(state) {
     lifesteal: cls.baseStats.lifesteal,
     goldFind: cls.baseStats.goldFind,
     magicFind: cls.baseStats.magicFind,
-    moveSpeed: 135,
+    moveSpeed: 145,
   };
 
   let atkPct = 0;
@@ -72,13 +72,13 @@ export function recalcPlayerStats(state) {
     if (item.legendaryEffect) activeEffects.add(item.legendaryEffect.id);
   }
 
-  // 技能樹加成
   atkPct += (tree.fury_atk || 0) * 6;
   flat.critRate += (tree.fury_crit || 0) * 2.5;
   flat.critDmg += (tree.fury_crit || 0) * 10;
   const skillDmgMult = 1 + (tree.fury_aoe || 0) * 0.15;
   const skillRadiusMult = 1 + (tree.fury_aoe || 0) * 0.16;
   const treeBoltChance = [0, 35, 70, 100][tree.fury_bolt || 0] || 0;
+  const cdrMult = Math.max(0.6, 1 - (tree.w_cdr || 0) * 0.06);
 
   hpPct += (tree.guard_hp || 0) * 8;
   armorPct += (tree.guard_def || 0) * 12;
@@ -92,7 +92,6 @@ export function recalcPlayerStats(state) {
   flat.magicFind += (tree.greed_mf || 0) * 8;
   const expMult = 1 + (tree.greed_exp || 0) * 0.12;
 
-  // 深淵魂晶永久輪迴加成
   const crystals = state.soulCrystals || 0;
   const crystalMult = 1 + crystals * 0.15;
   flat.goldFind += crystals * 5;
@@ -127,6 +126,7 @@ export function recalcPlayerStats(state) {
     moveSpeed: Math.round(flat.moveSpeed),
     skillDmgMult,
     skillRadiusMult,
+    cdrMult,
     treeBoltChance,
     killHealPct,
     expMult,

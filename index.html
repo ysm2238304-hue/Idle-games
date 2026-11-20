@@ -11,7 +11,6 @@
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
 </head>
 <body>
-  <!-- 1. 全螢幕暗黑歡迎頁 -->
   <section id="welcome-screen">
     <div class="welcome-backdrop"></div>
     <div class="welcome-vignette"></div>
@@ -40,7 +39,6 @@
     </div>
   </section>
 
-  <!-- 2. 主遊戲畫面（全幅 2.5D 戰鬥 ＋ 底部小圖示列） -->
   <section id="game-screen" class="hidden">
     <header id="top-hud">
       <div class="hud-left">
@@ -110,6 +108,10 @@
             <div id="skill-tree-container"></div>
           </div>
 
+          <div id="tab-skills" class="tab-panel">
+            <div id="skill-select-container"></div>
+          </div>
+
           <div id="tab-rebirth" class="tab-panel">
             <div id="rebirth-container"></div>
           </div>
@@ -125,15 +127,31 @@
       </aside>
     </main>
 
-    <!-- 底部小圖示快捷選項列 -->
+    <!-- 底部三格技能槽 ＋ 小圖示快捷列 -->
     <footer id="bottom-dock">
-      <button id="btn-cast-skill" class="dock-skill-btn" title="施放主動技能 (空白鍵)">
-        <span class="dock-icon">⚡</span>
-        <div class="dock-skill-meta">
-          <strong id="skill-name-label">旋風重斬</strong>
-          <div class="skill-cd-track"><div id="skill-cd-fill"></div></div>
-        </div>
-      </button>
+      <div class="dock-skills-group">
+        <button id="skill-slot-0" class="dock-skill-btn" title="主動技能 1 (Space)">
+          <img class="sk-slot-img hidden" src="" alt="" />
+          <div class="dock-skill-meta">
+            <strong class="sk-slot-name">旋風重斬 [Space]</strong>
+            <div class="skill-cd-track"><div class="skill-cd-fill"></div></div>
+          </div>
+        </button>
+        <button id="skill-slot-1" class="dock-skill-btn" title="主動技能 2 (E)">
+          <img class="sk-slot-img hidden" src="" alt="" />
+          <div class="dock-skill-meta">
+            <strong class="sk-slot-name">空技能槽 [E]</strong>
+            <div class="skill-cd-track"><div class="skill-cd-fill"></div></div>
+          </div>
+        </button>
+        <button id="skill-slot-2" class="dock-skill-btn" title="主動技能 3 (R)">
+          <img class="sk-slot-img hidden" src="" alt="" />
+          <div class="dock-skill-meta">
+            <strong class="sk-slot-name">空技能槽 [R]</strong>
+            <div class="skill-cd-track"><div class="skill-cd-fill"></div></div>
+          </div>
+        </button>
+      </div>
 
       <button id="btn-toggle-auto" class="dock-btn active" title="WASD 移動 / T 鍵切換自動與手動">
         <span class="dock-icon">🏃</span>
@@ -164,6 +182,11 @@
         <span id="tree-sp-badge" class="sp-badge hidden">0</span>
       </button>
 
+      <button class="dock-btn" data-drawer="skills" title="技能選擇配置 (6)">
+        <span class="dock-icon">⚡</span>
+        <span class="dock-label">技能頁[6]</span>
+      </button>
+
       <button class="dock-btn" data-drawer="rebirth" title="深淵輪迴 (5)">
         <span class="dock-icon">🌀</span>
         <span class="dock-label">輪迴[5]</span>
@@ -178,8 +201,6 @@
         <span class="dock-icon">📜</span>
         <span class="dock-label">日誌</span>
       </button>
-
-      <span class="hotkey-hint">WASD 移動 • Space 大招 • Q 分解</span>
     </footer>
   </section>
 

@@ -1,9 +1,10 @@
-import { CLASSES } from '../data/classes.js';
-import { EQUIP_SLOTS, RARITIES, BASE_ITEMS } from '../data/items.js';
-import { getZoneName } from '../data/monsters.js';
-import { SKILL_BRANCHES, SKILL_TREE_NODES, isNodeUnlocked } from '../data/skillTree.js';
-import { calcItemPower, getSalvageReward } from '../logic/lootGen.js';
-import { formatNum, getExpToNext, getUpgradeCost, calcRebirthCrystals } from '../logic/statCalc.js';
+import { CLASSES } from './data/classes.js';
+import { WARRIOR_SKILLS } from './data/warriorSkills.js';
+import { EQUIP_SLOTS, RARITIES, BASE_ITEMS } from './data/items.js';
+import { getZoneName } from './data/monsters.js';
+import { SKILL_BRANCHES, SKILL_TREE_NODES, isNodeUnlocked } from './data/skillTree.js';
+import { calcItemPower, getSalvageReward } from './logic/lootGen.js';
+import { formatNum, getExpToNext, getUpgradeCost, calcRebirthCrystals } from './logic/statCalc.js';
 
 const STAT_LABELS = {
   atkFlat: '攻擊力',
@@ -70,6 +71,7 @@ export class DashboardUI {
       bag: '🎒 戰利品背包',
       upgrade: '🔥 屬性強化',
       tree: '🌳 深淵技能樹',
+      skills: '⚡ 技能選擇配置',
       rebirth: '🌀 深淵輪迴',
       log: '📜 戰鬥日誌',
     };
@@ -183,18 +185,61 @@ export class DashboardUI {
     document.getElementById('btn-stage-next').disabled = state.stage >= state.maxStageReached;
     document.getElementById('btn-stage-prev').disabled = state.stage <= 1;
 
-    document.getElementById('skill-name-label').textContent = cls.skill.name;
-
     const spDot = document.getElementById('tree-sp-badge');
     if (spDot) {
       spDot.textContent = state.skillPoints || 0;
       spDot.classList.toggle('hidden', (state.skillPoints || 0) <= 0);
     }
+
+    this.renderDockSkillSlots(state);
   }
 
-  updateSkillProgress(ratio) {
-    const fill = document.getElementById('skill-cd-fill');
-    if (fill) fill.style.width = `${Math.round(ratio * 100)}%`;
+  renderDockSkillSlots(state) {
+    const keyLabels = ['Space', 'E', 'R'];
+    for (let i = 0; i < 3; i++) {
+      const btn = document.getElementById(`skill-slot-${i}`);
+      if (!btn) continue;
+      const iconEl = btn.querySelector('.sk-slot-img');
+      const nameEl = btn.querySelector('.sk-slot-name');
+
+      if (state.classId === 'warrior') {
+        const sid = (state.equippedSkills || [])[i];
+        const sk = sid ? WARRIOR_SKILLS[sid] : null;
+        const lvl = sk ? (state.skillTree?.[sk.treeNodeId] || 0) : 0;
+        if (sk && lvl > 0) {
+          iconEl.src = sk.icon;
+          iconEl.classList.remove('hidden');
+          nameEl.textContent = `${sk.name} [${keyLabels[i]}]`;
+          btn.disabled = false;
+        } else {
+          iconEl.classList.add('hidden');
+          nameEl.textContent = `空技能槽 [${keyLabels[i]}]`;
+          btn.disabled = true;
+        }
+      } else {
+        if (i === 0) {
+          const cls = CLASSES[state.classId];
+          iconEl.classList.add('hidden');
+          nameEl.textContent = `${cls.skill.name} [Space]`;
+          btn.disabled = false;
+        } else {
+          iconEl.classList.add('hidden');
+          nameEl.textContent = `— [${keyLabels[i]}]`;
+          btn.disabled = true;
+        }
+      }
+    }
+  }
+
+  updateSkillProgress(ratios) {
+    for (let i = 0; i < 3; i++) {
+      const btn = document.getElementById(`skill-slot-${i}`);
+      if (!btn) continue;
+      const fill = btn.querySelector('.skill-cd-fill');
+      const r = ratios[i] || 0;
+      if (fill) fill.style.width = `${Math.round(r * 100)}%`;
+      btn.classList.toggle('ready', !btn.disabled && r >= 1);
+    }
   }
 
   renderAllPanels(state, stats) {
@@ -202,6 +247,7 @@ export class DashboardUI {
     this.renderInventory(state);
     this.renderUpgrades(state);
     this.renderSkillTree(state);
+    this.renderSkillSelectPanel(state);
     this.renderRebirthPanel(state);
   }
 
@@ -387,7 +433,7 @@ export class DashboardUI {
 
     let html = `
       <div class="tree-header-bar">
-        <span>可用技能點：<strong style="color:#fde047;font-size:15px;">${sp}</strong>（每升 1 級獲得 1 點）</span>
+        <span>可用技能點：<strong style="color:#fde047;font-size:15px;">${sp}</strong>（每升 1 級 +1 點）</span>
         <button id="btn-reset-tree" class="btn-ghost">洗點重置</button>
       </div>
     `;
@@ -407,7 +453,7 @@ export class DashboardUI {
             </div>
             <div class="node-desc">${node.desc}</div>
             <button class="btn-primary btn-node-up" data-node="${node.id}" ${!unlocked || maxed || sp <= 0 ? 'disabled' : ''}>
-              ${maxed ? '已滿級' : (unlocked ? '+1 升級' : '需前置 2 級')}
+              ${maxed ? '已滿級' : (unlocked ? '+1 升級' : '需前置解鎖')}
             </button>
           </div>
         `;
@@ -421,6 +467,67 @@ export class DashboardUI {
     });
     document.getElementById('btn-reset-tree')?.addEventListener('click', () => {
       this.handlers.onResetSkillTree();
+    });
+  }
+
+  renderSkillSelectPanel(state) {
+    const box = document.getElementById('skill-select-container');
+    if (!box) return;
+
+    if (state.classId !== 'warrior') {
+      box.innerHTML = `<div class="empty-tip">目前僅「狂戰士」實裝 4 大技能配置頁，遊俠與法師將於下一階段補齊。</div>`;
+      return;
+    }
+
+    const eq = state.equippedSkills || ['whirlwind', null, null];
+    const keys = ['Space', 'E', 'R'];
+
+    let slotsHtml = '<div class="section-subtitle">目前已裝備主動技能（掛機自動輪替／可按快捷鍵施放）</div><div class="equipped-skills-row">';
+    for (let i = 0; i < 3; i++) {
+      const sk = eq[i] ? WARRIOR_SKILLS[eq[i]] : null;
+      slotsHtml += `
+        <div class="eq-sk-box">
+          <div class="eq-sk-key">槽位 ${i + 1} [${keys[i]}]</div>
+          ${sk
+            ? `<img src="${sk.icon}" alt="${sk.name}" /><strong>${sk.name}</strong>`
+            : `<span style="color:#64748b;font-size:12px;">空欄位</span>`}
+        </div>
+      `;
+    }
+    slotsHtml += '</div>';
+
+    let listHtml = '<div class="section-subtitle">戰士技能庫（需先於「🌳 技能樹」解鎖對應節點）</div><div class="skill-library-list">';
+    Object.values(WARRIOR_SKILLS).forEach((sk) => {
+      const lvl = state.skillTree?.[sk.treeNodeId] || 0;
+      const unlocked = lvl > 0;
+      listHtml += `
+        <div class="sk-lib-card ${unlocked ? '' : 'locked'}">
+          <img class="sk-lib-icon" src="${sk.icon}" alt="${sk.name}" />
+          <div class="sk-lib-body">
+            <div class="sk-lib-head">
+              <strong>${sk.name}</strong>
+              <span style="color:${unlocked ? '#fde047' : '#64748b'};font-size:12px;">
+                ${unlocked ? `Lv.${lvl} • 冷卻 ${(sk.cooldownMs / 1000).toFixed(1)}s` : '尚未解鎖'}
+              </span>
+            </div>
+            <div class="sk-lib-desc">${sk.desc}</div>
+            <div class="sk-lib-detail">${sk.getDetail(Math.max(1, lvl))}</div>
+            <div class="sk-lib-actions">
+              ${[0, 1, 2].map((sIdx) => `
+                <button class="btn-secondary btn-eq-sk" data-slot="${sIdx}" data-skill="${sk.id}" ${!unlocked ? 'disabled' : ''}>
+                  ${eq[sIdx] === sk.id ? `✓ 已裝槽${sIdx + 1}` : `裝入槽 ${sIdx + 1}`}
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+    });
+    listHtml += '</div>';
+
+    box.innerHTML = slotsHtml + listHtml;
+    box.querySelectorAll('.btn-eq-sk').forEach((btn) => {
+      btn.onclick = () => this.handlers.onEquipSkill(Number(btn.dataset.slot), btn.dataset.skill);
     });
   }
 

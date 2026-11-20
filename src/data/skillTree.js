@@ -1,10 +1,18 @@
 export const SKILL_BRANCHES = [
+  { id: 'warrior_active', name: '戰士技能（解鎖與強化）', color: '#f97316', icon: '🔥' },
   { id: 'fury',  name: '狂暴輸出', color: '#ef4444', icon: '⚔️' },
   { id: 'guard', name: '生存續戰', color: '#22c55e', icon: '🛡️' },
   { id: 'greed', name: '刷寶掛機', color: '#f59e0b', icon: '💎' },
 ];
 
 export const SKILL_TREE_NODES = [
+  // 戰士技能分支
+  { id: 'w_whirlwind',    branch: 'warrior_active', name: '旋風重斬',   maxLvl: 5, req: null, desc: '解鎖並強化【旋風重斬】每段傷害 +18%' },
+  { id: 'w_earthshatter', branch: 'warrior_active', name: '裂地猛擊',   maxLvl: 5, req: { id: 'w_whirlwind', lvl: 1 }, desc: '解鎖【裂地猛擊】暈眩砸地重擊 (每級 +35% 傷)' },
+  { id: 'w_bloodcharge',  branch: 'warrior_active', name: '血怒衝鋒',   maxLvl: 5, req: { id: 'w_whirlwind', lvl: 1 }, desc: '解鎖【血怒衝鋒】突進撞飛並吸血 (每級 +30% 傷)' },
+  { id: 'w_bladestorm',   branch: 'warrior_active', name: '烈焰劍氣波', maxLvl: 5, req: { id: 'w_earthshatter', lvl: 1 }, desc: '解鎖【烈焰劍氣波】三連貫穿劍氣 (每級 +28% 傷)' },
+  { id: 'w_cdr',          branch: 'warrior_active', name: '戰意沸騰',   maxLvl: 5, req: { id: 'w_bloodcharge', lvl: 1 }, desc: '每級縮短所有主動技能冷卻時間 6%' },
+
   // 狂暴輸出系
   { id: 'fury_atk',   branch: 'fury',  name: '戰意覺醒', maxLvl: 10, req: null, desc: '每級攻擊力 +6%' },
   { id: 'fury_crit',  branch: 'fury',  name: '致命弱點', maxLvl: 8,  req: { id: 'fury_atk', lvl: 2 }, desc: '每級暴擊率 +2.5%、暴擊傷害 +10%' },

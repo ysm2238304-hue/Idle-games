@@ -8,8 +8,9 @@ export function createInitialState(classId = 'warrior') {
     classId,
     level: 1,
     exp: 0,
-    skillPoints: 0,
-    skillTree: {},
+    skillPoints: 1, // 開局贈送 1 點體驗技能樹
+    skillTree: { w_whirlwind: 1 },
+    equippedSkills: ['whirlwind', null, null],
     soulCrystals: 0,
     rebirthCount: 0,
     gold: 0,
@@ -63,13 +64,15 @@ export function loadGame() {
       upgrades: { ...base.upgrades, ...(parsed.upgrades || {}) },
       equipment: { ...base.equipment, ...(parsed.equipment || {}) },
       autoSalvage: { ...base.autoSalvage, ...(parsed.autoSalvage || {}) },
-      skillTree: { ...(parsed.skillTree || {}) },
+      skillTree: { w_whirlwind: 1, ...(parsed.skillTree || {}) },
+      equippedSkills: Array.isArray(parsed.equippedSkills) && parsed.equippedSkills.length === 3
+        ? parsed.equippedSkills
+        : ['whirlwind', null, null],
       inventory: Array.isArray(parsed.inventory) ? parsed.inventory : [],
     };
-    // 相容舊存檔：補發應有技能點
-    const spent = Object.values(merged.skillTree).reduce((s, v) => s + v, 0);
+    const spent = Object.values(merged.skillTree).reduce((s, v) => s + v, 0) - 1; // 扣掉預設 w_whirlwind:1
     if (merged.level - 1 > spent + (merged.skillPoints || 0)) {
-      merged.skillPoints = (merged.level - 1) - spent;
+      merged.skillPoints = Math.max(0, (merged.level - 1) - spent);
     }
     return merged;
   } catch (e) {
