@@ -38,7 +38,7 @@ export function recalcPlayerStats(state) {
     lifesteal: cls.baseStats.lifesteal,
     goldFind: cls.baseStats.goldFind,
     magicFind: cls.baseStats.magicFind,
-    moveSpeed: 145,
+    moveSpeed: state.classId === 'ranger' ? 168 : (state.classId === 'mage' ? 152 : 145),
   };
 
   let atkPct = 0;
@@ -78,7 +78,10 @@ export function recalcPlayerStats(state) {
   const skillDmgMult = 1 + (tree.fury_aoe || 0) * 0.15;
   const skillRadiusMult = 1 + (tree.fury_aoe || 0) * 0.16;
   const treeBoltChance = [0, 35, 70, 100][tree.fury_bolt || 0] || 0;
-  const cdrMult = Math.max(0.6, 1 - (tree.w_cdr || 0) * 0.06);
+  const cdrLvl = state.classId === 'ranger'
+    ? (tree.r_cdr || 0)
+    : (state.classId === 'mage' ? (tree.m_cdr || 0) : (tree.w_cdr || 0));
+  const cdrMult = Math.max(0.6, 1 - cdrLvl * 0.06);
 
   hpPct += (tree.guard_hp || 0) * 8;
   armorPct += (tree.guard_def || 0) * 12;
@@ -99,7 +102,7 @@ export function recalcPlayerStats(state) {
 
   const maxHp = Math.round(flat.hp * (1 + hpPct / 100) * crystalMult);
   const atk = Math.round(flat.atk * (1 + atkPct / 100) * crystalMult);
-  const atkIntervalMs = Math.max(280, Math.round(cls.baseStats.atkIntervalMs / (1 + flat.atkSpeedPct / 100)));
+  const atkIntervalMs = Math.max(260, Math.round(cls.baseStats.atkIntervalMs / (1 + flat.atkSpeedPct / 100)));
   const critRate = Math.min(85, Math.round(flat.critRate * 10) / 10);
   const critDmg = Math.round(flat.critDmg);
   const armor = Math.round(flat.armor * (1 + armorPct / 100));

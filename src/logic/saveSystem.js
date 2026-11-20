@@ -8,9 +8,13 @@ export function createInitialState(classId = 'warrior') {
     classId,
     level: 1,
     exp: 0,
-    skillPoints: 1, // 開局贈送 1 點體驗技能樹
-    skillTree: { w_whirlwind: 1 },
-    equippedSkills: ['whirlwind', null, null],
+    skillPoints: 1,
+    skillTree: { w_whirlwind: 1, r_volley: 1, m_meteor: 1 },
+    equippedSkillsByClass: {
+      warrior: ['whirlwind', null, null],
+      ranger: ['volley', null, null],
+      mage: ['meteor', null, null],
+    },
     soulCrystals: 0,
     rebirthCount: 0,
     gold: 0,
@@ -64,13 +68,22 @@ export function loadGame() {
       upgrades: { ...base.upgrades, ...(parsed.upgrades || {}) },
       equipment: { ...base.equipment, ...(parsed.equipment || {}) },
       autoSalvage: { ...base.autoSalvage, ...(parsed.autoSalvage || {}) },
-      skillTree: { w_whirlwind: 1, ...(parsed.skillTree || {}) },
-      equippedSkills: Array.isArray(parsed.equippedSkills) && parsed.equippedSkills.length === 3
-        ? parsed.equippedSkills
-        : ['whirlwind', null, null],
+      skillTree: { w_whirlwind: 1, r_volley: 1, m_meteor: 1, ...(parsed.skillTree || {}) },
+      equippedSkillsByClass: {
+        ...base.equippedSkillsByClass,
+        ...(parsed.equippedSkillsByClass || {}),
+      },
       inventory: Array.isArray(parsed.inventory) ? parsed.inventory : [],
     };
-    const spent = Object.values(merged.skillTree).reduce((s, v) => s + v, 0) - 1; // 扣掉預設 w_whirlwind:1
+    if (!merged.equippedSkillsByClass.mage || merged.equippedSkillsByClass.mage.every((s) => !s)) {
+      merged.equippedSkillsByClass.mage = ['meteor', null, null];
+    }
+    // 相容舊版單一 equippedSkills
+    if (Array.isArray(parsed.equippedSkills) && !parsed.equippedSkillsByClass) {
+      merged.equippedSkillsByClass.warrior = parsed.equippedSkills;
+    }
+    const freeDefaults = 3; // w_whirlwind:1 + r_volley:1 + m_meteor:1
+    const spent = Math.max(0, Object.values(merged.skillTree).reduce((s, v) => s + v, 0) - freeDefaults);
     if (merged.level - 1 > spent + (merged.skillPoints || 0)) {
       merged.skillPoints = Math.max(0, (merged.level - 1) - spent);
     }

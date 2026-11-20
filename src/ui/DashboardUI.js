@@ -1,5 +1,7 @@
 import { CLASSES } from './data/classes.js';
 import { WARRIOR_SKILLS } from './data/warriorSkills.js';
+import { RANGER_SKILLS } from './data/rangerSkills.js';
+import { MAGE_SKILLS } from './data/mageSkills.js';
 import { EQUIP_SLOTS, RARITIES, BASE_ITEMS } from './data/items.js';
 import { getZoneName } from './data/monsters.js';
 import { SKILL_BRANCHES, SKILL_TREE_NODES, isNodeUnlocked } from './data/skillTree.js';
@@ -196,15 +198,19 @@ export class DashboardUI {
 
   renderDockSkillSlots(state) {
     const keyLabels = ['Space', 'E', 'R'];
+    const cid = state.classId || 'warrior';
+    const book = cid === 'warrior' ? WARRIOR_SKILLS : (cid === 'ranger' ? RANGER_SKILLS : MAGE_SKILLS);
+    const eqList = state.equippedSkillsByClass?.[cid] || [];
+
     for (let i = 0; i < 3; i++) {
       const btn = document.getElementById(`skill-slot-${i}`);
       if (!btn) continue;
       const iconEl = btn.querySelector('.sk-slot-img');
       const nameEl = btn.querySelector('.sk-slot-name');
 
-      if (state.classId === 'warrior') {
-        const sid = (state.equippedSkills || [])[i];
-        const sk = sid ? WARRIOR_SKILLS[sid] : null;
+      if (book) {
+        const sid = eqList[i];
+        const sk = sid ? book[sid] : null;
         const lvl = sk ? (state.skillTree?.[sk.treeNodeId] || 0) : 0;
         if (sk && lvl > 0) {
           iconEl.src = sk.icon;
@@ -218,7 +224,7 @@ export class DashboardUI {
         }
       } else {
         if (i === 0) {
-          const cls = CLASSES[state.classId];
+          const cls = CLASSES[cid];
           iconEl.classList.add('hidden');
           nameEl.textContent = `${cls.skill.name} [Space]`;
           btn.disabled = false;
@@ -473,18 +479,20 @@ export class DashboardUI {
   renderSkillSelectPanel(state) {
     const box = document.getElementById('skill-select-container');
     if (!box) return;
+    const cid = state.classId || 'warrior';
+    const book = cid === 'warrior' ? WARRIOR_SKILLS : (cid === 'ranger' ? RANGER_SKILLS : MAGE_SKILLS);
 
-    if (state.classId !== 'warrior') {
-      box.innerHTML = `<div class="empty-tip">目前僅「狂戰士」實裝 4 大技能配置頁，遊俠與法師將於下一階段補齊。</div>`;
+    if (!book) {
+      box.innerHTML = `<div class="empty-tip">目前「狂戰士」與「暗影遊俠」已實裝 4 大技能配置頁，秘法師將於下一階段補齊。</div>`;
       return;
     }
 
-    const eq = state.equippedSkills || ['whirlwind', null, null];
+    const eq = state.equippedSkillsByClass?.[cid] || [];
     const keys = ['Space', 'E', 'R'];
 
     let slotsHtml = '<div class="section-subtitle">目前已裝備主動技能（掛機自動輪替／可按快捷鍵施放）</div><div class="equipped-skills-row">';
     for (let i = 0; i < 3; i++) {
-      const sk = eq[i] ? WARRIOR_SKILLS[eq[i]] : null;
+      const sk = eq[i] ? book[eq[i]] : null;
       slotsHtml += `
         <div class="eq-sk-box">
           <div class="eq-sk-key">槽位 ${i + 1} [${keys[i]}]</div>
@@ -496,8 +504,8 @@ export class DashboardUI {
     }
     slotsHtml += '</div>';
 
-    let listHtml = '<div class="section-subtitle">戰士技能庫（需先於「🌳 技能樹」解鎖對應節點）</div><div class="skill-library-list">';
-    Object.values(WARRIOR_SKILLS).forEach((sk) => {
+    let listHtml = '<div class="section-subtitle">職業技能庫（需先於「🌳 技能樹」解鎖對應節點）</div><div class="skill-library-list">';
+    Object.values(book).forEach((sk) => {
       const lvl = state.skillTree?.[sk.treeNodeId] || 0;
       const unlocked = lvl > 0;
       listHtml += `

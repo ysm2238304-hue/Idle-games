@@ -1,5 +1,7 @@
 export const SKILL_BRANCHES = [
   { id: 'warrior_active', name: '戰士技能（解鎖與強化）', color: '#f97316', icon: '🔥' },
+  { id: 'ranger_active',  name: '遊俠技能（解鎖與強化）', color: '#10b981', icon: '🏹' },
+  { id: 'mage_active',    name: '法師技能（解鎖與強化）', color: '#a855f7', icon: '🔮' },
   { id: 'fury',  name: '狂暴輸出', color: '#ef4444', icon: '⚔️' },
   { id: 'guard', name: '生存續戰', color: '#22c55e', icon: '🛡️' },
   { id: 'greed', name: '刷寶掛機', color: '#f59e0b', icon: '💎' },
@@ -11,7 +13,21 @@ export const SKILL_TREE_NODES = [
   { id: 'w_earthshatter', branch: 'warrior_active', name: '裂地猛擊',   maxLvl: 5, req: { id: 'w_whirlwind', lvl: 1 }, desc: '解鎖【裂地猛擊】暈眩砸地重擊 (每級 +35% 傷)' },
   { id: 'w_bloodcharge',  branch: 'warrior_active', name: '血怒衝鋒',   maxLvl: 5, req: { id: 'w_whirlwind', lvl: 1 }, desc: '解鎖【血怒衝鋒】突進撞飛並吸血 (每級 +30% 傷)' },
   { id: 'w_bladestorm',   branch: 'warrior_active', name: '烈焰劍氣波', maxLvl: 5, req: { id: 'w_earthshatter', lvl: 1 }, desc: '解鎖【烈焰劍氣波】三連貫穿劍氣 (每級 +28% 傷)' },
-  { id: 'w_cdr',          branch: 'warrior_active', name: '戰意沸騰',   maxLvl: 5, req: { id: 'w_bloodcharge', lvl: 1 }, desc: '每級縮短所有主動技能冷卻時間 6%' },
+  { id: 'w_cdr',          branch: 'warrior_active', name: '戰意沸騰',   maxLvl: 5, req: { id: 'w_bloodcharge', lvl: 1 }, desc: '每級縮短戰士主動技能冷卻時間 6%' },
+
+  // 遊俠技能分支
+  { id: 'r_volley',     branch: 'ranger_active', name: '穿透連射',   maxLvl: 5, req: null, desc: '解鎖並強化【穿透連射】每道光矢傷害 +18%' },
+  { id: 'r_arrowrain',  branch: 'ranger_active', name: '翡翠箭雨',   maxLvl: 5, req: { id: 'r_volley', lvl: 1 }, desc: '解鎖【翡翠箭雨】4 波大範圍箭雨 (每級 +16% 傷)' },
+  { id: 'r_shadowstep', branch: 'ranger_active', name: '暗影瞬步',   maxLvl: 5, req: { id: 'r_volley', lvl: 1 }, desc: '解鎖【暗影瞬步】瞬移留毒爆陷阱 (每級 +32% 傷)' },
+  { id: 'r_phantombow', branch: 'ranger_active', name: '幻影狙殺箭', maxLvl: 5, req: { id: 'r_arrowrain', lvl: 1 }, desc: '解鎖【幻影狙殺箭】必定暴擊龍魂箭 (每級 +45% 傷)' },
+  { id: 'r_cdr',        branch: 'ranger_active', name: '疾風節奏',   maxLvl: 5, req: { id: 'r_shadowstep', lvl: 1 }, desc: '每級縮短遊俠主動技能冷卻時間 6%' },
+
+  // 法師技能分支
+  { id: 'm_meteor',     branch: 'mage_active', name: '深淵隕石',   maxLvl: 5, req: null, desc: '解鎖並強化【深淵隕石】轟擊傷害 (每級 +42% 傷)' },
+  { id: 'm_arcane_orb', branch: 'mage_active', name: '星界奧術球', maxLvl: 5, req: { id: 'm_meteor', lvl: 1 }, desc: '解鎖【星界奧術球】三連貫穿奧術球 (每級 +22% 傷)' },
+  { id: 'm_frost_nova', branch: 'mage_active', name: '寒冰新星',   maxLvl: 5, req: { id: 'm_meteor', lvl: 1 }, desc: '解鎖【寒冰新星】冰環減速並張開護盾回血 (每級 +30% 傷)' },
+  { id: 'm_void_beam',  branch: 'mage_active', name: '虛空星爆',   maxLvl: 5, req: { id: 'm_arcane_orb', lvl: 1 }, desc: '解鎖【虛空星爆】必定暴擊貫穿星辰雷射 (每級 +48% 傷)' },
+  { id: 'm_cdr',        branch: 'mage_active', name: '魔力湧動',   maxLvl: 5, req: { id: 'm_frost_nova', lvl: 1 }, desc: '每級縮短法師主動技能冷卻時間 6%' },
 
   // 狂暴輸出系
   { id: 'fury_atk',   branch: 'fury',  name: '戰意覺醒', maxLvl: 10, req: null, desc: '每級攻擊力 +6%' },

@@ -1,5 +1,7 @@
 import { CLASSES } from './data/classes.js';
 import { WARRIOR_SKILLS } from './data/warriorSkills.js';
+import { RANGER_SKILLS } from './data/rangerSkills.js';
+import { MAGE_SKILLS } from './data/mageSkills.js';
 import { RARITIES } from './data/items.js';
 import { SKILL_TREE_NODES, isNodeUnlocked } from './data/skillTree.js';
 import { generateLoot, getSalvageReward, calcItemPower } from './logic/lootGen.js';
@@ -50,15 +52,19 @@ const ui = new DashboardUI({
   },
 
   onEquipSkill: (slotIdx, skillId) => {
-    const eq = [...(gameState.equippedSkills || ['whirlwind', null, null])];
-    // 若該技能已裝在其他槽位，先交換/清空
+    const cid = gameState.classId || 'warrior';
+    const book = cid === 'warrior' ? WARRIOR_SKILLS : (cid === 'ranger' ? RANGER_SKILLS : MAGE_SKILLS);
+    if (!gameState.equippedSkillsByClass) {
+      gameState.equippedSkillsByClass = { warrior: ['whirlwind', null, null], ranger: ['volley', null, null], mage: ['meteor', null, null] };
+    }
+    const eq = [...(gameState.equippedSkillsByClass[cid] || [null, null, null])];
     const existIdx = eq.indexOf(skillId);
     if (existIdx !== -1 && existIdx !== slotIdx) {
       eq[existIdx] = eq[slotIdx];
     }
     eq[slotIdx] = skillId;
-    gameState.equippedSkills = eq;
-    ui.addLog(`已將【${WARRIOR_SKILLS[skillId]?.name}】裝備至技能槽 ${slotIdx + 1}`, 'system');
+    gameState.equippedSkillsByClass[cid] = eq;
+    ui.addLog(`已將【${book[skillId]?.name}】裝備至技能槽 ${slotIdx + 1}`, 'system');
     refreshStatsAndUI();
     persistAll(true);
   },
@@ -165,16 +171,22 @@ const ui = new DashboardUI({
     tree[nodeId] = cur + 1;
     gameState.skillTree = tree;
 
-    // 若解鎖新戰士主動技能且有空槽位，自動幫忙裝上
-    const unlockedSk = Object.values(WARRIOR_SKILLS).find((s) => s.treeNodeId === nodeId);
-    if (unlockedSk && cur === 0) {
-      const eq = [...(gameState.equippedSkills || ['whirlwind', null, null])];
-      const emptySlot = eq.indexOf(null);
-      if (emptySlot !== -1 && !eq.includes(unlockedSk.id)) {
-        eq[emptySlot] = unlockedSk.id;
-        gameState.equippedSkills = eq;
+    const allActive = [
+      { cid: 'warrior', book: WARRIOR_SKILLS },
+      { cid: 'ranger',  book: RANGER_SKILLS },
+      { cid: 'mage',    book: MAGE_SKILLS },
+    ];
+    allActive.forEach(({ cid, book }) => {
+      const unlockedSk = Object.values(book).find((s) => s.treeNodeId === nodeId);
+      if (unlockedSk && cur === 0) {
+        const eq = [...(gameState.equippedSkillsByClass?.[cid] || [null, null, null])];
+        const emptySlot = eq.indexOf(null);
+        if (emptySlot !== -1 && !eq.includes(unlockedSk.id)) {
+          eq[emptySlot] = unlockedSk.id;
+          gameState.equippedSkillsByClass[cid] = eq;
+        }
       }
-    }
+    });
 
     ui.addLog(`技能樹升級：【${node.name}】Lv.${cur + 1}`, 'system');
     refreshStatsAndUI();
@@ -183,11 +195,11 @@ const ui = new DashboardUI({
 
   onResetSkillTree: () => {
     const tree = gameState.skillTree || {};
-    const spent = Object.values(tree).reduce((s, v) => s + v, 0) - 1;
+    const spent = Object.values(tree).reduce((s, v) => s + v, 0) - 3;
     if (spent <= 0) return;
     gameState.skillPoints = (gameState.skillPoints || 0) + spent;
-    gameState.skillTree = { w_whirlwind: 1 };
-    gameState.equippedSkills = ['whirlwind', null, null];
+    gameState.skillTree = { w_whirlwind: 1, r_volley: 1, m_meteor: 1 };
+    gameState.equippedSkillsByClass = { warrior: ['whirlwind', null, null], ranger: ['volley', null, null], mage: ['meteor', null, null] };
     ui.addLog(`已重置技能樹並返還 ${spent} 點技能點。`, 'system');
     refreshStatsAndUI();
     persistAll(true);
@@ -201,8 +213,8 @@ const ui = new DashboardUI({
     gameState.level = 1;
     gameState.exp = 0;
     gameState.skillPoints = 1;
-    gameState.skillTree = { w_whirlwind: 1 };
-    gameState.equippedSkills = ['whirlwind', null, null];
+    gameState.skillTree = { w_whirlwind: 1, r_volley: 1, m_meteor: 1 };
+    gameState.equippedSkillsByClass = { warrior: ['whirlwind', null, null], ranger: ['volley', null, null], mage: ['meteor', null, null] };
     gameState.gold = 0;
     gameState.stage = 1;
     gameState.wave = 1;
@@ -485,10 +497,11 @@ initCloudAuth(async (user) => {
         upgrades: { ...base.upgrades, ...(cloudData.upgrades || {}) },
         equipment: { ...base.equipment, ...(cloudData.equipment || {}) },
         autoSalvage: { ...base.autoSalvage, ...(cloudData.autoSalvage || {}) },
-        skillTree: { w_whirlwind: 1, ...(cloudData.skillTree || {}) },
-        equippedSkills: Array.isArray(cloudData.equippedSkills) && cloudData.equippedSkills.length === 3
-          ? cloudData.equippedSkills
-          : ['whirlwind', null, null],
+        skillTree: { w_whirlwind: 1, r_volley: 1, ...(cloudData.skillTree || {}) },
+        equippedSkillsByClass: {
+          ...base.equippedSkillsByClass,
+          ...(cloudData.equippedSkillsByClass || {}),
+        },
         inventory: Array.isArray(cloudData.inventory) ? cloudData.inventory : [],
       };
       refreshStatsAndUI();
