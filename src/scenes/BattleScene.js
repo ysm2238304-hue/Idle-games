@@ -481,7 +481,8 @@ export class BattleScene extends Phaser.Scene {
       return false;
     }
     if (!freeAstral) this.playerMp = Math.max(0, this.playerMp - cost);
-    this.slotCdTimers[slotIdx] = freeAstral ? Math.round(info.cooldownMs * 0.3) : 0;
+    const echoRefund = (this.getState().classId === 'mage' && this.getStats().activeEffects.has('arcane_echo') && Math.random() < 0.25);
+    this.slotCdTimers[slotIdx] = freeAstral ? Math.round(info.cooldownMs * 0.3) : (echoRefund ? Math.round(info.cooldownMs * 0.5) : 0);
 
     if (info.cid === 'warrior') {
       this.castWarriorSkill(info.id, info.level, this.getStats(), isManual);
@@ -2031,6 +2032,7 @@ export class BattleScene extends Phaser.Scene {
     const totalDodge = stats.dodge + (this.time.now < this.dodgeBuffUntil ? 25 : 0);
     if (Math.random() * 100 < totalDodge) {
       this.spawnFloatingText(this.hero.x, this.hero.y - 68, 'MISS', '#94a3b8', 14);
+      if ((stats.dodgeHealPct || 0) > 0) this.healHero(Math.max(1, Math.round(this.playerMaxHp * (stats.dodgeHealPct / 100))));
       return;
     }
 
@@ -2058,6 +2060,17 @@ export class BattleScene extends Phaser.Scene {
 
   damageMonster(m, dmg, isCrit, isTap, customColor = null, prefix = '') {
     if (!m || m.hp <= 0) return;
+    const st = this.getStats();
+    const nowT = this.time.now;
+    let bonusMult = 1;
+    if ((st.stunDmgPct || 0) > 0 && nowT < (m.stunUntil || 0)) bonusMult += st.stunDmgPct / 100;
+    if ((st.chillDmgPct || 0) > 0 && nowT < (m.chilledUntil || 0)) bonusMult += st.chillDmgPct / 100;
+    if (nowT < (m.markedUntil || 0)) {
+      if ((st.markCritDmgPct || 0) > 0 && isCrit) bonusMult += st.markCritDmgPct / 100;
+      if (st.activeEffects.has('shadow_veil')) bonusMult += 0.25;
+    }
+    if (prefix === '🩸' && (st.bleedDmgPct || 0) > 0) bonusMult += st.bleedDmgPct / 100;
+    dmg = Math.max(1, Math.round(dmg * bonusMult));
     m.hp = Math.max(0, m.hp - dmg);
 
     m.sprite.setTintFill(0xffffff);
@@ -2094,6 +2107,12 @@ export class BattleScene extends Phaser.Scene {
         .forEach((t) => this.damageMonster(t, zdmg, true, false, '#38bdf8', '❄️'));
     }
     if (stats.activeEffects.has('vampiric_aura')) this.healHero(Math.round(this.playerMaxHp * 0.08));
+    if (stats.activeEffects.has('blood_nova') && this.time.now < (m.bleedUntil || 0)) {
+      this.playFxSprite('wfx_blood_ring', m.sprite.x, m.sprite.y, 1.0, 0, 340);
+      const bd = Math.round(stats.atk * 1.1);
+      this.monsters.filter((t) => t.hp > 0 && t !== m && Phaser.Math.Distance.Between(m.sprite.x, m.sprite.y, t.sprite.x, t.sprite.y) <= 185)
+        .forEach((t) => this.damageMonster(t, bd, false, false, '#f87171', '🩸'));
+    }
 
     this.playFxSprite('fx_explosion', m.sprite.x, m.sprite.y, m.isBoss ? 1.25 : 0.48, 0, 320);
     const mx = m.sprite.x;

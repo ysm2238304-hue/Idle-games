@@ -13,9 +13,9 @@ function pickRandom(arr) {
 export function rollRarity(isBoss, magicFindPct = 0) {
   const mfMult = 1 + Math.max(0, magicFindPct) / 100;
   const roll = Math.random() * 100;
-  const legChance = (isBoss ? 14 : 1.8) * mfMult;
-  const rareChance = (isBoss ? 44 : 13) * mfMult;
-  const magicChance = (isBoss ? 42 : 36) * mfMult;
+  const legChance = (isBoss ? 15 : 2.2) * mfMult;
+  const rareChance = (isBoss ? 45 : 14) * mfMult;
+  const magicChance = (isBoss ? 40 : 36) * mfMult;
 
   if (roll < legChance) return 'legendary';
   if (roll < legChance + rareChance) return 'rare';
@@ -23,9 +23,8 @@ export function rollRarity(isBoss, magicFindPct = 0) {
   return 'common';
 }
 
-export function generateLoot(stage, isBoss = false, magicFindPct = 0, guaranteed = false) {
-  // 群怪時代：小怪單隻掉率下修，BOSS 必掉
-  const dropChance = guaranteed ? 100 : (isBoss ? 100 : Math.min(48, 14 + magicFindPct * 0.15));
+export function generateLoot(stage, isBoss = false, magicFindPct = 0, guaranteed = false, playerClassId = 'warrior') {
+  const dropChance = guaranteed ? 100 : (isBoss ? 100 : Math.min(50, 15 + magicFindPct * 0.15));
   if (Math.random() * 100 > dropChance) return null;
 
   const slotKeys = Object.keys(EQUIP_SLOTS);
@@ -33,15 +32,23 @@ export function generateLoot(stage, isBoss = false, magicFindPct = 0, guaranteed
   const rarityId = rollRarity(isBoss, magicFindPct);
   const rarity = RARITIES[rarityId];
 
-  const bases = BASE_ITEMS[slot];
-  const tierIdx = Math.min(bases.length - 1, Math.floor((stage - 1) / 4));
-  const baseTpl = bases[randInt(Math.max(0, tierIdx - 1), tierIdx)];
+  const allBases = BASE_ITEMS[slot];
+  // 75% 智慧掉寶 (Smart Loot)：優先掉落當前職業可穿戴或全職通用裝備
+  const smartPool = allBases.filter((b) => !b.classReq || b.classReq === 'all' || b.classReq === playerClassId);
+  const bases = (Math.random() < 0.75 && smartPool.length > 0) ? smartPool : allBases;
 
-  const levelFactor = 1 + (stage - 1) * 0.24;
+  const tierRatio = Math.min(1, (Math.max(1, stage) - 1) / 90);
+  const maxIdx = Math.min(bases.length - 1, Math.floor(tierRatio * bases.length) + 1);
+  const minIdx = Math.max(0, maxIdx - 2);
+  const baseTpl = bases[randInt(minIdx, maxIdx)];
+
+  const levelFactor = 1 + (stage - 1) * 0.22;
   const baseValue = Math.max(1, Math.round(baseTpl.baseVal * levelFactor * rarity.mult * (0.9 + Math.random() * 0.25)));
 
   const affixCount = randInt(rarity.affixes[0], rarity.affixes[1]);
-  const shuffledPool = [...AFFIX_POOL].sort(() => Math.random() - 0.5);
+  const itemCls = baseTpl.classReq || 'all';
+  const eligibleAffixes = AFFIX_POOL.filter((a) => !a.classReq || itemCls === 'all' || a.classReq === itemCls);
+  const shuffledPool = [...eligibleAffixes].sort(() => Math.random() - 0.5);
   const affixes = [];
   for (let i = 0; i < affixCount && i < shuffledPool.length; i++) {
     const a = shuffledPool[i];
@@ -57,7 +64,8 @@ export function generateLoot(stage, isBoss = false, magicFindPct = 0, guaranteed
 
   let legendaryEffect = null;
   if (rarityId === 'legendary') {
-    legendaryEffect = pickRandom(LEGENDARY_EFFECTS);
+    const legPool = LEGENDARY_EFFECTS.filter((le) => le.classReq === 'all' || itemCls === 'all' || le.classReq === itemCls);
+    legendaryEffect = pickRandom(legPool.length > 0 ? legPool : LEGENDARY_EFFECTS);
   }
 
   const prefixLabel = rarityId === 'legendary' ? '遠古・' : (rarityId === 'rare' ? '精良・' : '');
@@ -66,6 +74,8 @@ export function generateLoot(stage, isBoss = false, magicFindPct = 0, guaranteed
     name: `${prefixLabel}${baseTpl.name}`,
     icon: baseTpl.icon,
     slot,
+    classReq: itemCls,
+    subType: baseTpl.subType || EQUIP_SLOTS[slot].label,
     rarity: rarityId,
     level: stage,
     upgradeLevel: 0,
@@ -96,13 +106,25 @@ export function calcItemPower(item) {
     lifesteal: 9.0,
     goldFind: 1.5,
     magicFind: 1.8,
+    bleedDmgPct: 3.5,
+    skillRadiusPct: 4.0,
+    stunDmgPct: 3.5,
+    armorToAtkPct: 4.5,
+    moveSpeedPct: 4.5,
+    pierceDmgPct: 3.8,
+    markCritDmgPct: 3.2,
+    dodgeHealPct: 7.0,
+    maxMpFlat: 2.0,
+    mpRegenFlat: 8.5,
+    cdrPct: 7.5,
+    chillDmgPct: 3.8,
   };
   let score = (item.baseStat.value || 0) * (weights[item.baseStat.key] || 1);
   for (const a of item.affixes || []) {
     score += a.value * (weights[a.key] || 1);
   }
   score *= 1 + (item.upgradeLevel || 0) * 0.12;
-  if (item.legendaryEffect) score += 85;
+  if (item.legendaryEffect) score += 95;
   return Math.round(score);
 }
 

@@ -2,7 +2,7 @@ import { CLASSES } from '../data/classes.js';
 import { WARRIOR_SKILLS } from '../data/warriorSkills.js';
 import { RANGER_SKILLS } from '../data/rangerSkills.js';
 import { MAGE_SKILLS } from '../data/mageSkills.js';
-import { EQUIP_SLOTS, RARITIES, BASE_ITEMS } from '../data/items.js';
+import { EQUIP_SLOTS, CLASS_REQ_LABELS, RARITIES, BASE_ITEMS } from '../data/items.js';
 import { STAGE_ZONES, getZoneName, getStageLabel, getSubStage, getChapterIdx } from '../data/monsters.js';
 import { CLASS_BUILD_INFO, SKILL_TREE_NODES, getTreeSpentPoints, isNodeBlockedByMutex, isNodeUnlocked } from '../data/skillTree.js';
 import { calcItemPower, getSalvageReward } from '../logic/lootGen.js';
@@ -21,6 +21,18 @@ const STAT_LABELS = {
   lifesteal: '吸血',
   goldFind: '金幣掉落',
   magicFind: '掉寶率',
+  bleedDmgPct: '流血增傷',
+  skillRadiusPct: '技能範圍',
+  stunDmgPct: '對暈眩增傷',
+  armorToAtkPct: '護甲轉攻擊',
+  moveSpeedPct: '移動速度',
+  pierceDmgPct: '穿透箭增傷',
+  markCritDmgPct: '對印記暴傷',
+  dodgeHealPct: '閃避回血',
+  maxMpFlat: '最大魔力',
+  mpRegenFlat: '每秒回魔',
+  cdrPct: '冷卻縮減',
+  chillDmgPct: '對冰寒增傷',
 };
 
 function resolveItemIcon(item) {
@@ -312,6 +324,9 @@ export class DashboardUI {
     const pwr = calcItemPower(item);
     const eqPwr = calcItemPower(eq);
 
+    const reqKey = item.classReq || 'all';
+    const reqInfo = CLASS_REQ_LABELS[reqKey] || CLASS_REQ_LABELS.all;
+    const canWear = reqKey === 'all' || reqKey === (state.classId || 'warrior');
     const affixesHtml = (item.affixes || []).map((a) =>
       `<div class="tt-affix">+ ${a.label} ${a.value}${a.unit}</div>`
     ).join('');
@@ -337,7 +352,7 @@ export class DashboardUI {
 
     tt.innerHTML = `
       <div class="tt-title" style="color:${r.color}">[${r.label}] ${item.name}${item.upgradeLevel ? ` +${item.upgradeLevel}` : ''}</div>
-      <div class="tt-meta">${EQUIP_SLOTS[item.slot].label} • Lv.${item.level} • 戰力 ${pwr}</div>
+      <div class="tt-meta">${item.subType || EQUIP_SLOTS[item.slot].label} • Lv.${item.level} • 戰力 ${pwr} <span style="color:${canWear ? reqInfo.color : '#ef4444'};font-weight:700;">[${reqInfo.label}]</span></div>
       <div class="tt-affix" style="color:#fde68a;">基礎：${STAT_LABELS[item.baseStat.key] || item.baseStat.key} +${item.baseStat.value}</div>
       ${affixesHtml}
       ${item.legendaryEffect ? `<div style="color:#fb923c;margin-top:4px;font-size:11px;">★ ${item.legendaryEffect.name}：${item.legendaryEffect.desc}</div>` : ''}
@@ -597,6 +612,9 @@ export class DashboardUI {
       `<li>+ ${a.label} ${a.value}${a.unit}</li>`
     ).join('');
 
+    const reqKey = item.classReq || 'all';
+    const reqInfo = CLASS_REQ_LABELS[reqKey] || CLASS_REQ_LABELS.all;
+    const canWear = reqKey === 'all' || reqKey === (state.classId || 'warrior');
     const legHtml = item.legendaryEffect
       ? `<div class="leg-effect">★ 傳奇特效【${item.legendaryEffect.name}】：${item.legendaryEffect.desc}</div>`
       : '';
@@ -609,14 +627,14 @@ export class DashboardUI {
             <span>[${r.label}] ${item.name}${item.upgradeLevel ? ` +${item.upgradeLevel}` : ''}</span>
             <span style="font-size:12px;">${deltaHtml}</span>
           </div>
-          <div class="insp-meta">${EQUIP_SLOTS[item.slot].label} • 物品等級 ${item.level} • 戰力 ${myPower}</div>
+          <div class="insp-meta">${item.subType || EQUIP_SLOTS[item.slot].label} • Lv.${item.level} • 戰力 ${myPower} • <span style="color:${canWear ? reqInfo.color : '#ef4444'};font-weight:700;">${reqInfo.label}</span></div>
           <div class="insp-base">基礎屬性：${STAT_LABELS[item.baseStat.key]} +${item.baseStat.value}</div>
         </div>
       </div>
       <ul class="insp-affixes">${affixesHtml || '<li style="color:#64748b">無額外詞條</li>'}</ul>
       ${legHtml}
       <div class="insp-actions">
-        ${isEquipped ? '' : `<button id="insp-equip" class="btn-primary">穿戴裝備</button>`}
+        ${isEquipped ? '' : `<button id="insp-equip" class="btn-primary" ${!canWear ? 'disabled' : ''}>${canWear ? '穿戴裝備' : '職業不符'}</button>`}
         <button id="insp-upgrade" class="btn-secondary">強化 (+1) 💎${upgCost}</button>
         ${isEquipped ? '' : `<button id="insp-salvage" class="btn-danger">分解 (+${salvage.gold}金 / +${salvage.dust}粉)</button>`}
       </div>

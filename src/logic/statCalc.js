@@ -44,6 +44,18 @@ export function recalcPlayerStats(state) {
   let atkPct = 0;
   let hpPct = 0;
   let armorPct = 0;
+  let bleedDmgPct = 0;
+  let skillRadiusPct = 0;
+  let stunDmgPct = 0;
+  let armorToAtkPct = 0;
+  let moveSpeedPct = 0;
+  let pierceDmgPct = 0;
+  let markCritDmgPct = 0;
+  let dodgeHealPct = 0;
+  let maxMpFlat = 0;
+  let mpRegenFlat = 0;
+  let cdrPct = 0;
+  let chillDmgPct = 0;
   const activeEffects = new Set();
 
   for (const slotKey of Object.keys(state.equipment || {})) {
@@ -65,6 +77,18 @@ export function recalcPlayerStats(state) {
       else if (key === 'lifesteal') flat.lifesteal += v;
       else if (key === 'goldFind') flat.goldFind += v;
       else if (key === 'magicFind') flat.magicFind += v;
+      else if (key === 'bleedDmgPct') bleedDmgPct += v;
+      else if (key === 'skillRadiusPct') skillRadiusPct += v;
+      else if (key === 'stunDmgPct') stunDmgPct += v;
+      else if (key === 'armorToAtkPct') armorToAtkPct += v;
+      else if (key === 'moveSpeedPct') moveSpeedPct += v;
+      else if (key === 'pierceDmgPct') pierceDmgPct += v;
+      else if (key === 'markCritDmgPct') markCritDmgPct += v;
+      else if (key === 'dodgeHealPct') dodgeHealPct += v;
+      else if (key === 'maxMpFlat') maxMpFlat += v;
+      else if (key === 'mpRegenFlat') mpRegenFlat += v;
+      else if (key === 'cdrPct') cdrPct += v;
+      else if (key === 'chillDmgPct') chillDmgPct += v;
     };
 
     if (item.baseStat) applyStat(item.baseStat.key, item.baseStat.value);
@@ -77,13 +101,13 @@ export function recalcPlayerStats(state) {
   flat.critDmg += (tree.fury_crit || 0) * 10 + (tree.w_p_savage || 0) * 8 + (tree.r_p_focus || 0) * 12;
   const keyW_Earth = (state.classId === 'warrior' && (tree.w_key_earth || 0) > 0);
   const keyM_Astral = (state.classId === 'mage' && (tree.m_key_astral || 0) > 0);
-  const skillDmgMult = 1 + (tree.fury_aoe || 0) * 0.15 + (keyW_Earth ? 0.35 : 0) + (keyM_Astral ? 0.30 : 0);
-  const skillRadiusMult = 1 + (tree.fury_aoe || 0) * 0.16 + (keyW_Earth ? 0.20 : 0);
+  const skillDmgMult = 1 + (tree.fury_aoe || 0) * 0.15 + (keyW_Earth ? 0.35 : 0) + (keyM_Astral ? 0.30 : 0) + (activeEffects.has('lava_core') ? 0.22 : 0);
+  const skillRadiusMult = 1 + (tree.fury_aoe || 0) * 0.16 + (keyW_Earth ? 0.20 : 0) + skillRadiusPct / 100;
   const treeBoltChance = [0, 35, 70, 100][tree.fury_bolt || 0] || 0;
   const cdrLvl = state.classId === 'ranger'
     ? (tree.r_cdr || 0)
     : (state.classId === 'mage' ? (tree.m_cdr || 0) : (tree.w_cdr || 0));
-  const cdrMult = Math.max(0.55, 1 - cdrLvl * 0.06);
+  const cdrMult = Math.max(0.45, 1 - cdrLvl * 0.06 - cdrPct / 100);
 
   hpPct += (tree.guard_hp || 0) * 8 + (tree.w_p_iron || 0) * 5 + (tree.m_p_ward || 0) * 5;
   armorPct += (tree.guard_def || 0) * 12 + (tree.w_p_iron || 0) * 8;
@@ -92,7 +116,8 @@ export function recalcPlayerStats(state) {
   const killHealPct = (tree.guard_leech || 0) * 2;
   const keyR_Gale = (state.classId === 'ranger' && (tree.r_key_gale || 0) > 0);
   flat.atkSpeedPct += (tree.guard_speed || 0) * 6 + (tree.r_p_swift || 0) * 5 + (keyR_Gale ? 25 : 0);
-  flat.moveSpeed *= 1 + (tree.guard_speed || 0) * 0.08 + (tree.r_p_swift || 0) * 0.04 + ((tree.w_cdr || 0) * 0.03);
+  flat.moveSpeed *= 1 + (tree.guard_speed || 0) * 0.08 + (tree.r_p_swift || 0) * 0.04 + ((tree.w_cdr || 0) * 0.03) + moveSpeedPct / 100;
+  if (activeEffects.has('gale_step')) { flat.dodge += 8; flat.atkSpeedPct += 12; }
 
   flat.goldFind += (tree.greed_gold || 0) * 10;
   flat.magicFind += (tree.greed_mf || 0) * 8 + (tree.r_cdr || 0) * 4 + (tree.m_p_sage || 0) * 6;
@@ -104,7 +129,8 @@ export function recalcPlayerStats(state) {
   flat.magicFind += crystals * 5;
 
   const maxHp = Math.round(flat.hp * (1 + hpPct / 100) * crystalMult);
-  const atk = Math.round(flat.atk * (1 + atkPct / 100) * crystalMult);
+  const armorPre = Math.round(flat.armor * (1 + armorPct / 100));
+  const atk = Math.round((flat.atk + armorPre * (armorToAtkPct / 100)) * (1 + atkPct / 100) * crystalMult);
   const atkIntervalMs = Math.max(260, Math.round(cls.baseStats.atkIntervalMs / (1 + flat.atkSpeedPct / 100)));
   const critRate = Math.min(85, Math.round(flat.critRate * 10) / 10);
   const critDmg = Math.round(flat.critDmg);
@@ -119,9 +145,9 @@ export function recalcPlayerStats(state) {
   );
 
   const baseMp = state.classId === 'mage' ? 160 : (state.classId === 'ranger' ? 120 : 100);
-  const maxMp = Math.round(baseMp + lvlBonus * 4 + (tree.m_p_arcane || 0) * 10);
+  const maxMp = Math.round(baseMp + lvlBonus * 4 + (tree.m_p_arcane || 0) * 10 + maxMpFlat + (activeEffects.has('frost_heart') ? 40 : 0));
   const mpRegenPerSec = (state.classId === 'mage' ? 13 : (state.classId === 'ranger' ? 9 : 7))
-    + (tree.m_p_ward || 0) * 1.5 + (tree.m_cdr || 0) * 1.5;
+    + (tree.m_p_ward || 0) * 1.5 + (tree.m_cdr || 0) * 1.5 + mpRegenFlat + (activeEffects.has('frost_heart') ? 4 : 0);
 
   return {
     maxHp,
@@ -143,6 +169,12 @@ export function recalcPlayerStats(state) {
     treeBoltChance,
     killHealPct,
     expMult,
+    bleedDmgPct,
+    stunDmgPct,
+    pierceDmgPct,
+    markCritDmgPct,
+    dodgeHealPct,
+    chillDmgPct,
     dps,
     activeEffects,
   };

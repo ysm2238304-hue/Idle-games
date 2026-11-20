@@ -74,6 +74,10 @@ const ui = new DashboardUI({
     const idx = gameState.inventory.findIndex((i) => i.uid === uid);
     if (idx === -1) return;
     const item = gameState.inventory[idx];
+    if (item.classReq && item.classReq !== 'all' && item.classReq !== gameState.classId) {
+      ui.addLog(`職業不符，無法穿戴【${item.name}】！`, 'warn');
+      return;
+    }
     const prev = gameState.equipment[item.slot];
     gameState.equipment[item.slot] = item;
     gameState.inventory.splice(idx, 1);
@@ -322,7 +326,7 @@ function initPhaserGame() {
         gameState.kills += 1;
         grantExp(mob.exp);
 
-        const dropped = generateLoot(mob.stage, mob.isBoss, computedStats.magicFind);
+        const dropped = generateLoot(mob.stage, mob.isBoss, computedStats.magicFind, false, gameState.classId);
         const keptItem = handleLootDrop(dropped);
 
         if (waveCleared) {
