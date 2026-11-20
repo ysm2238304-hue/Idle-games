@@ -25,6 +25,7 @@ const FX_NAMES = [
   'mfx_meteor_rock', 'mfx_meteor_blast', 'mfx_meteor_crater', 'mfx_meteor_flame',
   'mfx_frost_ring', 'mfx_frost_shard', 'mfx_frost_burst', 'mfx_arcane_shield',
   'mfx_void_beam', 'mfx_void_core', 'mfx_star_sigil', 'mfx_void_slash',
+  'efx_claw', 'efx_venom', 'efx_imp_fire', 'efx_necro_orb',
 ];
 
 export class BattleScene extends Phaser.Scene {
@@ -444,6 +445,9 @@ export class BattleScene extends Phaser.Scene {
       barW,
       nameText,
       attackTimer: Phaser.Math.Between(0, 900),
+      dustTimer: Phaser.Math.Between(0, 500),
+      bossSkillTimer: 2800,
+      bobPhase: Math.random() * Math.PI * 2,
       jitterAngle: Math.random() * Math.PI * 2,
       stunUntil: 0,
       slowUntil: 0,
@@ -761,9 +765,50 @@ export class BattleScene extends Phaser.Scene {
       }
 
       const mobFlip = dx > 0;
-      m.sprite.setFlipX(mobFlip).setDepth(m.sprite.y);
+      const t = time * 0.001 + (m.bobPhase || 0);
+      let squashX = 1;
+      let squashY = 1;
+      let tilt = 0;
+      if (m.moveStyle === 'hop') {
+        const b = Math.abs(Math.sin(t * 7.5));
+        squashY = 1 + b * 0.11;
+        squashX = 1 - b * 0.06;
+        tilt = Math.sin(t * 7.5) * 0.07;
+      } else if (m.moveStyle === 'scuttle') {
+        squashX = 1 + Math.sin(t * 14) * 0.08;
+        squashY = 1 - Math.sin(t * 14) * 0.06;
+        tilt = Math.sin(t * 14) * 0.09;
+      } else if (m.moveStyle === 'hover' || m.moveStyle === 'float') {
+        const f = Math.sin(t * 4.5);
+        squashY = 1 + f * 0.06;
+        tilt = Math.cos(t * 3.5) * 0.05;
+      } else {
+        const h = Math.abs(Math.sin(t * 4.8));
+        squashY = 1 + h * 0.07;
+        squashX = 1 - h * 0.04;
+      }
+      m.sprite.setFlipX(mobFlip).setDepth(m.sprite.y)
+        .setScale(m.scale * squashX, m.scale * squashY)
+        .setRotation(tilt);
       m.groundShadow.setPosition(m.sprite.x, m.sprite.y + 40);
       m.castShadow.setPosition(m.sprite.x - 12, m.sprite.y + 26).setFlipX(mobFlip);
+
+      m.dustTimer = (m.dustTimer || 0) + delta;
+      if (m.dustTimer >= (m.isBoss ? 520 : 880) && dist > stopRange) {
+        m.dustTimer = 0;
+        const puffColor = m.moveStyle === 'hover' ? 0xf97316 : (m.moveStyle === 'float' ? 0xa855f7 : 0x94a3b8);
+        const puff = this.add.image(m.sprite.x, m.sprite.y + 34, 'fx_glow')
+          .setTint(puffColor).setScale(m.isBoss ? 0.55 : 0.28).setAlpha(0.45).setDepth(4);
+        this.tweens.add({ targets: puff, y: puff.y - 12, scale: 0.08, alpha: 0, duration: 360, onComplete: () => puff.destroy() });
+      }
+
+      if (m.isBoss) {
+        m.bossSkillTimer = (m.bossSkillTimer || 0) + delta;
+        if (m.bossSkillTimer >= 5200) {
+          m.bossSkillTimer = 0;
+          this.triggerBossWarningAoe(m, stats);
+        }
+      }
 
       const barY = m.sprite.y - (m.isBoss ? 100 : 64);
       m.hpBg.setPosition(m.sprite.x, barY);
@@ -786,15 +831,49 @@ export class BattleScene extends Phaser.Scene {
 
   fireEnemyBolt(m) {
     const ang = Math.atan2(this.hero.y - m.sprite.y, this.hero.x - m.sprite.x);
-    const spr = this.add.image(m.sprite.x, m.sprite.y - 10, 'fx_glow')
-      .setTint(0x22c55e).setScale(0.55).setBlendMode(Phaser.BlendModes.ADD).setDepth(4500);
+    const isImp = m.atkStyle === 'imp_fire';
+    const texKey = isImp ? 'efx_imp_fire' : 'efx_necro_orb';
+    const sx = m.sprite.x + Math.cos(ang) * 26;
+    const sy = m.sprite.y - 12 + Math.sin(ang) * 16;
+    this.playFxSprite(isImp ? 'mfx_meteor_flame' : 'mfx_spark', sx, sy, 0.34, ang, 200);
+    const spr = this.add.image(sx, sy, texKey)
+      .setScale(isImp ? 0.38 : 0.42).setRotation(ang).setBlendMode(Phaser.BlendModes.ADD).setDepth(4505);
+    const spd = isImp ? 345 : 300;
     this.projectiles.push({
       fromEnemy: true,
+      atkStyle: m.atkStyle,
       sprite: spr,
-      vx: Math.cos(ang) * 290,
-      vy: Math.sin(ang) * 290,
-      lifeMs: 1800,
+      vx: Math.cos(ang) * spd,
+      vy: Math.sin(ang) * spd,
+      lifeMs: 1850,
       mob: m,
+    });
+  }
+
+  triggerBossWarningAoe(m, stats) {
+    if (!m || m.hp <= 0 || this.isTransitioning) return;
+    const tx = this.hero.x;
+    const ty = this.hero.y + 10;
+    const radius = 155;
+    const outer = this.add.circle(tx, ty, radius, 0xef4444, 0.16)
+      .setStrokeStyle(3, 0xf87171, 0.9).setDepth(7);
+    const inner = this.add.circle(tx, ty, 12, 0xef4444, 0.35).setDepth(7);
+    this.tweens.add({
+      targets: inner,
+      radius,
+      duration: 1150,
+      ease: 'Linear',
+      onComplete: () => {
+        outer.destroy();
+        inner.destroy();
+        if (!m || m.hp <= 0 || this.isTransitioning) return;
+        this.playFxSprite('mfx_meteor_blast', tx, ty - 16, 1.25, 0, 440);
+        this.playFxSprite('wfx_lava_ring', tx, ty, 1.15, 0, 420);
+        this.cameras.main.shake(190, 0.01);
+        if (Phaser.Math.Distance.Between(tx, ty, this.hero.x, this.hero.y) <= radius) {
+          this.performMonsterAttack(m, stats, 1.45, true);
+        }
+      },
     });
   }
 
@@ -857,10 +936,13 @@ export class BattleScene extends Phaser.Scene {
       const step = this.basicComboStep % 4;
       this.basicComboStep = (this.basicComboStep + 1) % 4;
       const isFourth = step === 3;
+      const mx = this.hero.x + Math.cos(baseAngle) * 32;
+      const my = this.hero.y - 12 + Math.sin(baseAngle) * 20;
+      this.playFxSprite('rfx_pierce_flash', mx, my, isFourth ? 0.42 : 0.28, baseAngle, 140);
       const offsets = [-0.06, 0.06];
       offsets.forEach((off) => {
         const ang = baseAngle + off;
-        const spr = this.add.image(this.hero.x, this.hero.y - 12, 'rfx_arrow')
+        const spr = this.add.image(mx, my, 'rfx_arrow')
           .setScale(0.42).setRotation(ang).setBlendMode(Phaser.BlendModes.ADD).setDepth(4508);
         this.projectiles.push({
           fromEnemy: false,
@@ -876,7 +958,7 @@ export class BattleScene extends Phaser.Scene {
         });
       });
       if (isFourth) {
-        const spr = this.add.image(this.hero.x, this.hero.y - 12, 'rfx_beam')
+        const spr = this.add.image(mx, my, 'rfx_beam')
           .setScale(0.55).setRotation(baseAngle).setBlendMode(Phaser.BlendModes.ADD).setDepth(4509);
         this.projectiles.push({
           fromEnemy: false,
@@ -894,9 +976,12 @@ export class BattleScene extends Phaser.Scene {
       }
     } else {
       this.arcaneChargeStacks = Math.min(5, this.arcaneChargeStacks + 1);
+      const mx = this.hero.x + Math.cos(baseAngle) * 34;
+      const my = this.hero.y - 16 + Math.sin(baseAngle) * 22;
+      this.playFxSprite('mfx_spark', mx, my, 0.34, baseAngle, 150);
       [-0.14, 0.14].forEach((off) => {
         const ang = baseAngle + off;
-        const spr = this.add.image(this.hero.x, this.hero.y - 16, 'mfx_bolt')
+        const spr = this.add.image(mx, my, 'mfx_bolt')
           .setScale(0.46).setRotation(ang).setBlendMode(Phaser.BlendModes.ADD).setDepth(4508);
         this.projectiles.push({
           fromEnemy: false,
@@ -1359,8 +1444,10 @@ export class BattleScene extends Phaser.Scene {
       let remove = p.lifeMs <= 0;
 
       if (!remove && p.fromEnemy) {
-        if (Phaser.Math.Distance.Between(p.sprite.x, p.sprite.y, this.hero.x, this.hero.y) <= 42) {
-          this.performMonsterAttack(p.mob, stats);
+        if (Phaser.Math.Distance.Between(p.sprite.x, p.sprite.y, this.hero.x, this.hero.y) <= 44) {
+          const hitFx = p.atkStyle === 'imp_fire' ? 'mfx_meteor_blast' : 'mfx_void_slash';
+          this.playFxSprite(hitFx, this.hero.x, this.hero.y - 10, 0.45, Math.random() * Math.PI, 220);
+          this.performMonsterAttack(p.mob, stats, 1, true);
           remove = true;
         }
       } else if (!remove && !p.fromEnemy) {
@@ -1469,8 +1556,26 @@ export class BattleScene extends Phaser.Scene {
     this.tweens.add({ targets: bolt, alpha: 0, duration: 250, onComplete: () => bolt.destroy() });
   }
 
-  performMonsterAttack(m, stats) {
+  performMonsterAttack(m, stats, atkMult = 1, skipMeleeFx = false) {
     if (this.isTransitioning || !m || m.hp <= 0) return;
+
+    if (!skipMeleeFx && !m.isRanged) {
+      const ang = Math.atan2(this.hero.y - m.sprite.y, this.hero.x - m.sprite.x);
+      if (m.atkStyle === 'venom') {
+        this.playFxSprite('efx_venom', this.hero.x, this.hero.y - 8, 0.52, Math.random() * Math.PI, 240);
+      } else if (m.atkStyle === 'slash') {
+        this.playFxSprite('wfx_cleave', this.hero.x, this.hero.y - 8, 0.58, ang, 210);
+      } else if (m.atkStyle === 'smash') {
+        this.playFxSprite('wfx_rubble', this.hero.x, this.hero.y, 0.65, 0, 260);
+        this.playFxSprite('efx_claw', this.hero.x, this.hero.y - 8, 0.62, ang, 220);
+      } else if (m.atkStyle === 'boss_cleave') {
+        this.playFxSprite('efx_claw', this.hero.x, this.hero.y - 8, 0.95, ang, 280);
+        this.playFxSprite('mfx_meteor_flame', this.hero.x, this.hero.y - 12, 0.72, 0, 300);
+        this.cameras.main.shake(120, 0.006);
+      } else {
+        this.playFxSprite('efx_claw', this.hero.x, this.hero.y - 8, 0.54, ang, 210);
+      }
+    }
 
     const totalDodge = stats.dodge + (this.time.now < this.dodgeBuffUntil ? 25 : 0);
     if (Math.random() * 100 < totalDodge) {
@@ -1481,7 +1586,7 @@ export class BattleScene extends Phaser.Scene {
     const mitigation = stats.armor / (stats.armor + 45 + m.stage * 14);
     const guardBonus = (this.getState().classId === 'warrior' && this.time.now < (this.warriorGuardUntil || 0))
       ? Math.min(0.20, this.warriorGuardStacks * 0.04) : 0;
-    let dmg = Math.max(1, Math.round(m.atk * (1 - mitigation) * (1 - guardBonus)));
+    let dmg = Math.max(1, Math.round(m.atk * atkMult * (1 - mitigation) * (1 - guardBonus)));
     if (this.mageShieldHp > 0) {
       const absorbed = Math.min(this.mageShieldHp, dmg);
       this.mageShieldHp -= absorbed;
