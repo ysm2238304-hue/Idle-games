@@ -316,7 +316,7 @@ function initPhaserGame() {
         const keptItem = handleLootDrop(dropped);
 
         if (waveCleared) {
-          if (mob.stage && gameState.wave >= 2) {
+          if (mob.stage) {
             const clearedLabel = getStageLabel(gameState.stage);
             ui.addLog(`🏆 成功擊破第 ${clearedLabel} 關小王／首領！`, 'victory');
             if (gameState.stage < 100) {

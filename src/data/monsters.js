@@ -248,3 +248,52 @@ function buildMonster(tpl, stage, scaleFactor, idx) {
     stage,
   };
 }
+
+export function createStageEncounters(stage) {
+  const chIdx = getChapterIdx(stage);
+  const sub = getSubStage(stage);
+  const pool = ZONE_POOLS[chIdx];
+  const scaleFactor = 1 + (stage - 1) * 0.22;
+  const spawns = [];
+
+  // 3 個前方遇敵區 + 1 個終點小王/首領區（從遠處 X 軸預先生成，全部殺完才過關）
+  const packXs = [1450, 3800, 6500, 9200];
+  packXs.forEach((px, pIdx) => {
+    const isFinalPack = pIdx === packXs.length - 1;
+    const count = isFinalPack ? 4 : (4 + Math.min(3, Math.floor(sub / 3)));
+    for (let i = 0; i < count; i++) {
+      const key = pool[(pIdx + i) % pool.length];
+      const tpl = MONSTER_TEMPLATES[key];
+      const mob = buildMonster(tpl, stage, scaleFactor, `${pIdx}_${i}`);
+      spawns.push({
+        mob,
+        x: px + (i - count / 2) * 140 + (Math.random() * 140 - 70),
+        y: 360 + Math.random() * 580,
+      });
+    }
+    if (isFinalPack) {
+      if (sub >= 10) {
+        const boss = buildMonster(MONSTER_TEMPLATES.boss_demon, stage, scaleFactor, 'boss');
+        boss.name = `【第${chIdx + 1}章首領】${boss.name}`;
+        spawns.push({ mob: boss, x: 10350, y: 640 });
+      } else {
+        const eliteKey = pool[(sub - 1) % pool.length];
+        const tpl = MONSTER_TEMPLATES[eliteKey];
+        const mini = buildMonster({
+          ...tpl,
+          name: `【${getStageLabel(stage)} 小王】${tpl.name}`,
+          scale: tpl.scale * 1.45,
+          hpMult: tpl.hpMult * 3.4,
+          atkMult: tpl.atkMult * 1.45,
+          goldMult: tpl.goldMult * 3.5,
+          expMult: tpl.expMult * 3.2,
+          isBoss: true,
+          isMiniBoss: true,
+        }, stage, scaleFactor, 'mini');
+        spawns.push({ mob: mini, x: 10350, y: 640 });
+      }
+    }
+  });
+
+  return spawns;
+}

@@ -187,7 +187,7 @@ export class DashboardUI {
     const sLabel = getStageLabel(state.stage);
     const sub = getSubStage(state.stage);
     document.getElementById('hud-stage-title').textContent = `第 ${sLabel} 關・${getZoneName(state.stage)}`;
-    document.getElementById('hud-wave-badge').textContent = state.wave >= 2 ? (sub >= 10 ? '💀 章節首領' : '🔥 小王登場') : '波次 1 / 2';
+    document.getElementById('hud-wave-badge').textContent = sub >= 10 ? '💀 章節大首領' : '⚔️ 橫向全清';
     document.getElementById('btn-stage-next').disabled = state.stage >= state.maxStageReached;
     document.getElementById('btn-stage-prev').disabled = state.stage <= 1;
 

@@ -3,11 +3,11 @@ import { WARRIOR_SKILLS } from '../data/warriorSkills.js';
 import { RANGER_SKILLS } from '../data/rangerSkills.js';
 import { MAGE_SKILLS } from '../data/mageSkills.js';
 import { RARITIES } from '../data/items.js';
-import { createWaveSquad, spawnSingleMonster, getWaveTargetKills, getChapterIdx, getStageLabel, ZONE_OBSTACLES } from '../data/monsters.js';
+import { createStageEncounters, getChapterIdx, getStageLabel, ZONE_OBSTACLES } from '../data/monsters.js';
 import { formatNum } from '../logic/statCalc.js';
 
-const MAP_W = 8000;
-const MAP_H = 4800;
+const MAP_W = 12000;
+const MAP_H = 1200;
 const ZONE_EMBERS = [0xfbbf24, 0x34d399, 0x38bdf8, 0xf97316, 0xe879f9, 0x7dd3fc, 0x4ade80, 0xfacc15, 0xf87171, 0xc084fc];
 const FX_NAMES = [
   'fx_slash', 'fx_cross', 'fx_whirlwind', 'fx_crack',
@@ -56,6 +56,8 @@ export class BattleScene extends Phaser.Scene {
 
     this.waveKills = 0;
     this.waveTargetKills = 12;
+    this.stageTotalMonsters = 12;
+    this.bossEngaged = false;
     this.waveElapsedSec = 0;
     this.swarmSpawnTimer = 0;
 
@@ -254,8 +256,8 @@ export class BattleScene extends Phaser.Scene {
 
   createHero() {
     const cid = this.getState().classId || 'warrior';
-    const cx = MAP_W / 2;
-    const cy = MAP_H / 2;
+    const cx = 340;
+    const cy = 620;
     const texKey = cid === 'warrior' ? 'wf_down_walk_0' : (cid === 'ranger' ? 'rf_down_walk_0' : 'mf_down_walk_0');
 
     this.heroGroundShadow = this.add.image(cx, cy + 44, 'fx_glow')
@@ -279,8 +281,8 @@ export class BattleScene extends Phaser.Scene {
   }
 
   createMinimap() {
-    this.miniW = 152;
-    this.miniH = 88;
+    this.miniW = 264;
+    this.miniH = 42;
     this.miniX = 16;
     this.miniY = 16;
     this.miniBg = this.add.rectangle(this.miniX, this.miniY, this.miniW, this.miniH, 0x090b12, 0.78)
@@ -348,15 +350,14 @@ export class BattleScene extends Phaser.Scene {
       return seed / 233280;
     };
 
-    const cx = MAP_W / 2;
-    const cy = MAP_H / 2;
     let attempts = 0;
-    while (this.obstacles.length < 30 && attempts < 240) {
+    while (this.obstacles.length < 34 && attempts < 280) {
       attempts++;
-      const ox = 420 + rand() * (MAP_W - 840);
-      const oy = 360 + rand() * (MAP_H - 720);
-      if (Math.hypot(ox - cx, oy - cy) < 440) continue;
-      if (this.obstacles.some((o) => Math.hypot(o.x - ox, o.y - oy) < 340)) continue;
+      const ox = 850 + rand() * (MAP_W - 1500);
+      const oy = 300 + rand() * 680;
+      if (Math.hypot(ox - 340, oy - 620) < 380) continue;
+      if (Math.hypot(ox - 10350, oy - 640) < 460) continue;
+      if (this.obstacles.some((o) => Math.hypot(o.x - ox, o.y - oy) < 320)) continue;
 
       const key = pool[this.obstacles.length % pool.length];
       const sc = 0.62 + rand() * 0.22;
@@ -540,10 +541,12 @@ export class BattleScene extends Phaser.Scene {
     this.projectiles = [];
   }
 
-  spawnMonsterInstance(data, angle) {
+  spawnMonsterInstance(data, angle, fixedX = null, fixedY = null) {
     const dist = data.isBoss ? 480 : Phaser.Math.Between(380, 650);
-    const sx = Phaser.Math.Clamp(this.hero.x + Math.cos(angle) * dist, 180, MAP_W - 180);
-    const sy = Phaser.Math.Clamp(this.hero.y + Math.sin(angle) * dist, 180, MAP_H - 180);
+    const sx = fixedX !== null ? Phaser.Math.Clamp(fixedX, 220, MAP_W - 220)
+      : Phaser.Math.Clamp(this.hero.x + Math.cos(angle) * dist, 220, MAP_W - 220);
+    const sy = fixedY !== null ? Phaser.Math.Clamp(fixedY, 270, MAP_H - 180)
+      : Phaser.Math.Clamp(this.hero.y + Math.sin(angle) * dist, 270, MAP_H - 180);
 
     const groundShadow = this.add.image(sx, sy + 40, 'fx_glow')
       .setTint(0x000000).setScale(data.isBoss ? 2.1 : 1.3, data.isBoss ? 0.72 : 0.45).setAlpha(0.58).setDepth(2);
@@ -586,19 +589,26 @@ export class BattleScene extends Phaser.Scene {
     this.updateZoneBackground();
     this.clearAllMonsters();
 
+    if (this.hero) {
+      this.hero.setPosition(340, 620);
+      this.heroDir = 'right';
+      this.heroFlipX = false;
+    }
+
     const state = this.getState();
-    const squad = createWaveSquad(state.stage, state.wave);
+    const encounters = createStageEncounters(state.stage);
     this.isTransitioning = false;
     this.waveKills = 0;
     this.waveElapsedSec = 0;
     this.swarmSpawnTimer = 0;
-    this.waveTargetKills = getWaveTargetKills(state.stage, state.wave);
-    this.isBossWave = squad.some((m) => m.isBoss);
-    this.bossTimeLeft = this.isBossWave ? 32 : 0;
+    this.stageTotalMonsters = encounters.length;
+    this.waveTargetKills = encounters.length;
+    this.isBossWave = encounters.some((e) => e.mob.isBoss);
+    this.bossEngaged = false;
+    this.bossTimeLeft = 40;
 
-    squad.forEach((data, idx) => {
-      const angle = (Math.PI * 2 * idx) / squad.length + Math.random() * 0.6;
-      this.spawnMonsterInstance(data, angle);
+    encounters.forEach((enc) => {
+      this.spawnMonsterInstance(enc.mob, Math.PI, enc.x, enc.y);
     });
 
     this.updateHeroHpBar();
@@ -608,12 +618,13 @@ export class BattleScene extends Phaser.Scene {
   updateWaveBanner() {
     if (!this.waveInfoText) return;
     const lbl = getStageLabel(this.getState()?.stage || 1);
-    if (this.isBossWave) {
+    const rem = this.monsters.filter((m) => m.hp > 0).length;
+    if (this.bossEngaged) {
       this.waveInfoText.setColor('#fb923c');
-      this.waveInfoText.setText(`🔥 第 ${lbl} 關小王／首領登場！狂暴倒數: ${Math.max(0, this.bossTimeLeft).toFixed(1)}s`);
+      this.waveInfoText.setText(`🔥 第 ${lbl} 關首領激戰！剩餘 ${rem} 隻・倒數: ${Math.max(0, this.bossTimeLeft).toFixed(1)}s`);
     } else {
       this.waveInfoText.setColor('#fde68a');
-      this.waveInfoText.setText(`⚔️ 第 ${lbl} 關進度: ${this.waveKills} / ${this.waveTargetKills}（擊殺後小王登場）`);
+      this.waveInfoText.setText(`⚔️ 第 ${lbl} 關橫向推進・剩餘怪物: ${rem} / ${this.stageTotalMonsters}（需全數擊殺）`);
     }
   }
 
@@ -677,19 +688,7 @@ export class BattleScene extends Phaser.Scene {
     const dt = delta / 1000;
     this.waveElapsedSec += dt;
 
-    this.swarmSpawnTimer += delta;
-    if (this.swarmSpawnTimer >= 2100) {
-      this.swarmSpawnTimer = 0;
-      const aliveCount = this.monsters.filter((m) => m.hp > 0).length;
-      if (aliveCount < 18) {
-        const batch = Math.min(5, 2 + Math.floor(this.waveElapsedSec / 7));
-        const state = this.getState();
-        for (let i = 0; i < batch; i++) {
-          const mob = spawnSingleMonster(state.stage, state.wave, false);
-          this.spawnMonsterInstance(mob, Math.random() * Math.PI * 2);
-        }
-      }
-    }
+
 
     const cid = this.getState().classId || 'warrior';
     this.updateHeroMovement(time, delta, dt, stats, cid);
@@ -714,11 +713,15 @@ export class BattleScene extends Phaser.Scene {
       }
     }
 
-    if (this.isBossWave) {
+    const bossMob = this.monsters.find((m) => m.hp > 0 && m.isBoss);
+    if (bossMob && Phaser.Math.Distance.Between(this.hero.x, this.hero.y, bossMob.sprite.x, bossMob.sprite.y) <= 820) {
+      this.bossEngaged = true;
+    }
+    if (this.bossEngaged && bossMob) {
       this.bossTimeLeft -= dt;
       this.updateWaveBanner();
       if (this.bossTimeLeft <= 0) {
-        this.handleHeroDefeat('首領戰超時，退回第 1 波重整旗鼓！');
+        this.handleHeroDefeat('首領戰超時，退回起點重整旗鼓！');
       }
     }
   }
@@ -770,8 +773,8 @@ export class BattleScene extends Phaser.Scene {
               // 邊界推離，防止退到牆角被圍
               if (this.hero.x < 360) repX += 0.9;
               if (this.hero.x > MAP_W - 360) repX -= 0.9;
-              if (this.hero.y < 320) repY += 0.9;
-              if (this.hero.y > MAP_H - 320) repY -= 0.9;
+              if (this.hero.y < 340) repY += 0.9;
+              if (this.hero.y > MAP_H - 250) repY -= 0.9;
               const rLen = Math.hypot(repX, repY) || 1;
               // 加入少許側向切線方便滑步風箏
               const nx = repX / rLen;
@@ -832,8 +835,8 @@ export class BattleScene extends Phaser.Scene {
       this.smoothVy = 0;
     }
 
-    this.hero.x = Phaser.Math.Clamp(this.hero.x + this.smoothVx * dt, 200, MAP_W - 200);
-    this.hero.y = Phaser.Math.Clamp(this.hero.y + this.smoothVy * dt, 180, MAP_H - 180);
+    this.hero.x = Phaser.Math.Clamp(this.hero.x + this.smoothVx * dt, 180, MAP_W - 180);
+    this.hero.y = Phaser.Math.Clamp(this.hero.y + this.smoothVy * dt, 260, MAP_H - 180);
     this.resolveObstacleCollision(this.hero, 28);
     this.hero.setDepth(this.hero.y);
 
@@ -932,13 +935,17 @@ export class BattleScene extends Phaser.Scene {
       const dx = this.hero.x - m.sprite.x;
       const dy = this.hero.y - m.sprite.y;
       const dist = Math.hypot(dx, dy) || 1;
+      const aggroRange = m.isBoss ? 900 : 1020;
+      if (dist > aggroRange && m.hp >= m.maxHp) {
+        continue;
+      }
       const stopRange = m.isBoss ? 94 : (m.isRanged ? 260 : 70);
 
       if (dist > stopRange) {
         const mx = (dx / dist + Math.cos(m.jitterAngle) * 0.16) * m.speed * slowFactor * dt;
         const my = (dy / dist + Math.sin(m.jitterAngle) * 0.16) * m.speed * slowFactor * dt;
         m.sprite.x = Phaser.Math.Clamp(m.sprite.x + mx, 120, MAP_W - 120);
-        m.sprite.y = Phaser.Math.Clamp(m.sprite.y + my, 120, MAP_H - 120);
+        m.sprite.y = Phaser.Math.Clamp(m.sprite.y + my, 250, MAP_H - 170);
         this.resolveObstacleCollision(m.sprite, m.isBoss ? 34 : 24);
       }
 
@@ -1857,11 +1864,9 @@ export class BattleScene extends Phaser.Scene {
     m.hpFill.destroy();
     m.nameText.destroy();
 
-    if (!this.isBossWave || m.isBoss) {
-      this.waveKills += 1;
-    }
-
-    const waveCleared = this.isBossWave ? m.isBoss : (this.waveKills >= this.waveTargetKills);
+    this.waveKills += 1;
+    const remaining = this.monsters.filter((t) => t.hp > 0).length;
+    const waveCleared = remaining === 0;
     const dropResult = this.callbacks.onMonsterKilled(m, waveCleared);
     if (dropResult && dropResult.item) {
       this.spawnLootBeam(mx, my + 24, dropResult.item);
