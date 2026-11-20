@@ -93,6 +93,14 @@ export class BattleScene extends Phaser.Scene {
       });
     });
 
+    ['goblin', 'spider', 'skeleton', 'imp', 'orc', 'necromancer', 'boss_demon'].forEach((mid) => {
+      ['walk', 'atk'].forEach((st) => {
+        for (let i = 0; i < 4; i++) {
+          this.load.image(`mob_${mid}_${st}_${i}`, `./assets/monsters/${mid}_frames/${st}_${i}.png`);
+        }
+      });
+    });
+
     this.load.image('mob_goblin', './assets/monsters/goblin.png');
     this.load.image('mob_spider', './assets/monsters/spider.png');
     this.load.image('mob_skeleton', './assets/monsters/skeleton.png');
@@ -194,6 +202,26 @@ export class BattleScene extends Phaser.Scene {
           });
         }
       });
+    });
+
+    ['goblin', 'spider', 'skeleton', 'imp', 'orc', 'necromancer', 'boss_demon'].forEach((mid) => {
+      const walkFps = mid === 'spider' ? 12 : (mid === 'imp' ? 10 : (mid === 'orc' || mid === 'boss_demon' ? 7 : 9));
+      if (!this.anims.exists(`mob_${mid}_walk`)) {
+        this.anims.create({
+          key: `mob_${mid}_walk`,
+          frames: [0, 1, 2, 3].map((i) => ({ key: `mob_${mid}_walk_${i}` })),
+          frameRate: walkFps,
+          repeat: -1,
+        });
+      }
+      if (!this.anims.exists(`mob_${mid}_atk`)) {
+        this.anims.create({
+          key: `mob_${mid}_atk`,
+          frames: [0, 1, 2, 3].map((i) => ({ key: `mob_${mid}_atk_${i}` })),
+          frameRate: 13,
+          repeat: 0,
+        });
+      }
     });
   }
 
@@ -421,10 +449,12 @@ export class BattleScene extends Phaser.Scene {
 
     const groundShadow = this.add.image(sx, sy + 40, 'fx_glow')
       .setTint(0x000000).setScale(data.isBoss ? 2.1 : 1.3, data.isBoss ? 0.72 : 0.45).setAlpha(0.58).setDepth(2);
-    const castShadow = this.add.image(sx - 12, sy + 26, data.spriteKey)
+    const initKey = `mob_${data.id}_walk_0`;
+    const castShadow = this.add.image(sx - 12, sy + 26, initKey)
       .setTint(0x000000).setScale(data.scale, data.scale * 0.42).setAlpha(0.28).setDepth(3);
 
-    const sprite = this.add.image(sx, sy, data.spriteKey).setScale(data.scale).setDepth(sy).setAlpha(0);
+    const sprite = this.add.sprite(sx, sy, initKey).setScale(data.scale).setDepth(sy).setAlpha(0);
+    sprite.play(`mob_${data.id}_walk`);
     this.tweens.add({ targets: sprite, alpha: 1, duration: 260 });
 
     const barW = data.isBoss ? 140 : 72;
@@ -764,7 +794,12 @@ export class BattleScene extends Phaser.Scene {
         m.sprite.y = Phaser.Math.Clamp(m.sprite.y + my, 120, MAP_H - 120);
       }
 
-      const mobFlip = dx > 0;
+      const mobFlip = dx < 0;
+      const isMobAtk = time < (m.atkAnimUntil || 0);
+      const wantAnim = `mob_${m.id}_${isMobAtk ? 'atk' : 'walk'}`;
+      if (m.sprite.anims.currentAnim?.key !== wantAnim) {
+        m.sprite.play(wantAnim, true);
+      }
       const t = time * 0.001 + (m.bobPhase || 0);
       let squashX = 1;
       let squashY = 1;
@@ -791,7 +826,7 @@ export class BattleScene extends Phaser.Scene {
         .setScale(m.scale * squashX, m.scale * squashY)
         .setRotation(tilt);
       m.groundShadow.setPosition(m.sprite.x, m.sprite.y + 40);
-      m.castShadow.setPosition(m.sprite.x - 12, m.sprite.y + 26).setFlipX(mobFlip);
+      m.castShadow.setPosition(m.sprite.x - 12, m.sprite.y + 26).setFlipX(mobFlip).setTexture(m.sprite.texture.key);
 
       m.dustTimer = (m.dustTimer || 0) + delta;
       if (m.dustTimer >= (m.isBoss ? 520 : 880) && dist > stopRange) {
@@ -819,10 +854,26 @@ export class BattleScene extends Phaser.Scene {
         m.attackTimer += delta;
         if (m.attackTimer >= m.atkIntervalMs) {
           m.attackTimer = 0;
+          m.atkAnimUntil = time + 360;
+          m.sprite.play(`mob_${m.id}_atk`, true);
           if (m.isRanged) {
-            this.fireEnemyBolt(m);
+            this.time.delayedCall(140, () => {
+              if (m.hp > 0 && !this.isTransitioning) this.fireEnemyBolt(m);
+            });
           } else {
-            this.performMonsterAttack(m, stats);
+            const lx = (dx / dist) * 26;
+            const ly = (dy / dist) * 26;
+            this.tweens.add({
+              targets: m.sprite,
+              x: m.sprite.x + lx,
+              y: m.sprite.y + ly,
+              duration: 115,
+              yoyo: true,
+              ease: 'Quad.easeOut',
+            });
+            this.time.delayedCall(115, () => {
+              if (m.hp > 0 && !this.isTransitioning) this.performMonsterAttack(m, stats);
+            });
           }
         }
       }
@@ -1561,19 +1612,31 @@ export class BattleScene extends Phaser.Scene {
 
     if (!skipMeleeFx && !m.isRanged) {
       const ang = Math.atan2(this.hero.y - m.sprite.y, this.hero.x - m.sprite.x);
+      const midX = (m.sprite.x + this.hero.x) / 2;
+      const midY = (m.sprite.y + this.hero.y) / 2 - 8;
+      const trailColor = m.atkStyle === 'venom' ? 0x4ade80 : (m.atkStyle === 'slash' ? 0x93c5fd : (m.atkStyle === 'smash' ? 0xf59e0b : 0xef4444));
+      const trail = this.add.image(midX, midY, 'wfx_wave_trail')
+        .setTint(trailColor).setScale(m.isBoss ? 1.25 : 0.85).setRotation(ang).setAlpha(0.85)
+        .setBlendMode(Phaser.BlendModes.ADD).setDepth(4511);
+      this.tweens.add({ targets: trail, alpha: 0, scale: m.isBoss ? 1.55 : 1.1, duration: 260, onComplete: () => trail.destroy() });
+
       if (m.atkStyle === 'venom') {
-        this.playFxSprite('efx_venom', this.hero.x, this.hero.y - 8, 0.52, Math.random() * Math.PI, 240);
+        this.playFxSprite('efx_venom', this.hero.x, this.hero.y - 8, 0.94, Math.random() * Math.PI, 320);
       } else if (m.atkStyle === 'slash') {
-        this.playFxSprite('wfx_cleave', this.hero.x, this.hero.y - 8, 0.58, ang, 210);
+        const sl = this.add.image(this.hero.x, this.hero.y - 8, 'wfx_cleave')
+          .setTint(0x93c5fd).setScale(0.9).setRotation(ang).setBlendMode(Phaser.BlendModes.ADD).setDepth(4512);
+        this.tweens.add({ targets: sl, scale: 1.18, alpha: 0, duration: 280, onComplete: () => sl.destroy() });
       } else if (m.atkStyle === 'smash') {
-        this.playFxSprite('wfx_rubble', this.hero.x, this.hero.y, 0.65, 0, 260);
-        this.playFxSprite('efx_claw', this.hero.x, this.hero.y - 8, 0.62, ang, 220);
+        this.playFxSprite('wfx_rubble', this.hero.x, this.hero.y, 1.15, 0, 340);
+        this.playFxSprite('efx_claw', this.hero.x, this.hero.y - 8, 1.10, ang, 300);
+        this.cameras.main.shake(90, 0.004);
       } else if (m.atkStyle === 'boss_cleave') {
-        this.playFxSprite('efx_claw', this.hero.x, this.hero.y - 8, 0.95, ang, 280);
-        this.playFxSprite('mfx_meteor_flame', this.hero.x, this.hero.y - 12, 0.72, 0, 300);
-        this.cameras.main.shake(120, 0.006);
+        this.playFxSprite('efx_claw', this.hero.x, this.hero.y - 8, 1.65, ang, 360);
+        this.playFxSprite('mfx_meteor_flame', this.hero.x, this.hero.y - 12, 1.25, 0, 380);
+        this.playFxSprite('wfx_lava_ring', this.hero.x, this.hero.y + 8, 1.10, 0, 360);
+        this.cameras.main.shake(150, 0.008);
       } else {
-        this.playFxSprite('efx_claw', this.hero.x, this.hero.y - 8, 0.54, ang, 210);
+        this.playFxSprite('efx_claw', this.hero.x, this.hero.y - 8, 0.98, ang, 300);
       }
     }
 
