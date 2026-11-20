@@ -73,9 +73,10 @@ export class BattleScene extends Phaser.Scene {
   }
 
   init(data) {
-    this.callbacks = data.callbacks;
-    this.getState = data.getState;
-    this.getStats = data.getStats;
+    const src = (data && typeof data.getState === 'function') ? data : (window.__IDLE_ARPG_BRIDGE__ || {});
+    this.callbacks = src.callbacks;
+    this.getState = src.getState;
+    this.getStats = src.getStats;
   }
 
   preload() {
