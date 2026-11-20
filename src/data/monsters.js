@@ -11,6 +11,8 @@ export const MONSTER_TEMPLATES = {
     expMult: 1.0,
     isBoss: false,
     isRanged: false,
+    moveStyle: 'hop',
+    atkStyle: 'claw',
   },
   spider: {
     id: 'spider',
@@ -24,6 +26,8 @@ export const MONSTER_TEMPLATES = {
     expMult: 0.95,
     isBoss: false,
     isRanged: false,
+    moveStyle: 'scuttle',
+    atkStyle: 'venom',
   },
   skeleton: {
     id: 'skeleton',
@@ -37,19 +41,23 @@ export const MONSTER_TEMPLATES = {
     expMult: 1.25,
     isBoss: false,
     isRanged: false,
+    moveStyle: 'march',
+    atkStyle: 'slash',
   },
   imp: {
     id: 'imp',
     name: '深淵小惡魔',
     spriteKey: 'mob_imp',
     scale: 0.42,
-    speed: 126,
+    speed: 118,
     hpMult: 0.9,
     atkMult: 1.0,
     goldMult: 1.15,
     expMult: 1.15,
     isBoss: false,
-    isRanged: false,
+    isRanged: true,
+    moveStyle: 'hover',
+    atkStyle: 'imp_fire',
   },
   orc: {
     id: 'orc',
@@ -63,6 +71,8 @@ export const MONSTER_TEMPLATES = {
     expMult: 1.75,
     isBoss: false,
     isRanged: false,
+    moveStyle: 'heavy',
+    atkStyle: 'smash',
   },
   necromancer: {
     id: 'necromancer',
@@ -76,6 +86,8 @@ export const MONSTER_TEMPLATES = {
     expMult: 1.4,
     isBoss: false,
     isRanged: true,
+    moveStyle: 'float',
+    atkStyle: 'necro_orb',
   },
   boss_demon: {
     id: 'boss_demon',
@@ -89,6 +101,8 @@ export const MONSTER_TEMPLATES = {
     expMult: 5.0,
     isBoss: true,
     isRanged: false,
+    moveStyle: 'heavy',
+    atkStyle: 'boss_cleave',
     timeLimitSec: 32,
   },
 };
@@ -119,48 +133,61 @@ export function getWaveTargetKills(stage, wave) {
   return 10 + Math.min(14, Math.floor((stage - 1) * 0.7) + wave * 2);
 }
 
-export function spawnSingleMonster(stage, wave, forceBoss = false) {
+export function createWaveSquad(stage, wave) {
   const zoneIdx = Math.floor((stage - 1) / 3) % ZONE_POOLS.length;
   const pool = ZONE_POOLS[zoneIdx];
-  const tplId = forceBoss ? 'boss_demon' : pool[Math.floor(Math.random() * pool.length)];
-  const tpl = MONSTER_TEMPLATES[tplId];
+  const squad = [];
+  const scaleFactor = 1 + (stage - 1) * 0.24 + (wave - 1) * 0.08;
 
-  const stageHpScale = Math.pow(1.24, stage - 1);
-  const stageAtkScale = Math.pow(1.16, stage - 1);
-  const waveScale = 1 + (wave - 1) * 0.1;
+  const isBossWave = wave >= 5;
+  const count = isBossWave ? 4 : Math.min(12, 6 + Math.floor(stage * 0.35) + wave);
 
-  const maxHp = Math.max(18, Math.round(38 * stageHpScale * waveScale * tpl.hpMult));
-  const atk = Math.max(2, Math.round(4 * stageAtkScale * tpl.atkMult));
-  const gold = Math.max(2, Math.round((4 + stage * 2.2) * Math.pow(1.2, stage - 1) * tpl.goldMult));
-  const exp = Math.max(4, Math.round((6 + stage * 2.5) * Math.pow(1.16, stage - 1) * tpl.expMult));
+  for (let i = 0; i < count; i++) {
+    const key = pool[i % pool.length];
+    const tpl = MONSTER_TEMPLATES[key];
+    squad.push(buildMonster(tpl, stage, scaleFactor, i));
+  }
+
+  if (isBossWave) {
+    squad.push(buildMonster(MONSTER_TEMPLATES.boss_demon, stage, scaleFactor, 999));
+  }
+
+  return squad;
+}
+
+export function spawnSingleMonster(stage, wave, allowElite = false) {
+  const zoneIdx = Math.floor((stage - 1) / 3) % ZONE_POOLS.length;
+  const pool = ZONE_POOLS[zoneIdx];
+  const scaleFactor = 1 + (stage - 1) * 0.24 + (wave - 1) * 0.08;
+  const key = pool[Math.floor(Math.random() * pool.length)];
+  const tpl = MONSTER_TEMPLATES[key];
+  const uid = Date.now() + Math.random();
+  return buildMonster(tpl, stage, scaleFactor, uid, allowElite);
+}
+
+function buildMonster(tpl, stage, scaleFactor, idx) {
+  const baseHp = 48 * scaleFactor;
+  const baseAtk = 6.5 * (1 + (stage - 1) * 0.19);
+  const baseGold = 7 * (1 + (stage - 1) * 0.28);
+  const baseExp = 12 * (1 + (stage - 1) * 0.24);
 
   return {
-    uid: `${tpl.id}_s${stage}_w${wave}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`,
-    name: tpl.isBoss ? `【首領】${tpl.name}` : `Lv.${stage} ${tpl.name}`,
+    uid: `m_${Date.now()}_${idx}_${Math.random().toString(36).slice(2, 6)}`,
+    id: tpl.id,
+    name: tpl.name,
     spriteKey: tpl.spriteKey,
     scale: tpl.scale,
     speed: tpl.speed,
     isBoss: tpl.isBoss,
     isRanged: tpl.isRanged,
-    timeLimitSec: tpl.timeLimitSec || 0,
-    maxHp,
-    hp: maxHp,
-    atk,
-    atkIntervalMs: tpl.isBoss ? 1550 : (tpl.isRanged ? 2200 : 1800),
-    gold,
-    exp,
+    moveStyle: tpl.moveStyle || 'hop',
+    atkStyle: tpl.atkStyle || 'claw',
+    maxHp: Math.round(baseHp * tpl.hpMult),
+    hp: Math.round(baseHp * tpl.hpMult),
+    atk: Math.round(baseAtk * tpl.atkMult),
+    gold: Math.round(baseGold * tpl.goldMult),
+    exp: Math.round(baseExp * tpl.expMult),
+    atkIntervalMs: tpl.isBoss ? 1450 : (tpl.isRanged ? 1950 : 1550),
     stage,
-    wave,
   };
-}
-
-export function createWaveSquad(stage, wave) {
-  const list = [];
-  if (wave >= 5) {
-    list.push(spawnSingleMonster(stage, wave, true));
-    for (let i = 0; i < 3; i++) list.push(spawnSingleMonster(stage, wave, false));
-  } else {
-    for (let i = 0; i < 3; i++) list.push(spawnSingleMonster(stage, wave, false));
-  }
-  return list;
 }
