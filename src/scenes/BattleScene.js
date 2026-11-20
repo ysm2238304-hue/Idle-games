@@ -26,6 +26,8 @@ const FX_NAMES = [
   'mfx_frost_ring', 'mfx_frost_shard', 'mfx_frost_burst', 'mfx_arcane_shield',
   'mfx_void_beam', 'mfx_void_core', 'mfx_star_sigil', 'mfx_void_slash',
   'efx_claw', 'efx_venom', 'efx_imp_fire', 'efx_necro_orb',
+  'nfx_totem', 'nfx_warcry', 'nfx_caltrops', 'nfx_deathmark',
+  'nfx_lightning', 'nfx_icicles', 'nfx_blackhole', 'nfx_overload',
 ];
 
 export class BattleScene extends Phaser.Scene {
@@ -78,6 +80,9 @@ export class BattleScene extends Phaser.Scene {
     this.mageShieldHp = 0;
     this.arcaneChargeStacks = 0;
     this.hasPointerMoved = false;
+    this.warcryUntil = 0;
+    this.windwalkUntil = 0;
+    this.overloadUntil = 0;
   }
 
   init(data) {
@@ -403,7 +408,7 @@ export class BattleScene extends Phaser.Scene {
       const lvl = state.skillTree?.[sk.treeNodeId] || 0;
       if (lvl <= 0) return null;
       const cd = Math.round(sk.cooldownMs * (this.getStats().cdrMult || 1));
-      const mpCost = (sid === 'bladestorm' || sid === 'phantombow' || sid === 'void_beam') ? 26 : 18;
+      const mpCost = ['bladestorm', 'phantombow', 'void_beam', 'execute_cleave', 'earth_stomp', 'shadow_clones', 'death_mark', 'black_hole'].includes(sid) ? 26 : (sid === 'mana_overload' ? 0 : 18);
       return { id: sid, name: sk.name, cooldownMs: cd, level: lvl, cid, mpCost };
     }
     if (slotIdx > 0) return null;
@@ -469,12 +474,14 @@ export class BattleScene extends Phaser.Scene {
     if (this.slotCdTimers[slotIdx] < info.cooldownMs) return false;
     if (!isManual && !this.shouldAutoCastSkill(info.id)) return false;
     const cost = info.mpCost || 18;
-    if (this.playerMp < cost) {
+    const tree = this.getState().skillTree || {};
+    const freeAstral = (this.getState().classId === 'mage' && (tree.m_key_astral || 0) > 0 && Math.random() < 0.35);
+    if (!freeAstral && this.playerMp < cost) {
       if (isManual) this.spawnFloatingText(this.hero.x, this.hero.y - 90, '魔力不足!', '#60a5fa', 14);
       return false;
     }
-    this.playerMp = Math.max(0, this.playerMp - cost);
-    this.slotCdTimers[slotIdx] = 0;
+    if (!freeAstral) this.playerMp = Math.max(0, this.playerMp - cost);
+    this.slotCdTimers[slotIdx] = freeAstral ? Math.round(info.cooldownMs * 0.3) : 0;
 
     if (info.cid === 'warrior') {
       this.castWarriorSkill(info.id, info.level, this.getStats(), isManual);
@@ -712,7 +719,11 @@ export class BattleScene extends Phaser.Scene {
       }
 
       this.heroAttackTimer += delta;
-      if (this.heroAttackTimer >= stats.atkIntervalMs && dist <= atkRange) {
+      const tree = this.getState().skillTree || {};
+      const lowBloodKey = cid === 'warrior' && (tree.w_key_blood || 0) > 0 && this.playerHp < this.playerMaxHp * 0.55;
+      const spdMult = (time < this.warcryUntil ? 1.35 : 1) * (time < this.windwalkUntil ? 1.40 : 1) * (lowBloodKey ? 1.45 : 1);
+      const effInterval = Math.max(180, Math.round(stats.atkIntervalMs / spdMult));
+      if (this.heroAttackTimer >= effInterval && dist <= atkRange) {
         this.heroAttackTimer = 0;
         this.performHeroAttack(time, stats, cid, nearest);
       }
@@ -1219,7 +1230,7 @@ export class BattleScene extends Phaser.Scene {
     this.faceHeroToward(aim.x, aim.y);
     this.heroAttackAnimUntil = this.time.now + 420;
 
-    const dmgMult = stats.skillDmgMult || 1;
+    const dmgMult = (stats.skillDmgMult || 1) * (this.time.now < this.overloadUntil ? 1.35 : 1);
     const radMult = stats.skillRadiusMult || 1;
     this.showSkillBanner(sk.name);
 
@@ -1348,6 +1359,77 @@ export class BattleScene extends Phaser.Scene {
           });
         });
       });
+    } else if (skillId === 'warcry') {
+      this.warcryUntil = this.time.now + 4500;
+      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 30);
+      this.playFxSprite('nfx_warcry', this.hero.x, this.hero.y, 1.55 * radMult, 0, 460);
+      const dmg = Math.round(stats.atk * (1.2 + skillLvl * 0.2) * dmgMult);
+      alive.forEach((m) => {
+        if (Phaser.Math.Distance.Between(this.hero.x, this.hero.y, m.sprite.x, m.sprite.y) <= 250 * radMult) {
+          this.damageMonster(m, dmg, true, false, '#f87171', '📣');
+          const ang = Math.atan2(m.sprite.y - this.hero.y, m.sprite.x - this.hero.x);
+          const kb = m.isBoss ? 18 : 65;
+          m.sprite.x = Phaser.Math.Clamp(m.sprite.x + Math.cos(ang) * kb, 140, MAP_W - 140);
+          m.sprite.y = Phaser.Math.Clamp(m.sprite.y + Math.sin(ang) * kb, 180, MAP_H - 180);
+        }
+      });
+      this.cameras.main.shake(150, 0.008);
+    } else if (skillId === 'execute_cleave') {
+      const ang = Math.atan2(aim.y - this.hero.y, aim.x - this.hero.x);
+      const cx = this.hero.x + Math.cos(ang) * 85;
+      const cy = this.hero.y + Math.sin(ang) * 85;
+      this.playFxSprite('wfx_cleave', cx, cy, 1.55 * radMult, ang, 320);
+      this.playFxSprite('wfx_blood_ring', cx, cy, 1.25 * radMult, 0, 380);
+      const baseDmg = stats.atk * (2.4 + skillLvl * 0.40) * dmgMult;
+      alive.forEach((m) => {
+        if (Phaser.Math.Distance.Between(cx, cy, m.sprite.x, m.sprite.y) <= 210 * radMult) {
+          const low = m.hp < m.maxHp * 0.5;
+          const isCrit = low || Math.random() * 100 < stats.critRate;
+          const dmg = Math.round(baseDmg * (low ? 1.6 : 1) * (isCrit ? stats.critDmg / 100 : 1));
+          this.damageMonster(m, dmg, isCrit, false, '#ef4444', '⚔️');
+        }
+      });
+      this.cameras.main.shake(190, 0.011);
+    } else if (skillId === 'volcano_totem') {
+      const tx = aim.x;
+      const ty = aim.y;
+      const totem = this.add.image(tx, ty, 'nfx_totem').setScale(0.85).setBlendMode(Phaser.BlendModes.ADD).setDepth(ty);
+      this.time.addEvent({
+        delay: 520,
+        repeat: 3,
+        callback: () => {
+          this.playFxSprite('wfx_lava_ring', tx, ty + 12, 1.45 * radMult, 0, 420);
+          this.playFxSprite('mfx_meteor_flame', tx, ty - 24, 1.15 * radMult, 0, 420);
+          const dmg = Math.round(stats.atk * (0.85 + skillLvl * 0.18) * dmgMult);
+          this.monsters.filter((m) => m.hp > 0).forEach((m) => {
+            if (Phaser.Math.Distance.Between(tx, ty, m.sprite.x, m.sprite.y) <= 240 * radMult) {
+              this.damageMonster(m, dmg, Math.random() * 100 < stats.critRate, false, '#fb923c', '🌋');
+            }
+          });
+        },
+      });
+      this.time.delayedCall(2200, () => totem.destroy());
+    } else if (skillId === 'earth_stomp') {
+      const mx = this.hero.x;
+      const my = this.hero.y;
+      const radius = 310 * radMult;
+      this.playFxSprite('wfx_lava_ring', mx, my + 10, 1.8 * radMult, 0, 500);
+      this.playFxSprite('wfx_rubble', mx, my, 1.55 * radMult, 0, 460);
+      const dmg = Math.round(stats.atk * (1.75 + skillLvl * 0.30) * dmgMult);
+      alive.forEach((m) => {
+        if (Phaser.Math.Distance.Between(mx, my, m.sprite.x, m.sprite.y) <= radius) {
+          m.stunUntil = this.time.now + 1500;
+          this.tweens.add({
+            targets: m.sprite,
+            x: mx + Phaser.Math.Between(-75, 75),
+            y: my + Phaser.Math.Between(-55, 55),
+            duration: 240,
+            ease: 'Cubic.easeOut',
+          });
+          this.damageMonster(m, dmg, true, false, '#fbbf24', '💥');
+        }
+      });
+      this.cameras.main.shake(220, 0.012);
     }
   }
 
@@ -1360,7 +1442,7 @@ export class BattleScene extends Phaser.Scene {
     this.faceHeroToward(aim.x, aim.y);
     this.heroAttackAnimUntil = this.time.now + 400;
 
-    const dmgMult = stats.skillDmgMult || 1;
+    const dmgMult = (stats.skillDmgMult || 1) * (this.time.now < this.overloadUntil ? 1.35 : 1);
     const radMult = stats.skillRadiusMult || 1;
     this.showSkillBanner(sk.name, '#34d399');
 
@@ -1470,6 +1552,58 @@ export class BattleScene extends Phaser.Scene {
         stats,
       });
       this.cameras.main.shake(180, 0.01);
+    } else if (skillId === 'windwalk') {
+      this.windwalkUntil = this.time.now + 4500;
+      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 25);
+      this.playFxSprite('rfx_dodge_aura', this.hero.x, this.hero.y, 1.35, 0, 650);
+      this.playFxSprite('rfx_wind_trail', this.hero.x, this.hero.y, 1.15, 0, 450);
+    } else if (skillId === 'caltrops') {
+      const tx = aim.x;
+      const ty = aim.y;
+      const field = this.add.image(tx, ty + 10, 'nfx_caltrops').setScale(1.25 * radMult).setBlendMode(Phaser.BlendModes.ADD).setDepth(6);
+      this.time.addEvent({
+        delay: 650,
+        repeat: 5,
+        callback: () => {
+          const dmg = Math.round(stats.atk * (0.55 + skillLvl * 0.14) * dmgMult);
+          this.monsters.filter((m) => m.hp > 0).forEach((m) => {
+            if (Phaser.Math.Distance.Between(tx, ty, m.sprite.x, m.sprite.y) <= 220 * radMult) {
+              m.slowUntil = this.time.now + 1200;
+              this.damageMonster(m, dmg, Math.random() * 100 < stats.critRate, false, '#a3e635', '☠️');
+            }
+          });
+        },
+      });
+      this.time.delayedCall(4000, () => field.destroy());
+    } else if (skillId === 'shadow_clones') {
+      const baseAng = Math.atan2(aim.y - this.hero.y, aim.x - this.hero.x);
+      const rawDmg = stats.atk * (0.90 + skillLvl * 0.20) * dmgMult;
+      [-90, 90].forEach((oy) => {
+        const cx = this.hero.x - 20;
+        const cy = this.hero.y + oy;
+        const clone = this.add.image(cx, cy, this.hero.texture.key).setScale(0.52).setTint(0x10b981).setAlpha(0.75).setDepth(cy);
+        this.playFxSprite('rfx_shadow_smoke', cx, cy, 0.85, 0, 320);
+        [-0.18, 0, 0.18].forEach((off) => {
+          const ang = baseAng + off;
+          const spr = this.add.image(cx, cy, 'rfx_beam').setScale(0.58).setRotation(ang).setBlendMode(Phaser.BlendModes.ADD).setDepth(4509);
+          this.projectiles.push({
+            fromEnemy: false, kind: 'ranger_beam', sprite: spr,
+            vx: Math.cos(ang) * 800, vy: Math.sin(ang) * 800, lifeMs: 850,
+            fixedRawDmg: rawDmg, bonusCrit: 15, appliesMark: true, hitIds: new Set(), stats,
+          });
+        });
+        this.tweens.add({ targets: clone, alpha: 0, duration: 550, onComplete: () => clone.destroy() });
+      });
+    } else if (skillId === 'death_mark') {
+      const dmgBase = stats.atk * (1.8 + skillLvl * 0.35) * dmgMult;
+      alive.forEach((m) => {
+        if (Phaser.Math.Distance.Between(this.hero.x, this.hero.y, m.sprite.x, m.sprite.y) <= 520) {
+          const isMarked = this.time.now < (m.markedUntil || 0);
+          m.markedUntil = this.time.now + 5000;
+          this.playFxSprite('nfx_deathmark', m.sprite.x, m.sprite.y - 10, 0.72, 0, 380);
+          this.damageMonster(m, Math.round(dmgBase * (isMarked ? 2.0 : 1.0)), true, false, '#f87171', '💀');
+        }
+      });
     }
   }
 
@@ -1482,7 +1616,7 @@ export class BattleScene extends Phaser.Scene {
     this.faceHeroToward(aim.x, aim.y);
     this.heroAttackAnimUntil = this.time.now + 420;
 
-    const dmgMult = stats.skillDmgMult || 1;
+    const dmgMult = (stats.skillDmgMult || 1) * (this.time.now < this.overloadUntil ? 1.35 : 1);
     const radMult = stats.skillRadiusMult || 1;
     this.showSkillBanner(sk.name, '#c084fc');
 
@@ -1612,6 +1746,81 @@ export class BattleScene extends Phaser.Scene {
         }
       });
       this.cameras.main.shake(210, 0.011);
+    } else if (skillId === 'mana_overload') {
+      this.overloadUntil = this.time.now + 4500;
+      this.arcaneChargeStacks = 5;
+      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + Math.round(this.playerMaxMp * (0.5 + skillLvl * 0.05)));
+      this.playFxSprite('nfx_overload', this.hero.x, this.hero.y - 20, 1.35, 0, 560);
+      this.spawnFloatingText(this.hero.x, this.hero.y - 95, '⚡魔力超載!', '#38bdf8', 16);
+    } else if (skillId === 'chain_lightning') {
+      let curX = this.hero.x;
+      let curY = this.hero.y - 12;
+      const hitSet = new Set();
+      for (let hop = 0; hop < 6; hop++) {
+        const next = this.monsters.find((m) => m.hp > 0 && !hitSet.has(m.uid) && Phaser.Math.Distance.Between(curX, curY, m.sprite.x, m.sprite.y) <= 420);
+        if (!next) break;
+        hitSet.add(next.uid);
+        const mx = (curX + next.sprite.x) / 2;
+        const my = (curY + next.sprite.y) / 2;
+        const dist = Math.max(60, Phaser.Math.Distance.Between(curX, curY, next.sprite.x, next.sprite.y));
+        const ang = Math.atan2(next.sprite.y - curY, next.sprite.x - curX);
+        const arc = this.add.image(mx, my, 'nfx_lightning').setDisplaySize(dist, 85).setRotation(ang).setBlendMode(Phaser.BlendModes.ADD).setDepth(4512);
+        this.tweens.add({ targets: arc, alpha: 0, duration: 280, onComplete: () => arc.destroy() });
+        const isChill = this.time.now < (next.chilledUntil || 0);
+        const dmg = Math.round(stats.atk * (1.3 + skillLvl * 0.26) * (isChill ? 1.85 : 1) * dmgMult);
+        this.damageMonster(next, dmg, Math.random() * 100 < stats.critRate, false, '#38bdf8', '⚡');
+        curX = next.sprite.x;
+        curY = next.sprite.y;
+      }
+    } else if (skillId === 'icicle_rain') {
+      const tx = aim.x;
+      const ty = aim.y;
+      const radius = 235 * radMult;
+      this.time.addEvent({
+        delay: 280,
+        repeat: 3,
+        callback: () => {
+          this.playFxSprite('nfx_icicles', tx + Phaser.Math.Between(-30, 30), ty - 45, 1.35 * radMult, 0, 360);
+          this.playFxSprite('mfx_frost_burst', tx, ty + 10, 1.15 * radMult, 0, 340);
+          const dmg = Math.round(stats.atk * (0.78 + skillLvl * 0.16) * dmgMult);
+          this.monsters.filter((m) => m.hp > 0).forEach((m) => {
+            if (Phaser.Math.Distance.Between(tx, ty, m.sprite.x, m.sprite.y) <= radius) {
+              m.slowUntil = this.time.now + 3500;
+              m.chilledUntil = this.time.now + 3500;
+              this.damageMonster(m, dmg, Math.random() * 100 < stats.critRate, false, '#7dd3fc', '❄️');
+            }
+          });
+        },
+      });
+    } else if (skillId === 'black_hole') {
+      const bx = aim.x;
+      const by = aim.y;
+      const radius = 330 * radMult;
+      const bh = this.add.image(bx, by, 'nfx_blackhole').setScale(1.4 * radMult).setBlendMode(Phaser.BlendModes.ADD).setDepth(4505);
+      this.tweens.add({ targets: bh, angle: 360, duration: 1200 });
+      alive.forEach((m) => {
+        if (Phaser.Math.Distance.Between(bx, by, m.sprite.x, m.sprite.y) <= radius) {
+          m.stunUntil = this.time.now + 1200;
+          this.tweens.add({
+            targets: m.sprite,
+            x: bx + Phaser.Math.Between(-50, 50),
+            y: by + Phaser.Math.Between(-40, 40),
+            duration: 550,
+            ease: 'Quad.easeIn',
+          });
+        }
+      });
+      this.time.delayedCall(1100, () => {
+        bh.destroy();
+        this.playFxSprite('mfx_void_core', bx, by, 1.6 * radMult, 0, 450);
+        const dmg = Math.round(stats.atk * (2.5 + skillLvl * 0.42) * dmgMult);
+        this.monsters.filter((m) => m.hp > 0).forEach((m) => {
+          if (Phaser.Math.Distance.Between(bx, by, m.sprite.x, m.sprite.y) <= radius * 0.85) {
+            this.damageMonster(m, dmg, true, false, '#c084fc', '🕳️');
+          }
+        });
+        this.cameras.main.shake(220, 0.012);
+      });
     }
   }
 
@@ -1640,8 +1849,27 @@ export class BattleScene extends Phaser.Scene {
       }
     }
 
-    if (stats.lifesteal > 0) {
-      this.healHero(Math.max(1, Math.round(dmg * (stats.lifesteal / 100))));
+    const tree = this.getState().skillTree || {};
+    const cid = this.getState().classId;
+    const lowBlood = cid === 'warrior' && (tree.w_key_blood || 0) > 0 && this.playerHp < this.playerMaxHp * 0.55;
+    let totalLS = stats.lifesteal + (this.time.now < this.warcryUntil ? 12 : 0);
+    if (lowBlood) {
+      totalLS *= 2;
+      mob.bleedUntil = this.time.now + 3000;
+      mob.bleedDmg = Math.max(2, Math.round(stats.atk * 0.25));
+    }
+    if (totalLS > 0) {
+      this.healHero(Math.max(1, Math.round(dmg * (totalLS / 100))));
+    }
+    if (this.time.now < this.windwalkUntil && (tree.r_mod_gale || 0) > 0) {
+      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 5);
+    }
+    if (isCrit && cid === 'ranger' && (tree.r_key_gale || 0) > 0 && Math.random() < 0.45 && this.projectiles.length < 36) {
+      const bang = Math.atan2(mob.sprite.y - this.hero.y, mob.sprite.x - this.hero.x);
+      [-0.12, 0.12].forEach((o) => {
+        const s = this.add.image(this.hero.x, this.hero.y - 12, 'rfx_arrow').setScale(0.42).setRotation(bang + o).setBlendMode(Phaser.BlendModes.ADD).setDepth(4508);
+        this.projectiles.push({ fromEnemy: false, kind: 'pierce_arrow', sprite: s, vx: Math.cos(bang + o) * 820, vy: Math.sin(bang + o) * 820, lifeMs: 850, pierceLeft: 2, dmgMult: 0.75, hitIds: new Set([mob.uid]), stats });
+      });
     }
   }
 
@@ -1852,6 +2080,19 @@ export class BattleScene extends Phaser.Scene {
 
   handleSingleMonsterKilled(m, stats) {
     if (stats.killHealPct > 0) this.healHero(Math.round(this.playerMaxHp * (stats.killHealPct / 100)));
+    const kTree = this.getState().skillTree || {};
+    if ((kTree.r_key_plague || 0) > 0 && this.time.now < (m.markedUntil || 0)) {
+      this.playFxSprite('rfx_poison_burst', m.sprite.x, m.sprite.y, 1.35, 0, 420);
+      const pdmg = Math.round(stats.atk * 1.4);
+      this.monsters.filter((t) => t.hp > 0 && t !== m && Phaser.Math.Distance.Between(m.sprite.x, m.sprite.y, t.sprite.x, t.sprite.y) <= 210)
+        .forEach((t) => this.damageMonster(t, pdmg, true, false, '#4ade80', '☠️'));
+    }
+    if ((kTree.m_key_zero || 0) > 0 && this.time.now < (m.chilledUntil || 0)) {
+      this.playFxSprite('mfx_frost_burst', m.sprite.x, m.sprite.y, 1.35, 0, 420);
+      const zdmg = Math.round(stats.atk * 1.45);
+      this.monsters.filter((t) => t.hp > 0 && t !== m && Phaser.Math.Distance.Between(m.sprite.x, m.sprite.y, t.sprite.x, t.sprite.y) <= 210)
+        .forEach((t) => this.damageMonster(t, zdmg, true, false, '#38bdf8', '❄️'));
+    }
     if (stats.activeEffects.has('vampiric_aura')) this.healHero(Math.round(this.playerMaxHp * 0.08));
 
     this.playFxSprite('fx_explosion', m.sprite.x, m.sprite.y, m.isBoss ? 1.25 : 0.48, 0, 320);

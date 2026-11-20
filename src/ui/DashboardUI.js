@@ -4,7 +4,7 @@ import { RANGER_SKILLS } from '../data/rangerSkills.js';
 import { MAGE_SKILLS } from '../data/mageSkills.js';
 import { EQUIP_SLOTS, RARITIES, BASE_ITEMS } from '../data/items.js';
 import { STAGE_ZONES, getZoneName, getStageLabel, getSubStage, getChapterIdx } from '../data/monsters.js';
-import { SKILL_BRANCHES, SKILL_TREE_NODES, isNodeUnlocked } from '../data/skillTree.js';
+import { CLASS_BUILD_INFO, SKILL_TREE_NODES, getTreeSpentPoints, isNodeBlockedByMutex, isNodeUnlocked } from '../data/skillTree.js';
 import { calcItemPower, getSalvageReward } from '../logic/lootGen.js';
 import { formatNum, getExpToNext, getUpgradeCost, calcRebirthCrystals } from '../logic/statCalc.js';
 
@@ -36,6 +36,7 @@ export class DashboardUI {
     this.handlers = handlers;
     this.activeDrawer = null;
     this.selectedItemUid = null;
+    this.activeSkillTreeTab = null;
     this.bindDockAndDrawer();
     this.bindGlobalButtons();
     this.bindHotbarTooltips();
@@ -657,40 +658,111 @@ export class DashboardUI {
     if (!box) return;
     const sp = state.skillPoints || 0;
     const tree = state.skillTree || {};
+    const curTreeId = this.activeSkillTreeTab || state.classId || 'warrior';
+    const meta = CLASS_BUILD_INFO[curTreeId] || CLASS_BUILD_INFO.warrior;
+    const spentHere = getTreeSpentPoints(curTreeId, tree);
+    const nodes = SKILL_TREE_NODES.filter((n) => n.tree === curTreeId);
 
-    let html = `
+    const tabsHtml = Object.entries(CLASS_BUILD_INFO).map(([tid, info]) => `
+      <button class="d4-tab-btn ${tid === curTreeId ? 'active' : ''}" data-tree-tab="${tid}">
+        ${info.name}
+      </button>
+    `).join('');
+
+    const tierLines = curTreeId === 'shared'
+      ? [{ y: 4, pts: 0, label: 'T1' }, { y: 28, pts: 0, label: 'T2' }, { y: 52, pts: 0, label: 'T3' }, { y: 76, pts: 0, label: 'T4' }]
+      : [
+          { y: 2, pts: 0, label: 'T1 核心' },
+          { y: 17, pts: 3, label: 'T2 雙流派 (需3點)' },
+          { y: 33, pts: 7, label: 'T3 互斥改造 (需7點)' },
+          { y: 49, pts: 12, label: 'T4 進階戰技 (需12點)' },
+          { y: 66, pts: 17, label: 'T5 終極奧義 (需17點)' },
+          { y: 83, pts: 22, label: 'T6 關鍵被動 (需22點)' },
+        ];
+
+    const tiersHtml = tierLines.map((tl) => {
+      const open = spentHere >= tl.pts;
+      return `<div class="d4-tier-line" style="top:${tl.y}%;"><span class="d4-tier-tag ${open ? 'open' : ''}">${open ? '✓' : '🔒'} ${tl.label}</span></div>`;
+    }).join('');
+
+    const nodeMap = Object.fromEntries(nodes.map((n) => [n.id, n]));
+    const linesSvg = nodes.filter((n) => n.req && nodeMap[n.req.id]).map((n) => {
+      const p = nodeMap[n.req.id];
+      const active = (tree[n.id] || 0) > 0;
+      const unlocked = isNodeUnlocked(n, tree);
+      const stroke = active ? meta.color : (unlocked ? '#fde047' : '#334155');
+      const dash = active ? '' : 'stroke-dasharray="1.6 1.2"';
+      return `<line x1="${p.x}" y1="${p.y}" x2="${n.x}" y2="${n.y}" stroke="${stroke}" stroke-width="${active ? '0.85' : '0.45'}" ${dash} opacity="${active ? '0.95' : '0.65'}" />`;
+    }).join('');
+
+    box.innerHTML = `
       <div class="tree-header-bar">
-        <span>可用技能點：<strong style="color:#fde047;font-size:15px;">${sp}</strong>（每升 1 級 +1 點）</span>
+        <span>可用技能點：<strong style="color:#fde047;font-size:15px;">${sp}</strong>（升級+1／首領+1）｜ 本星圖投入：<strong>${spentHere}</strong></span>
         <button id="btn-reset-tree" class="btn-ghost">洗點重置</button>
+      </div>
+      <div class="d4-tree-tabs">${tabsHtml}</div>
+      <div class="d4-build-legend">
+        <span style="color:${meta.buildA.color}">◀ ${meta.buildA.name}</span>
+        <span style="color:#94a3b8">點擊節點升級・◆為互斥二選一</span>
+        <span style="color:${meta.buildB.color}">${meta.buildB.name} ▶</span>
+      </div>
+      <div class="d4-tree-canvas" id="d4-tree-canvas">
+        ${tiersHtml}
+        <svg class="d4-tree-svg" viewBox="0 0 100 100" preserveAspectRatio="none">${linesSvg}</svg>
       </div>
     `;
 
-    SKILL_BRANCHES.forEach((br) => {
-      html += `<div class="tree-branch-title" style="color:${br.color}">${br.icon} ${br.name}</div><div class="tree-nodes-grid">`;
-      const nodes = SKILL_TREE_NODES.filter((n) => n.branch === br.id);
-      nodes.forEach((node) => {
-        const cur = tree[node.id] || 0;
-        const unlocked = isNodeUnlocked(node, tree);
-        const maxed = cur >= node.maxLvl;
-        html += `
-          <div class="tree-node-card ${unlocked ? '' : 'locked'} ${maxed ? 'maxed' : ''}">
-            <div class="node-top">
-              <strong>${node.name}</strong>
-              <span>${cur} / ${node.maxLvl}</span>
-            </div>
-            <div class="node-desc">${node.desc}</div>
-            <button class="btn-primary btn-node-up" data-node="${node.id}" ${!unlocked || maxed || sp <= 0 ? 'disabled' : ''}>
-              ${maxed ? '已滿級' : (unlocked ? '+1 升級' : '需前置解鎖')}
-            </button>
-          </div>
+    const canvas = document.getElementById('d4-tree-canvas');
+    nodes.forEach((node) => {
+      const cur = tree[node.id] || 0;
+      const blocked = isNodeBlockedByMutex(node, tree);
+      const unlocked = isNodeUnlocked(node, tree);
+      const maxed = cur >= node.maxLvl;
+      const btn = document.createElement('button');
+      let clsState = cur > 0 ? 'invested' : (blocked ? 'mutex-blocked' : (unlocked ? 'available' : 'locked'));
+      btn.className = `d4-node shape-${node.shape || 'circle'} ${clsState}`;
+      btn.style.left = `${node.x}%`;
+      btn.style.top = `${node.y}%`;
+      if (node.archetype === 'A' && cur > 0) btn.style.borderColor = meta.buildA.color;
+      if (node.archetype === 'B' && cur > 0) btn.style.borderColor = meta.buildB.color;
+
+      const glyph = node.icon
+        ? `<img src="${node.icon}" alt="${node.name}" />`
+        : `<span class="d4-node-inner" style="font-size:${node.kind === 'keystone' ? '18px' : '13px'};">${node.kind === 'keystone' ? '👑' : (node.kind === 'mod' ? '◆' : '✦')}</span>`;
+      btn.innerHTML = `${glyph}<span class="d4-node-lvl">${cur}/${node.maxLvl}</span>`;
+
+      btn.onclick = () => {
+        if (!unlocked || maxed || sp <= 0) return;
+        this.hideCompareTooltip();
+        this.handlers.onUpgradeSkillNode(node.id);
+      };
+      btn.onmouseenter = (e) => {
+        const tt = document.getElementById('diablo-tooltip');
+        if (!tt) return;
+        const gateTxt = (node.reqPoints || 0) > 0 ? `需星圖投入 ${node.reqPoints} 點（目前 ${spentHere}）` : '無點數門檻';
+        const stateTxt = blocked
+          ? '<span style="color:#f87171;">已選擇另一條互斥分支</span>'
+          : (maxed ? '<span style="color:#4ade80;">已滿級</span>' : (unlocked ? '<span style="color:#fde047;">可點擊升級 (+1)</span>' : '<span style="color:#94a3b8;">尚未達成前置條件</span>'));
+        tt.innerHTML = `
+          <div class="tt-title" style="color:#fde68a">${node.name} (${cur}/${node.maxLvl})</div>
+          <div class="tt-meta">第 ${node.tier} 階 • ${gateTxt}</div>
+          <div class="tt-affix">${node.desc}</div>
+          <div style="margin-top:5px;font-size:11px;font-weight:700;">${stateTxt}</div>
         `;
-      });
-      html += '</div>';
+        tt.style.borderColor = cur > 0 ? meta.color : '#c89b3c';
+        tt.classList.remove('hidden');
+        this.moveCompareTooltip(e);
+      };
+      btn.onmousemove = (e) => this.moveCompareTooltip(e);
+      btn.onmouseleave = () => this.hideCompareTooltip();
+      canvas.appendChild(btn);
     });
 
-    box.innerHTML = html;
-    box.querySelectorAll('.btn-node-up').forEach((btn) => {
-      btn.onclick = () => this.handlers.onUpgradeSkillNode(btn.dataset.node);
+    box.querySelectorAll('[data-tree-tab]').forEach((tb) => {
+      tb.onclick = () => {
+        this.activeSkillTreeTab = tb.dataset.treeTab;
+        this.renderSkillTree(state);
+      };
     });
     document.getElementById('btn-reset-tree')?.addEventListener('click', () => {
       this.handlers.onResetSkillTree();

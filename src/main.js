@@ -1,5 +1,5 @@
 import { CLASSES } from './data/classes.js';
-import { getStageLabel } from './data/monsters.js';
+import { getStageLabel, getSubStage } from './data/monsters.js';
 import { WARRIOR_SKILLS } from './data/warriorSkills.js';
 import { RANGER_SKILLS } from './data/rangerSkills.js';
 import { MAGE_SKILLS } from './data/mageSkills.js';
@@ -327,7 +327,13 @@ function initPhaserGame() {
 
         if (waveCleared) {
           const clearedLabel = getStageLabel(gameState.stage);
-          ui.addLog(`🏆 成功全清第 ${clearedLabel} 關！`, 'victory');
+          const subSt = getSubStage(gameState.stage);
+          if (subSt === 5 || subSt === 10) {
+            gameState.skillPoints = (gameState.skillPoints || 0) + 1;
+            ui.addLog(`🏆 全清第 ${clearedLabel} 關並擊破首領，額外獲得 +1 技能點！`, 'victory');
+          } else {
+            ui.addLog(`🏆 成功全清第 ${clearedLabel} 關！`, 'victory');
+          }
           const nextUnlock = Math.min(100, gameState.stage + 1);
           gameState.maxStageReached = Math.max(gameState.maxStageReached || 1, nextUnlock);
           persistAll(true);
