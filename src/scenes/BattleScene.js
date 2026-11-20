@@ -3,6 +3,14 @@ import { RARITIES } from '../data/items.js';
 import { createWaveMonster } from '../data/monsters.js';
 import { formatNum } from '../logic/statCalc.js';
 
+const ZONE_THEMES = [
+  { wall: 0x0b0e14, pillar: 0x141a26, floor: 0x161a24, line: 0x2d3548, torch: 0xf59e0b, ember: 0xfbbf24 }, // 腐朽邊境
+  { wall: 0x09110d, pillar: 0x111f18, floor: 0x121d18, line: 0x243b2f, torch: 0x10b981, ember: 0x34d399 }, // 哥布林巢穴
+  { wall: 0x0b0e17, pillar: 0x14192b, floor: 0x151926, line: 0x2f3854, torch: 0x38bdf8, ember: 0x7dd3fc }, // 白骨墓穴
+  { wall: 0x140a09, pillar: 0x241210, floor: 0x1f1210, line: 0x4a251d, torch: 0xf97316, ember: 0xfb923c }, // 熔岩裂谷
+  { wall: 0x120916, pillar: 0x211129, floor: 0x1b1021, line: 0x452354, torch: 0xc084fc, ember: 0xe879f9 }, // 深淵聖殿
+];
+
 export class BattleScene extends Phaser.Scene {
   constructor() {
     super({ key: 'BattleScene' });
@@ -17,8 +25,10 @@ export class BattleScene extends Phaser.Scene {
     this.skillCooldownTimer = 0;
     this.bossTimeLeft = 0;
     this.isTransitioning = false;
-    this.bgTiles = [];
-    this.torches = [];
+    this.floorScrollOffset = 0;
+    this.isScrollingFloor = false;
+    this.torchLights = [];
+    this.lastZoneIdx = -1;
   }
 
   init(data) {
@@ -40,18 +50,29 @@ export class BattleScene extends Phaser.Scene {
     const w = this.scale.width;
     const h = this.scale.height;
 
-    this.drawDungeonBackground(w, h);
+    this.bgGraphics = this.add.graphics().setDepth(0);
+    this.floorGraphics = this.add.graphics().setDepth(1);
+    this.torchGroup = this.add.group();
+    this.redrawBackdrop(w, h);
+
     this.createCharacters(w, h);
     this.createHudBars(w, h);
+
+    // 環境飄浮微粒計時器
+    this.time.addEvent({
+      delay: 320,
+      loop: true,
+      callback: () => this.spawnAmbientEmber(),
+    });
 
     // 點擊怪物造成輔助點擊傷害
     this.input.on('pointerdown', (pointer) => {
       if (this.isTransitioning || !this.currentMonster || this.currentMonster.hp <= 0) return;
-      if (pointer.x > w * 0.45) {
+      if (pointer.x > w * 0.42) {
         const stats = this.getStats();
         const tapDmg = Math.max(2, Math.round(stats.atk * 0.45));
         this.applyDamageToMonster(tapDmg, false, true);
-        this.spawnSlashEffect(this.monsterSprite.x, this.monsterSprite.y - 20, 0xfbbf24);
+        this.spawnArcSlash(this.monsterSprite.x, this.monsterSprite.y - 12, 0xfbbf24, 34);
       }
     });
 
@@ -65,54 +86,97 @@ export class BattleScene extends Phaser.Scene {
     this.spawnWaveMonster();
   }
 
-  drawDungeonBackground(w, h) {
-    this.bgGraphics = this.add.graphics();
-    this.floorY = Math.round(h * 0.72);
-    this.redrawBackdrop(w, h);
+  getTheme() {
+    const stage = this.getState()?.stage || 1;
+    const idx = Math.floor((stage - 1) / 3) % ZONE_THEMES.length;
+    return { idx, theme: ZONE_THEMES[idx] };
   }
 
   redrawBackdrop(w, h) {
     this.floorY = Math.round(h * 0.72);
+    const { idx, theme } = this.getTheme();
+    this.lastZoneIdx = idx;
+
     const g = this.bgGraphics;
     g.clear();
-
-    // 暗黑地下城牆壁漸層感
-    g.fillStyle(0x0b0d13, 1);
+    g.fillStyle(theme.wall, 1);
     g.fillRect(0, 0, w, this.floorY);
 
-    // 遠景石柱
-    g.fillStyle(0x141824, 1);
-    for (let x = 40; x < w; x += 150) {
-      g.fillRect(x, 40, 28, this.floorY - 40);
-      g.fillStyle(0x1f2537, 1);
-      g.fillRect(x - 4, 40, 36, 14);
-      g.fillStyle(0x141824, 1);
+    // 清除舊火把
+    this.torchGroup.clear(true, true);
+    this.torchLights = [];
+
+    // 遠景石柱與火把
+    for (let x = 56; x < w; x += 155) {
+      g.fillStyle(theme.pillar, 1);
+      g.fillRect(x, 34, 30, this.floorY - 34);
+      g.fillStyle(theme.line, 0.8);
+      g.fillRect(x - 5, 34, 40, 12);
+
+      // 壁掛火把光暈
+      const ty = Math.round(this.floorY * 0.45);
+      const glow = this.add.circle(x + 15, ty, 34, theme.torch, 0.14).setDepth(2);
+      const flame = this.add.circle(x + 15, ty, 6, theme.ember, 0.85).setDepth(3);
+      this.torchGroup.add(glow);
+      this.torchGroup.add(flame);
+      this.torchLights.push(glow, flame);
+      this.tweens.add({
+        targets: glow,
+        scale: 1.18,
+        alpha: 0.24,
+        duration: Phaser.Math.Between(550, 850),
+        yoyo: true,
+        repeat: -1,
+      });
     }
 
-    // 地面石板
-    g.fillStyle(0x161922, 1);
-    g.fillRect(0, this.floorY, w, h - this.floorY);
-    g.lineStyle(2, 0x2d3348, 0.9);
-    g.lineBetween(0, this.floorY, w, this.floorY);
+    this.drawFloor(w, h, theme);
+  }
 
-    g.lineStyle(1, 0x232838, 0.6);
-    for (let x = 0; x < w; x += 64) {
-      g.lineBetween(x, this.floorY, x - 35, h);
+  drawFloor(w, h, theme) {
+    const fg = this.floorGraphics;
+    fg.clear();
+    fg.fillStyle(theme.floor, 1);
+    fg.fillRect(0, this.floorY, w, h - this.floorY);
+    fg.lineStyle(2, theme.line, 0.95);
+    fg.lineBetween(0, this.floorY, w, this.floorY);
+
+    fg.lineStyle(1, theme.line, 0.55);
+    const step = 64;
+    const off = ((this.floorScrollOffset % step) + step) % step;
+    for (let x = -step; x < w + step; x += step) {
+      const drawX = x - off;
+      fg.lineBetween(drawX, this.floorY, drawX - 36, h);
     }
   }
 
-  createCharacters(w, h) {
+  spawnAmbientEmber() {
+    if (!this.scale) return;
+    const w = this.scale.width;
+    const { theme } = this.getTheme();
+    const px = Phaser.Math.Between(20, Math.max(40, w - 20));
+    const py = Phaser.Math.Between(this.floorY - 40, this.floorY + 25);
+    const dot = this.add.circle(px, py, Phaser.Math.Between(1, 3), theme.ember, 0.55).setDepth(4);
+    this.tweens.add({
+      targets: dot,
+      y: py - Phaser.Math.Between(45, 95),
+      x: px + Phaser.Math.Between(-20, 20),
+      alpha: 0,
+      duration: Phaser.Math.Between(1200, 2000),
+      onComplete: () => dot.destroy(),
+    });
+  }
+
+  createCharacters(w) {
     const cls = CLASSES[this.getState().classId] || CLASSES.warrior;
 
-    // 地面陰影
-    this.heroShadow = this.add.ellipse(w * 0.25, this.floorY + 12, 92, 22, 0x000000, 0.45);
-    this.mobShadow = this.add.ellipse(w * 0.74, this.floorY + 12, 100, 24, 0x000000, 0.45);
+    this.heroShadow = this.add.ellipse(w * 0.24, this.floorY + 12, 92, 22, 0x000000, 0.5).setDepth(4);
+    this.mobShadow = this.add.ellipse(w * 0.74, this.floorY + 12, 100, 24, 0x000000, 0.5).setDepth(4);
 
-    this.hero = this.add.image(w * 0.25, this.floorY - 68, cls.spriteKey)
+    this.hero = this.add.image(w * 0.24, this.floorY - 68, cls.spriteKey)
       .setScale(0.58)
-      .setDepth(5);
+      .setDepth(6);
 
-    // 待機呼吸動畫
     this.tweens.add({
       targets: this.hero,
       scaleY: 0.60,
@@ -125,7 +189,7 @@ export class BattleScene extends Phaser.Scene {
 
     this.monsterSprite = this.add.image(w * 0.74, this.floorY - 72, 'mob_goblin')
       .setScale(0.56)
-      .setDepth(5)
+      .setDepth(6)
       .setVisible(false);
 
     this.tweens.add({
@@ -138,16 +202,14 @@ export class BattleScene extends Phaser.Scene {
     });
   }
 
-  createHudBars(w, h) {
-    // 玩家血條 (畫布內角色頭上)
-    this.heroHpBg = this.add.rectangle(w * 0.25, this.floorY - 155, 110, 10, 0x0f172a).setStrokeStyle(1, 0x475569).setDepth(10);
-    this.heroHpFill = this.add.rectangle(w * 0.25 - 55, this.floorY - 155, 110, 8, 0x22c55e).setOrigin(0, 0.5).setDepth(11);
-    this.heroHpText = this.add.text(w * 0.25, this.floorY - 170, '', {
+  createHudBars(w) {
+    this.heroHpBg = this.add.rectangle(w * 0.24, this.floorY - 155, 110, 10, 0x0f172a).setStrokeStyle(1, 0x475569).setDepth(10);
+    this.heroHpFill = this.add.rectangle(w * 0.24 - 55, this.floorY - 155, 110, 8, 0x22c55e).setOrigin(0, 0.5).setDepth(11);
+    this.heroHpText = this.add.text(w * 0.24, this.floorY - 170, '', {
       fontSize: '12px', color: '#e2e8f0', fontFamily: 'sans-serif', fontStyle: 'bold',
       stroke: '#000000', strokeThickness: 3,
     }).setOrigin(0.5).setDepth(12);
 
-    // 怪物血條
     this.mobHpBg = this.add.rectangle(w * 0.74, this.floorY - 165, 140, 12, 0x0f172a).setStrokeStyle(1, 0x64748b).setDepth(10);
     this.mobHpFill = this.add.rectangle(w * 0.74 - 70, this.floorY - 165, 140, 10, 0xef4444).setOrigin(0, 0.5).setDepth(11);
     this.mobNameText = this.add.text(w * 0.74, this.floorY - 186, '', {
@@ -167,9 +229,7 @@ export class BattleScene extends Phaser.Scene {
 
   refreshHeroClass(classId) {
     const cls = CLASSES[classId] || CLASSES.warrior;
-    if (this.hero) {
-      this.hero.setTexture(cls.spriteKey);
-    }
+    if (this.hero) this.hero.setTexture(cls.spriteKey);
     const stats = this.getStats();
     this.playerMaxHp = stats.maxHp;
     this.playerHp = stats.maxHp;
@@ -188,8 +248,14 @@ export class BattleScene extends Phaser.Scene {
 
   spawnWaveMonster() {
     const state = this.getState();
+    const { idx } = this.getTheme();
+    if (idx !== this.lastZoneIdx) {
+      this.redrawBackdrop(this.scale.width, this.scale.height);
+    }
+
     this.currentMonster = createWaveMonster(state.stage, state.wave);
     this.isTransitioning = false;
+    this.isScrollingFloor = false;
     this.mobAttackTimer = 0;
     this.bossTimeLeft = this.currentMonster.isBoss ? this.currentMonster.timeLimitSec : 0;
 
@@ -202,7 +268,6 @@ export class BattleScene extends Phaser.Scene {
       .clearTint()
       .setVisible(true);
 
-    // 怪物進場滑動
     this.tweens.add({
       targets: this.monsterSprite,
       x: w * 0.74,
@@ -215,12 +280,16 @@ export class BattleScene extends Phaser.Scene {
   }
 
   update(time, delta) {
+    if (this.isScrollingFloor) {
+      this.floorScrollOffset += delta * 0.24;
+      this.drawFloor(this.scale.width, this.scale.height, this.getTheme().theme);
+    }
+
     if (this.isTransitioning || !this.currentMonster || this.currentMonster.hp <= 0) return;
 
     const stats = this.getStats();
     const cls = CLASSES[this.getState().classId] || CLASSES.warrior;
 
-    // 技能冷卻
     this.skillCooldownTimer += delta;
     if (this.skillCooldownTimer >= cls.skill.cooldownMs) {
       this.skillCooldownTimer = 0;
@@ -230,21 +299,18 @@ export class BattleScene extends Phaser.Scene {
       this.callbacks.onSkillTick(Math.min(1, this.skillCooldownTimer / cls.skill.cooldownMs));
     }
 
-    // 英雄普攻
     this.heroAttackTimer += delta;
     if (this.heroAttackTimer >= stats.atkIntervalMs) {
       this.heroAttackTimer = 0;
-      this.performHeroAttack(stats);
+      this.performHeroAttack(stats, cls.id);
     }
 
-    // 怪物反擊
     this.mobAttackTimer += delta;
     if (this.mobAttackTimer >= this.currentMonster.atkIntervalMs) {
       this.mobAttackTimer = 0;
       this.performMonsterAttack(stats);
     }
 
-    // BOSS 倒數
     if (this.currentMonster.isBoss) {
       this.bossTimeLeft -= delta / 1000;
       this.bossTimerText.setText(`🔥 首領狂暴倒數: ${Math.max(0, this.bossTimeLeft).toFixed(1)}s`);
@@ -254,16 +320,8 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
-  performHeroAttack(stats) {
+  performHeroAttack(stats, classId) {
     const w = this.scale.width;
-    this.tweens.add({
-      targets: this.hero,
-      x: w * 0.34,
-      duration: 95,
-      yoyo: true,
-      ease: 'Power2',
-    });
-
     const isCrit = Math.random() * 100 < stats.critRate;
     let dmg = stats.atk * (0.92 + Math.random() * 0.16);
     if (stats.activeEffects.has('execute') && this.currentMonster.hp / this.currentMonster.maxHp < 0.35) {
@@ -272,66 +330,179 @@ export class BattleScene extends Phaser.Scene {
     if (isCrit) dmg *= stats.critDmg / 100;
     dmg = Math.max(1, Math.round(dmg));
 
-    this.applyDamageToMonster(dmg, isCrit, false);
-    this.spawnSlashEffect(this.monsterSprite.x, this.monsterSprite.y - 10, isCrit ? 0xfacc15 : 0x38bdf8);
+    const finishHit = () => {
+      if (!this.currentMonster || this.currentMonster.hp <= 0) return;
+      this.applyDamageToMonster(dmg, isCrit, false);
 
-    // 傳奇特效：暴擊閃電鏈
-    if (isCrit && stats.activeEffects.has('chain_lightning') && this.currentMonster.hp > 0) {
-      const boltDmg = Math.max(1, Math.round(stats.atk * 0.45));
-      this.time.delayedCall(120, () => {
-        if (this.currentMonster && this.currentMonster.hp > 0) {
-          this.applyDamageToMonster(boltDmg, false, false, '#60a5fa', '⚡');
-        }
-      });
-    }
+      if (isCrit && stats.activeEffects.has('chain_lightning') && this.currentMonster.hp > 0) {
+        const boltDmg = Math.max(1, Math.round(stats.atk * 0.45));
+        this.time.delayedCall(110, () => {
+          if (this.currentMonster && this.currentMonster.hp > 0) {
+            this.spawnLightningChain(this.hero.x + 20, this.hero.y - 30, this.monsterSprite.x, this.monsterSprite.y - 10);
+            this.applyDamageToMonster(boltDmg, false, false, '#60a5fa', '⚡');
+          }
+        });
+      }
 
-    // 吸血
-    if (stats.lifesteal > 0) {
-      const heal = Math.max(1, Math.round(dmg * (stats.lifesteal / 100)));
-      this.healHero(heal);
+      if (stats.lifesteal > 0) {
+        this.healHero(Math.max(1, Math.round(dmg * (stats.lifesteal / 100))));
+      }
+    };
+
+    if (classId === 'warrior') {
+      this.tweens.add({ targets: this.hero, x: w * 0.36, duration: 95, yoyo: true, ease: 'Power2' });
+      this.spawnArcSlash(this.monsterSprite.x - 16, this.monsterSprite.y - 12, isCrit ? 0xfacc15 : 0xf97316, isCrit ? 64 : 48);
+      this.spawnSparkBurst(this.monsterSprite.x, this.monsterSprite.y - 10, 0xfb923c, 6);
+      finishHit();
+    } else if (classId === 'ranger') {
+      this.tweens.add({ targets: this.hero, x: w * 0.22, duration: 70, yoyo: true });
+      this.spawnProjectile(this.hero.x + 30, this.hero.y - 16, this.monsterSprite.x, this.monsterSprite.y - 14, 0x34d399, 'arrow', finishHit);
+    } else {
+      this.tweens.add({ targets: this.hero, y: '-=8', duration: 90, yoyo: true });
+      this.spawnProjectile(this.hero.x + 32, this.hero.y - 24, this.monsterSprite.x, this.monsterSprite.y - 14, 0xc084fc, 'orb', finishHit);
     }
   }
 
   triggerClassSkill(cls, stats) {
     if (!this.currentMonster || this.currentMonster.hp <= 0) return;
     const sk = cls.skill;
-
-    this.spawnFloatingText(this.hero.x, this.hero.y - 95, `✨ ${sk.name}!`, '#fde047', 16);
+    this.spawnFloatingText(this.hero.x, this.hero.y - 98, `✨ ${sk.name}!`, '#fde047', 16);
 
     if (sk.type === 'whirlwind') {
-      this.tweens.add({ targets: this.hero, angle: 360, duration: 360, ease: 'Cubic.easeOut' });
+      this.tweens.add({ targets: this.hero, angle: 360, duration: 380, ease: 'Cubic.easeOut' });
+      const ring = this.add.circle(this.monsterSprite.x, this.monsterSprite.y, 18, 0xff6b35, 0)
+        .setStrokeStyle(5, 0xfb923c, 0.95).setDepth(20);
+      this.tweens.add({
+        targets: ring,
+        scale: 3.4,
+        alpha: 0,
+        duration: 380,
+        onComplete: () => ring.destroy(),
+      });
+      this.spawnSparkBurst(this.monsterSprite.x, this.monsterSprite.y, 0xfacc15, 14);
       const dmg = Math.round(stats.atk * sk.mult);
       this.applyDamageToMonster(dmg, true, false, '#fb923c', '💥');
       this.healHero(Math.round(this.playerMaxHp * sk.healPct));
-      this.cameras.main.shake(140, 0.008);
+      this.cameras.main.shake(150, 0.008);
     } else if (sk.type === 'volley') {
       for (let i = 0; i < sk.hits; i++) {
-        this.time.delayedCall(i * 110, () => {
+        this.time.delayedCall(i * 115, () => {
           if (!this.currentMonster || this.currentMonster.hp <= 0) return;
-          const isCrit = Math.random() * 100 < (stats.critRate + sk.bonusCrit);
-          let dmg = stats.atk * sk.mult;
-          if (isCrit) dmg *= stats.critDmg / 100;
-          this.applyDamageToMonster(Math.round(dmg), isCrit, false, '#34d399', '🏹');
-          this.spawnSlashEffect(this.monsterSprite.x, this.monsterSprite.y - 20 + i * 14, 0x34d399);
+          this.spawnProjectile(
+            this.hero.x + 30,
+            this.hero.y - 24 + i * 10,
+            this.monsterSprite.x,
+            this.monsterSprite.y - 20 + i * 10,
+            0x10b981,
+            'beam',
+            () => {
+              if (!this.currentMonster || this.currentMonster.hp <= 0) return;
+              const isCrit = Math.random() * 100 < (stats.critRate + sk.bonusCrit);
+              let dmg = stats.atk * sk.mult;
+              if (isCrit) dmg *= stats.critDmg / 100;
+              this.applyDamageToMonster(Math.round(dmg), isCrit, false, '#34d399', '🏹');
+              this.spawnSparkBurst(this.monsterSprite.x, this.monsterSprite.y - 10, 0x34d399, 5);
+            }
+          );
         });
       }
     } else if (sk.type === 'meteor') {
       const mx = this.monsterSprite.x;
       const my = this.monsterSprite.y;
-      const meteor = this.add.circle(mx - 60, 20, 22, 0xc084fc, 0.9).setDepth(20);
+      // 地面警示召喚法陣
+      const sigil = this.add.ellipse(mx, this.floorY + 10, 120, 34, 0xa855f7, 0.25)
+        .setStrokeStyle(2, 0xe879f9, 0.95).setDepth(17);
+      const meteor = this.add.circle(mx - 85, -30, 26, 0xf97316, 0.95)
+        .setStrokeStyle(4, 0xfde047, 1).setDepth(22);
+
       this.tweens.add({
         targets: meteor,
         x: mx,
         y: my,
-        duration: 280,
+        duration: 320,
         ease: 'Quad.easeIn',
+        onUpdate: () => {
+          if (Math.random() < 0.65) {
+            const trail = this.add.circle(meteor.x, meteor.y, 10, 0xc084fc, 0.65).setDepth(21);
+            this.tweens.add({ targets: trail, scale: 0.1, alpha: 0, duration: 200, onComplete: () => trail.destroy() });
+          }
+        },
         onComplete: () => {
           meteor.destroy();
+          sigil.destroy();
+          const blast = this.add.circle(mx, my, 20, 0xe879f9, 0.5).setStrokeStyle(4, 0xfde047).setDepth(22);
+          this.tweens.add({ targets: blast, scale: 3.2, alpha: 0, duration: 320, onComplete: () => blast.destroy() });
+          this.spawnSparkBurst(mx, my, 0xe879f9, 16);
           if (!this.currentMonster || this.currentMonster.hp <= 0) return;
           const dmg = Math.round(stats.atk * sk.mult);
           this.applyDamageToMonster(dmg, true, false, '#e879f9', '☄️');
-          this.cameras.main.shake(180, 0.01);
+          this.cameras.main.shake(200, 0.011);
         },
+      });
+    }
+  }
+
+  spawnArcSlash(x, y, color, radius = 48) {
+    const g = this.add.graphics().setDepth(18);
+    g.lineStyle(5, color, 0.95);
+    g.beginPath();
+    g.arc(x, y, radius, Phaser.Math.DegToRad(-55), Phaser.Math.DegToRad(55), false);
+    g.strokePath();
+    this.tweens.add({ targets: g, alpha: 0, scaleX: 1.15, duration: 170, onComplete: () => g.destroy() });
+  }
+
+  spawnProjectile(sx, sy, tx, ty, color, style, onHit) {
+    let proj;
+    if (style === 'arrow') {
+      proj = this.add.rectangle(sx, sy, 28, 4, color, 1).setDepth(18);
+    } else if (style === 'beam') {
+      proj = this.add.rectangle(sx, sy, 44, 6, color, 0.95).setDepth(18);
+    } else {
+      proj = this.add.circle(sx, sy, 10, color, 0.95).setStrokeStyle(2, 0xffffff).setDepth(18);
+    }
+    this.tweens.add({
+      targets: proj,
+      x: tx,
+      y: ty,
+      duration: style === 'beam' ? 110 : 150,
+      ease: 'Quad.easeOut',
+      onComplete: () => {
+        proj.destroy();
+        if (onHit) onHit();
+      },
+    });
+  }
+
+  spawnLightningChain(x1, y1, x2, y2) {
+    const g = this.add.graphics().setDepth(24);
+    g.lineStyle(3, 0x60a5fa, 1);
+    g.beginPath();
+    g.moveTo(x1, y1);
+    const steps = 6;
+    for (let i = 1; i < steps; i++) {
+      const t = i / steps;
+      const px = Phaser.Math.Linear(x1, x2, t) + Phaser.Math.Between(-14, 14);
+      const py = Phaser.Math.Linear(y1, y2, t) + Phaser.Math.Between(-24, 18);
+      g.lineTo(px, py);
+    }
+    g.lineTo(x2, y2);
+    g.strokePath();
+    this.tweens.add({ targets: g, alpha: 0, duration: 220, onComplete: () => g.destroy() });
+  }
+
+  spawnSparkBurst(x, y, color, count = 8) {
+    for (let i = 0; i < count; i++) {
+      const ang = (Math.PI * 2 * i) / count + Math.random() * 0.4;
+      const dist = Phaser.Math.Between(24, 64);
+      const p = this.add.circle(x, y, Phaser.Math.Between(2, 4), color, 0.95).setDepth(20);
+      this.tweens.add({
+        targets: p,
+        x: x + Math.cos(ang) * dist,
+        y: y + Math.sin(ang) * dist,
+        alpha: 0,
+        scale: 0.2,
+        duration: Phaser.Math.Between(220, 380),
+        onComplete: () => p.destroy(),
       });
     }
   }
@@ -340,14 +511,8 @@ export class BattleScene extends Phaser.Scene {
     if (!this.currentMonster || this.currentMonster.hp <= 0) return;
     const w = this.scale.width;
 
-    this.tweens.add({
-      targets: this.monsterSprite,
-      x: w * 0.62,
-      duration: 100,
-      yoyo: true,
-    });
+    this.tweens.add({ targets: this.monsterSprite, x: w * 0.62, duration: 100, yoyo: true });
 
-    // 閃避判定
     if (Math.random() * 100 < stats.dodge) {
       this.spawnFloatingText(this.hero.x, this.hero.y - 75, 'MISS', '#94a3b8', 15);
       return;
@@ -415,7 +580,8 @@ export class BattleScene extends Phaser.Scene {
       this.healHero(Math.round(this.playerMaxHp * 0.08));
     }
 
-    // 怪物倒下淡出
+    this.spawnSparkBurst(this.monsterSprite.x, this.monsterSprite.y, defeated.isBoss ? 0xfb923c : 0x94a3b8, 12);
+
     this.tweens.add({
       targets: this.monsterSprite,
       alpha: 0,
@@ -429,7 +595,8 @@ export class BattleScene extends Phaser.Scene {
       this.spawnLootBeam(this.monsterSprite.x, this.floorY + 6, dropResult.item);
     }
 
-    // 往前推進感
+    // 地面向前推進視差捲動
+    this.isScrollingFloor = true;
     this.time.delayedCall(680, () => {
       this.spawnWaveMonster();
     });
@@ -446,9 +613,9 @@ export class BattleScene extends Phaser.Scene {
 
   spawnLootBeam(x, y, item) {
     const r = RARITIES[item.rarity] || RARITIES.common;
-    const beam = this.add.rectangle(x, y - 90, 16, 180, r.beam, 0.55).setDepth(18);
+    const beam = this.add.rectangle(x, y - 95, 18, 190, r.beam, 0.6).setDepth(18);
     const orb = this.add.circle(x, y - 6, 9, r.beam, 1).setStrokeStyle(2, 0xffffff).setDepth(19);
-    const tag = this.add.text(x, y - 34, `[${r.label}] ${item.name}`, {
+    const tag = this.add.text(x, y - 36, `[${r.label}] ${item.name}`, {
       fontSize: '12px', color: r.color, fontFamily: 'sans-serif', fontStyle: 'bold',
       stroke: '#000000', strokeThickness: 3,
     }).setOrigin(0.5).setDepth(20);
@@ -463,24 +630,11 @@ export class BattleScene extends Phaser.Scene {
     });
     this.tweens.add({
       targets: tag,
-      y: y - 72,
+      y: y - 76,
       alpha: 0,
       duration: 1400,
       delay: 300,
       onComplete: () => tag.destroy(),
-    });
-  }
-
-  spawnSlashEffect(x, y, color) {
-    const slash = this.add.rectangle(x, y, 54, 5, color, 0.9)
-      .setAngle(Phaser.Math.Between(-35, 35))
-      .setDepth(16);
-    this.tweens.add({
-      targets: slash,
-      scaleX: 1.4,
-      alpha: 0,
-      duration: 160,
-      onComplete: () => slash.destroy(),
     });
   }
 
@@ -521,11 +675,11 @@ export class BattleScene extends Phaser.Scene {
   handleResize(w, h) {
     this.redrawBackdrop(w, h);
     if (this.hero) {
-      this.hero.setPosition(w * 0.25, this.floorY - 68);
-      this.heroShadow.setPosition(w * 0.25, this.floorY + 12);
-      this.heroHpBg.setPosition(w * 0.25, this.floorY - 155);
-      this.heroHpFill.setPosition(w * 0.25 - 55, this.floorY - 155);
-      this.heroHpText.setPosition(w * 0.25, this.floorY - 170);
+      this.hero.setPosition(w * 0.24, this.floorY - 68);
+      this.heroShadow.setPosition(w * 0.24, this.floorY + 12);
+      this.heroHpBg.setPosition(w * 0.24, this.floorY - 155);
+      this.heroHpFill.setPosition(w * 0.24 - 55, this.floorY - 155);
+      this.heroHpText.setPosition(w * 0.24, this.floorY - 170);
     }
     if (this.monsterSprite) {
       const my = this.floorY - (this.currentMonster?.isBoss ? 92 : 68);

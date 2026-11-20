@@ -1,5 +1,5 @@
 import { CLASSES } from '../data/classes.js';
-import { EQUIP_SLOTS, RARITIES } from '../data/items.js';
+import { EQUIP_SLOTS, RARITIES, BASE_ITEMS } from '../data/items.js';
 import { getZoneName } from '../data/monsters.js';
 import { calcItemPower, getSalvageReward } from '../logic/lootGen.js';
 import { formatNum, getExpToNext, getUpgradeCost } from '../logic/statCalc.js';
@@ -18,6 +18,14 @@ const STAT_LABELS = {
   goldFind: '金幣掉落',
   magicFind: '掉寶率',
 };
+
+function resolveItemIcon(item) {
+  if (item.icon) return item.icon;
+  const list = BASE_ITEMS[item.slot] || [];
+  const matched = list.find((b) => item.name.includes(b.name));
+  if (matched) return matched.icon;
+  return `./assets/items/${item.slot}_0.png`;
+}
 
 export class DashboardUI {
   constructor(handlers) {
@@ -146,7 +154,7 @@ export class DashboardUI {
     Object.values(EQUIP_SLOTS).forEach((slotMeta) => {
       const item = state.equipment[slotMeta.id];
       const card = document.createElement('div');
-      card.className = 'equip-slot-card';
+      card.className = `equip-slot-card ${item ? `rarity-${item.rarity}` : ''}`;
 
       if (item) {
         const r = RARITIES[item.rarity];
@@ -154,12 +162,17 @@ export class DashboardUI {
         card.style.background = r.bg;
         const upgStr = item.upgradeLevel > 0 ? ` +${item.upgradeLevel}` : '';
         card.innerHTML = `
-          <div class="slot-header">
-            <span>${slotMeta.icon} ${slotMeta.label}</span>
-            <span style="color:${r.color};font-size:11px;">戰力 ${calcItemPower(item)}</span>
+          <div class="slot-row">
+            <img class="slot-item-icon" src="${resolveItemIcon(item)}" alt="${item.name}" />
+            <div class="slot-info">
+              <div class="slot-header">
+                <span>${slotMeta.label}</span>
+                <span style="color:${r.color};font-size:11px;">戰力 ${calcItemPower(item)}</span>
+              </div>
+              <div class="item-title" style="color:${r.color}">${item.name}${upgStr}</div>
+              <div class="item-sub">${STAT_LABELS[item.baseStat.key] || item.baseStat.key} +${item.baseStat.value}</div>
+            </div>
           </div>
-          <div class="item-title" style="color:${r.color}">${item.name}${upgStr}</div>
-          <div class="item-sub">${STAT_LABELS[item.baseStat.key] || item.baseStat.key} +${item.baseStat.value}</div>
         `;
         card.onclick = () => this.renderItemInspector(item, true, state);
       } else {
@@ -187,7 +200,6 @@ export class DashboardUI {
     const invCount = document.getElementById('inv-count');
     if (invCount) invCount.textContent = `${state.inventory.length} / 60`;
 
-    // 同步自動分解勾選
     ['common', 'magic', 'rare'].forEach((rar) => {
       const cb = document.getElementById(`auto-salvage-${rar}`);
       if (cb) {
@@ -209,13 +221,13 @@ export class DashboardUI {
       const equipped = state.equipment[item.slot];
       const delta = calcItemPower(item) - calcItemPower(equipped);
       const cell = document.createElement('div');
-      cell.className = `inv-cell ${this.selectedItemUid === item.uid ? 'selected' : ''}`;
+      cell.className = `inv-cell rarity-${item.rarity} ${this.selectedItemUid === item.uid ? 'selected' : ''}`;
       cell.style.borderColor = r.border;
       cell.style.background = r.bg;
 
       const badge = delta > 0 ? '<span class="power-up">▲</span>' : (delta < 0 ? '<span class="power-down">▼</span>' : '');
       cell.innerHTML = `
-        <div class="inv-icon">${EQUIP_SLOTS[item.slot].icon}</div>
+        <img class="inv-item-img" src="${resolveItemIcon(item)}" alt="${item.name}" />
         <div class="inv-lvl">Lv.${item.level}</div>
         ${badge}
       `;
@@ -257,12 +269,17 @@ export class DashboardUI {
       : '';
 
     box.innerHTML = `
-      <div class="insp-head" style="color:${r.color}">
-        <span>[${r.label}] ${item.name}${item.upgradeLevel ? ` +${item.upgradeLevel}` : ''}</span>
-        <span style="font-size:12px;">${deltaHtml}</span>
+      <div class="insp-top">
+        <img class="insp-icon-img" style="border-color:${r.border};background:${r.bg}" src="${resolveItemIcon(item)}" alt="${item.name}" />
+        <div class="insp-top-text">
+          <div class="insp-head" style="color:${r.color}">
+            <span>[${r.label}] ${item.name}${item.upgradeLevel ? ` +${item.upgradeLevel}` : ''}</span>
+            <span style="font-size:12px;">${deltaHtml}</span>
+          </div>
+          <div class="insp-meta">${EQUIP_SLOTS[item.slot].label} • 物品等級 ${item.level} • 戰力 ${myPower}</div>
+          <div class="insp-base">基礎屬性：${STAT_LABELS[item.baseStat.key]} +${item.baseStat.value}</div>
+        </div>
       </div>
-      <div class="insp-meta">${EQUIP_SLOTS[item.slot].label} • 物品等級 ${item.level} • 戰力 ${myPower}</div>
-      <div class="insp-base">基礎屬性：${STAT_LABELS[item.baseStat.key]} +${item.baseStat.value}</div>
       <ul class="insp-affixes">${affixesHtml || '<li style="color:#64748b">無額外詞條</li>'}</ul>
       ${legHtml}
       <div class="insp-actions">

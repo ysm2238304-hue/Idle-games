@@ -63,6 +63,7 @@ export function generateLoot(stage, isBoss = false, magicFindPct = 0, guaranteed
   const item = {
     uid: `item_${++itemUidCounter}_${Math.random().toString(36).slice(2, 6)}`,
     name: `${prefixLabel}${baseTpl.name}`,
+    icon: baseTpl.icon,
     slot,
     rarity: rarityId,
     level: stage,
