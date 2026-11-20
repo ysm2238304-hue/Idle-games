@@ -1,4 +1,4 @@
-import { createWaveMonster } from '../data/monsters.js';
+import { createWaveSquad } from '../data/monsters.js';
 import { generateLoot } from './lootGen.js';
 
 const SAVE_KEY = 'desk_diablo_idle_save_v1';
@@ -8,6 +8,10 @@ export function createInitialState(classId = 'warrior') {
     classId,
     level: 1,
     exp: 0,
+    skillPoints: 0,
+    skillTree: {},
+    soulCrystals: 0,
+    rebirthCount: 0,
     gold: 0,
     dust: 0,
     stage: 1,
@@ -53,40 +57,48 @@ export function loadGame() {
     if (!raw) return null;
     const parsed = JSON.parse(raw);
     const base = createInitialState(parsed.classId || 'warrior');
-    return {
+    const merged = {
       ...base,
       ...parsed,
       upgrades: { ...base.upgrades, ...(parsed.upgrades || {}) },
       equipment: { ...base.equipment, ...(parsed.equipment || {}) },
       autoSalvage: { ...base.autoSalvage, ...(parsed.autoSalvage || {}) },
+      skillTree: { ...(parsed.skillTree || {}) },
       inventory: Array.isArray(parsed.inventory) ? parsed.inventory : [],
     };
+    // 相容舊存檔：補發應有技能點
+    const spent = Object.values(merged.skillTree).reduce((s, v) => s + v, 0);
+    if (merged.level - 1 > spent + (merged.skillPoints || 0)) {
+      merged.skillPoints = (merged.level - 1) - spent;
+    }
+    return merged;
   } catch (e) {
     console.warn('讀檔失敗:', e);
     return null;
   }
 }
 
-export function clearSave() {
-  localStorage.removeItem(SAVE_KEY);
-}
-
 export function calcOfflineProgress(state, computedStats) {
   const now = Date.now();
   const elapsedSec = Math.floor((now - (state.lastSavedAt || now)) / 1000);
-  if (elapsedSec < 20) return null;
+  if (elapsedSec < 25) return null;
 
-  const cappedSec = Math.min(elapsedSec, 12 * 3600); // 上限 12 小時
-  const sampleMob = createWaveMonster(state.stage, 1);
-  const timePerKill = Math.max(1.5, sampleMob.maxHp / Math.max(1, computedStats.dps) + 0.8);
-  const estKills = Math.floor((cappedSec / timePerKill) * 0.75); // 75% 離線效率
+  const offTree = state.skillTree?.greed_offline || 0;
+  const capHours = 6 + offTree;
+  const effRate = 0.50 + offTree * 0.08;
+  const cappedSec = Math.min(elapsedSec, capHours * 3600);
+
+  const squad = createWaveSquad(state.stage, 1);
+  const sampleMob = squad[0];
+  const timePerKill = Math.max(1.8, sampleMob.maxHp / Math.max(1, computedStats.dps) + 0.9);
+  const estKills = Math.floor((cappedSec / timePerKill) * effRate);
 
   if (estKills <= 0) return null;
 
   const goldEarned = Math.round(estKills * sampleMob.gold * (1 + computedStats.goldFind / 100));
-  const expEarned = estKills * sampleMob.exp;
+  const expEarned = Math.round(estKills * sampleMob.exp * (computedStats.expMult || 1));
   const itemsFound = [];
-  const rollCount = Math.min(8, Math.floor(estKills / 4));
+  const rollCount = Math.min(6, Math.floor(estKills / 6));
   for (let i = 0; i < rollCount; i++) {
     const loot = generateLoot(state.stage, false, computedStats.magicFind, false);
     if (loot) itemsFound.push(loot);

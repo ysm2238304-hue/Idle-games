@@ -13,9 +13,9 @@ function pickRandom(arr) {
 export function rollRarity(isBoss, magicFindPct = 0) {
   const mfMult = 1 + Math.max(0, magicFindPct) / 100;
   const roll = Math.random() * 100;
-  const legChance = (isBoss ? 18 : 3.2) * mfMult;
-  const rareChance = (isBoss ? 48 : 16) * mfMult;
-  const magicChance = (isBoss ? 34 : 38) * mfMult;
+  const legChance = (isBoss ? 14 : 1.8) * mfMult;
+  const rareChance = (isBoss ? 44 : 13) * mfMult;
+  const magicChance = (isBoss ? 42 : 36) * mfMult;
 
   if (roll < legChance) return 'legendary';
   if (roll < legChance + rareChance) return 'rare';
@@ -24,7 +24,8 @@ export function rollRarity(isBoss, magicFindPct = 0) {
 }
 
 export function generateLoot(stage, isBoss = false, magicFindPct = 0, guaranteed = false) {
-  const dropChance = guaranteed ? 100 : (isBoss ? 100 : Math.min(85, 36 + magicFindPct * 0.25));
+  // 群怪時代：小怪單隻掉率下修，BOSS 必掉
+  const dropChance = guaranteed ? 100 : (isBoss ? 100 : Math.min(48, 14 + magicFindPct * 0.15));
   if (Math.random() * 100 > dropChance) return null;
 
   const slotKeys = Object.keys(EQUIP_SLOTS);
@@ -33,10 +34,10 @@ export function generateLoot(stage, isBoss = false, magicFindPct = 0, guaranteed
   const rarity = RARITIES[rarityId];
 
   const bases = BASE_ITEMS[slot];
-  const tierIdx = Math.min(bases.length - 1, Math.floor((stage - 1) / 3));
+  const tierIdx = Math.min(bases.length - 1, Math.floor((stage - 1) / 4));
   const baseTpl = bases[randInt(Math.max(0, tierIdx - 1), tierIdx)];
 
-  const levelFactor = 1 + (stage - 1) * 0.22;
+  const levelFactor = 1 + (stage - 1) * 0.24;
   const baseValue = Math.max(1, Math.round(baseTpl.baseVal * levelFactor * rarity.mult * (0.9 + Math.random() * 0.25)));
 
   const affixCount = randInt(rarity.affixes[0], rarity.affixes[1]);
@@ -107,7 +108,7 @@ export function calcItemPower(item) {
 
 export function getSalvageReward(item) {
   const rarityMult = { common: 1, magic: 2.2, rare: 5, legendary: 14 }[item.rarity] || 1;
-  const gold = Math.round((6 + item.level * 4) * rarityMult);
-  const dust = Math.max(1, Math.round((1 + item.level * 0.6) * rarityMult));
+  const gold = Math.round((5 + item.level * 3) * rarityMult);
+  const dust = Math.max(1, Math.round((1 + item.level * 0.5) * rarityMult));
   return { gold, dust };
 }

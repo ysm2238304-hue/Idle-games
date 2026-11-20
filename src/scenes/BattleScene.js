@@ -1,8 +1,10 @@
 import { CLASSES } from '../data/classes.js';
 import { RARITIES } from '../data/items.js';
-import { createWaveMonster } from '../data/monsters.js';
+import { createWaveSquad } from '../data/monsters.js';
 import { formatNum } from '../logic/statCalc.js';
 
+const MAP_W = 2200;
+const MAP_H = 1230;
 const ZONE_EMBERS = [0xfbbf24, 0x34d399, 0x38bdf8, 0xf97316, 0xe879f9];
 
 export class BattleScene extends Phaser.Scene {
@@ -10,17 +12,18 @@ export class BattleScene extends Phaser.Scene {
     super({ key: 'BattleScene' });
     this.callbacks = null;
     this.hero = null;
-    this.monsterSprite = null;
-    this.currentMonster = null;
+    this.monsters = [];
     this.playerHp = 240;
     this.playerMaxHp = 240;
     this.heroAttackTimer = 0;
-    this.mobAttackTimer = 0;
     this.skillCooldownTimer = 0;
     this.bossTimeLeft = 0;
+    this.isBossWave = false;
     this.isTransitioning = false;
-    this.isPaused = true;
+    this.isPaused = false;
     this.lastZoneIdx = -1;
+    this.patrolTarget = { x: MAP_W / 2, y: MAP_H / 2 };
+    this.heroFacingLeft = false;
   }
 
   init(data) {
@@ -37,39 +40,43 @@ export class BattleScene extends Phaser.Scene {
     this.load.image('mob_skeleton', './assets/monsters/skeleton.png');
     this.load.image('mob_boss_demon', './assets/monsters/boss_demon.png');
     for (let i = 0; i < 5; i++) {
-      this.load.image(`bg_zone_${i}`, `./assets/bg/zone_${i}.jpg`);
+      this.load.image(`map_zone_${i}`, `./assets/bg/map_${i}.jpg`);
     }
   }
 
   create() {
-    const w = this.scale.width;
-    const h = this.scale.height;
-
     this.generateFxTextures();
-    this.floorY = Math.round(h * 0.78);
 
-    this.bgImage = this.add.image(w / 2, h / 2, 'bg_zone_0').setDepth(0);
-    this.bgShade = this.add.rectangle(w / 2, h / 2, w, h, 0x05060a, 0.22).setDepth(1);
-    this.fitBackground(w, h);
+    this.bgImage = this.add.image(MAP_W / 2, MAP_H / 2, 'map_zone_0')
+      .setDisplaySize(MAP_W, MAP_H)
+      .setDepth(0);
 
-    this.createCharacters(w);
-    this.createHudBars(w);
+    this.cameras.main.setBounds(0, 0, MAP_W, MAP_H);
+    this.createHero();
+
+    this.bossTimerText = this.add.text(this.scale.width / 2, 28, '', {
+      fontSize: '18px', color: '#fb923c', fontFamily: 'sans-serif', fontStyle: 'bold',
+      stroke: '#000000', strokeThickness: 5,
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(5000).setVisible(false);
 
     this.time.addEvent({
-      delay: 280,
+      delay: 260,
       loop: true,
       callback: () => {
         if (!this.isPaused) this.spawnAmbientEmber();
       },
     });
 
+    // 點擊地圖任一怪物或地面造成範圍輔助點擊傷害
     this.input.on('pointerdown', (pointer) => {
-      if (this.isPaused || this.isTransitioning || !this.currentMonster || this.currentMonster.hp <= 0) return;
-      if (pointer.x > w * 0.42) {
+      if (this.isPaused || this.isTransitioning || this.monsters.length === 0) return;
+      const worldPt = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+      const target = this.findNearestMonster(worldPt.x, worldPt.y, 130);
+      if (target) {
         const stats = this.getStats();
         const tapDmg = Math.max(2, Math.round(stats.atk * 0.45));
-        this.applyDamageToMonster(tapDmg, false, true);
-        this.spawnArcSlash(this.monsterSprite.x, this.monsterSprite.y - 16, 0xfbbf24, 42);
+        this.damageMonster(target, tapDmg, false, true);
+        this.spawnArcSlash(target.sprite.x, target.sprite.y - 16, 0xfbbf24, 42);
       }
     });
 
@@ -82,7 +89,7 @@ export class BattleScene extends Phaser.Scene {
     this.playerMaxHp = stats.maxHp;
     this.playerHp = stats.maxHp;
     this.skillCooldownTimer = cls.skill.cooldownMs;
-    this.spawnWaveMonster();
+    this.spawnWaveSquad();
   }
 
   generateFxTextures() {
@@ -99,11 +106,32 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
-  fitBackground(w, h) {
-    if (!this.bgImage) return;
-    const scale = Math.max(w / 1280, h / 720) * 1.06;
-    this.bgImage.setPosition(w / 2, h / 2).setScale(scale);
-    this.bgShade.setPosition(w / 2, h / 2).setSize(w, h);
+  createHero() {
+    const cls = CLASSES[this.getState().classId] || CLASSES.warrior;
+    const cx = MAP_W / 2;
+    const cy = MAP_H / 2;
+
+    this.heroShadow = this.add.ellipse(cx, cy + 44, 86, 24, 0x000000, 0.52).setDepth(2);
+    this.hero = this.add.image(cx, cy, cls.spriteKey).setScale(0.54).setDepth(cy);
+
+    this.tweens.add({
+      targets: this.hero,
+      scaleY: 0.56,
+      scaleX: 0.52,
+      duration: 680,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    });
+
+    this.heroHpBg = this.add.rectangle(cx, cy - 84, 108, 10, 0x0b0e14).setStrokeStyle(1.5, 0xc89b3c).setDepth(4000);
+    this.heroHpFill = this.add.rectangle(cx - 54, cy - 84, 108, 8, 0x22c55e).setOrigin(0, 0.5).setDepth(4001);
+    this.heroHpText = this.add.text(cx, cy - 99, '', {
+      fontSize: '12px', color: '#f8fafc', fontFamily: 'sans-serif', fontStyle: 'bold',
+      stroke: '#000000', strokeThickness: 3,
+    }).setOrigin(0.5).setDepth(4002);
+
+    this.cameras.main.startFollow(this.hero, true, 0.09, 0.09);
   }
 
   getZoneIdx() {
@@ -115,8 +143,7 @@ export class BattleScene extends Phaser.Scene {
     const idx = this.getZoneIdx();
     if (idx !== this.lastZoneIdx && this.bgImage) {
       this.lastZoneIdx = idx;
-      this.bgImage.setTexture(`bg_zone_${idx}`);
-      this.fitBackground(this.scale.width, this.scale.height);
+      this.bgImage.setTexture(`map_zone_${idx}`).setDisplaySize(MAP_W, MAP_H);
     }
   }
 
@@ -125,82 +152,12 @@ export class BattleScene extends Phaser.Scene {
   }
 
   castSkillManual() {
-    if (this.isPaused || this.isTransitioning || !this.currentMonster || this.currentMonster.hp <= 0) return false;
+    if (this.isPaused || this.isTransitioning || this.monsters.length === 0) return false;
     const cls = CLASSES[this.getState().classId] || CLASSES.warrior;
     if (this.skillCooldownTimer < cls.skill.cooldownMs) return false;
     this.skillCooldownTimer = 0;
     this.triggerClassSkill(cls, this.getStats());
     return true;
-  }
-
-  spawnAmbientEmber() {
-    if (!this.scale) return;
-    const w = this.scale.width;
-    const color = ZONE_EMBERS[this.getZoneIdx()];
-    const px = Phaser.Math.Between(30, Math.max(60, w - 30));
-    const py = Phaser.Math.Between(this.floorY - 60, this.floorY + 30);
-    const dot = this.add.image(px, py, 'fx_glow').setTint(color).setScale(0.22).setAlpha(0.75).setBlendMode(Phaser.BlendModes.ADD).setDepth(4);
-    this.tweens.add({
-      targets: dot,
-      y: py - Phaser.Math.Between(60, 130),
-      x: px + Phaser.Math.Between(-28, 28),
-      alpha: 0,
-      duration: Phaser.Math.Between(1400, 2200),
-      onComplete: () => dot.destroy(),
-    });
-  }
-
-  createCharacters(w) {
-    const cls = CLASSES[this.getState().classId] || CLASSES.warrior;
-    this.heroShadow = this.add.ellipse(w * 0.30, this.floorY + 14, 118, 26, 0x000000, 0.55).setDepth(4);
-    this.mobShadow = this.add.ellipse(w * 0.70, this.floorY + 14, 128, 28, 0x000000, 0.55).setDepth(4);
-
-    this.hero = this.add.image(w * 0.30, this.floorY - 80, cls.spriteKey).setScale(0.72).setDepth(6);
-    this.tweens.add({
-      targets: this.hero,
-      scaleY: 0.74,
-      scaleX: 0.70,
-      duration: 750,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut',
-    });
-
-    this.monsterSprite = this.add.image(w * 0.70, this.floorY - 82, 'mob_goblin')
-      .setScale(0.70).setDepth(6).setVisible(false);
-    this.tweens.add({
-      targets: this.monsterSprite,
-      y: '+=6',
-      duration: 820,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut',
-    });
-  }
-
-  createHudBars(w) {
-    this.heroHpBg = this.add.rectangle(w * 0.30, this.floorY - 190, 136, 12, 0x0b0e14).setStrokeStyle(1.5, 0xc89b3c).setDepth(10);
-    this.heroHpFill = this.add.rectangle(w * 0.30 - 68, this.floorY - 190, 136, 10, 0x22c55e).setOrigin(0, 0.5).setDepth(11);
-    this.heroHpText = this.add.text(w * 0.30, this.floorY - 208, '', {
-      fontSize: '13px', color: '#f8fafc', fontFamily: 'sans-serif', fontStyle: 'bold',
-      stroke: '#000000', strokeThickness: 3,
-    }).setOrigin(0.5).setDepth(12);
-
-    this.mobHpBg = this.add.rectangle(w * 0.70, this.floorY - 202, 168, 14, 0x0b0e14).setStrokeStyle(1.5, 0xc89b3c).setDepth(10);
-    this.mobHpFill = this.add.rectangle(w * 0.70 - 84, this.floorY - 202, 168, 12, 0xef4444).setOrigin(0, 0.5).setDepth(11);
-    this.mobNameText = this.add.text(w * 0.70, this.floorY - 224, '', {
-      fontSize: '14px', color: '#fde68a', fontFamily: 'sans-serif', fontStyle: 'bold',
-      stroke: '#000000', strokeThickness: 4,
-    }).setOrigin(0.5).setDepth(12);
-    this.mobHpText = this.add.text(w * 0.70, this.floorY - 202, '', {
-      fontSize: '11px', color: '#ffffff', fontFamily: 'sans-serif', fontStyle: 'bold',
-      stroke: '#000000', strokeThickness: 3,
-    }).setOrigin(0.5).setDepth(13);
-
-    this.bossTimerText = this.add.text(w * 0.5, 34, '', {
-      fontSize: '17px', color: '#fb923c', fontFamily: 'sans-serif', fontStyle: 'bold',
-      stroke: '#000000', strokeThickness: 5,
-    }).setOrigin(0.5).setDepth(15).setVisible(false);
   }
 
   refreshHeroClass(classId) {
@@ -210,7 +167,7 @@ export class BattleScene extends Phaser.Scene {
     this.playerMaxHp = stats.maxHp;
     this.playerHp = stats.maxHp;
     this.skillCooldownTimer = cls.skill.cooldownMs;
-    this.updateHpBars();
+    this.updateHeroHpBar();
   }
 
   syncMaxHp() {
@@ -219,36 +176,77 @@ export class BattleScene extends Phaser.Scene {
     this.playerMaxHp = stats.maxHp;
     if (diff > 0) this.playerHp = Math.min(this.playerMaxHp, this.playerHp + diff);
     else this.playerHp = Math.min(this.playerMaxHp, this.playerHp);
-    this.updateHpBars();
+    this.updateHeroHpBar();
   }
 
-  spawnWaveMonster() {
+  clearAllMonsters() {
+    this.monsters.forEach((m) => {
+      m.sprite?.destroy();
+      m.shadow?.destroy();
+      m.hpBg?.destroy();
+      m.hpFill?.destroy();
+      m.nameText?.destroy();
+    });
+    this.monsters = [];
+  }
+
+  spawnWaveSquad() {
     this.updateZoneBackground();
+    this.clearAllMonsters();
+
     const state = this.getState();
-    this.currentMonster = createWaveMonster(state.stage, state.wave);
+    const squad = createWaveSquad(state.stage, state.wave);
     this.isTransitioning = false;
-    this.mobAttackTimer = 0;
-    this.bossTimeLeft = this.currentMonster.isBoss ? this.currentMonster.timeLimitSec : 0;
+    this.isBossWave = squad.some((m) => m.isBoss);
+    this.bossTimeLeft = this.isBossWave ? 28 : 0;
+    this.bossTimerText.setVisible(this.isBossWave);
 
-    const w = this.scale.width;
-    const baseScale = this.currentMonster.scale * 1.25;
-    this.monsterSprite
-      .setTexture(this.currentMonster.spriteKey)
-      .setScale(baseScale)
-      .setPosition(w + 90, this.floorY - (this.currentMonster.isBoss ? 110 : 82))
-      .setAlpha(1)
-      .clearTint()
-      .setVisible(true);
+    squad.forEach((data, idx) => {
+      const angle = (Math.PI * 2 * idx) / squad.length + Math.random() * 0.6;
+      const dist = data.isBoss ? 430 : Phaser.Math.Between(360, 560);
+      const sx = Phaser.Math.Clamp(this.hero.x + Math.cos(angle) * dist, 180, MAP_W - 180);
+      const sy = Phaser.Math.Clamp(this.hero.y + Math.sin(angle) * dist, 180, MAP_H - 180);
 
-    this.tweens.add({
-      targets: this.monsterSprite,
-      x: w * 0.70,
-      duration: 380,
-      ease: 'Cubic.easeOut',
+      const shadow = this.add.ellipse(sx, sy + 42, data.isBoss ? 116 : 74, 22, 0x000000, 0.48).setDepth(2);
+      const sprite = this.add.image(sx, sy, data.spriteKey).setScale(data.scale).setDepth(sy).setAlpha(0);
+      this.tweens.add({ targets: sprite, alpha: 1, duration: 280 });
+
+      const barW = data.isBoss ? 136 : 76;
+      const hpBg = this.add.rectangle(sx, sy - (data.isBoss ? 98 : 66), barW, 8, 0x0b0e14).setStrokeStyle(1, 0x64748b).setDepth(3500);
+      const hpFill = this.add.rectangle(sx - barW / 2, sy - (data.isBoss ? 98 : 66), barW, 6, data.isBoss ? 0xf97316 : 0xef4444).setOrigin(0, 0.5).setDepth(3501);
+      const nameText = this.add.text(sx, sy - (data.isBoss ? 114 : 80), data.isBoss ? data.name : '', {
+        fontSize: '12px', color: '#fde68a', fontFamily: 'sans-serif', fontStyle: 'bold',
+        stroke: '#000000', strokeThickness: 3,
+      }).setOrigin(0.5).setDepth(3502);
+
+      this.monsters.push({
+        ...data,
+        sprite,
+        shadow,
+        hpBg,
+        hpFill,
+        barW,
+        nameText,
+        attackTimer: Phaser.Math.Between(0, 900),
+        jitterAngle: Math.random() * Math.PI * 2,
+      });
     });
 
-    this.bossTimerText.setVisible(this.currentMonster.isBoss);
-    this.updateHpBars();
+    this.updateHeroHpBar();
+  }
+
+  findNearestMonster(x, y, maxRange = Infinity) {
+    let best = null;
+    let bestDist = maxRange;
+    for (const m of this.monsters) {
+      if (m.hp <= 0) continue;
+      const d = Phaser.Math.Distance.Between(x, y, m.sprite.x, m.sprite.y);
+      if (d < bestDist) {
+        bestDist = d;
+        best = m;
+      }
+    }
+    return best;
   }
 
   update(time, delta) {
@@ -260,28 +258,38 @@ export class BattleScene extends Phaser.Scene {
       this.callbacks.onSkillTick(this.skillCooldownTimer / cls.skill.cooldownMs);
     }
 
-    if (this.isTransitioning || !this.currentMonster || this.currentMonster.hp <= 0) return;
+    if (this.isTransitioning) return;
 
     const stats = this.getStats();
-    if (this.skillCooldownTimer >= cls.skill.cooldownMs) {
-      this.skillCooldownTimer = 0;
-      this.triggerClassSkill(cls, stats);
+    const dt = delta / 1000;
+
+    // 1. 英雄自動移動 AI（近戰追擊 / 遠程走位拉打 / 無怪時巡邏）
+    this.updateHeroMovement(dt, stats, cls.id);
+
+    // 2. 怪物四面八方包圍追蹤與攻擊
+    this.updateMonstersAI(delta, dt, stats);
+
+    // 3. 英雄自動攻擊與技能
+    const nearest = this.findNearestMonster(this.hero.x, this.hero.y);
+    if (nearest) {
+      const atkRange = cls.id === 'warrior' ? 115 : 330;
+      const dist = Phaser.Math.Distance.Between(this.hero.x, this.hero.y, nearest.sprite.x, nearest.sprite.y);
+
+      if (this.skillCooldownTimer >= cls.skill.cooldownMs && dist <= Math.max(220, atkRange)) {
+        this.skillCooldownTimer = 0;
+        this.triggerClassSkill(cls, stats, nearest);
+      }
+
+      this.heroAttackTimer += delta;
+      if (this.heroAttackTimer >= stats.atkIntervalMs && dist <= atkRange) {
+        this.heroAttackTimer = 0;
+        this.performHeroAttack(stats, cls.id, nearest);
+      }
     }
 
-    this.heroAttackTimer += delta;
-    if (this.heroAttackTimer >= stats.atkIntervalMs) {
-      this.heroAttackTimer = 0;
-      this.performHeroAttack(stats, cls.id);
-    }
-
-    this.mobAttackTimer += delta;
-    if (this.mobAttackTimer >= this.currentMonster.atkIntervalMs) {
-      this.mobAttackTimer = 0;
-      this.performMonsterAttack(stats);
-    }
-
-    if (this.currentMonster.isBoss) {
-      this.bossTimeLeft -= delta / 1000;
+    // 4. BOSS 倒數
+    if (this.isBossWave) {
+      this.bossTimeLeft -= dt;
       this.bossTimerText.setText(`🔥 首領狂暴倒數: ${Math.max(0, this.bossTimeLeft).toFixed(1)}s`);
       if (this.bossTimeLeft <= 0) {
         this.handleHeroDefeat('首領戰超時，退回第 1 波重整旗鼓！');
@@ -289,28 +297,115 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
-  performHeroAttack(stats, classId) {
-    const w = this.scale.width;
+  updateHeroMovement(dt, stats, classId) {
+    const nearest = this.findNearestMonster(this.hero.x, this.hero.y);
+    let vx = 0;
+    let vy = 0;
+
+    if (nearest) {
+      const dx = nearest.sprite.x - this.hero.x;
+      const dy = nearest.sprite.y - this.hero.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      const isRanged = classId !== 'warrior';
+
+      if (isRanged && dist < 135) {
+        // 遠程風箏走位：往反方向拉開距離
+        vx = -(dx / dist) * stats.moveSpeed;
+        vy = -(dy / dist) * stats.moveSpeed;
+      } else if (dist > (isRanged ? 250 : 88)) {
+        vx = (dx / dist) * stats.moveSpeed;
+        vy = (dy / dist) * stats.moveSpeed;
+      } else {
+        // 小幅繞圈走位，呈現活生生的戰鬥感
+        const perpX = -dy / dist;
+        const perpY = dx / dist;
+        vx = perpX * stats.moveSpeed * 0.45;
+        vy = perpY * stats.moveSpeed * 0.45;
+      }
+      this.heroFacingLeft = dx < 0;
+    } else {
+      const dx = this.patrolTarget.x - this.hero.x;
+      const dy = this.patrolTarget.y - this.hero.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist < 24) {
+        this.patrolTarget = {
+          x: Phaser.Math.Between(360, MAP_W - 360),
+          y: Phaser.Math.Between(260, MAP_H - 260),
+        };
+      } else {
+        vx = (dx / dist) * stats.moveSpeed * 0.7;
+        vy = (dy / dist) * stats.moveSpeed * 0.7;
+        this.heroFacingLeft = dx < 0;
+      }
+    }
+
+    this.hero.x = Phaser.Math.Clamp(this.hero.x + vx * dt, 220, MAP_W - 220);
+    this.hero.y = Phaser.Math.Clamp(this.hero.y + vy * dt, 200, MAP_H - 200);
+    this.hero.setFlipX(this.heroFacingLeft);
+    this.hero.setDepth(this.hero.y);
+
+    this.heroShadow.setPosition(this.hero.x, this.hero.y + 44);
+    this.heroHpBg.setPosition(this.hero.x, this.hero.y - 84);
+    this.heroHpFill.setPosition(this.hero.x - 54, this.hero.y - 84);
+    this.heroHpText.setPosition(this.hero.x, this.hero.y - 99);
+  }
+
+  updateMonstersAI(delta, dt, stats) {
+    for (const m of this.monsters) {
+      if (m.hp <= 0) continue;
+      const dx = this.hero.x - m.sprite.x;
+      const dy = this.hero.y - m.sprite.y;
+      const dist = Math.hypot(dx, dy) || 1;
+      const stopRange = m.isBoss ? 92 : 70;
+
+      if (dist > stopRange) {
+        const mx = (dx / dist + Math.cos(m.jitterAngle) * 0.15) * m.speed * dt;
+        const my = (dy / dist + Math.sin(m.jitterAngle) * 0.15) * m.speed * dt;
+        m.sprite.x = Phaser.Math.Clamp(m.sprite.x + mx, 120, MAP_W - 120);
+        m.sprite.y = Phaser.Math.Clamp(m.sprite.y + my, 120, MAP_H - 120);
+      }
+
+      // 怪物原始面向左邊，若英雄在右邊就翻轉朝右
+      m.sprite.setFlipX(dx > 0);
+      m.sprite.setDepth(m.sprite.y);
+      m.shadow.setPosition(m.sprite.x, m.sprite.y + 42);
+
+      const barY = m.sprite.y - (m.isBoss ? 98 : 66);
+      m.hpBg.setPosition(m.sprite.x, barY);
+      m.hpFill.setPosition(m.sprite.x - m.barW / 2, barY);
+      m.nameText.setPosition(m.sprite.x, barY - 16);
+
+      if (dist <= stopRange + 24) {
+        m.attackTimer += delta;
+        if (m.attackTimer >= m.atkIntervalMs) {
+          m.attackTimer = 0;
+          this.performMonsterAttack(m, stats);
+        }
+      }
+    }
+  }
+
+  performHeroAttack(stats, classId, target) {
     const isCrit = Math.random() * 100 < stats.critRate;
     let dmg = stats.atk * (0.92 + Math.random() * 0.16);
-    if (stats.activeEffects.has('execute') && this.currentMonster.hp / this.currentMonster.maxHp < 0.35) {
+    if (stats.activeEffects.has('execute') && target.hp / target.maxHp < 0.35) {
       dmg *= 1.35;
     }
     if (isCrit) dmg *= stats.critDmg / 100;
     dmg = Math.max(1, Math.round(dmg));
 
-    const finishHit = () => {
-      if (!this.currentMonster || this.currentMonster.hp <= 0) return;
-      this.applyDamageToMonster(dmg, isCrit, false);
+    const finishHit = (hitMob) => {
+      if (!hitMob || hitMob.hp <= 0) return;
+      this.damageMonster(hitMob, dmg, isCrit, false);
 
-      if (isCrit && stats.activeEffects.has('chain_lightning') && this.currentMonster.hp > 0) {
-        const boltDmg = Math.max(1, Math.round(stats.atk * 0.45));
-        this.time.delayedCall(110, () => {
-          if (this.currentMonster && this.currentMonster.hp > 0) {
-            this.spawnLightningChain(this.hero.x + 25, this.hero.y - 36, this.monsterSprite.x, this.monsterSprite.y - 12);
-            this.applyDamageToMonster(boltDmg, false, false, '#60a5fa', '⚡');
-          }
-        });
+      const boltChance = stats.activeEffects.has('chain_lightning') ? Math.max(100, stats.treeBoltChance) : stats.treeBoltChance;
+      if (isCrit && boltChance > 0 && Math.random() * 100 < boltChance) {
+        const boltDmg = Math.max(1, Math.round(stats.atk * 0.5));
+        const second = this.monsters.find((m) => m.hp > 0 && m !== hitMob) || hitMob;
+        if (second && second.hp > 0) {
+          this.spawnLightningChain(hitMob.sprite.x, hitMob.sprite.y - 12, second.sprite.x, second.sprite.y - 12);
+          this.damageMonster(second, boltDmg, false, false, '#60a5fa', '⚡');
+        }
       }
 
       if (stats.lifesteal > 0) {
@@ -319,85 +414,86 @@ export class BattleScene extends Phaser.Scene {
     };
 
     if (classId === 'warrior') {
-      this.tweens.add({ targets: this.hero, x: w * 0.44, duration: 95, yoyo: true, ease: 'Power2' });
-      this.spawnArcSlash(this.monsterSprite.x - 18, this.monsterSprite.y - 14, isCrit ? 0xfacc15 : 0xf97316, isCrit ? 74 : 56);
-      this.spawnSparkBurst(this.monsterSprite.x, this.monsterSprite.y - 12, 0xfb923c, 7);
-      finishHit();
+      this.spawnArcSlash(target.sprite.x, target.sprite.y - 12, isCrit ? 0xfacc15 : 0xf97316, isCrit ? 68 : 52);
+      this.spawnSparkBurst(target.sprite.x, target.sprite.y - 10, 0xfb923c, 6);
+      finishHit(target);
     } else if (classId === 'ranger') {
-      this.tweens.add({ targets: this.hero, x: w * 0.28, duration: 70, yoyo: true });
-      this.spawnProjectile(this.hero.x + 36, this.hero.y - 20, this.monsterSprite.x, this.monsterSprite.y - 18, 0x34d399, 'arrow', finishHit);
+      this.spawnProjectile(this.hero.x, this.hero.y - 12, target.sprite.x, target.sprite.y - 12, 0x34d399, 'arrow', () => finishHit(target));
     } else {
-      this.tweens.add({ targets: this.hero, y: '-=10', duration: 90, yoyo: true });
-      this.spawnProjectile(this.hero.x + 38, this.hero.y - 28, this.monsterSprite.x, this.monsterSprite.y - 18, 0xc084fc, 'orb', finishHit);
+      this.spawnProjectile(this.hero.x, this.hero.y - 18, target.sprite.x, target.sprite.y - 12, 0xc084fc, 'orb', () => finishHit(target));
     }
   }
 
-  triggerClassSkill(cls, stats) {
-    if (!this.currentMonster || this.currentMonster.hp <= 0) return;
+  triggerClassSkill(cls, stats, primaryTarget = null) {
+    const alive = this.monsters.filter((m) => m.hp > 0);
+    if (alive.length === 0) return;
     const sk = cls.skill;
-    const w = this.scale.width;
+    const target = primaryTarget || this.findNearestMonster(this.hero.x, this.hero.y) || alive[0];
+    const dmgMult = stats.skillDmgMult || 1;
+    const radMult = stats.skillRadiusMult || 1;
 
-    const banner = this.add.text(w * 0.5, 76, `⚡ 【${sk.name}】`, {
-      fontSize: '24px', color: '#fde047', fontFamily: 'sans-serif', fontStyle: 'bold',
-      stroke: '#000000', strokeThickness: 6,
-    }).setOrigin(0.5).setDepth(35);
-    this.tweens.add({ targets: banner, y: 48, alpha: 0, duration: 950, onComplete: () => banner.destroy() });
+    const banner = this.add.text(this.scale.width / 2, 68, `⚡ 【${sk.name}】`, {
+      fontSize: '22px', color: '#fde047', fontFamily: 'sans-serif', fontStyle: 'bold',
+      stroke: '#000000', strokeThickness: 5,
+    }).setOrigin(0.5).setScrollFactor(0).setDepth(5000);
+    this.tweens.add({ targets: banner, y: 42, alpha: 0, duration: 900, onComplete: () => banner.destroy() });
 
     const heroAura = this.add.image(this.hero.x, this.hero.y, 'fx_glow')
-      .setTint(sk.fxColor).setScale(4.0).setAlpha(0.8).setBlendMode(Phaser.BlendModes.ADD).setDepth(5);
-    this.tweens.add({ targets: heroAura, scale: 5.5, alpha: 0, duration: 420, onComplete: () => heroAura.destroy() });
+      .setTint(sk.fxColor).setScale(3.6).setAlpha(0.8).setBlendMode(Phaser.BlendModes.ADD).setDepth(4500);
+    this.tweens.add({ targets: heroAura, scale: 5.0, alpha: 0, duration: 400, onComplete: () => heroAura.destroy() });
 
     if (sk.type === 'whirlwind') {
+      // 以英雄為中心的 360° 旋風大範圍群傷
+      const radius = 210 * radMult;
       this.tweens.add({ targets: this.hero, angle: 360, duration: 400, ease: 'Cubic.easeOut' });
-      const mx = this.monsterSprite.x;
-      const my = this.monsterSprite.y;
-      const glowRing = this.add.image(mx, my, 'fx_glow')
-        .setTint(0xff6b35).setScale(3.6).setAlpha(1).setBlendMode(Phaser.BlendModes.ADD).setDepth(21);
-      const shock = this.add.circle(mx, my, 28, 0xff6b35, 0)
-        .setStrokeStyle(7, 0xfde047, 1).setBlendMode(Phaser.BlendModes.ADD).setDepth(22);
-      this.tweens.add({ targets: glowRing, scale: 6.5, alpha: 0, duration: 460, onComplete: () => glowRing.destroy() });
-      this.tweens.add({ targets: shock, scale: 4.8, alpha: 0, duration: 440, onComplete: () => shock.destroy() });
-      this.spawnArcSlash(mx, my, 0xfacc15, 98);
-      this.spawnSparkBurst(mx, my, 0xfde047, 20);
+      const glow = this.add.image(this.hero.x, this.hero.y, 'fx_glow')
+        .setTint(0xff6b35).setScale(4.5 * radMult).setAlpha(0.95).setBlendMode(Phaser.BlendModes.ADD).setDepth(4501);
+      const shock = this.add.circle(this.hero.x, this.hero.y, 26, 0xff6b35, 0)
+        .setStrokeStyle(6, 0xfde047, 1).setBlendMode(Phaser.BlendModes.ADD).setDepth(4502);
+      this.tweens.add({ targets: glow, scale: 6.5 * radMult, alpha: 0, duration: 450, onComplete: () => glow.destroy() });
+      this.tweens.add({ targets: shock, scale: 6.2 * radMult, alpha: 0, duration: 430, onComplete: () => shock.destroy() });
+      this.spawnSparkBurst(this.hero.x, this.hero.y, 0xfde047, 20);
 
-      const dmg = Math.round(stats.atk * sk.mult);
-      this.applyDamageToMonster(dmg, true, false, '#fb923c', '💥');
+      const dmg = Math.round(stats.atk * sk.mult * dmgMult);
+      alive.forEach((m) => {
+        if (Phaser.Math.Distance.Between(this.hero.x, this.hero.y, m.sprite.x, m.sprite.y) <= radius) {
+          this.damageMonster(m, dmg, true, false, '#fb923c', '💥');
+        }
+      });
       this.healHero(Math.round(this.playerMaxHp * sk.healPct));
       this.cameras.main.shake(170, 0.01);
     } else if (sk.type === 'volley') {
+      // 追蹤最近最多 3 隻怪物連射 + 小範圍濺射
       for (let i = 0; i < sk.hits; i++) {
         this.time.delayedCall(i * 110, () => {
-          if (!this.currentMonster || this.currentMonster.hp <= 0) return;
-          this.spawnProjectile(
-            this.hero.x + 36,
-            this.hero.y - 32 + i * 16,
-            this.monsterSprite.x,
-            this.monsterSprite.y - 26 + i * 16,
-            0x34d399,
-            'beam',
-            () => {
-              if (!this.currentMonster || this.currentMonster.hp <= 0) return;
-              const burst = this.add.image(this.monsterSprite.x, this.monsterSprite.y - 12, 'fx_glow')
-                .setTint(0x34d399).setScale(3.0).setAlpha(0.95).setBlendMode(Phaser.BlendModes.ADD).setDepth(22);
-              this.tweens.add({ targets: burst, scale: 4.5, alpha: 0, duration: 280, onComplete: () => burst.destroy() });
-              const isCrit = Math.random() * 100 < (stats.critRate + sk.bonusCrit);
-              let dmg = stats.atk * sk.mult;
-              if (isCrit) dmg *= stats.critDmg / 100;
-              this.applyDamageToMonster(Math.round(dmg), isCrit, false, '#34d399', '🏹');
-              this.spawnSparkBurst(this.monsterSprite.x, this.monsterSprite.y - 12, 0x34d399, 9);
-            }
-          );
+          const curAlive = this.monsters.filter((m) => m.hp > 0);
+          if (curAlive.length === 0) return;
+          const tMob = curAlive[i % curAlive.length];
+          this.spawnProjectile(this.hero.x, this.hero.y - 16, tMob.sprite.x, tMob.sprite.y - 12, 0x34d399, 'beam', () => {
+            const burst = this.add.image(tMob.sprite.x, tMob.sprite.y, 'fx_glow')
+              .setTint(0x34d399).setScale(2.8 * radMult).setAlpha(0.95).setBlendMode(Phaser.BlendModes.ADD).setDepth(4502);
+            this.tweens.add({ targets: burst, scale: 4.2 * radMult, alpha: 0, duration: 260, onComplete: () => burst.destroy() });
+            const isCrit = Math.random() * 100 < (stats.critRate + sk.bonusCrit);
+            let dmg = stats.atk * sk.mult * dmgMult;
+            if (isCrit) dmg *= stats.critDmg / 100;
+            this.monsters.filter((m) => m.hp > 0).forEach((m) => {
+              if (Phaser.Math.Distance.Between(tMob.sprite.x, tMob.sprite.y, m.sprite.x, m.sprite.y) <= 115 * radMult) {
+                this.damageMonster(m, Math.round(dmg), isCrit, false, '#34d399', '🏹');
+              }
+            });
+          });
         });
       }
     } else if (sk.type === 'meteor') {
-      const mx = this.monsterSprite.x;
-      const my = this.monsterSprite.y;
-      const sigil = this.add.ellipse(mx, this.floorY + 12, 175, 48, 0xa855f7, 0.35)
-        .setStrokeStyle(3, 0xe879f9, 1).setBlendMode(Phaser.BlendModes.ADD).setDepth(17);
-      const meteorCore = this.add.circle(mx - 110, -45, 30, 0xf97316, 1)
-        .setStrokeStyle(5, 0xfde047, 1).setDepth(22);
-      const meteorHalo = this.add.image(mx - 110, -45, 'fx_glow')
-        .setTint(0xe879f9).setScale(3.5).setBlendMode(Phaser.BlendModes.ADD).setDepth(21);
+      const mx = target.sprite.x;
+      const my = target.sprite.y;
+      const radius = 220 * radMult;
+      const sigil = this.add.ellipse(mx, my + 24, 175 * radMult, 72 * radMult, 0xa855f7, 0.35)
+        .setStrokeStyle(3, 0xe879f9, 1).setBlendMode(Phaser.BlendModes.ADD).setDepth(4499);
+      const meteorCore = this.add.circle(mx - 100, my - 260, 28, 0xf97316, 1)
+        .setStrokeStyle(5, 0xfde047, 1).setDepth(4502);
+      const meteorHalo = this.add.image(mx - 100, my - 260, 'fx_glow')
+        .setTint(0xe879f9).setScale(3.4).setBlendMode(Phaser.BlendModes.ADD).setDepth(4501);
 
       this.tweens.add({
         targets: [meteorCore, meteorHalo],
@@ -407,30 +503,147 @@ export class BattleScene extends Phaser.Scene {
         ease: 'Quad.easeIn',
         onUpdate: () => {
           const trail = this.add.image(meteorCore.x, meteorCore.y, 'fx_glow')
-            .setTint(0xc084fc).setScale(1.6).setAlpha(0.75).setBlendMode(Phaser.BlendModes.ADD).setDepth(20);
-          this.tweens.add({ targets: trail, scale: 0.2, alpha: 0, duration: 220, onComplete: () => trail.destroy() });
+            .setTint(0xc084fc).setScale(1.5).setAlpha(0.75).setBlendMode(Phaser.BlendModes.ADD).setDepth(4500);
+          this.tweens.add({ targets: trail, scale: 0.2, alpha: 0, duration: 200, onComplete: () => trail.destroy() });
         },
         onComplete: () => {
           meteorCore.destroy();
           meteorHalo.destroy();
           sigil.destroy();
           const blast = this.add.image(mx, my, 'fx_glow')
-            .setTint(0xf97316).setScale(5.5).setAlpha(1).setBlendMode(Phaser.BlendModes.ADD).setDepth(23);
+            .setTint(0xf97316).setScale(5.5 * radMult).setAlpha(1).setBlendMode(Phaser.BlendModes.ADD).setDepth(4503);
           const ring = this.add.circle(mx, my, 28, 0xe879f9, 0.35)
-            .setStrokeStyle(5, 0xfde047).setBlendMode(Phaser.BlendModes.ADD).setDepth(24);
-          this.tweens.add({ targets: [blast, ring], scale: 6.2, alpha: 0, duration: 400, onComplete: () => { blast.destroy(); ring.destroy(); } });
+            .setStrokeStyle(5, 0xfde047).setBlendMode(Phaser.BlendModes.ADD).setDepth(4504);
+          this.tweens.add({ targets: [blast, ring], scale: 6.2 * radMult, alpha: 0, duration: 400, onComplete: () => { blast.destroy(); ring.destroy(); } });
           this.spawnSparkBurst(mx, my, 0xe879f9, 22);
-          if (!this.currentMonster || this.currentMonster.hp <= 0) return;
-          const dmg = Math.round(stats.atk * sk.mult);
-          this.applyDamageToMonster(dmg, true, false, '#e879f9', '☄️');
+          const dmg = Math.round(stats.atk * sk.mult * dmgMult);
+          this.monsters.filter((m) => m.hp > 0).forEach((m) => {
+            if (Phaser.Math.Distance.Between(mx, my, m.sprite.x, m.sprite.y) <= radius) {
+              this.damageMonster(m, dmg, true, false, '#e879f9', '☄️');
+            }
+          });
           this.cameras.main.shake(220, 0.012);
         },
       });
     }
   }
 
+  performMonsterAttack(m, stats) {
+    if (this.isTransitioning || m.hp <= 0) return;
+
+    if (Math.random() * 100 < stats.dodge) {
+      this.spawnFloatingText(this.hero.x, this.hero.y - 68, 'MISS', '#94a3b8', 14);
+      return;
+    }
+
+    const mitigation = stats.armor / (stats.armor + 45 + m.stage * 14);
+    const dmg = Math.max(1, Math.round(m.atk * (1 - mitigation)));
+    this.playerHp = Math.max(0, this.playerHp - dmg);
+
+    this.hero.setTintFill(0xff4444);
+    this.time.delayedCall(90, () => this.hero && this.hero.clearTint());
+    this.spawnFloatingText(this.hero.x, this.hero.y - 68, `-${formatNum(dmg)}`, '#f87171', 15);
+    this.updateHeroHpBar();
+
+    if (this.playerHp <= 0) {
+      this.handleHeroDefeat('生命歸零，返回第 1 波休整！');
+    }
+  }
+
+  damageMonster(m, dmg, isCrit, isTap, customColor = null, prefix = '') {
+    if (!m || m.hp <= 0) return;
+    m.hp = Math.max(0, m.hp - dmg);
+
+    m.sprite.setTintFill(0xffffff);
+    this.time.delayedCall(75, () => m.sprite && m.sprite.active && m.sprite.clearTint());
+
+    const ratio = Math.max(0, Math.min(1, m.hp / Math.max(1, m.maxHp)));
+    m.hpFill.width = m.barW * ratio;
+
+    const color = customColor || (isTap ? '#fde047' : (isCrit ? '#facc15' : '#ffffff'));
+    const size = isCrit ? 20 : (isTap ? 14 : 15);
+    const label = `${prefix}${isCrit ? '💥' : ''}-${formatNum(dmg)}${isCrit ? '!' : ''}`;
+    this.spawnFloatingText(m.sprite.x + Phaser.Math.Between(-18, 18), m.sprite.y - 54, label, color, size);
+
+    if (isCrit) this.cameras.main.shake(70, 0.003);
+
+    if (m.hp <= 0) {
+      this.handleSingleMonsterKilled(m, this.getStats());
+    }
+  }
+
+  handleSingleMonsterKilled(m, stats) {
+    if (stats.killHealPct > 0) {
+      this.healHero(Math.round(this.playerMaxHp * (stats.killHealPct / 100)));
+    }
+    if (stats.activeEffects.has('vampiric_aura')) {
+      this.healHero(Math.round(this.playerMaxHp * 0.08));
+    }
+
+    this.spawnSparkBurst(m.sprite.x, m.sprite.y, m.isBoss ? 0xfb923c : 0x94a3b8, 12);
+    const mx = m.sprite.x;
+    const my = m.sprite.y;
+
+    m.sprite.destroy();
+    m.shadow.destroy();
+    m.hpBg.destroy();
+    m.hpFill.destroy();
+    m.nameText.destroy();
+
+    const dropResult = this.callbacks.onMonsterKilled(m, this.monsters.every((mob) => mob.hp <= 0));
+    if (dropResult && dropResult.item) {
+      this.spawnLootBeam(mx, my + 24, dropResult.item);
+    }
+
+    if (this.monsters.every((mob) => mob.hp <= 0)) {
+      this.isTransitioning = true;
+      this.time.delayedCall(650, () => {
+        this.spawnWaveSquad();
+      });
+    }
+  }
+
+  handleHeroDefeat(reason) {
+    this.isTransitioning = true;
+    this.playerHp = this.playerMaxHp;
+    this.updateHeroHpBar();
+    this.callbacks.onPlayerDefeated(reason);
+    this.time.delayedCall(900, () => {
+      this.spawnWaveSquad();
+    });
+  }
+
+  healHero(amount) {
+    if (amount <= 0) return;
+    this.playerHp = Math.min(this.playerMaxHp, this.playerHp + amount);
+    this.updateHeroHpBar();
+  }
+
+  updateHeroHpBar() {
+    if (!this.heroHpFill) return;
+    const ratio = Math.max(0, Math.min(1, this.playerHp / Math.max(1, this.playerMaxHp)));
+    this.heroHpFill.width = 108 * ratio;
+    this.heroHpText.setText(`${formatNum(this.playerHp)} / ${formatNum(this.playerMaxHp)}`);
+  }
+
+  spawnAmbientEmber() {
+    const cam = this.cameras.main;
+    const color = ZONE_EMBERS[this.getZoneIdx()];
+    const px = cam.scrollX + Phaser.Math.Between(30, Math.max(80, cam.width - 30));
+    const py = cam.scrollY + Phaser.Math.Between(60, Math.max(120, cam.height - 40));
+    const dot = this.add.image(px, py, 'fx_glow').setTint(color).setScale(0.22).setAlpha(0.75).setBlendMode(Phaser.BlendModes.ADD).setDepth(3900);
+    this.tweens.add({
+      targets: dot,
+      y: py - Phaser.Math.Between(45, 95),
+      x: px + Phaser.Math.Between(-24, 24),
+      alpha: 0,
+      duration: Phaser.Math.Between(1200, 1900),
+      onComplete: () => dot.destroy(),
+    });
+  }
+
   spawnArcSlash(x, y, color, radius = 56) {
-    const g = this.add.graphics().setDepth(18).setBlendMode(Phaser.BlendModes.ADD);
+    const g = this.add.graphics().setDepth(4500).setBlendMode(Phaser.BlendModes.ADD);
     g.lineStyle(6, color, 1);
     g.beginPath();
     g.arc(x, y, radius, Phaser.Math.DegToRad(-60), Phaser.Math.DegToRad(60), false);
@@ -441,17 +654,19 @@ export class BattleScene extends Phaser.Scene {
   spawnProjectile(sx, sy, tx, ty, color, style, onHit) {
     let proj;
     if (style === 'arrow') {
-      proj = this.add.rectangle(sx, sy, 36, 4, color, 1).setBlendMode(Phaser.BlendModes.ADD).setDepth(18);
+      proj = this.add.rectangle(sx, sy, 32, 4, color, 1).setBlendMode(Phaser.BlendModes.ADD).setDepth(4500);
+      proj.setRotation(Math.atan2(ty - sy, tx - sx));
     } else if (style === 'beam') {
-      proj = this.add.rectangle(sx, sy, 74, 9, color, 1).setBlendMode(Phaser.BlendModes.ADD).setDepth(19);
+      proj = this.add.rectangle(sx, sy, 68, 8, color, 1).setBlendMode(Phaser.BlendModes.ADD).setDepth(4501);
+      proj.setRotation(Math.atan2(ty - sy, tx - sx));
     } else {
-      proj = this.add.image(sx, sy, 'fx_glow').setTint(color).setScale(1.0).setBlendMode(Phaser.BlendModes.ADD).setDepth(18);
+      proj = this.add.image(sx, sy, 'fx_glow').setTint(color).setScale(0.95).setBlendMode(Phaser.BlendModes.ADD).setDepth(4500);
     }
     this.tweens.add({
       targets: proj,
       x: tx,
       y: ty,
-      duration: style === 'beam' ? 110 : 150,
+      duration: style === 'beam' ? 115 : 160,
       ease: 'Quad.easeOut',
       onComplete: () => {
         proj.destroy();
@@ -461,16 +676,14 @@ export class BattleScene extends Phaser.Scene {
   }
 
   spawnLightningChain(x1, y1, x2, y2) {
-    const g = this.add.graphics().setDepth(24).setBlendMode(Phaser.BlendModes.ADD);
+    const g = this.add.graphics().setDepth(4504).setBlendMode(Phaser.BlendModes.ADD);
     g.lineStyle(4, 0x60a5fa, 1);
     g.beginPath();
     g.moveTo(x1, y1);
     const steps = 6;
     for (let i = 1; i < steps; i++) {
       const t = i / steps;
-      const px = Phaser.Math.Linear(x1, x2, t) + Phaser.Math.Between(-16, 16);
-      const py = Phaser.Math.Linear(y1, y2, t) + Phaser.Math.Between(-24, 20);
-      g.lineTo(px, py);
+      g.lineTo(Phaser.Math.Linear(x1, x2, t) + Phaser.Math.Between(-16, 16), Phaser.Math.Linear(y1, y2, t) + Phaser.Math.Between(-20, 20));
     }
     g.lineTo(x2, y2);
     g.strokePath();
@@ -480,141 +693,28 @@ export class BattleScene extends Phaser.Scene {
   spawnSparkBurst(x, y, color, count = 8) {
     for (let i = 0; i < count; i++) {
       const ang = (Math.PI * 2 * i) / count + Math.random() * 0.4;
-      const dist = Phaser.Math.Between(30, 86);
-      const p = this.add.image(x, y, 'fx_glow').setTint(color).setScale(0.36).setBlendMode(Phaser.BlendModes.ADD).setDepth(20);
+      const dist = Phaser.Math.Between(28, 78);
+      const p = this.add.image(x, y, 'fx_glow').setTint(color).setScale(0.32).setBlendMode(Phaser.BlendModes.ADD).setDepth(4502);
       this.tweens.add({
         targets: p,
         x: x + Math.cos(ang) * dist,
         y: y + Math.sin(ang) * dist,
         alpha: 0,
         scale: 0.05,
-        duration: Phaser.Math.Between(240, 420),
+        duration: Phaser.Math.Between(220, 390),
         onComplete: () => p.destroy(),
       });
     }
   }
 
-  performMonsterAttack(stats) {
-    if (!this.currentMonster || this.currentMonster.hp <= 0) return;
-    const w = this.scale.width;
-
-    this.tweens.add({ targets: this.monsterSprite, x: w * 0.56, duration: 100, yoyo: true });
-
-    if (Math.random() * 100 < stats.dodge) {
-      this.spawnFloatingText(this.hero.x, this.hero.y - 90, 'MISS', '#94a3b8', 16);
-      return;
-    }
-
-    const mitigation = stats.armor / (stats.armor + 40 + this.currentMonster.stage * 12);
-    const dmg = Math.max(1, Math.round(this.currentMonster.atk * (1 - mitigation)));
-    this.playerHp = Math.max(0, this.playerHp - dmg);
-
-    this.hero.setTintFill(0xff4444);
-    this.time.delayedCall(90, () => this.hero && this.hero.clearTint());
-    this.spawnFloatingText(this.hero.x, this.hero.y - 90, `-${formatNum(dmg)}`, '#f87171', 16);
-    this.updateHpBars();
-
-    if (this.playerHp <= 0) {
-      this.handleHeroDefeat('生命歸零，返回第 1 波休整！');
-    }
-  }
-
-  applyDamageToMonster(dmg, isCrit, isTap, customColor = null, prefix = '') {
-    if (!this.currentMonster || this.currentMonster.hp <= 0) return;
-    this.currentMonster.hp = Math.max(0, this.currentMonster.hp - dmg);
-
-    this.monsterSprite.setTintFill(0xffffff);
-    this.time.delayedCall(75, () => this.monsterSprite && this.monsterSprite.clearTint());
-
-    this.tweens.add({
-      targets: this.monsterSprite,
-      x: this.scale.width * 0.70 + (isCrit ? 14 : 7),
-      duration: 55,
-      yoyo: true,
-    });
-
-    const color = customColor || (isTap ? '#fde047' : (isCrit ? '#facc15' : '#ffffff'));
-    const size = isCrit ? 24 : (isTap ? 15 : 18);
-    const label = `${prefix}${isCrit ? '💥' : ''}-${formatNum(dmg)}${isCrit ? '!' : ''}`;
-    this.spawnFloatingText(
-      this.monsterSprite.x + Phaser.Math.Between(-28, 28),
-      this.monsterSprite.y - 80,
-      label,
-      color,
-      size
-    );
-
-    if (isCrit) this.cameras.main.shake(80, 0.004);
-    this.updateHpBars();
-
-    if (this.currentMonster.hp <= 0) {
-      this.handleMonsterKilled();
-    }
-  }
-
-  healHero(amount) {
-    if (amount <= 0) return;
-    this.playerHp = Math.min(this.playerMaxHp, this.playerHp + amount);
-    this.updateHpBars();
-  }
-
-  handleMonsterKilled() {
-    this.isTransitioning = true;
-    const defeated = this.currentMonster;
-    const stats = this.getStats();
-
-    if (stats.activeEffects.has('vampiric_aura')) {
-      this.healHero(Math.round(this.playerMaxHp * 0.08));
-    }
-
-    this.spawnSparkBurst(this.monsterSprite.x, this.monsterSprite.y, defeated.isBoss ? 0xfb923c : 0x94a3b8, 14);
-
-    this.tweens.add({
-      targets: this.monsterSprite,
-      alpha: 0,
-      y: this.monsterSprite.y + 20,
-      duration: 280,
-      onComplete: () => this.monsterSprite.setVisible(false),
-    });
-
-    const dropResult = this.callbacks.onMonsterKilled(defeated);
-    if (dropResult && dropResult.item) {
-      this.spawnLootBeam(this.monsterSprite.x, this.floorY + 8, dropResult.item);
-    }
-
-    // 背景微微視差滑動模擬前進感
-    if (this.bgImage) {
-      this.tweens.add({
-        targets: this.bgImage,
-        x: '-=18',
-        duration: 500,
-        yoyo: true,
-        ease: 'Sine.easeInOut',
-      });
-    }
-
-    this.time.delayedCall(650, () => {
-      this.spawnWaveMonster();
-    });
-  }
-
-  handleHeroDefeat(reason) {
-    this.isTransitioning = true;
-    this.playerHp = this.playerMaxHp;
-    this.callbacks.onPlayerDefeated(reason);
-    this.time.delayedCall(900, () => {
-      this.spawnWaveMonster();
-    });
-  }
-
   spawnLootBeam(x, y, item) {
     const r = RARITIES[item.rarity] || RARITIES.common;
-    const beam = this.add.rectangle(x, y - 105, 20, 210, r.beam, 0.65).setBlendMode(Phaser.BlendModes.ADD).setDepth(18);
-    const orb = this.add.circle(x, y - 8, 10, r.beam, 1).setStrokeStyle(2, 0xffffff).setDepth(19);
-    const tag = this.add.text(x, y - 40, `[${r.label}] ${item.name}`, {
+    const beam = this.add.rectangle(x, y - 95, 18, 190, r.beam, 0.65).setBlendMode(Phaser.BlendModes.ADD).setDepth(4400);
+    const orb = this.add.circle(x, y - 6, 9, r.beam, 1).setStrokeStyle(2, 0xffffff).setDepth(4401);
+    const tag = this.add.text(x, y - 38, `[${r.label}] ${item.name}`, {
       fontSize: '13px', color: r.color, fontFamily: 'sans-serif', fontStyle: 'bold',
       stroke: '#000000', strokeThickness: 4,
-    }).setOrigin(0.5).setDepth(20);
+    }).setOrigin(0.5).setDepth(4402);
 
     this.tweens.add({
       targets: [beam, orb],
@@ -626,7 +726,7 @@ export class BattleScene extends Phaser.Scene {
     });
     this.tweens.add({
       targets: tag,
-      y: y - 85,
+      y: y - 80,
       alpha: 0,
       duration: 1400,
       delay: 300,
@@ -642,51 +742,20 @@ export class BattleScene extends Phaser.Scene {
       fontStyle: 'bold',
       stroke: '#000000',
       strokeThickness: 4,
-    }).setOrigin(0.5).setDepth(30);
+    }).setOrigin(0.5).setDepth(4600);
 
     this.tweens.add({
       targets: txt,
-      y: y - 46,
+      y: y - 42,
       alpha: 0,
-      duration: 720,
+      duration: 700,
       ease: 'Cubic.easeOut',
       onComplete: () => txt.destroy(),
     });
   }
 
-  updateHpBars() {
-    if (!this.heroHpFill) return;
-    const hRatio = Math.max(0, Math.min(1, this.playerHp / Math.max(1, this.playerMaxHp)));
-    this.heroHpFill.width = 136 * hRatio;
-    this.heroHpText.setText(`${formatNum(this.playerHp)} / ${formatNum(this.playerMaxHp)}`);
-
-    if (this.currentMonster) {
-      const mRatio = Math.max(0, Math.min(1, this.currentMonster.hp / Math.max(1, this.currentMonster.maxHp)));
-      this.mobHpFill.width = 168 * mRatio;
-      this.mobNameText.setText(this.currentMonster.name);
-      this.mobHpText.setText(`${formatNum(this.currentMonster.hp)} / ${formatNum(this.currentMonster.maxHp)}`);
-    }
-  }
-
   handleResize(w, h) {
-    this.floorY = Math.round(h * 0.78);
-    this.fitBackground(w, h);
-    if (this.hero) {
-      this.hero.setPosition(w * 0.30, this.floorY - 80);
-      this.heroShadow.setPosition(w * 0.30, this.floorY + 14);
-      this.heroHpBg.setPosition(w * 0.30, this.floorY - 190);
-      this.heroHpFill.setPosition(w * 0.30 - 68, this.floorY - 190);
-      this.heroHpText.setPosition(w * 0.30, this.floorY - 208);
-    }
-    if (this.monsterSprite) {
-      const my = this.floorY - (this.currentMonster?.isBoss ? 110 : 82);
-      this.monsterSprite.setPosition(w * 0.70, my);
-      this.mobShadow.setPosition(w * 0.70, this.floorY + 14);
-      this.mobHpBg.setPosition(w * 0.70, this.floorY - 202);
-      this.mobHpFill.setPosition(w * 0.70 - 84, this.floorY - 202);
-      this.mobNameText.setPosition(w * 0.70, this.floorY - 224);
-      this.mobHpText.setPosition(w * 0.70, this.floorY - 202);
-    }
-    if (this.bossTimerText) this.bossTimerText.setPosition(w * 0.5, 34);
+    if (w < 10 || h < 10) return;
+    if (this.bossTimerText) this.bossTimerText.setPosition(w / 2, 28);
   }
 }

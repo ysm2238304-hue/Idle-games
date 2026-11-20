@@ -17,12 +17,11 @@
     <div class="welcome-vignette"></div>
     <div class="welcome-content">
       <div class="welcome-crest">
-        <div class="crest-sub">ABYSSAL IDLE ARPG</div>
+        <div class="crest-sub">2.5D ABYSSAL IDLE ARPG</div>
         <h1 class="crest-title">暗黑桌面掛機</h1>
-        <p class="crest-desc">放置刷寶・隨機詞條・無限深淵挑戰</p>
+        <p class="crest-desc">2.5D 大地圖自動刷寶・群怪圍攻・技能樹・深淵輪迴</p>
       </div>
 
-      <!-- 步驟 1：Google 登入 -->
       <div id="welcome-step-auth" class="welcome-panel">
         <div class="auth-actions">
           <button id="btn-google-login" class="btn-gold-lg">🔐 使用 Google 帳號登入並連動存檔</button>
@@ -31,7 +30,6 @@
         <div id="welcome-auth-status" class="auth-status-text">正在檢查 Google 登入狀態...</div>
       </div>
 
-      <!-- 步驟 2：選職業開始遊戲 -->
       <div id="welcome-step-class" class="welcome-panel hidden">
         <div class="welcome-class-header">
           <div id="welcome-save-summary" class="save-summary-pill"></div>
@@ -42,7 +40,7 @@
     </div>
   </section>
 
-  <!-- 2. 主遊戲畫面（全幅戰鬥 ＋ 底部小圖示列） -->
+  <!-- 2. 主遊戲畫面（全幅 2.5D 戰鬥 ＋ 底部小圖示列） -->
   <section id="game-screen" class="hidden">
     <header id="top-hud">
       <div class="hud-left">
@@ -62,7 +60,7 @@
 
       <div class="hud-exp-wrap">
         <div id="hud-exp-bar"></div>
-        <span id="hud-exp-text">EXP 0 / 45</span>
+        <span id="hud-exp-text">EXP 0 / 90</span>
       </div>
 
       <div class="hud-right">
@@ -70,14 +68,13 @@
         <button id="btn-cloud-logout" class="btn-ghost hidden">登出</button>
         <div class="res-pill">💰 <span id="hud-gold">0</span></div>
         <div class="res-pill">💎 <span id="hud-dust">0</span></div>
+        <div class="res-pill crystal">🔮 <span id="hud-crystals">0</span></div>
       </div>
     </header>
 
-    <!-- 全幅戰鬥舞台 -->
     <main id="battle-viewport">
       <div id="phaser-stage"></div>
 
-      <!-- 右側懸浮暗黑抽屜（點擊底部圖示展開） -->
       <aside id="rpg-drawer" class="hidden">
         <div class="drawer-header">
           <h3 id="drawer-title">🛡️ 角色與裝備</h3>
@@ -107,6 +104,14 @@
           <div id="tab-upgrade" class="tab-panel">
             <div class="section-subtitle">金幣永久訓練</div>
             <div id="gold-upgrades-list"></div>
+          </div>
+
+          <div id="tab-tree" class="tab-panel">
+            <div id="skill-tree-container"></div>
+          </div>
+
+          <div id="tab-rebirth" class="tab-panel">
+            <div id="rebirth-container"></div>
           </div>
 
           <div id="tab-log" class="tab-panel">
@@ -148,6 +153,17 @@
         <span class="dock-label">強化</span>
       </button>
 
+      <button class="dock-btn" data-drawer="tree" title="深淵技能樹">
+        <span class="dock-icon">🌳</span>
+        <span class="dock-label">技能樹</span>
+        <span id="tree-sp-badge" class="sp-badge hidden">0</span>
+      </button>
+
+      <button class="dock-btn" data-drawer="rebirth" title="深淵輪迴">
+        <span class="dock-icon">🌀</span>
+        <span class="dock-label">輪迴</span>
+      </button>
+
       <button id="btn-switch-class" class="dock-btn" title="切換冒險職業">
         <span class="dock-icon">⚔️</span>
         <span class="dock-label">職業</span>
@@ -160,7 +176,6 @@
     </footer>
   </section>
 
-  <!-- 遊戲內切換職業彈窗 -->
   <div id="modal-class" class="modal-overlay hidden">
     <div class="modal-card modal-wide">
       <div class="modal-header">
@@ -171,7 +186,6 @@
     </div>
   </div>
 
-  <!-- 離線掛機結算彈窗 -->
   <div id="modal-offline" class="modal-overlay hidden">
     <div class="modal-card">
       <h2>🌙 歡迎回來！離線掛機收益</h2>

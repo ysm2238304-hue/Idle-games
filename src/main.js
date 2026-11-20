@@ -1,7 +1,8 @@
 import { CLASSES } from './data/classes.js';
 import { RARITIES } from './data/items.js';
+import { SKILL_TREE_NODES, isNodeUnlocked } from './data/skillTree.js';
 import { generateLoot, getSalvageReward, calcItemPower } from './logic/lootGen.js';
-import { recalcPlayerStats, getExpToNext, getUpgradeCost, formatNum } from './logic/statCalc.js';
+import { recalcPlayerStats, getExpToNext, getUpgradeCost, calcRebirthCrystals, formatNum } from './logic/statCalc.js';
 import { createInitialState, loadGame, saveGame, calcOfflineProgress } from './logic/saveSystem.js';
 import {
   initCloudAuth,
@@ -16,6 +17,7 @@ import { DashboardUI } from './ui/DashboardUI.js';
 
 let gameState = loadGame() || createInitialState('warrior');
 let computedStats = recalcPlayerStats(gameState);
+let phaserGame = null;
 let battleScene = null;
 let selectedLobbyClass = gameState.classId || 'warrior';
 let gameStarted = false;
@@ -136,6 +138,56 @@ const ui = new DashboardUI({
     persistAll(true);
   },
 
+  onUpgradeSkillNode: (nodeId) => {
+    if ((gameState.skillPoints || 0) <= 0) return;
+    const node = SKILL_TREE_NODES.find((n) => n.id === nodeId);
+    if (!node) return;
+    const tree = gameState.skillTree || {};
+    const cur = tree[nodeId] || 0;
+    if (cur >= node.maxLvl || !isNodeUnlocked(node, tree)) return;
+
+    gameState.skillPoints -= 1;
+    tree[nodeId] = cur + 1;
+    gameState.skillTree = tree;
+    ui.addLog(`技能樹升級：【${node.name}】Lv.${cur + 1}`, 'system');
+    refreshStatsAndUI();
+    persistAll(true);
+  },
+
+  onResetSkillTree: () => {
+    const spent = Object.values(gameState.skillTree || {}).reduce((s, v) => s + v, 0);
+    if (spent <= 0) return;
+    gameState.skillPoints = (gameState.skillPoints || 0) + spent;
+    gameState.skillTree = {};
+    ui.addLog(`已重置技能樹並返還 ${spent} 點技能點。`, 'system');
+    refreshStatsAndUI();
+    persistAll(true);
+  },
+
+  onRebirth: () => {
+    const gain = calcRebirthCrystals(gameState.maxStageReached || 1);
+    if (gain <= 0) return;
+    gameState.soulCrystals = (gameState.soulCrystals || 0) + gain;
+    gameState.rebirthCount = (gameState.rebirthCount || 0) + 1;
+    gameState.level = 1;
+    gameState.exp = 0;
+    gameState.skillPoints = 0;
+    gameState.skillTree = {};
+    gameState.gold = 0;
+    gameState.stage = 1;
+    gameState.wave = 1;
+    gameState.maxStageReached = 1;
+    gameState.upgrades = { atk: 0, hp: 0, crit: 0, speed: 0 };
+
+    ui.addLog(`🌀 深淵輪迴成功！獲得 +${gain} 魂晶（目前共 ${gameState.soulCrystals} 顆）！`, 'victory');
+    refreshStatsAndUI();
+    if (battleScene) {
+      battleScene.refreshHeroClass(gameState.classId);
+      battleScene.spawnWaveSquad();
+    }
+    persistAll(true);
+  },
+
   onChangeStage: (delta) => {
     const target = Math.max(1, Math.min(gameState.maxStageReached, gameState.stage + delta));
     if (target === gameState.stage) return;
@@ -143,19 +195,21 @@ const ui = new DashboardUI({
     gameState.wave = 1;
     ui.addLog(`切換至第 ${target} 關刷寶。`, 'system');
     refreshStatsAndUI();
-    if (battleScene) battleScene.spawnWaveMonster();
+    if (battleScene) battleScene.spawnWaveSquad();
     persistAll();
   },
 });
 
 function grantExp(amount) {
-  gameState.exp += amount;
+  const gained = Math.round(amount * (computedStats.expMult || 1));
+  gameState.exp += gained;
   let need = getExpToNext(gameState.level);
   while (gameState.exp >= need) {
     gameState.exp -= need;
     gameState.level += 1;
+    gameState.skillPoints = (gameState.skillPoints || 0) + 1;
     need = getExpToNext(gameState.level);
-    ui.addLog(`🎉 角色升級！目前 Lv.${gameState.level}`, 'victory');
+    ui.addLog(`🎉 角色升級至 Lv.${gameState.level}（獲得 +1 技能點）`, 'victory');
   }
 }
 
@@ -180,7 +234,79 @@ function handleLootDrop(item) {
   return item;
 }
 
-// --- 全螢幕暗黑歡迎頁：Google 登入 → 選職 → 踏入深淵 ---
+// 延後到 #game-screen 顯示後才初始化 Phaser，徹底根治 0x0 黑屏
+function initPhaserGame() {
+  if (phaserGame) {
+    battleScene?.setPaused(false);
+    requestAnimationFrame(() => phaserGame.scale.refresh());
+    return;
+  }
+  const stageEl = document.getElementById('phaser-stage');
+  const w = Math.max(640, stageEl?.clientWidth || window.innerWidth);
+  const h = Math.max(400, stageEl?.clientHeight || (window.innerHeight - 122));
+
+  const config = {
+    type: Phaser.AUTO,
+    parent: 'phaser-stage',
+    width: w,
+    height: h,
+    backgroundColor: '#090b10',
+    scale: {
+      mode: Phaser.Scale.RESIZE,
+      autoCenter: Phaser.Scale.CENTER_BOTH,
+    },
+    scene: [BattleScene],
+  };
+
+  phaserGame = new Phaser.Game(config);
+  phaserGame.scene.start('BattleScene', {
+    getState: () => gameState,
+    getStats: () => computedStats,
+    callbacks: {
+      onSkillTick: (ratio) => {
+        ui.updateSkillProgress(ratio);
+        const btn = document.getElementById('btn-cast-skill');
+        if (btn) btn.classList.toggle('ready', ratio >= 1);
+      },
+      onMonsterKilled: (mob, waveCleared) => {
+        const goldGain = Math.round(mob.gold * (1 + computedStats.goldFind / 100));
+        gameState.gold += goldGain;
+        gameState.kills += 1;
+        grantExp(mob.exp);
+
+        const dropped = generateLoot(mob.stage, mob.isBoss, computedStats.magicFind);
+        const keptItem = handleLootDrop(dropped);
+
+        if (waveCleared) {
+          if (mob.stage && gameState.wave >= 5) {
+            ui.addLog(`🏆 成功擊破第 ${gameState.stage} 關首領圍攻！`, 'victory');
+            gameState.stage += 1;
+            gameState.wave = 1;
+            gameState.maxStageReached = Math.max(gameState.maxStageReached, gameState.stage);
+            persistAll(true);
+          } else {
+            gameState.wave += 1;
+          }
+        }
+
+        refreshStatsAndUI();
+        return { item: keptItem || dropped };
+      },
+      onPlayerDefeated: (reason) => {
+        gameState.wave = 1;
+        ui.addLog(`⚠️ ${reason}`, 'warn');
+        refreshStatsAndUI();
+      },
+    },
+  });
+
+  phaserGame.events.once('ready', () => {
+    battleScene = phaserGame.scene.getScene('BattleScene');
+    battleScene.setPaused(false);
+  });
+}
+
+// --- 全螢幕暗黑歡迎頁 ---
 const welcomeScreen = document.getElementById('welcome-screen');
 const gameScreen = document.getElementById('game-screen');
 const welcomeAuthStep = document.getElementById('welcome-step-auth');
@@ -212,7 +338,7 @@ function renderWelcomeClasses() {
 function enterWelcomeClassStep(userLabel) {
   welcomeAuthStep.classList.add('hidden');
   welcomeClassStep.classList.remove('hidden');
-  welcomeSaveSummary.textContent = `${userLabel} ｜ 存檔進度：Lv.${gameState.level}・第 ${gameState.stage} 關・金幣 ${formatNum(gameState.gold)}`;
+  welcomeSaveSummary.textContent = `${userLabel} ｜ Lv.${gameState.level}・第 ${gameState.stage} 關・魂晶 ${gameState.soulCrystals || 0}`;
   selectedLobbyClass = gameState.classId || 'warrior';
   renderWelcomeClasses();
 }
@@ -224,11 +350,7 @@ function startAdventure() {
   gameScreen.classList.remove('hidden');
 
   refreshStatsAndUI();
-  if (battleScene) {
-    battleScene.scale.resize(window.innerWidth, window.innerHeight - 122);
-    battleScene.refreshHeroClass(gameState.classId);
-    battleScene.setPaused(false);
-  }
+  initPhaserGame();
   persistAll(true);
 
   const offline = calcOfflineProgress(gameState, computedStats);
@@ -283,64 +405,6 @@ window.addEventListener('keydown', (e) => {
   }
 });
 
-const config = {
-  type: Phaser.AUTO,
-  parent: 'phaser-stage',
-  width: window.innerWidth,
-  height: Math.max(400, window.innerHeight - 122),
-  backgroundColor: '#090b10',
-  scale: {
-    mode: Phaser.Scale.RESIZE,
-    autoCenter: Phaser.Scale.CENTER_BOTH,
-  },
-  scene: [BattleScene],
-};
-
-const game = new Phaser.Game(config);
-game.scene.start('BattleScene', {
-  getState: () => gameState,
-  getStats: () => computedStats,
-  callbacks: {
-    onSkillTick: (ratio) => {
-      ui.updateSkillProgress(ratio);
-      const btn = document.getElementById('btn-cast-skill');
-      if (btn) btn.classList.toggle('ready', ratio >= 1);
-    },
-    onMonsterKilled: (mob) => {
-      const goldGain = Math.round(mob.gold * (1 + computedStats.goldFind / 100));
-      gameState.gold += goldGain;
-      gameState.kills += 1;
-      grantExp(mob.exp);
-
-      const dropped = generateLoot(mob.stage, mob.isBoss, computedStats.magicFind);
-      const keptItem = handleLootDrop(dropped);
-
-      if (mob.isBoss) {
-        ui.addLog(`🏆 擊敗第 ${gameState.stage} 關首領！獲得 ${formatNum(goldGain)} 金幣`, 'victory');
-        gameState.stage += 1;
-        gameState.wave = 1;
-        gameState.maxStageReached = Math.max(gameState.maxStageReached, gameState.stage);
-        persistAll(true);
-      } else {
-        gameState.wave += 1;
-      }
-
-      refreshStatsAndUI();
-      return { item: keptItem || dropped };
-    },
-    onPlayerDefeated: (reason) => {
-      gameState.wave = 1;
-      ui.addLog(`⚠️ ${reason}`, 'warn');
-      refreshStatsAndUI();
-    },
-  },
-});
-
-game.events.once('ready', () => {
-  battleScene = game.scene.getScene('BattleScene');
-  battleScene.setPaused(!gameStarted);
-});
-
 refreshStatsAndUI();
 
 initCloudAuth(async (user) => {
@@ -360,6 +424,7 @@ initCloudAuth(async (user) => {
         upgrades: { ...base.upgrades, ...(cloudData.upgrades || {}) },
         equipment: { ...base.equipment, ...(cloudData.equipment || {}) },
         autoSalvage: { ...base.autoSalvage, ...(cloudData.autoSalvage || {}) },
+        skillTree: { ...(cloudData.skillTree || {}) },
         inventory: Array.isArray(cloudData.inventory) ? cloudData.inventory : [],
       };
       refreshStatsAndUI();

@@ -1,8 +1,9 @@
 import { CLASSES } from '../data/classes.js';
 import { EQUIP_SLOTS, RARITIES, BASE_ITEMS } from '../data/items.js';
 import { getZoneName } from '../data/monsters.js';
+import { SKILL_BRANCHES, SKILL_TREE_NODES, isNodeUnlocked } from '../data/skillTree.js';
 import { calcItemPower, getSalvageReward } from '../logic/lootGen.js';
-import { formatNum, getExpToNext, getUpgradeCost } from '../logic/statCalc.js';
+import { formatNum, getExpToNext, getUpgradeCost, calcRebirthCrystals } from '../logic/statCalc.js';
 
 const STAT_LABELS = {
   atkFlat: '攻擊力',
@@ -37,7 +38,6 @@ export class DashboardUI {
   }
 
   bindDockAndDrawer() {
-    const drawer = document.getElementById('rpg-drawer');
     document.querySelectorAll('.dock-btn[data-drawer]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const target = btn.dataset.drawer;
@@ -56,8 +56,7 @@ export class DashboardUI {
 
   openDrawer(tabName) {
     this.activeDrawer = tabName;
-    const drawer = document.getElementById('rpg-drawer');
-    drawer.classList.remove('hidden');
+    document.getElementById('rpg-drawer')?.classList.remove('hidden');
 
     document.querySelectorAll('.dock-btn[data-drawer]').forEach((b) => {
       b.classList.toggle('active', b.dataset.drawer === tabName);
@@ -66,7 +65,14 @@ export class DashboardUI {
       p.classList.toggle('active', p.id === `tab-${tabName}`);
     });
 
-    const titles = { gear: '🛡️ 角色與裝備', bag: '🎒 戰利品背包', upgrade: '🔥 屬性強化', log: '📜 戰鬥日誌' };
+    const titles = {
+      gear: '🛡️ 角色與裝備',
+      bag: '🎒 戰利品背包',
+      upgrade: '🔥 屬性強化',
+      tree: '🌳 深淵技能樹',
+      rebirth: '🌀 深淵輪迴',
+      log: '📜 戰鬥日誌',
+    };
     document.getElementById('drawer-title').textContent = titles[tabName] || '';
 
     const insp = document.getElementById('item-inspector');
@@ -143,7 +149,7 @@ export class DashboardUI {
     const timeStr = hrs > 0 ? `${hrs} 小時 ${mins % 60} 分鐘` : `${mins} 分鐘`;
 
     body.innerHTML = `
-      <p>你離開了 <strong>${timeStr}</strong>，英雄在地下城持續自動戰鬥：</p>
+      <p>你離開了 <strong>${timeStr}</strong>，英雄在 2.5D 地下城持續自動戰鬥：</p>
       <ul class="offline-list">
         <li>擊殺怪物：<strong>${formatNum(report.kills)} 隻</strong></li>
         <li>獲得金幣：<strong style="color:#facc15">+${formatNum(report.goldEarned)}</strong></li>
@@ -165,6 +171,7 @@ export class DashboardUI {
     document.getElementById('hud-dps').textContent = `DPS ${formatNum(stats.dps)}`;
     document.getElementById('hud-gold').textContent = formatNum(state.gold);
     document.getElementById('hud-dust').textContent = formatNum(state.dust);
+    document.getElementById('hud-crystals').textContent = formatNum(state.soulCrystals || 0);
 
     const need = getExpToNext(state.level);
     const expPct = Math.min(100, Math.round((state.exp / need) * 100));
@@ -172,11 +179,17 @@ export class DashboardUI {
     document.getElementById('hud-exp-text').textContent = `EXP ${formatNum(state.exp)} / ${formatNum(need)}`;
 
     document.getElementById('hud-stage-title').textContent = `第 ${state.stage} 關・${getZoneName(state.stage)}`;
-    document.getElementById('hud-wave-badge').textContent = state.wave >= 5 ? '🔥 BOSS 波次' : `波次 ${state.wave} / 5`;
+    document.getElementById('hud-wave-badge').textContent = state.wave >= 5 ? '🔥 BOSS 圍攻' : `波次 ${state.wave} / 5`;
     document.getElementById('btn-stage-next').disabled = state.stage >= state.maxStageReached;
     document.getElementById('btn-stage-prev').disabled = state.stage <= 1;
 
     document.getElementById('skill-name-label').textContent = cls.skill.name;
+
+    const spDot = document.getElementById('tree-sp-badge');
+    if (spDot) {
+      spDot.textContent = state.skillPoints || 0;
+      spDot.classList.toggle('hidden', (state.skillPoints || 0) <= 0);
+    }
   }
 
   updateSkillProgress(ratio) {
@@ -188,6 +201,8 @@ export class DashboardUI {
     this.renderGearAndStats(state, stats);
     this.renderInventory(state);
     this.renderUpgrades(state);
+    this.renderSkillTree(state);
+    this.renderRebirthPanel(state);
   }
 
   renderGearAndStats(state, stats) {
@@ -235,7 +250,8 @@ export class DashboardUI {
       <div class="stat-row"><span>暴擊率 / 暴傷</span><strong>${stats.critRate}% / ${stats.critDmg}%</strong></div>
       <div class="stat-row"><span>護甲 / 閃避</span><strong>${formatNum(stats.armor)} / ${stats.dodge}%</strong></div>
       <div class="stat-row"><span>攻擊吸血</span><strong>${stats.lifesteal}%</strong></div>
-      <div class="stat-row"><span>金幣 / 掉寶加成</span><strong>+${stats.goldFind}% / +${stats.magicFind}%</strong></div>
+      <div class="stat-row"><span>移動速度</span><strong>${stats.moveSpeed}</strong></div>
+      <div class="stat-row"><span>金幣 / 掉寶</span><strong>+${stats.goldFind}% / +${stats.magicFind}%</strong></div>
     `;
   }
 
@@ -340,10 +356,10 @@ export class DashboardUI {
   renderUpgrades(state) {
     const list = document.getElementById('gold-upgrades-list');
     const defs = [
-      { key: 'atk',   name: '磨礪武器', desc: '每級基礎攻擊 +4' },
-      { key: 'hp',    name: '強健體魄', desc: '每級最大生命 +22' },
-      { key: 'crit',  name: '弱點洞悉', desc: '每級暴擊率 +1.5%' },
-      { key: 'speed', name: '迅捷身法', desc: '每級攻擊速度 +4%' },
+      { key: 'atk',   name: '磨礪武器', desc: '每級基礎攻擊 +3.5' },
+      { key: 'hp',    name: '強健體魄', desc: '每級最大生命 +20' },
+      { key: 'crit',  name: '弱點洞悉', desc: '每級暴擊率 +1.4%' },
+      { key: 'speed', name: '迅捷身法', desc: '每級攻擊速度 +3.5%' },
     ];
     list.innerHTML = '';
     defs.forEach((d) => {
@@ -360,6 +376,78 @@ export class DashboardUI {
       `;
       row.querySelector('button').onclick = () => this.handlers.onBuyUpgrade(d.key);
       list.appendChild(row);
+    });
+  }
+
+  renderSkillTree(state) {
+    const box = document.getElementById('skill-tree-container');
+    if (!box) return;
+    const sp = state.skillPoints || 0;
+    const tree = state.skillTree || {};
+
+    let html = `
+      <div class="tree-header-bar">
+        <span>可用技能點：<strong style="color:#fde047;font-size:15px;">${sp}</strong>（每升 1 級獲得 1 點）</span>
+        <button id="btn-reset-tree" class="btn-ghost">洗點重置</button>
+      </div>
+    `;
+
+    SKILL_BRANCHES.forEach((br) => {
+      html += `<div class="tree-branch-title" style="color:${br.color}">${br.icon} ${br.name}</div><div class="tree-nodes-grid">`;
+      const nodes = SKILL_TREE_NODES.filter((n) => n.branch === br.id);
+      nodes.forEach((node) => {
+        const cur = tree[node.id] || 0;
+        const unlocked = isNodeUnlocked(node, tree);
+        const maxed = cur >= node.maxLvl;
+        html += `
+          <div class="tree-node-card ${unlocked ? '' : 'locked'} ${maxed ? 'maxed' : ''}">
+            <div class="node-top">
+              <strong>${node.name}</strong>
+              <span>${cur} / ${node.maxLvl}</span>
+            </div>
+            <div class="node-desc">${node.desc}</div>
+            <button class="btn-primary btn-node-up" data-node="${node.id}" ${!unlocked || maxed || sp <= 0 ? 'disabled' : ''}>
+              ${maxed ? '已滿級' : (unlocked ? '+1 升級' : '需前置 2 級')}
+            </button>
+          </div>
+        `;
+      });
+      html += '</div>';
+    });
+
+    box.innerHTML = html;
+    box.querySelectorAll('.btn-node-up').forEach((btn) => {
+      btn.onclick = () => this.handlers.onUpgradeSkillNode(btn.dataset.node);
+    });
+    document.getElementById('btn-reset-tree')?.addEventListener('click', () => {
+      this.handlers.onResetSkillTree();
+    });
+  }
+
+  renderRebirthPanel(state) {
+    const box = document.getElementById('rebirth-container');
+    if (!box) return;
+    const gain = calcRebirthCrystals(state.maxStageReached || 1);
+    const crystals = state.soulCrystals || 0;
+
+    box.innerHTML = `
+      <div class="rebirth-card">
+        <h3>🌀 深淵輪迴（永久轉生）</h3>
+        <p class="rebirth-desc">通關第 10 關後即可進行深淵輪迴。輪迴會重置<strong>等級、金幣、技能點與當前關卡</strong>，並<strong>保留所有已裝備與背包道具</strong>，換取永久性的深淵魂晶倍率！</p>
+        <div class="rebirth-stats">
+          <div>目前輪迴次數：<strong>${state.rebirthCount || 0} 次</strong></div>
+          <div>持有深淵魂晶：<strong>🔮 ${formatNum(crystals)}</strong></div>
+          <div>當前永久加成：<strong style="color:#4ade80">全攻防 +${crystals * 15}% / 金幣掉寶 +${crystals * 5}%</strong></div>
+          <div>本次輪迴可獲得：<strong style="color:#fbbf24">+${formatNum(gain)} 🔮</strong></div>
+        </div>
+        <button id="btn-do-rebirth" class="btn-gold-lg" style="width:100%;" ${gain <= 0 ? 'disabled' : ''}>
+          ${gain > 0 ? `🌀 立即輪迴（獲得 +${gain} 魂晶）` : '需抵達第 10 關才可輪迴'}
+        </button>
+      </div>
+    `;
+
+    document.getElementById('btn-do-rebirth')?.addEventListener('click', () => {
+      this.handlers.onRebirth();
     });
   }
 
