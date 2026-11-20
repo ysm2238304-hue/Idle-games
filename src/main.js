@@ -299,8 +299,7 @@ function initPhaserGame() {
     scene: [BattleScene],
   };
 
-  phaserGame = new Phaser.Game(config);
-  phaserGame.scene.start('BattleScene', {
+  window.__IDLE_ARPG_BRIDGE__ = {
     getState: () => gameState,
     getStats: () => computedStats,
     callbacks: {
@@ -335,11 +334,14 @@ function initPhaserGame() {
         refreshStatsAndUI();
       },
     },
-  });
+  };
+
+  phaserGame = new Phaser.Game(config);
 
   phaserGame.events.once('ready', () => {
     battleScene = phaserGame.scene.getScene('BattleScene');
-    battleScene.setPaused(false);
+    battleScene?.setPaused(false);
+    requestAnimationFrame(() => phaserGame?.scale?.refresh());
   });
 }
 
