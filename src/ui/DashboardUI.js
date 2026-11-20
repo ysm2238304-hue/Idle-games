@@ -1,12 +1,12 @@
-import { CLASSES } from './data/classes.js';
-import { WARRIOR_SKILLS } from './data/warriorSkills.js';
-import { RANGER_SKILLS } from './data/rangerSkills.js';
-import { MAGE_SKILLS } from './data/mageSkills.js';
-import { EQUIP_SLOTS, RARITIES, BASE_ITEMS } from './data/items.js';
-import { getZoneName } from './data/monsters.js';
-import { SKILL_BRANCHES, SKILL_TREE_NODES, isNodeUnlocked } from './data/skillTree.js';
-import { calcItemPower, getSalvageReward } from './logic/lootGen.js';
-import { formatNum, getExpToNext, getUpgradeCost, calcRebirthCrystals } from './logic/statCalc.js';
+import { CLASSES } from '../data/classes.js';
+import { WARRIOR_SKILLS } from '../data/warriorSkills.js';
+import { RANGER_SKILLS } from '../data/rangerSkills.js';
+import { MAGE_SKILLS } from '../data/mageSkills.js';
+import { EQUIP_SLOTS, RARITIES, BASE_ITEMS } from '../data/items.js';
+import { getZoneName } from '../data/monsters.js';
+import { SKILL_BRANCHES, SKILL_TREE_NODES, isNodeUnlocked } from '../data/skillTree.js';
+import { calcItemPower, getSalvageReward } from '../logic/lootGen.js';
+import { formatNum, getExpToNext, getUpgradeCost, calcRebirthCrystals } from '../logic/statCalc.js';
 
 const STAT_LABELS = {
   atkFlat: '攻擊力',

@@ -5,8 +5,8 @@ export const RANGER_SKILLS = {
     name: '穿透連射',
     icon: './assets/skills/sk_r_volley.png',
     cooldownMs: 4400,
-    desc: '朝前方扇形齊射 5 道貫穿翡翠光矢，暴擊率額外 +25%。',
-    getDetail: (lvl) => `發射 5 道貫穿光矢，每道造成 ${80 + lvl * 18}% 攻擊傷害（暴擊率 +25%）。`,
+    desc: '朝游標扇形齊射 5 道貫穿翡翠光矢，暴擊率 +25% 並附加 5 秒【獵手印記】。',
+    getDetail: (lvl) => `發射 5 道貫穿光矢，每道造成 ${80 + lvl * 18}% 攻擊傷害（暴擊率 +25%，附加【獵手印記】）。`,
   },
   arrowrain: {
     id: 'arrowrain',
@@ -14,8 +14,8 @@ export const RANGER_SKILLS = {
     name: '翡翠箭雨',
     icon: './assets/skills/sk_r_arrowrain.png',
     cooldownMs: 6200,
-    desc: '於敵群上空召喚翡翠法陣，連續降下 4 波箭雨轟炸半徑 220px 區域。',
-    getDetail: (lvl) => `4 波大範圍箭雨，每波造成 ${65 + lvl * 16}% 攻擊傷害並短暫減速敵人。`,
+    desc: '於游標區域降下 4 波箭雨；命中【獵手印記】敵人時延長減速並回復生命。',
+    getDetail: (lvl) => `4 波範圍箭雨，每波 ${65 + lvl * 16}% 攻傷；命中【印記】敵人減速延長至 2.4s 並回血 1.5%。`,
   },
   shadowstep: {
     id: 'shadowstep',
@@ -23,8 +23,8 @@ export const RANGER_SKILLS = {
     name: '暗影瞬步',
     icon: './assets/skills/sk_r_shadowstep.png',
     cooldownMs: 5600,
-    desc: '化作暗影瞬移拉開距離，並在原地留下劇毒陷阱引爆重創敵人，閃避 +25% 持續 3 秒。',
-    getDetail: (lvl) => `劇毒爆炸造成 ${190 + lvl * 32}% 攻擊傷害，閃避率 +25%（3 秒）。`,
+    desc: '瞬移拉開距離並在原地引爆劇毒陷阱（閃避 +25%），對【印記】目標額外引爆毒傷。',
+    getDetail: (lvl) => `劇毒爆炸造成 ${190 + lvl * 32}% 攻擊傷害（對【印記】目標額外 +80% 傷），閃避 +25%（3 秒）。`,
   },
   phantombow: {
     id: 'phantombow',
@@ -32,7 +32,7 @@ export const RANGER_SKILLS = {
     name: '幻影狙殺箭',
     icon: './assets/skills/sk_r_phantombow.png',
     cooldownMs: 7400,
-    desc: '蓄力射出巨大青翠龍魂狙殺箭，必定暴擊並貫穿路徑上所有敵軍。',
-    getDetail: (lvl) => `必定暴擊！造成 ${300 + lvl * 45}% 攻擊傷害並附帶音爆震波。`,
+    desc: '朝游標射出必定暴擊的青翠龍魂狙殺箭；擊中【獵手印記】目標傷害再 +35%！',
+    getDetail: (lvl) => `必定暴擊！造成 ${300 + lvl * 45}% 攻擊傷害（引爆【印記】再 +35% 傷害）。`,
   },
 };

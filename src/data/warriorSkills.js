@@ -5,8 +5,8 @@ export const WARRIOR_SKILLS = {
     name: '旋風重斬',
     icon: './assets/skills/sk_whirlwind.png',
     cooldownMs: 5000,
-    desc: '高速旋轉烈焰巨劍 1.1 秒，持續絞殺半徑 230px 內所有敵人並回復生命。',
-    getDetail: (lvl) => `4 段旋轉斬擊，每段造成 ${80 + lvl * 18}% 攻擊傷害，每段回復 2.5% 最大生命。`,
+    desc: '高速旋轉烈焰巨劍 1.1 秒，絞殺半徑 230px 敵人並回血；對【流血】目標傷害 +25%。',
+    getDetail: (lvl) => `4 段旋轉斬擊，每段造成 ${80 + lvl * 18}% 攻擊傷害（流血目標 +25%），每段回復 2.5% 最大生命。`,
   },
   earthshatter: {
     id: 'earthshatter',
@@ -14,8 +14,8 @@ export const WARRIOR_SKILLS = {
     name: '裂地猛擊',
     icon: './assets/skills/sk_earthshatter.png',
     cooldownMs: 6500,
-    desc: '重劍猛砸大地引發岩漿衝擊波，擊飛並暈眩半徑 240px 內敵人 1.2 秒。',
-    getDetail: (lvl) => `造成 ${210 + lvl * 35}% 攻擊傷害並留下燃燒裂紋，暈眩敵人 1.2 秒。`,
+    desc: '重劍猛砸大地擊飛暈眩敵人 1.2 秒；引爆【流血】目標額外造成傷害並縮短冷卻。',
+    getDetail: (lvl) => `造成 ${210 + lvl * 35}% 攻擊傷害並暈眩 1.2 秒，引爆【流血】額外 +65% 傷且每隻減 CD 0.4s。`,
   },
   bloodcharge: {
     id: 'bloodcharge',
@@ -23,8 +23,8 @@ export const WARRIOR_SKILLS = {
     name: '血怒衝鋒',
     icon: './assets/skills/sk_bloodcharge.png',
     cooldownMs: 5500,
-    desc: '化作赤紅殘影高速衝入敵陣，沿途留下火焰軌跡撞飛敵人並大量吸血。',
-    getDetail: (lvl) => `衝刺造成 ${180 + lvl * 30}% 攻擊傷害，並立即回復 ${10 + lvl * 2}% 最大生命。`,
+    desc: '朝游標方向高速衝鋒撞飛敵人、賦予 3.5 秒【流血】並大幅吸血。',
+    getDetail: (lvl) => `衝刺造成 ${180 + lvl * 30}% 攻擊傷害、附加【流血】，並立即回復 ${10 + lvl * 2}% 最大生命。`,
   },
   bladestorm: {
     id: 'bladestorm',
@@ -32,7 +32,7 @@ export const WARRIOR_SKILLS = {
     name: '烈焰劍氣波',
     icon: './assets/skills/sk_bladestorm.png',
     cooldownMs: 7200,
-    desc: '朝前方扇形劈出 3 道巨大烈焰劍氣波，貫穿整排敵軍並引發爆裂星芒。',
-    getDetail: (lvl) => `發射 3 道貫穿劍氣，每道造成 ${145 + lvl * 28}% 攻擊傷害。`,
+    desc: '朝游標扇形劈出 3 道巨大貫穿烈焰劍氣，命中【流血】目標時必定暴擊！',
+    getDetail: (lvl) => `發射 3 道貫穿劍氣，每道造成 ${145 + lvl * 28}% 攻擊傷害（對【流血】敵人必暴擊）。`,
   },
 };

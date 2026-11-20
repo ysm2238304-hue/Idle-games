@@ -442,7 +442,7 @@ function toggleAutoMoveMode() {
 
 document.getElementById('btn-toggle-auto')?.addEventListener('click', toggleAutoMoveMode);
 [0, 1, 2].forEach((i) => {
-  document.getElementById(`skill-slot-${i}`)?.addEventListener('click', () => battleScene?.castSkillSlot(i));
+  document.getElementById(`skill-slot-${i}`)?.addEventListener('click', () => battleScene?.castSkillSlot(i, true));
 });
 
 window.addEventListener('keydown', (e) => {
@@ -451,11 +451,11 @@ window.addEventListener('keydown', (e) => {
 
   if (e.code === 'Space') {
     e.preventDefault();
-    battleScene?.castSkillSlot(0);
+    battleScene?.castSkillSlot(0, true);
   } else if (e.code === 'KeyE') {
-    battleScene?.castSkillSlot(1);
+    battleScene?.castSkillSlot(1, true);
   } else if (e.code === 'KeyR') {
-    battleScene?.castSkillSlot(2);
+    battleScene?.castSkillSlot(2, true);
   } else if (e.code === 'KeyT') {
     toggleAutoMoveMode();
   } else if (e.code === 'KeyQ') {
@@ -497,7 +497,7 @@ initCloudAuth(async (user) => {
         upgrades: { ...base.upgrades, ...(cloudData.upgrades || {}) },
         equipment: { ...base.equipment, ...(cloudData.equipment || {}) },
         autoSalvage: { ...base.autoSalvage, ...(cloudData.autoSalvage || {}) },
-        skillTree: { w_whirlwind: 1, r_volley: 1, ...(cloudData.skillTree || {}) },
+        skillTree: { w_whirlwind: 1, r_volley: 1, m_meteor: 1, ...(cloudData.skillTree || {}) },
         equippedSkillsByClass: {
           ...base.equippedSkillsByClass,
           ...(cloudData.equippedSkillsByClass || {}),

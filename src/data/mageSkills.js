@@ -5,8 +5,8 @@ export const MAGE_SKILLS = {
     name: '深淵隕石',
     icon: './assets/skills/sk_m_meteor.png',
     cooldownMs: 5200,
-    desc: '召喚星界紫焰隕石轟擊目標區域（半徑 230px），留下裂地熔岩焦痕。',
-    getDetail: (lvl) => `隕石轟擊造成 ${260 + lvl * 42}% 攻擊毀滅傷害並引爆紫焰衝擊。`,
+    desc: '朝游標區域召喚星界紫焰隕石轟擊；對【冰寒】敵人觸發融化，傷害 +35%！',
+    getDetail: (lvl) => `隕石轟擊造成 ${260 + lvl * 42}% 攻擊毀滅傷害（對【冰寒】目標再 +35%）。`,
   },
   arcane_orb: {
     id: 'arcane_orb',
@@ -14,8 +14,8 @@ export const MAGE_SKILLS = {
     name: '星界奧術球',
     icon: './assets/skills/sk_m_arcane_orb.png',
     cooldownMs: 4600,
-    desc: '朝前方扇形釋放 3 顆貫穿星界奧術球，沿途引爆奧術星芒。',
-    getDetail: (lvl) => `發射 3 顆貫穿奧術球，每顆造成 ${115 + lvl * 22}% 攻擊傷害（暴擊率 +15%）。`,
+    desc: '朝游標扇形釋放 3 顆貫穿奧術球；對【冰寒】敵人觸發碎冰，傷害 +35%！',
+    getDetail: (lvl) => `發射 3 顆貫穿奧術球，每顆造成 ${115 + lvl * 22}% 攻擊傷害（暴擊 +15%，【冰寒】目標 +35%）。`,
   },
   frost_nova: {
     id: 'frost_nova',
@@ -23,8 +23,8 @@ export const MAGE_SKILLS = {
     name: '寒冰新星',
     icon: './assets/skills/sk_m_frost_nova.png',
     cooldownMs: 6000,
-    desc: '於周身引爆極寒冰環（半徑 240px）大幅減速敵軍，並張開奧術護盾回復生命。',
-    getDetail: (lvl) => `冰爆造成 ${180 + lvl * 30}% 攻擊傷害、減速 2.4 秒並回復 ${8 + lvl * 2}% 最大生命。`,
+    desc: '引爆極寒冰環使敵人【冰寒】減速 3.5 秒，並張開吸收傷害的奧術護盾與回血。',
+    getDetail: (lvl) => `冰爆造成 ${180 + lvl * 30}% 攻擊傷害、附加 3.5 秒【冰寒】，獲得 ${16 + lvl * 2}% 護盾並回血。`,
   },
   void_beam: {
     id: 'void_beam',
@@ -32,7 +32,7 @@ export const MAGE_SKILLS = {
     name: '虛空星爆',
     icon: './assets/skills/sk_m_void_beam.png',
     cooldownMs: 7400,
-    desc: '開啟虛空奇點並射出貫穿天際的星辰雷射，必定暴擊殲滅路徑上所有敵人。',
-    getDetail: (lvl) => `必定暴擊！直線貫穿造成 ${310 + lvl * 48}% 攻擊傷害並附帶虛空震波。`,
+    desc: '朝游標射出必定暴擊的星辰雷射；消耗【奧術充能】每層再提升 12% 傷害與光束寬度。',
+    getDetail: (lvl) => `必定暴擊！直線貫穿造成 ${310 + lvl * 48}% 攻擊傷害（每層奧術充能額外 +12% 傷）。`,
   },
 };
