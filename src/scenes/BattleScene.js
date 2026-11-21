@@ -6,7 +6,7 @@ import { PALADIN_SKILLS } from '../data/paladinSkills.js';
 import { NECRO_SKILLS } from '../data/necroSkills.js';
 import { ASSASSIN_SKILLS } from '../data/assassinSkills.js';
 import { RARITIES } from '../data/items.js';
-import { createStageEncounters, getChapterIdx, getStageLabel, ZONE_OBSTACLES } from '../data/monsters.js';
+import { createStageEncounters, spawnSingleMonster, getChapterIdx, getStageLabel, ZONE_OBSTACLES } from '../data/monsters.js';
 import { formatNum } from '../logic/statCalc.js';
 
 const MAP_W = 4096;
@@ -2223,7 +2223,7 @@ export class BattleScene extends Phaser.Scene {
         continue;
       }
 
-      const baseScale = s.kind === 'golem' ? 0.54 : 0.42;
+      const baseScale = s.kind === 'golem' ? 0.58 : 0.48;
       const bob = Math.sin(now * 0.015 + i) * 0.025;
       s.sprite.setScale(baseScale * (1 - bob * 0.5), baseScale * (1 + bob));
 
@@ -2334,7 +2334,7 @@ export class BattleScene extends Phaser.Scene {
         const oy = Phaser.Math.Between(-60, 70);
         const sx = this.hero.x + ox;
         const sy = this.hero.y + oy;
-        const spr = this.add.sprite(sx, sy, 'skel_down_walk_0').setScale(0.42).setDepth(sy);
+        const spr = this.add.sprite(sx, sy, 'skel_down_walk_0').setScale(0.48).setDepth(sy);
         spr.play('sum_skel_down_walk');
         const barBg = this.add.rectangle(sx, sy - 48, 48, 5, 0x090b10).setStrokeStyle(1, 0x2dd4bf).setDepth(3500);
         const barFill = this.add.rectangle(sx - 24, sy - 48, 48, 4, 0x2dd4bf).setOrigin(0, 0.5).setDepth(3501);
@@ -2352,7 +2352,7 @@ export class BattleScene extends Phaser.Scene {
         existingG.lvl = skillLvl;
         existingG.sprite.setPosition(aim.x, aim.y);
       } else {
-        const spr = this.add.sprite(aim.x, aim.y, 'gol_down_walk_0').setScale(0.54).setDepth(aim.y);
+        const spr = this.add.sprite(aim.x, aim.y, 'gol_down_walk_0').setScale(0.58).setDepth(aim.y);
         spr.play('sum_gol_down_walk');
         const barBg = this.add.rectangle(aim.x, aim.y - 68, 56, 6, 0x090b10).setStrokeStyle(1, 0xfb7185).setDepth(3500);
         const barFill = this.add.rectangle(aim.x - 28, aim.y - 68, 56, 5, 0xf43f5e).setOrigin(0, 0.5).setDepth(3501);
