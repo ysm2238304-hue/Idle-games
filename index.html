@@ -39,35 +39,115 @@
     </div>
   </section>
 
+  <!-- v26 100% 滿版畫布 ＋ 四角浮動 MMORPG HUD ＋ 底部懸浮雙球祭壇 -->
   <section id="game-screen" class="hidden">
-    <header id="top-hud">
-      <div class="hud-left">
-        <span class="brand-title">⚔️ 暗黑桌面掛機</span>
-        <span id="hud-class-badge" class="badge">狂戰士 Lv.1</span>
-        <span id="hud-dps" class="badge dps">DPS 0</span>
-      </div>
-
-      <div class="hud-center-stage">
-        <button id="btn-stage-prev" class="btn-stage">◀</button>
-        <div class="stage-info">
-          <span id="hud-stage-title" style="cursor:pointer;" title="點擊開啟世界地圖選關">第 1-1 關・腐朽邊境營地</span>
-          <span id="hud-wave-badge" class="wave-pill">波次 1 / 5</span>
-        </div>
-        <button id="btn-stage-next" class="btn-stage">▶</button>
-      </div>
-
-      <div class="hud-right">
-        <span id="hud-cloud-status" class="cloud-badge">☁️ 未登入</span>
-        <button id="btn-cloud-logout" class="btn-ghost hidden">登出</button>
-        <div class="res-pill">💰 <span id="hud-gold">0</span></div>
-        <div class="res-pill">💎 <span id="hud-dust">0</span></div>
-        <div class="res-pill crystal">🔮 <span id="hud-crystals">0</span></div>
-      </div>
-    </header>
-
     <main id="battle-viewport">
       <div id="phaser-stage"></div>
 
+      <!-- 左上角：角色名片卡 ＋ 可折疊關卡追蹤面板 -->
+      <div id="hud-top-left" class="hud-corner">
+        <div class="mmo-hero-card">
+          <div class="hero-avatar-ring">
+            <img id="hud-hero-avatar" src="./assets/heroes/warrior.png" alt="英雄頭像" />
+          </div>
+          <div class="hero-card-info">
+            <div class="hero-card-row">
+              <span id="hud-class-badge" class="badge">狂戰士 Lv.1</span>
+              <span id="hud-dps" class="badge dps">DPS 0</span>
+              <span id="hud-cloud-status" class="cloud-badge">☁️ 未登入</span>
+              <button id="btn-cloud-logout" class="btn-ghost-xs hidden">登出</button>
+            </div>
+            <div class="hero-mini-bars">
+              <div class="mini-bar hp"><div id="mini-hp-fill" class="mini-bar-fill"></div><span id="mini-hp-text">240 / 240</span></div>
+              <div class="mini-bar mp"><div id="mini-mp-fill" class="mini-bar-fill"></div><span id="mini-mp-text">100 / 100</span></div>
+            </div>
+            <div class="hero-res-row">
+              <span class="res-pill-sm">💰 <b id="hud-gold">0</b></span>
+              <span class="res-pill-sm">💎 <b id="hud-dust">0</b></span>
+              <span class="res-pill-sm crystal">🔮 <b id="hud-crystals">0</b></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="mmo-quest-tracker" id="quest-tracker">
+          <div class="tracker-header">
+            <div class="tracker-stage-nav">
+              <button id="btn-stage-prev" class="btn-stage-xs" title="上一關">◀</button>
+              <span id="hud-stage-title" class="tracker-stage-title" title="點擊開啟世界地圖選關">第 1-1 關・腐朽邊境營地</span>
+              <button id="btn-stage-next" class="btn-stage-xs" title="下一關">▶</button>
+            </div>
+            <button id="btn-toggle-tracker" class="btn-collapse" title="收合/展開追蹤">▾</button>
+          </div>
+          <div class="tracker-body" id="tracker-body">
+            <div class="tracker-row">
+              <span id="hud-wave-badge" class="wave-pill">⚔️ 全清小王</span>
+              <span id="tracker-mob-count" class="tracker-val">剩餘 0 / 0</span>
+            </div>
+            <div class="tracker-prog-track"><div id="tracker-prog-fill"></div></div>
+            <div id="tracker-boss-line" class="tracker-sub">自動巡邏清怪中・擊破首領可進下一關</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 中上方：當前鎖定目標／首領血條 (Target Frame) -->
+      <div id="hud-top-center">
+        <div id="target-frame" class="target-frame hidden">
+          <div class="target-head">
+            <span id="target-badge" class="target-badge">⚔️</span>
+            <span id="target-name" class="target-name">深淵怪物</span>
+            <span id="target-lv" class="target-lv">Lv.1</span>
+          </div>
+          <div class="target-hp-track">
+            <div id="target-hp-fill" class="target-hp-fill"></div>
+            <span id="target-hp-text" class="target-hp-text">0 / 0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右上角：MMORPG 微型功能列 ＋ 即時雷達小地圖 -->
+      <div id="hud-top-right" class="hud-corner">
+        <div class="mmo-top-menu">
+          <button id="btn-world-map" class="mmo-micro-btn" data-tip="世界大地圖選關 [M]"><img class="mmo-ui-img" src="./assets/ui/ui_worldmap.png" alt="地圖" /><small>M</small></button>
+          <button class="mmo-micro-btn" data-drawer="gear" data-tip="角色紙娃娃與裝備 [I / 1]"><img class="mmo-ui-img" src="./assets/ui/ui_gear.png" alt="裝備" /><small>I</small></button>
+          <button class="mmo-micro-btn" data-drawer="bag" data-tip="暗黑網格物品欄 [2]">
+            <img class="mmo-ui-img" src="./assets/ui/ui_bag.png" alt="背包" /><small id="inv-count">0</small>
+            <span id="bag-dot" class="notify-dot hidden"></span>
+          </button>
+          <button class="mmo-micro-btn" data-drawer="upgrade" data-tip="金幣屬性強化 [3]"><img class="mmo-ui-img" src="./assets/ui/ui_upgrade.png" alt="強化" /><small>3</small></button>
+          <button class="mmo-micro-btn" data-drawer="tree" data-tip="深淵技能樹 [4]">
+            <img class="mmo-ui-img" src="./assets/ui/ui_tree.png" alt="技能樹" /><small>4</small>
+            <span id="tree-sp-badge" class="sp-badge hidden">0</span>
+          </button>
+          <button class="mmo-micro-btn" data-drawer="skills" data-tip="職業技能配置頁 [6]"><img class="mmo-ui-img" src="./assets/ui/ui_skills.png" alt="技能頁" /><small>6</small></button>
+          <button class="mmo-micro-btn" data-drawer="rebirth" data-tip="深淵輪迴轉生 [5]"><img class="mmo-ui-img" src="./assets/ui/ui_rebirth.png" alt="輪迴" /><small>5</small></button>
+          <button id="btn-switch-class" class="mmo-micro-btn" data-tip="切換冒險職業"><img class="mmo-ui-img" src="./assets/ui/ui_class.png" alt="職業" /><small>職</small></button>
+          <button class="mmo-micro-btn" data-drawer="log" data-tip="完整戰鬥日誌"><img class="mmo-ui-img" src="./assets/ui/ui_log.png" alt="日誌" /><small>誌</small></button>
+        </div>
+
+        <div class="mmo-minimap-card">
+          <div class="minimap-head">
+            <span id="minimap-zone-name">腐朽邊境營地</span>
+            <span id="minimap-coords">2048, 1152</span>
+          </div>
+          <canvas id="hud-minimap-canvas" width="192" height="108"></canvas>
+        </div>
+      </div>
+
+      <!-- 左下角：半透明即時戰鬥／掉寶日誌浮動窗 -->
+      <div id="hud-bottom-left" class="hud-corner">
+        <div class="floating-log-box" id="floating-log-box">
+          <div class="floating-log-tabs">
+            <button class="flog-tab active" data-logfilter="all">綜合</button>
+            <button class="flog-tab" data-logfilter="loot">掉落</button>
+            <button class="flog-tab" data-logfilter="combat">戰鬥</button>
+            <button class="flog-tab" data-logfilter="system">系統</button>
+            <button id="btn-toggle-flog" class="btn-collapse" title="收合/展開日誌">▾</button>
+          </div>
+          <div id="floating-log-entries" class="floating-log-entries"></div>
+        </div>
+      </div>
+
+      <!-- 右側滑出系統抽屜 -->
       <aside id="rpg-drawer" class="hidden">
         <div class="drawer-header">
           <h3 id="drawer-title">🛡️ 角色與裝備</h3>
@@ -121,25 +201,23 @@
           <div class="empty-tip">點擊裝備或背包物品查看詳細詞條</div>
         </div>
       </aside>
-    </main>
 
-    <!-- 暗黑破壞神經典雙球血魔祭壇 HUD ＋ 10 格刻度經驗條 -->
-    <footer id="diablo-hud">
-      <div class="orb-wrap orb-left" id="orb-hp" title="生命值 (HP)">
-        <div class="orb-ring"></div>
-        <div class="orb-glass">
-          <div class="orb-liquid orb-hp-liquid" id="orb-hp-fill"></div>
-          <div class="orb-wave"></div>
-          <div class="orb-gloss"></div>
-          <div class="orb-readout">
-            <span id="orb-hp-text">240 / 240</span>
-            <small>LIFE</small>
+      <!-- 底部中央：懸浮雙球暗黑 MMORPG 祭壇 -->
+      <footer id="diablo-hud" class="floating-altar">
+        <div class="orb-wrap orb-left" id="orb-hp" title="生命值 (HP)">
+          <div class="orb-ring"></div>
+          <div class="orb-glass">
+            <div class="orb-liquid orb-hp-liquid" id="orb-hp-fill"></div>
+            <div class="orb-wave"></div>
+            <div class="orb-gloss"></div>
+            <div class="orb-readout">
+              <span id="orb-hp-text">240 / 240</span>
+              <small>LIFE</small>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div id="altar-center">
-        <div class="mmo-bar-row">
+        <div id="altar-center" class="floating-altar-core">
           <div class="mmo-hotbar">
             <button id="btn-potion" class="mmo-slot mmo-potion" data-tip="生命藥水 [H]：立即回復 45% 最大生命（每 12 秒或過關補充）">
               <span class="mmo-hotkey">H</span>
@@ -181,52 +259,38 @@
             </button>
           </div>
 
-          <div class="mmo-micro-menu">
-            <button id="btn-world-map" class="mmo-micro-btn" data-tip="世界大地圖選關 [M]"><img class="mmo-ui-img" src="./assets/ui/ui_worldmap.png" alt="地圖" /><small>M</small></button>
-            <button class="mmo-micro-btn" data-drawer="gear" data-tip="角色紙娃娃與裝備 [I / 1]"><img class="mmo-ui-img" src="./assets/ui/ui_gear.png" alt="裝備" /><small>I</small></button>
-            <button class="mmo-micro-btn" data-drawer="bag" data-tip="暗黑網格物品欄 [2]">
-              <img class="mmo-ui-img" src="./assets/ui/ui_bag.png" alt="背包" /><small id="inv-count">0</small>
-              <span id="bag-dot" class="notify-dot hidden"></span>
-            </button>
-            <button class="mmo-micro-btn" data-drawer="upgrade" data-tip="金幣屬性強化 [3]"><img class="mmo-ui-img" src="./assets/ui/ui_upgrade.png" alt="強化" /><small>3</small></button>
-            <button class="mmo-micro-btn" data-drawer="tree" data-tip="深淵技能樹 [4]">
-              <img class="mmo-ui-img" src="./assets/ui/ui_tree.png" alt="技能樹" /><small>4</small>
-              <span id="tree-sp-badge" class="sp-badge hidden">0</span>
-            </button>
-            <button class="mmo-micro-btn" data-drawer="skills" data-tip="職業技能配置頁 [6]"><img class="mmo-ui-img" src="./assets/ui/ui_skills.png" alt="技能頁" /><small>6</small></button>
-            <button class="mmo-micro-btn" data-drawer="rebirth" data-tip="深淵輪迴轉生 [5]"><img class="mmo-ui-img" src="./assets/ui/ui_rebirth.png" alt="輪迴" /><small>5</small></button>
-            <button id="btn-switch-class" class="mmo-micro-btn" data-tip="切換冒險職業"><img class="mmo-ui-img" src="./assets/ui/ui_class.png" alt="職業" /><small>職</small></button>
-            <button class="mmo-micro-btn" data-drawer="log" data-tip="戰鬥日誌"><img class="mmo-ui-img" src="./assets/ui/ui_log.png" alt="日誌" /><small>誌</small></button>
+          <div class="mmo-status-strip">
+            <span id="hud-afk-pill" class="afk-pill active">★ AFK 自動掛機中</span>
+            <button id="btn-quick-salvage" class="strip-btn" title="一鍵分解普通/魔法裝備 [Q]">🧹 一鍵分解 [Q]</button>
+          </div>
+
+          <div class="diablo-exp-bar" id="diablo-exp-bar" title="經驗值進度 (10 格暗金刻度)">
+            <div class="diablo-exp-fill" id="diablo-exp-fill"></div>
+            <div class="diablo-exp-ticks">
+              <span></span><span></span><span></span><span></span><span></span>
+              <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <span class="diablo-exp-text" id="diablo-exp-text">Lv.1 • EXP 0 / 90 (0%)</span>
           </div>
         </div>
 
-        <div class="diablo-exp-bar" id="diablo-exp-bar" title="經驗值進度 (10 格暗金刻度)">
-          <div class="diablo-exp-fill" id="diablo-exp-fill"></div>
-          <div class="diablo-exp-ticks">
-            <span></span><span></span><span></span><span></span><span></span>
-            <span></span><span></span><span></span><span></span><span></span>
-          </div>
-          <span class="diablo-exp-text" id="diablo-exp-text">Lv.1 • EXP 0 / 90 (0%)</span>
-        </div>
-      </div>
-
-      <div class="orb-wrap orb-right" id="orb-mp" title="魔力值 (MP)">
-        <div class="orb-ring"></div>
-        <div class="orb-glass">
-          <div class="orb-liquid orb-mp-liquid" id="orb-mp-fill"></div>
-          <div class="orb-wave"></div>
-          <div class="orb-gloss"></div>
-          <div class="orb-readout">
-            <span id="orb-mp-text">100 / 100</span>
-            <small id="orb-mp-label">MANA</small>
+        <div class="orb-wrap orb-right" id="orb-mp" title="魔力值 (MP)">
+          <div class="orb-ring"></div>
+          <div class="orb-glass">
+            <div class="orb-liquid orb-mp-liquid" id="orb-mp-fill"></div>
+            <div class="orb-wave"></div>
+            <div class="orb-gloss"></div>
+            <div class="orb-readout">
+              <span id="orb-mp-text">100 / 100</span>
+              <small id="orb-mp-label">MANA</small>
+            </div>
           </div>
         </div>
-      </div>
-    </footer>
+      </footer>
+    </main>
   </section>
 
   <div id="diablo-tooltip" class="diablo-tooltip hidden"></div>
-
 
   <div id="modal-world-map" class="modal-overlay hidden">
     <div class="modal-card modal-world">

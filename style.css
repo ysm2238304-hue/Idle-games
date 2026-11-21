@@ -1081,3 +1081,522 @@ button { font-family: inherit; }
 }
 .diablo-exp-bar { height: 18px; }
 .diablo-exp-text { font-size: 11.5px; }
+
+
+/* ========== v26 滿版畫布＋四角浮動 MMORPG HUD＋懸浮雙球祭壇 ========== */
+#game-screen {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  display: block;
+}
+
+#battle-viewport {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+#phaser-stage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hud-corner {
+  position: absolute;
+  z-index: 20;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.hud-corner > * {
+  pointer-events: auto;
+}
+
+/* 左上角：角色名片卡 ＋ 關卡追蹤框 */
+#hud-top-left {
+  top: 12px;
+  left: 14px;
+  width: 318px;
+}
+
+.mmo-hero-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 11px;
+  background: rgba(11, 13, 20, 0.80);
+  backdrop-filter: blur(10px);
+  border: 1.5px solid #8a6932;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.72), inset 0 0 12px rgba(200, 155, 60, 0.12);
+}
+
+.hero-avatar-ring {
+  width: 50px;
+  height: 50px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 2px solid #e0a63b;
+  background: radial-gradient(circle, #2a2013 0%, #0d0b08 100%);
+  box-shadow: 0 0 12px rgba(224, 166, 59, 0.45);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hero-avatar-ring img {
+  width: 112%;
+  height: 112%;
+  object-fit: cover;
+}
+
+.hero-card-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.hero-card-row {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex-wrap: wrap;
+}
+.hero-card-row .badge {
+  padding: 2px 6px;
+  font-size: 11px;
+}
+.hero-card-row .cloud-badge {
+  font-size: 10px;
+  color: #94a3b8;
+  margin-left: auto;
+  max-width: 82px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.btn-ghost-xs {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid #475569;
+  color: #cbd5e1;
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.hero-mini-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.mini-bar {
+  position: relative;
+  height: 11px;
+  background: rgba(6, 8, 12, 0.9);
+  border: 1px solid #334155;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.mini-bar-fill {
+  height: 100%;
+  width: 100%;
+  transition: width 0.15s ease-out;
+}
+.mini-bar.hp .mini-bar-fill {
+  background: linear-gradient(90deg, #b91c1c, #ef4444);
+}
+.mini-bar.mp .mini-bar-fill {
+  background: linear-gradient(90deg, #1d4ed8, #38bdf8);
+}
+.mini-bar.mp.warrior .mini-bar-fill {
+  background: linear-gradient(90deg, #c2410c, #fb923c);
+}
+.mini-bar.mp.ranger .mini-bar-fill {
+  background: linear-gradient(90deg, #047857, #34d399);
+}
+.mini-bar span {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8.5px;
+  font-weight: 800;
+  color: #f8fafc;
+  text-shadow: 0 1px 2px #000;
+}
+
+.hero-res-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.res-pill-sm {
+  font-size: 11px;
+  color: #fde047;
+  background: rgba(20, 23, 34, 0.85);
+  border: 1px solid #473923;
+  padding: 1px 6px;
+  border-radius: 5px;
+}
+.res-pill-sm.crystal {
+  color: #e879f9;
+  border-color: #6b21a8;
+}
+
+/* 可折疊關卡追蹤面板 */
+.mmo-quest-tracker {
+  background: rgba(11, 13, 20, 0.76);
+  backdrop-filter: blur(8px);
+  border: 1px solid #523e1e;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.65);
+}
+.tracker-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  background: rgba(28, 22, 14, 0.82);
+  border-bottom: 1px solid #3a2e1a;
+  gap: 6px;
+}
+.tracker-stage-nav {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  flex: 1;
+}
+.btn-stage-xs {
+  background: #1a1e2b;
+  color: #e2e8f0;
+  border: 1px solid #523e1e;
+  border-radius: 4px;
+  width: 20px;
+  height: 20px;
+  font-size: 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.btn-stage-xs:disabled { opacity: 0.35; cursor: not-allowed; }
+.tracker-stage-title {
+  font-size: 12px;
+  font-weight: 800;
+  color: #fef3c7;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tracker-stage-title:hover { color: #fde047; text-decoration: underline; }
+.btn-collapse {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 0 4px;
+}
+.tracker-body {
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.tracker-body.collapsed { display: none; }
+.tracker-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11.5px;
+}
+.tracker-val { color: #fde68a; font-weight: 700; }
+.tracker-prog-track {
+  height: 6px;
+  background: #0a0c12;
+  border: 1px solid #334155;
+  border-radius: 999px;
+  overflow: hidden;
+}
+#tracker-prog-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #d97706, #fde047);
+  transition: width 0.2s;
+}
+.tracker-sub {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+/* 中上方：目標鎖定血條 (Target Frame) */
+#hud-top-center {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  pointer-events: none;
+}
+.target-frame {
+  width: 310px;
+  padding: 7px 12px;
+  background: rgba(13, 14, 21, 0.84);
+  backdrop-filter: blur(8px);
+  border: 1.5px solid #991b1b;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.78);
+}
+.target-frame.boss {
+  border-color: #f97316;
+  box-shadow: 0 0 20px rgba(249, 115, 22, 0.45);
+}
+.target-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 800;
+}
+.target-name { color: #fef3c7; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.target-lv { color: #fca5a5; font-size: 11px; }
+.target-hp-track {
+  position: relative;
+  height: 14px;
+  background: #090b10;
+  border: 1px solid #450a0a;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.target-hp-fill {
+  height: 100%;
+  width: 100%;
+  background: linear-gradient(90deg, #991b1b, #ef4444);
+  transition: width 0.12s;
+}
+.target-frame.boss .target-hp-fill {
+  background: linear-gradient(90deg, #c2410c, #f97316, #fbbf24);
+}
+.target-hp-text {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: #fff;
+  text-shadow: 0 1px 2px #000;
+}
+
+/* 右上角：系統微型圖示列 ＋ 雷達小地圖 */
+#hud-top-right {
+  top: 12px;
+  right: 14px;
+  align-items: flex-end;
+}
+.mmo-top-menu {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 7px;
+  background: rgba(11, 13, 20, 0.82);
+  backdrop-filter: blur(10px);
+  border: 1.5px solid #8a6932;
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.72);
+}
+.mmo-top-menu .mmo-micro-btn {
+  width: 38px;
+  height: 38px;
+}
+
+.mmo-minimap-card {
+  width: 204px;
+  padding: 6px;
+  background: rgba(11, 13, 20, 0.82);
+  backdrop-filter: blur(10px);
+  border: 1.5px solid #8a6932;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.78);
+}
+.minimap-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #fde68a;
+  margin-bottom: 4px;
+}
+.minimap-head span:last-child {
+  color: #94a3b8;
+  font-size: 10px;
+}
+#hud-minimap-canvas {
+  display: block;
+  width: 192px;
+  height: 108px;
+  background: #07090f;
+  border: 1px solid #3a2e1a;
+  border-radius: 6px;
+}
+
+/* 左下角：半透明即時戰鬥／掉寶日誌 */
+#hud-bottom-left {
+  bottom: 12px;
+  left: 14px;
+  width: 330px;
+  max-width: calc(50vw - 260px);
+}
+.floating-log-box {
+  background: rgba(10, 12, 18, 0.74);
+  backdrop-filter: blur(8px);
+  border: 1px solid #473923;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.65);
+}
+.floating-log-tabs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 7px;
+  background: rgba(20, 18, 15, 0.85);
+  border-bottom: 1px solid #3a2e1a;
+}
+.flog-tab {
+  background: transparent;
+  border: 1px solid transparent;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+.flog-tab.active {
+  background: rgba(224, 166, 59, 0.18);
+  border-color: #c89b3c;
+  color: #fde68a;
+}
+.floating-log-tabs .btn-collapse { margin-left: auto; }
+.floating-log-entries {
+  height: 136px;
+  overflow-y: auto;
+  padding: 6px 8px;
+  font-size: 11px;
+  line-height: 1.45;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.floating-log-entries.collapsed { display: none; }
+.floating-log-entries .log-entry {
+  word-break: break-word;
+  text-shadow: 0 1px 2px #000;
+}
+
+/* 抽屜在右上系統列下方打開，避免遮住系統列 */
+#rpg-drawer {
+  top: 66px;
+  right: 14px;
+  bottom: 14px;
+  z-index: 35;
+}
+
+/* 底部中央：懸浮雙球祭壇（兩側完全透明露出地圖） */
+#diablo-hud.floating-altar {
+  position: absolute;
+  bottom: 8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: auto;
+  height: auto;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  gap: 12px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  z-index: 22;
+  pointer-events: none;
+}
+#diablo-hud.floating-altar > * {
+  pointer-events: auto;
+}
+#diablo-hud.floating-altar .orb-wrap {
+  width: 126px;
+  height: 126px;
+  margin-top: 0;
+  margin-bottom: 2px;
+}
+.floating-altar-core {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 12px 7px;
+  background: rgba(12, 11, 14, 0.84);
+  backdrop-filter: blur(12px);
+  border: 1.5px solid #8a6932;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85), inset 0 0 16px rgba(200, 155, 60, 0.12);
+}
+.floating-altar-core .mmo-hotbar {
+  background: transparent;
+  border: none;
+  padding: 0;
+  gap: 8px;
+}
+.mmo-status-strip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+.afk-pill {
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: rgba(34, 197, 94, 0.16);
+  border: 1px solid #22c55e;
+  color: #86efac;
+}
+.afk-pill.manual {
+  background: rgba(148, 163, 184, 0.16);
+  border-color: #64748b;
+  color: #cbd5e1;
+}
+.strip-btn {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: rgba(30, 26, 20, 0.9);
+  border: 1px solid #6b532c;
+  color: #fde68a;
+  cursor: pointer;
+}
+.strip-btn:hover { border-color: #fde047; }
+.floating-altar-core .diablo-exp-bar {
+  width: 100%;
+  min-width: 340px;
+  height: 16px;
+}
