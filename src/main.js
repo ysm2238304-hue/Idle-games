@@ -127,11 +127,11 @@ const ui = new DashboardUI({
 
   onSalvageAllJunk: () => {
     if (gameState.inventory.length === 0) return;
-    let count = 0;
-    let totalGold = 0;
-    let totalDust = 0;
+    const targets = new Set(['common', 'magic', 'rare', 'legendary'].filter((r) => gameState.autoSalvage?.[r]));
+    if (targets.size === 0) { targets.add('common'); targets.add('magic'); }
+    let count = 0, totalGold = 0, totalDust = 0;
     gameState.inventory = gameState.inventory.filter((item) => {
-      if (item.rarity === 'common' || item.rarity === 'magic') {
+      if (targets.has(item.rarity)) {
         const rew = getSalvageReward(item);
         totalGold += rew.gold;
         totalDust += rew.dust;
@@ -145,12 +145,87 @@ const ui = new DashboardUI({
       gameState.dust += totalDust;
       ui.selectedItemUid = null;
       ui.renderItemInspector(null, false, gameState);
-      ui.addLog(`一鍵分解 ${count} 件普通/魔法裝備：+${totalGold} 金幣、+${totalDust} 粉塵`, 'system');
+      ui.addLog(`分解 ${count} 件指定品質裝備：+${totalGold} 金幣、+${totalDust} 粉塵`, 'loot');
       refreshStatsAndUI();
       persistAll(true);
     } else {
-      ui.addLog('背包內沒有可分解的普通/魔法裝備。', 'normal');
+      ui.addLog('背包內沒有符合所選品質的裝備可分解。', 'normal');
     }
+  },
+
+  onSellSelectedJunk: () => {
+    if (gameState.inventory.length === 0) return;
+    const targets = new Set(['common', 'magic', 'rare', 'legendary'].filter((r) => gameState.autoSalvage?.[r]));
+    if (targets.size === 0) { targets.add('common'); targets.add('magic'); }
+    let count = 0, totalGold = 0;
+    gameState.inventory = gameState.inventory.filter((item) => {
+      if (targets.has(item.rarity)) {
+        const rew = getSalvageReward(item);
+        totalGold += Math.round(rew.gold * 2.5 + rew.dust * 8);
+        count++;
+        return false;
+      }
+      return true;
+    });
+    if (count > 0) {
+      gameState.gold += totalGold;
+      ui.selectedItemUid = null;
+      ui.renderItemInspector(null, false, gameState);
+      ui.addLog(`出售 ${count} 件指定品質裝備換取 +${totalGold} 金幣！`, 'loot');
+      refreshStatsAndUI();
+      persistAll(true);
+    } else {
+      ui.addLog('背包內沒有符合所選品質的裝備可出售。', 'normal');
+    }
+  },
+
+  onAutoEquipBest: () => {
+    const cid = gameState.classId || 'warrior';
+    let swapped = 0;
+    const slots = ['weapon', 'helm', 'armor', 'boots', 'ring', 'amulet'];
+    slots.forEach((slot) => {
+      const cur = gameState.equipment[slot];
+      let bestIdx = -1;
+      let bestPwr = calcItemPower(cur);
+      gameState.inventory.forEach((it, idx) => {
+        if (it.slot !== slot) return;
+        if (it.classReq && it.classReq !== 'all' && it.classReq !== cid) return;
+        const p = calcItemPower(it);
+        if (p > bestPwr) {
+          bestPwr = p;
+          bestIdx = idx;
+        }
+      });
+      if (bestIdx !== -1) {
+        const newIt = gameState.inventory.splice(bestIdx, 1)[0];
+        if (cur) gameState.inventory.push(cur);
+        gameState.equipment[slot] = newIt;
+        swapped++;
+      }
+    });
+    if (swapped > 0) {
+      ui.selectedItemUid = null;
+      ui.addLog(`⚔️ 一鍵最佳裝備：已自動換上 ${swapped} 件更高戰力裝備！`, 'victory');
+      refreshStatsAndUI();
+      persistAll(true);
+    } else {
+      ui.addLog('身上裝備已是目前職業最強配置！', 'system');
+    }
+  },
+
+  onSortBag: () => {
+    const cid = gameState.classId || 'warrior';
+    const rRank = { legendary: 4, rare: 3, magic: 2, common: 1 };
+    gameState.inventory.sort((a, b) => {
+      const aOk = (!a.classReq || a.classReq === 'all' || a.classReq === cid) ? 1 : 0;
+      const bOk = (!b.classReq || b.classReq === 'all' || b.classReq === cid) ? 1 : 0;
+      if (aOk !== bOk) return bOk - aOk;
+      if ((rRank[b.rarity] || 0) !== (rRank[a.rarity] || 0)) return (rRank[b.rarity] || 0) - (rRank[a.rarity] || 0);
+      return calcItemPower(b) - calcItemPower(a);
+    });
+    ui.addLog('🧹 已依職業適用、稀有度與戰力自動整理背包！', 'system');
+    refreshStatsAndUI();
+    persistAll();
   },
 
   onToggleAutoSalvage: (rarity, checked) => {

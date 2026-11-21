@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./style.css?v=33" />
+  <link rel="stylesheet" href="./style.css?v=38" />
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
 </head>
 <body>
@@ -162,14 +162,22 @@
           </div>
 
           <div id="tab-bag" class="tab-panel">
-            <div class="bag-toolbar">
-              <div class="auto-salvage-group">
-                <span>自動分解：</span>
-                <label><input type="checkbox" id="auto-salvage-common" /> 普通</label>
-                <label><input type="checkbox" id="auto-salvage-magic" /> 魔法</label>
-                <label><input type="checkbox" id="auto-salvage-rare" /> 稀有</label>
+            <div class="bag-toolbar" style="flex-direction:column;align-items:stretch;gap:6px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;">
+                <div class="auto-salvage-group">
+                  <span>品質篩選：</span>
+                  <label><input type="checkbox" id="auto-salvage-common" /> 普通</label>
+                  <label><input type="checkbox" id="auto-salvage-magic" /> 魔法</label>
+                  <label><input type="checkbox" id="auto-salvage-rare" /> 稀有</label>
+                  <label><input type="checkbox" id="auto-salvage-legendary" /> 傳奇</label>
+                </div>
               </div>
-              <button id="btn-salvage-junk" class="btn-danger-sm">一鍵分解 [Q]</button>
+              <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                <button id="btn-auto-equip" class="btn-gold-sm" style="flex:1;">⚔️ 一鍵最佳裝備</button>
+                <button id="btn-sort-bag" class="btn-ghost-sm" style="flex:1;">🧹 整理排序</button>
+                <button id="btn-salvage-junk" class="btn-danger-sm" style="flex:1;">💎 分解所選 [Q]</button>
+                <button id="btn-sell-junk" class="btn-gold-sm" style="flex:1;">💰 出售(2.5x金)</button>
+              </div>
             </div>
             <div class="bag-hint">提示：滑鼠懸停對比屬性、雙擊直接穿戴</div>
             <div id="inventory-grid" class="diablo-inv-grid"></div>
@@ -341,6 +349,6 @@
     </div>
   </div>
 
-  <script type="module" src="./src/main.js?v=33"></script>
+  <script type="module" src="./src/main.js?v=38"></script>
 </body>
 </html>

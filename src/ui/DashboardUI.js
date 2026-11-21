@@ -136,6 +136,15 @@ export class DashboardUI {
     document.getElementById('btn-salvage-junk')?.addEventListener('click', () => {
       this.handlers.onSalvageAllJunk();
     });
+    document.getElementById('btn-sell-junk')?.addEventListener('click', () => {
+      this.handlers.onSellSelectedJunk();
+    });
+    document.getElementById('btn-auto-equip')?.addEventListener('click', () => {
+      this.handlers.onAutoEquipBest();
+    });
+    document.getElementById('btn-sort-bag')?.addEventListener('click', () => {
+      this.handlers.onSortBag();
+    });
     document.getElementById('btn-stage-prev')?.addEventListener('click', () => {
       this.handlers.onChangeStage(-1);
     });
@@ -975,7 +984,7 @@ export class DashboardUI {
     const fillEl = document.getElementById('tracker-prog-fill');
     const bossEl = document.getElementById('tracker-boss-line');
     const prog = mapKills % bossEvery;
-    if (cntEl) cntEl.textContent = `本批 ${remaining} / 15 隻 (60%基數)・累積 ${mapKills}`;
+    if (cntEl) cntEl.textContent = `本批 ${remaining} / 24 隻 (60%基數)・累積 ${mapKills}`;
     const pct = Math.max(0, Math.min(100, (prog / bossEvery) * 100));
     if (fillEl) fillEl.style.width = `${pct.toFixed(1)}%`;
     if (bossEl) {

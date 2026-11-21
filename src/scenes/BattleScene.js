@@ -136,7 +136,7 @@ export class BattleScene extends Phaser.Scene {
       });
     });
 
-    ['goblin', 'spider', 'skeleton', 'imp', 'orc', 'necromancer', 'boss_demon'].forEach((mid) => {
+    ['goblin', 'spider', 'skeleton', 'imp', 'orc', 'necromancer', 'boss_demon', 'ch1_wolf', 'ch1_bandit', 'ch1_boar', 'ch1_slime', 'ch1_militia', 'ch1_treant', 'ch1_crow', 'ch1_raider', 'ch1_rat', 'ch1_warlord', 'ch2_shaman', 'ch2_bomber', 'ch2_rider', 'ch2_bat', 'ch2_spore', 'ch2_sapper', 'ch2_worm', 'ch2_stalker', 'ch2_arachne', 'ch2_chieftain', 'ch3_ghoul', 'ch3_archer', 'ch3_bonemage', 'ch3_wraith', 'ch3_abom', 'ch3_mummy', 'ch3_hound', 'ch3_scarab', 'ch3_guard', 'ch3_lord', 'ch4_imp', 'ch4_hound', 'ch4_elemental', 'ch4_salamander', 'ch4_golem', 'ch4_harpy', 'ch4_cultist', 'ch4_knight', 'ch4_scorpion', 'ch4_ifrit', 'ch5_thrall', 'ch5_succubus', 'ch5_warlock', 'ch5_gargoyle', 'ch5_cerberus', 'ch5_torturer', 'ch5_eye', 'ch5_guard', 'ch5_archfiend', 'ch5_general', 'ch6_wolf', 'ch6_sprite', 'ch6_yeti', 'ch6_witch', 'ch6_crab', 'ch6_golem', 'ch6_knight', 'ch6_wyvern', 'ch6_banshee', 'ch6_titan', 'ch7_toad', 'ch7_mosquito', 'ch7_slime', 'ch7_lizard', 'ch7_shaman', 'ch7_plant', 'ch7_leech', 'ch7_spider', 'ch7_croc', 'ch7_hydra', 'ch8_spark', 'ch8_eagle', 'ch8_mage', 'ch8_golem', 'ch8_harpy', 'ch8_knight', 'ch8_elemental', 'ch8_wyrm', 'ch8_centaur', 'ch8_titan', 'ch9_thrall', 'ch9_bat', 'ch9_nun', 'ch9_inquisitor', 'ch9_gargoyle', 'ch9_knight', 'ch9_priest', 'ch9_hound', 'ch9_executioner', 'ch9_lord', 'ch10_wisp', 'ch10_stalker', 'ch10_horror', 'ch10_mage', 'ch10_construct', 'ch10_seraph', 'ch10_devourer', 'ch10_knight', 'ch10_eye', 'ch10_titan'].forEach((mid) => {
       ['walk', 'atk'].forEach((st) => {
         for (let i = 0; i < 4; i++) {
           this.load.image(`mob_${mid}_${st}_${i}`, `./assets/monsters/${mid}_frames/${st}_${i}.png`);
@@ -257,7 +257,7 @@ export class BattleScene extends Phaser.Scene {
       });
     });
 
-    ['goblin', 'spider', 'skeleton', 'imp', 'orc', 'necromancer', 'boss_demon'].forEach((mid) => {
+    ['goblin', 'spider', 'skeleton', 'imp', 'orc', 'necromancer', 'boss_demon', 'ch1_wolf', 'ch1_bandit', 'ch1_boar', 'ch1_slime', 'ch1_militia', 'ch1_treant', 'ch1_crow', 'ch1_raider', 'ch1_rat', 'ch1_warlord', 'ch2_shaman', 'ch2_bomber', 'ch2_rider', 'ch2_bat', 'ch2_spore', 'ch2_sapper', 'ch2_worm', 'ch2_stalker', 'ch2_arachne', 'ch2_chieftain', 'ch3_ghoul', 'ch3_archer', 'ch3_bonemage', 'ch3_wraith', 'ch3_abom', 'ch3_mummy', 'ch3_hound', 'ch3_scarab', 'ch3_guard', 'ch3_lord', 'ch4_imp', 'ch4_hound', 'ch4_elemental', 'ch4_salamander', 'ch4_golem', 'ch4_harpy', 'ch4_cultist', 'ch4_knight', 'ch4_scorpion', 'ch4_ifrit', 'ch5_thrall', 'ch5_succubus', 'ch5_warlock', 'ch5_gargoyle', 'ch5_cerberus', 'ch5_torturer', 'ch5_eye', 'ch5_guard', 'ch5_archfiend', 'ch5_general', 'ch6_wolf', 'ch6_sprite', 'ch6_yeti', 'ch6_witch', 'ch6_crab', 'ch6_golem', 'ch6_knight', 'ch6_wyvern', 'ch6_banshee', 'ch6_titan', 'ch7_toad', 'ch7_mosquito', 'ch7_slime', 'ch7_lizard', 'ch7_shaman', 'ch7_plant', 'ch7_leech', 'ch7_spider', 'ch7_croc', 'ch7_hydra', 'ch8_spark', 'ch8_eagle', 'ch8_mage', 'ch8_golem', 'ch8_harpy', 'ch8_knight', 'ch8_elemental', 'ch8_wyrm', 'ch8_centaur', 'ch8_titan', 'ch9_thrall', 'ch9_bat', 'ch9_nun', 'ch9_inquisitor', 'ch9_gargoyle', 'ch9_knight', 'ch9_priest', 'ch9_hound', 'ch9_executioner', 'ch9_lord', 'ch10_wisp', 'ch10_stalker', 'ch10_horror', 'ch10_mage', 'ch10_construct', 'ch10_seraph', 'ch10_devourer', 'ch10_knight', 'ch10_eye', 'ch10_titan'].forEach((mid) => {
       const walkFps = mid === 'spider' ? 12 : (mid === 'imp' ? 10 : (mid === 'orc' || mid === 'boss_demon' ? 7 : 9));
       if (!this.anims.exists(`mob_${mid}_walk`)) {
         this.anims.create({
@@ -786,7 +786,7 @@ export class BattleScene extends Phaser.Scene {
           tracker: {
             remaining: remMobs.length,
             mapKills: this.mapKills || 0,
-            bossEvery: 15,
+            bossEvery: 24,
             bossEngaged: remMobs.some((m) => m.isBoss),
             bossTimeLeft: this.bossTimeLeft || 0,
           },
@@ -2990,7 +2990,7 @@ export class BattleScene extends Phaser.Scene {
     if (dropResult && dropResult.item) {
       this.spawnLootBeam(mx, my + 24, dropResult.item);
     }
-    if (this.mapKills % 15 === 0) {
+    if (this.mapKills % 24 === 0) {
       this.potionCharges = Math.min(this.potionMaxCharges, this.potionCharges + 1);
       const curStage = this.getState().stage || 1;
       const bossMob = spawnSingleMonster(curStage, true);

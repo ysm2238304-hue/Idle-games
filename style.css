@@ -1627,3 +1627,16 @@ button { font-family: inherit; }
 .mini-bar.mp.assassin .mini-bar-fill {
   background: linear-gradient(90deg, #7e22ce, #d8b4fe);
 }
+
+/* v33 背包一鍵操作按鈕樣式 */
+.btn-gold-sm {
+  background: linear-gradient(180deg, #d97706 0%, #92400e 100%);
+  color: #fef3c7; border: 1px solid #fbbf24; border-radius: 5px;
+  padding: 5px 8px; font-size: 11px; font-weight: 800; cursor: pointer;
+}
+.btn-gold-sm:hover { filter: brightness(1.12); }
+.btn-ghost-sm {
+  background: #1e293b; color: #e2e8f0; border: 1px solid #475569; border-radius: 5px;
+  padding: 5px 8px; font-size: 11px; font-weight: 700; cursor: pointer;
+}
+.btn-ghost-sm:hover { border-color: #94a3b8; }
