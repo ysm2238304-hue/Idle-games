@@ -211,21 +211,50 @@ export function createWaveSquad(stage, wave) {
   return squad;
 }
 
-export function spawnSingleMonster(stage, wave) {
+export function spawnSingleMonster(stage, forceBoss = false) {
   const chIdx = getChapterIdx(stage);
+  const sub = getSubStage(stage);
   const pool = ZONE_POOLS[chIdx];
-  const scaleFactor = 1 + (stage - 1) * 0.22 + (wave - 1) * 0.08;
+  const scaleFactor = (1 + (stage - 1) * 0.28) * Math.pow(1.032, stage - 1);
+  if (forceBoss) {
+    if (sub >= 10) {
+      const boss = buildMonster(MONSTER_TEMPLATES.boss_demon, stage, scaleFactor, 'boss_' + Date.now(), true);
+      boss.name = `【第${chIdx + 1}章首領】${boss.name}`;
+      return boss;
+    }
+    const eliteKey = pool[(sub - 1) % pool.length];
+    const tpl = MONSTER_TEMPLATES[eliteKey];
+    return buildMonster({
+      ...tpl,
+      name: `【${getStageLabel(stage)} 菁英首領】${tpl.name}`,
+      scale: tpl.scale * 1.45,
+      hpMult: tpl.hpMult * 3.5,
+      atkMult: tpl.atkMult * 1.48,
+      goldMult: tpl.goldMult * 3.8,
+      expMult: tpl.expMult * 3.6,
+      isBoss: true,
+      isMiniBoss: true,
+    }, stage, scaleFactor, 'mini_' + Date.now(), true);
+  }
   const key = pool[Math.floor(Math.random() * pool.length)];
   const tpl = MONSTER_TEMPLATES[key];
   const uid = Date.now() + Math.random();
   return buildMonster(tpl, stage, scaleFactor, uid);
 }
 
-function buildMonster(tpl, stage, scaleFactor, idx) {
-  const baseHp = 48 * scaleFactor;
-  const baseAtk = 6.5 * (1 + (stage - 1) * 0.17);
-  const baseGold = 8 * (1 + (stage - 1) * 0.25);
-  const baseExp = 13 * (1 + (stage - 1) * 0.22);
+function buildMonster(tpl, stage, scaleFactor, idx, forceAggressive = null) {
+  const diffMult = (1 + (stage - 1) * 0.28) * Math.pow(1.032, stage - 1);
+  const atkScale = (1 + (stage - 1) * 0.20) * Math.pow(1.022, stage - 1);
+  const expScale = (1 + (stage - 1) * 0.30) * Math.pow(1.028, stage - 1);
+  const goldScale = (1 + (stage - 1) * 0.26) * Math.pow(1.024, stage - 1);
+
+  const isAggressive = forceAggressive !== null ? forceAggressive : (tpl.isBoss ? true : Math.random() < 0.55);
+  const aggroExpBonus = isAggressive ? 1.20 : 1.0;
+
+  const baseHp = 48 * diffMult;
+  const baseAtk = 6.5 * atkScale;
+  const baseGold = 8 * goldScale;
+  const baseExp = 14 * expScale * aggroExpBonus;
 
   return {
     uid: `m_${Date.now()}_${idx}_${Math.random().toString(36).slice(2, 6)}`,
@@ -237,6 +266,8 @@ function buildMonster(tpl, stage, scaleFactor, idx) {
     isBoss: !!tpl.isBoss,
     isMiniBoss: !!tpl.isMiniBoss,
     isRanged: !!tpl.isRanged,
+    isAggressive,
+    isProvoked: false,
     moveStyle: tpl.moveStyle || 'hop',
     atkStyle: tpl.atkStyle || 'claw',
     maxHp: Math.round(baseHp * tpl.hpMult),

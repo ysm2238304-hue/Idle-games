@@ -242,7 +242,7 @@ const ui = new DashboardUI({
   },
 
   onJumpStage: (targetStage) => {
-    const target = Math.max(1, Math.min(100, Math.min(gameState.maxStageReached, targetStage)));
+    const target = Math.max(1, Math.min(100, targetStage));
     gameState.stage = target;
     gameState.wave = 1;
     ui.addLog(`傳送至第 ${getStageLabel(target)} 關刷寶。`, 'system');
@@ -252,7 +252,7 @@ const ui = new DashboardUI({
   },
 
   onChangeStage: (delta) => {
-    const target = Math.max(1, Math.min(100, Math.min(gameState.maxStageReached, gameState.stage + delta)));
+    const target = Math.max(1, Math.min(100, gameState.stage + delta));
     if (target === gameState.stage) return;
     gameState.stage = target;
     gameState.wave = 1;
@@ -357,7 +357,7 @@ function initPhaserGame() {
         refreshStatsAndUI();
         return { item: keptItem || dropped };
       },
-      onStageCleared: (clearedStage) => {
+      onStageClearedDisabled: (clearedStage) => {
         const modal = document.getElementById('modal-stage-clear');
         const titleEl = document.getElementById('clear-modal-title');
         const descEl = document.getElementById('clear-modal-desc');

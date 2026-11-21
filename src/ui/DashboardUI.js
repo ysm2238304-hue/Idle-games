@@ -184,7 +184,7 @@ export class DashboardUI {
       pinsEl.innerHTML = '';
       STAGE_ZONES.forEach((zName, chIdx) => {
         const [px, py] = coords[chIdx];
-        const unlocked = chIdx <= maxCh;
+        const unlocked = true;
         const btn = document.createElement('button');
         btn.className = `map-pin ${chIdx === selectedCh ? 'active' : ''}`;
         btn.style.left = `${px}%`;
@@ -211,7 +211,7 @@ export class DashboardUI {
       const grid = document.getElementById('substage-grid-inner');
       for (let sub = 1; sub <= 10; sub++) {
         const stNum = selectedCh * 10 + sub;
-        const unlocked = stNum <= maxStage;
+        const unlocked = true;
         const isCur = stNum === state.stage;
         const b = document.createElement('button');
         b.className = `substage-btn ${isCur ? 'current' : ''}`;
@@ -320,8 +320,8 @@ export class DashboardUI {
     const sLabel = getStageLabel(state.stage);
     const sub = getSubStage(state.stage);
     document.getElementById('hud-stage-title').textContent = `第 ${sLabel} 關・${getZoneName(state.stage)}`;
-    document.getElementById('hud-wave-badge').textContent = sub >= 10 ? '💀 章節大首領' : '⚔️ 全清小王';
-    document.getElementById('btn-stage-next').disabled = state.stage >= state.maxStageReached;
+    document.getElementById('hud-wave-badge').textContent = `難度 Lv.${state.stage}`;
+    document.getElementById('btn-stage-next').disabled = state.stage >= 100;
     document.getElementById('btn-stage-prev').disabled = state.stage <= 1;
 
     const spDot = document.getElementById('tree-sp-badge');
@@ -970,20 +970,21 @@ export class DashboardUI {
     if (txtEl) txtEl.textContent = `${formatNum(target.hp)} / ${formatNum(target.maxHp)}`;
   }
 
-  updateStageTracker({ remaining, total, bossEngaged, bossTimeLeft }) {
+  updateStageTracker({ remaining, mapKills = 0, bossEvery = 15, bossEngaged, bossTimeLeft }) {
     const cntEl = document.getElementById('tracker-mob-count');
     const fillEl = document.getElementById('tracker-prog-fill');
     const bossEl = document.getElementById('tracker-boss-line');
-    if (cntEl) cntEl.textContent = `剩餘 ${remaining} / ${total}`;
-    const pct = total > 0 ? Math.max(0, Math.min(100, (remaining / total) * 100)) : 0;
+    const prog = mapKills % bossEvery;
+    if (cntEl) cntEl.textContent = `場上 ${remaining} 隻・本圖擊殺 ${mapKills}`;
+    const pct = Math.max(0, Math.min(100, (prog / bossEvery) * 100));
     if (fillEl) fillEl.style.width = `${pct.toFixed(1)}%`;
     if (bossEl) {
       if (bossEngaged) {
         bossEl.style.color = '#fb923c';
-        bossEl.textContent = `🔥 首領激戰中！剩餘時間 ${Math.max(0, bossTimeLeft).toFixed(1)}s`;
+        bossEl.textContent = `🔥 首領激戰中！（本圖持續刷怪）`;
       } else {
         bossEl.style.color = '#94a3b8';
-        bossEl.textContent = remaining > 0 ? '自動巡邏清怪中・全清可進下一關' : '✨ 關卡已清空，準備傳送...';
+        bossEl.textContent = `持續刷怪中・再擊殺 ${bossEvery - prog} 隻出現地圖首領`;
       }
     }
   }

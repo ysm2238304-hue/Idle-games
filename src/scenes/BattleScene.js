@@ -60,6 +60,7 @@ export class BattleScene extends Phaser.Scene {
     this.patrolTarget = { x: MAP_W / 2, y: MAP_H / 2 };
 
     this.waveKills = 0;
+    this.mapKills = 0;
     this.waveTargetKills = 12;
     this.stageTotalMonsters = 12;
     this.bossEngaged = false;
@@ -93,6 +94,8 @@ export class BattleScene extends Phaser.Scene {
     this.summons = [];
     this.undeadFrenzyUntil = 0;
     this.lethalFangsUntil = 0;
+    this.mapKills = 0;
+    this.respawnTimer = 0;
   }
 
   init(data) {
@@ -556,6 +559,10 @@ export class BattleScene extends Phaser.Scene {
   }
 
   refreshHeroClass() {
+    if (this.summons) {
+      this.summons.forEach((s) => { s.sprite?.destroy(); s.barBg?.destroy(); s.barFill?.destroy(); s.label?.destroy(); });
+      this.summons = [];
+    }
     const stats = this.getStats();
     this.playerMaxHp = stats.maxHp;
     this.playerHp = stats.maxHp;
@@ -582,10 +589,6 @@ export class BattleScene extends Phaser.Scene {
   }
 
   clearAllMonsters() {
-    if (this.summons) {
-      this.summons.forEach((s) => s.sprite && s.sprite.destroy());
-      this.summons = [];
-    }
     this.monsters.forEach((m) => {
       m.sprite?.destroy();
       m.groundShadow?.destroy();
@@ -619,8 +622,10 @@ export class BattleScene extends Phaser.Scene {
     const barW = data.isBoss ? 140 : 72;
     const hpBg = this.add.rectangle(sx, sy - (data.isBoss ? 100 : 64), barW, 8, 0x0b0e14).setStrokeStyle(1, 0x64748b).setDepth(3500);
     const hpFill = this.add.rectangle(sx - barW / 2, sy - (data.isBoss ? 100 : 64), barW, 6, data.isBoss ? 0xf97316 : 0xef4444).setOrigin(0, 0.5).setDepth(3501);
-    const nameText = this.add.text(sx, sy - (data.isBoss ? 116 : 78), data.isBoss ? data.name : '', {
-      fontSize: '12px', color: '#fde68a', fontFamily: 'sans-serif', fontStyle: 'bold',
+    const mobTag = data.isBoss ? data.name : (data.isAggressive ? `🔴 ${data.name}` : `⚪ ${data.name}`);
+    const mobCol = data.isBoss ? '#fb923c' : (data.isAggressive ? '#fca5a5' : '#cbd5e1');
+    const nameText = this.add.text(sx, sy - (data.isBoss ? 116 : 78), mobTag, {
+      fontSize: data.isBoss ? '12.5px' : '11px', color: mobCol, fontFamily: 'sans-serif', fontStyle: 'bold',
       stroke: '#000000', strokeThickness: 3,
     }).setOrigin(0.5).setDepth(3502);
 
@@ -637,6 +642,10 @@ export class BattleScene extends Phaser.Scene {
       dustTimer: Phaser.Math.Between(0, 500),
       bossSkillTimer: 2800,
       bobPhase: Math.random() * Math.PI * 2,
+      homeX: sx,
+      homeY: sy,
+      roamAngle: Math.random() * Math.PI * 2,
+      roamTimer: 0,
       jitterAngle: Math.random() * Math.PI * 2,
       stunUntil: 0,
       slowUntil: 0,
@@ -759,8 +768,9 @@ export class BattleScene extends Phaser.Scene {
           } : null,
           tracker: {
             remaining: remMobs.length,
-            total: this.stageTotalMonsters || remMobs.length,
-            bossEngaged: !!this.bossEngaged,
+            mapKills: this.mapKills || 0,
+            bossEvery: 15,
+            bossEngaged: remMobs.some((m) => m.isBoss),
             bossTimeLeft: this.bossTimeLeft || 0,
           },
           minimap: {
@@ -787,6 +797,21 @@ export class BattleScene extends Phaser.Scene {
     this.updateMonstersAI(time, delta, dt, stats);
     this.updateProjectiles(dt, stats);
     this.updateSummons(dt, stats);
+
+    this.respawnTimer = (this.respawnTimer || 0) + delta;
+    if (this.respawnTimer >= 1200) {
+      this.respawnTimer = 0;
+      const aliveCount = this.monsters.filter((m) => m.hp > 0).length;
+      if (aliveCount < 13) {
+        const curStage = this.getState().stage || 1;
+        const nm = spawnSingleMonster(curStage, false);
+        const ang = Math.random() * Math.PI * 2;
+        const dist = Phaser.Math.Between(480, 920);
+        const sx = Phaser.Math.Clamp(this.hero.x + Math.cos(ang) * dist, 220, MAP_W - 220);
+        const sy = Phaser.Math.Clamp(this.hero.y + Math.sin(ang) * dist * 0.72, 260, MAP_H - 220);
+        this.spawnMonsterInstance(nm, ang, sx, sy);
+      }
+    }
 
     const nearest = this.findNearestMonster(this.hero.x, this.hero.y);
     if (nearest) {
@@ -817,9 +842,7 @@ export class BattleScene extends Phaser.Scene {
     if (this.bossEngaged && bossMob) {
       this.bossTimeLeft -= dt;
       this.updateWaveBanner();
-      if (this.bossTimeLeft <= 0) {
-        this.handleHeroDefeat('首領戰超時，退回起點重整旗鼓！');
-      }
+      // 持續刷圖模式：不因首領倒數強制踢回起點
     }
   }
 
@@ -1043,20 +1066,36 @@ export class BattleScene extends Phaser.Scene {
       if (time < (m.stunUntil || 0)) continue;
 
       const slowFactor = time < (m.slowUntil || 0) ? 0.5 : 1.0;
+      const willChase = !!(m.isAggressive || m.isProvoked);
       const dx = this.hero.x - m.sprite.x;
       const dy = this.hero.y - m.sprite.y;
       const dist = Math.hypot(dx, dy) || 1;
       const stopRange = m.isBoss ? 94 : (m.isRanged ? 260 : 70);
 
-      if (dist > stopRange) {
-        const mx = (dx / dist + Math.cos(m.jitterAngle) * 0.16) * m.speed * slowFactor * dt;
-        const my = (dy / dist + Math.sin(m.jitterAngle) * 0.16) * m.speed * slowFactor * dt;
-        m.sprite.x = Phaser.Math.Clamp(m.sprite.x + mx, 120, MAP_W - 120);
-        m.sprite.y = Phaser.Math.Clamp(m.sprite.y + my, 180, MAP_H - 180);
-        this.resolveObstacleCollision(m.sprite, m.isBoss ? 34 : 24);
+      let mobFlip = dx < 0;
+      if (willChase) {
+        if (dist > stopRange) {
+          const mx = (dx / dist + Math.cos(m.jitterAngle) * 0.16) * m.speed * slowFactor * dt;
+          const my = (dy / dist + Math.sin(m.jitterAngle) * 0.16) * m.speed * slowFactor * dt;
+          m.sprite.x = Phaser.Math.Clamp(m.sprite.x + mx, 120, MAP_W - 120);
+          m.sprite.y = Phaser.Math.Clamp(m.sprite.y + my, 180, MAP_H - 180);
+          this.resolveObstacleCollision(m.sprite, m.isBoss ? 34 : 24);
+        }
+      } else {
+        m.roamTimer = (m.roamTimer || 0) - delta;
+        if (m.roamTimer <= 0) {
+          m.roamTimer = Phaser.Math.Between(1600, 3200);
+          const toHome = Math.atan2((m.homeY || m.sprite.y) - m.sprite.y, (m.homeX || m.sprite.x) - m.sprite.x);
+          const homeDist = Math.hypot((m.homeX || m.sprite.x) - m.sprite.x, (m.homeY || m.sprite.y) - m.sprite.y);
+          m.roamAngle = homeDist > 150 ? toHome : Math.random() * Math.PI * 2;
+        }
+        const rVx = Math.cos(m.roamAngle) * m.speed * 0.38 * slowFactor;
+        const rVy = Math.sin(m.roamAngle) * m.speed * 0.38 * slowFactor;
+        m.sprite.x = Phaser.Math.Clamp(m.sprite.x + rVx * dt, 140, MAP_W - 140);
+        m.sprite.y = Phaser.Math.Clamp(m.sprite.y + rVy * dt, 200, MAP_H - 200);
+        mobFlip = rVx < 0;
       }
 
-      const mobFlip = dx < 0;
       const isMobAtk = time < (m.atkAnimUntil || 0);
       const wantAnim = `mob_${m.id}_${isMobAtk ? 'atk' : 'walk'}`;
       if (m.sprite.anims.currentAnim?.key !== wantAnim) {
@@ -1099,7 +1138,7 @@ export class BattleScene extends Phaser.Scene {
         this.tweens.add({ targets: puff, y: puff.y - 12, scale: 0.08, alpha: 0, duration: 360, onComplete: () => puff.destroy() });
       }
 
-      if (m.isBoss) {
+      if (m.isBoss && willChase) {
         m.bossSkillTimer = (m.bossSkillTimer || 0) + delta;
         if (m.bossSkillTimer >= 5200) {
           m.bossSkillTimer = 0;
@@ -1112,7 +1151,7 @@ export class BattleScene extends Phaser.Scene {
       m.hpFill.setPosition(m.sprite.x - m.barW / 2, barY);
       m.nameText.setPosition(m.sprite.x, barY - 16);
 
-      if (dist <= stopRange + 28) {
+      if (willChase && dist <= stopRange + 28) {
         m.attackTimer += delta;
         if (m.attackTimer >= m.atkIntervalMs) {
           m.attackTimer = 0;
@@ -2168,10 +2207,17 @@ export class BattleScene extends Phaser.Scene {
       const s = this.summons[i];
       s.lifeMs -= dt * 1000;
       if (s.lifeMs <= 0 || !s.sprite || !s.sprite.active) {
-        if (s.sprite) s.sprite.destroy();
+        s.sprite?.destroy();
+        s.barBg?.destroy();
+        s.barFill?.destroy();
+        s.label?.destroy();
         this.summons.splice(i, 1);
         continue;
       }
+
+      const baseScale = s.kind === 'golem' ? 0.52 : 0.38;
+      const bob = Math.sin(now * 0.014 + i) * 0.03;
+      s.sprite.setScale(baseScale * (1 - bob * 0.5), baseScale * (1 + bob));
 
       const target = this.findNearestMonster(s.sprite.x, s.sprite.y);
       if (target) {
@@ -2181,14 +2227,14 @@ export class BattleScene extends Phaser.Scene {
         s.sprite.setFlipX(dx < 0);
         const atkR = s.kind === 'golem' ? 115 : 85;
         if (dist > atkR) {
-          const spd = (s.kind === 'golem' ? 170 : 210) * (frenzy ? 1.35 : 1);
+          const spd = (s.kind === 'golem' ? 185 : 225) * (frenzy ? 1.35 : 1);
           s.sprite.x += (dx / dist) * spd * dt;
           s.sprite.y += (dy / dist) * spd * dt;
           s.sprite.setDepth(s.sprite.y);
         }
         s.atkTimer -= dt * 1000 * (frenzy ? 1.6 : 1);
-        if (dist <= atkR + 25 && s.atkTimer <= 0) {
-          s.atkTimer = s.kind === 'golem' ? 1350 : 920;
+        if (dist <= atkR + 28 && s.atkTimer <= 0) {
+          s.atkTimer = s.kind === 'golem' ? 1300 : 880;
           const sumMult = (1 + (stats.summonDmgPct || 0) / 100) * (frenzy ? 1.35 : 1);
           const isCrit = Math.random() * 100 < stats.critRate;
           if (s.kind === 'golem') {
@@ -2218,11 +2264,20 @@ export class BattleScene extends Phaser.Scene {
         const dy = this.hero.y + s.offY - s.sprite.y;
         const dist = Math.hypot(dx, dy);
         if (dist > 30) {
-          s.sprite.x += (dx / dist) * 180 * dt;
-          s.sprite.y += (dy / dist) * 180 * dt;
+          s.sprite.x += (dx / dist) * 195 * dt;
+          s.sprite.y += (dy / dist) * 195 * dt;
           s.sprite.setDepth(s.sprite.y);
         }
       }
+
+      const barY = s.sprite.y - (s.kind === 'golem' ? 68 : 48);
+      const ratio = Math.max(0, Math.min(1, s.lifeMs / s.maxLifeMs));
+      if (s.barBg) s.barBg.setPosition(s.sprite.x, barY);
+      if (s.barFill) {
+        s.barFill.setPosition(s.sprite.x - 24, barY);
+        s.barFill.width = 48 * ratio;
+      }
+      if (s.label) s.label.setPosition(s.sprite.x, barY - 12);
     }
   }
 
@@ -2253,8 +2308,13 @@ export class BattleScene extends Phaser.Scene {
         }
         const ox = Phaser.Math.Between(-90, 90);
         const oy = Phaser.Math.Between(-60, 70);
-        const spr = this.add.image(this.hero.x + ox, this.hero.y + oy, 'necro_skeleton').setScale(0.36).setDepth(this.hero.y + oy);
-        this.summons.push({ kind: 'skeleton', sprite: spr, lifeMs: 16000, atkTimer: 250, lvl: skillLvl, offX: ox, offY: oy });
+        const sx = this.hero.x + ox;
+        const sy = this.hero.y + oy;
+        const spr = this.add.image(sx, sy, 'necro_skeleton').setScale(0.38).setDepth(sy);
+        const barBg = this.add.rectangle(sx, sy - 48, 48, 5, 0x090b10).setStrokeStyle(1, 0x2dd4bf).setDepth(3500);
+        const barFill = this.add.rectangle(sx - 24, sy - 48, 48, 4, 0x2dd4bf).setOrigin(0, 0.5).setDepth(3501);
+        const label = this.add.text(sx, sy - 60, '💀 骷髏戰士', { fontSize: '10px', color: '#5eead4', fontStyle: 'bold', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(3502);
+        this.summons.push({ kind: 'skeleton', sprite: spr, barBg, barFill, label, lifeMs: 22000, maxLifeMs: 22000, atkTimer: 250, lvl: skillLvl, offX: ox, offY: oy });
       }
       return;
     }
@@ -2268,7 +2328,10 @@ export class BattleScene extends Phaser.Scene {
         existingG.sprite.setPosition(aim.x, aim.y);
       } else {
         const spr = this.add.image(aim.x, aim.y, 'necro_golem').setScale(0.52).setDepth(aim.y);
-        this.summons.push({ kind: 'golem', sprite: spr, lifeMs: 14000, atkTimer: 300, lvl: skillLvl, offX: -75, offY: 30 });
+        const barBg = this.add.rectangle(aim.x, aim.y - 68, 56, 6, 0x090b10).setStrokeStyle(1, 0xfb7185).setDepth(3500);
+        const barFill = this.add.rectangle(aim.x - 28, aim.y - 68, 56, 5, 0xf43f5e).setOrigin(0, 0.5).setDepth(3501);
+        const label = this.add.text(aim.x, aim.y - 80, '🩸 鮮血魔像', { fontSize: '10.5px', color: '#fda4af', fontStyle: 'bold', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(3502);
+        this.summons.push({ kind: 'golem', sprite: spr, barBg, barFill, label, lifeMs: 20000, maxLifeMs: 20000, atkTimer: 300, lvl: skillLvl, offX: -75, offY: 30 });
       }
       return;
     }
@@ -2789,6 +2852,12 @@ export class BattleScene extends Phaser.Scene {
 
   damageMonster(m, dmg, isCrit, isTap, customColor = null, prefix = '') {
     if (!m || m.hp <= 0) return;
+    if (!m.isAggressive && !m.isProvoked) {
+      m.isProvoked = true;
+      if (m.nameText) {
+        m.nameText.setText(`🔴 ${m.name}`).setColor('#fca5a5');
+      }
+    }
     const st = this.getStats();
     const nowT = this.time.now;
     let bonusMult = 1;
@@ -2878,25 +2947,20 @@ export class BattleScene extends Phaser.Scene {
       }
     }
     this.waveKills += 1;
-    const remaining = this.monsters.filter((t) => t.hp > 0).length;
-    const waveCleared = remaining === 0;
-    const dropResult = this.callbacks.onMonsterKilled(m, waveCleared);
+    this.mapKills = (this.mapKills || 0) + 1;
+    const dropResult = this.callbacks.onMonsterKilled(m, false);
     if (dropResult && dropResult.item) {
       this.spawnLootBeam(mx, my + 24, dropResult.item);
     }
-
-    this.updateWaveBanner();
-
-    if (waveCleared) {
+    if (this.mapKills % 15 === 0) {
       this.potionCharges = Math.min(this.potionMaxCharges, this.potionCharges + 1);
-      this.isTransitioning = true;
-      this.time.delayedCall(550, () => {
-        if (this.callbacks?.onStageCleared) {
-          this.callbacks.onStageCleared(m.stage);
-        } else {
-          this.spawnWaveSquad();
-        }
-      });
+      const curStage = this.getState().stage || 1;
+      const bossMob = spawnSingleMonster(curStage, true);
+      const bang = Math.random() * Math.PI * 2;
+      const bx = Phaser.Math.Clamp(this.hero.x + Math.cos(bang) * 620, 260, MAP_W - 260);
+      const by = Phaser.Math.Clamp(this.hero.y + Math.sin(bang) * 460, 260, MAP_H - 220);
+      this.spawnMonsterInstance(bossMob, bang, bx, by);
+      this.spawnFloatingText(this.hero.x, this.hero.y - 115, '💀 地圖首領降臨！', '#fb923c', 17);
     }
   }
 
