@@ -49,6 +49,7 @@ export class DashboardUI {
     this.activeDrawer = null;
     this.selectedItemUid = null;
     this.activeSkillTreeTab = null;
+    this.activeLogFilter = 'all';
     this.bindDockAndDrawer();
     this.bindGlobalButtons();
     this.bindHotbarTooltips();
@@ -125,6 +126,28 @@ export class DashboardUI {
     });
     document.getElementById('btn-stage-next')?.addEventListener('click', () => {
       this.handlers.onChangeStage(1);
+    });
+    document.getElementById('btn-quick-salvage')?.addEventListener('click', () => {
+      this.handlers.onSalvageAllJunk();
+    });
+    document.getElementById('btn-toggle-tracker')?.addEventListener('click', (e) => {
+      const body = document.getElementById('tracker-body');
+      if (!body) return;
+      const col = body.classList.toggle('collapsed');
+      e.currentTarget.textContent = col ? '▸' : '▾';
+    });
+    document.getElementById('btn-toggle-flog')?.addEventListener('click', (e) => {
+      const entries = document.getElementById('floating-log-entries');
+      if (!entries) return;
+      const col = entries.classList.toggle('collapsed');
+      e.currentTarget.textContent = col ? '▸' : '▾';
+    });
+    document.querySelectorAll('.flog-tab').forEach((tab) => {
+      tab.addEventListener('click', () => {
+        this.activeLogFilter = tab.dataset.logfilter || 'all';
+        document.querySelectorAll('.flog-tab').forEach((t) => t.classList.toggle('active', t === tab));
+        this.applyFloatingLogFilter();
+      });
     });
   }
 
@@ -253,6 +276,15 @@ export class DashboardUI {
 
   updateTopBar(state, stats) {
     const cls = CLASSES[state.classId] || CLASSES.warrior;
+    const avatarEl = document.getElementById('hud-hero-avatar');
+    if (avatarEl && cls.spritePath) avatarEl.src = cls.spritePath;
+    const miniMpBar = document.querySelector('.mini-bar.mp');
+    if (miniMpBar) {
+      miniMpBar.classList.toggle('warrior', state.classId === 'warrior');
+      miniMpBar.classList.toggle('ranger', state.classId === 'ranger');
+    }
+    const zoneEl = document.getElementById('minimap-zone-name');
+    if (zoneEl) zoneEl.textContent = getZoneName(state.stage);
     document.getElementById('hud-class-badge').textContent = `${cls.name} Lv.${state.level}`;
     document.getElementById('hud-class-badge').style.borderColor = cls.color;
     document.getElementById('hud-dps').textContent = `DPS ${formatNum(stats.dps)}`;
@@ -309,6 +341,14 @@ export class DashboardUI {
     if (hpOrb) hpOrb.classList.toggle('low-hp', hpPct > 0 && hpPct < 35);
     if (mpFill) mpFill.style.height = `${mpPct.toFixed(1)}%`;
     if (mpTxt) mpTxt.textContent = `${formatNum(mp)} / ${formatNum(maxMp)}`;
+    const mHpFill = document.getElementById('mini-hp-fill');
+    const mHpTxt = document.getElementById('mini-hp-text');
+    const mMpFill = document.getElementById('mini-mp-fill');
+    const mMpTxt = document.getElementById('mini-mp-text');
+    if (mHpFill) mHpFill.style.width = `${hpPct.toFixed(1)}%`;
+    if (mHpTxt) mHpTxt.textContent = `${formatNum(hp)} / ${formatNum(maxHp)}`;
+    if (mMpFill) mMpFill.style.width = `${mpPct.toFixed(1)}%`;
+    if (mMpTxt) mMpTxt.textContent = `${formatNum(mp)} / ${formatNum(maxMp)}`;
     if (potTxt) potTxt.textContent = `${potions}`;
     if (potBtn) potBtn.disabled = potions <= 0;
   }
@@ -887,16 +927,140 @@ export class DashboardUI {
     });
   }
 
-  addLog(text, type = 'normal') {
-    const container = document.getElementById('log-content');
-    if (!container) return;
+  updateTargetFrame(target) {
+    const frame = document.getElementById('target-frame');
+    if (!frame) return;
+    if (!target || target.hp <= 0) {
+      frame.classList.add('hidden');
+      return;
+    }
+    frame.classList.remove('hidden');
+    frame.classList.toggle('boss', !!target.isBoss);
+    const badge = document.getElementById('target-badge');
+    const nameEl = document.getElementById('target-name');
+    const lvEl = document.getElementById('target-lv');
+    const fillEl = document.getElementById('target-hp-fill');
+    const txtEl = document.getElementById('target-hp-text');
+    if (badge) badge.textContent = target.isBoss ? '💀' : '⚔️';
+    if (nameEl) nameEl.textContent = target.name || '深淵怪物';
+    if (lvEl) lvEl.textContent = `關卡 ${getStageLabel(target.stage || 1)}`;
+    const pct = Math.max(0, Math.min(100, (target.hp / Math.max(1, target.maxHp)) * 100));
+    if (fillEl) fillEl.style.width = `${pct.toFixed(1)}%`;
+    if (txtEl) txtEl.textContent = `${formatNum(target.hp)} / ${formatNum(target.maxHp)}`;
+  }
+
+  updateStageTracker({ remaining, total, bossEngaged, bossTimeLeft }) {
+    const cntEl = document.getElementById('tracker-mob-count');
+    const fillEl = document.getElementById('tracker-prog-fill');
+    const bossEl = document.getElementById('tracker-boss-line');
+    if (cntEl) cntEl.textContent = `剩餘 ${remaining} / ${total}`;
+    const pct = total > 0 ? Math.max(0, Math.min(100, (remaining / total) * 100)) : 0;
+    if (fillEl) fillEl.style.width = `${pct.toFixed(1)}%`;
+    if (bossEl) {
+      if (bossEngaged) {
+        bossEl.style.color = '#fb923c';
+        bossEl.textContent = `🔥 首領激戰中！剩餘時間 ${Math.max(0, bossTimeLeft).toFixed(1)}s`;
+      } else {
+        bossEl.style.color = '#94a3b8';
+        bossEl.textContent = remaining > 0 ? '自動巡邏清怪中・全清可進下一關' : '✨ 關卡已清空，準備傳送...';
+      }
+    }
+  }
+
+  renderMinimap({ heroX, heroY, mapW, mapH, obstacles, monsters }) {
+    const coordsEl = document.getElementById('minimap-coords');
+    if (coordsEl) coordsEl.textContent = `${Math.round(heroX)}, ${Math.round(heroY)}`;
+    const canvas = document.getElementById('hud-minimap-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const w = canvas.width;
+    const h = canvas.height;
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = '#090c14';
+    ctx.fillRect(0, 0, w, h);
+
+    // 網格線
+    ctx.strokeStyle = 'rgba(200, 155, 60, 0.12)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(w / 2, 0); ctx.lineTo(w / 2, h);
+    ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2);
+    ctx.stroke();
+
+    // 障礙物
+    ctx.fillStyle = 'rgba(100, 116, 139, 0.72)';
+    for (const ob of obstacles || []) {
+      const ox = (ob.x / mapW) * w;
+      const oy = (ob.y / mapH) * h;
+      ctx.fillRect(ox - 1.5, oy - 1.5, 3, 3);
+    }
+
+    // 怪物與首領
+    for (const m of monsters || []) {
+      if (m.hp <= 0) continue;
+      const mx = (m.x / mapW) * w;
+      const my = (m.y / mapH) * h;
+      ctx.fillStyle = m.isBoss ? '#f97316' : '#ef4444';
+      ctx.beginPath();
+      ctx.arc(mx, my, m.isBoss ? 4.2 : 2.3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // 玩家中心光點
+    const hx = (heroX / mapW) * w;
+    const hy = (heroY / mapH) * h;
+    ctx.fillStyle = '#4ade80';
+    ctx.beginPath();
+    ctx.arc(hx, hy, 3.6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#ffffff';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  }
+
+  applyFloatingLogFilter() {
+    const fl = document.getElementById('floating-log-entries');
+    if (!fl) return;
+    const f = this.activeLogFilter || 'all';
+    Array.from(fl.children).forEach((el) => {
+      el.classList.toggle('hidden', f !== 'all' && el.dataset.cat !== f);
+    });
+    fl.scrollTop = fl.scrollHeight;
+  }
+
+  addLog(text, type = 'normal', category = null) {
     const now = new Date();
     const ts = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`;
-    const p = document.createElement('div');
-    p.className = `log-entry ${type}`;
-    p.textContent = `[${ts}] ${text}`;
-    container.appendChild(p);
-    while (container.children.length > 100) container.removeChild(container.firstChild);
-    container.scrollTop = container.scrollHeight;
+    const line = `[${ts}] ${text}`;
+    const cat = category || (
+      text.includes('掉落') || text.includes('分解') || text.includes('裝備') || text.includes('強化')
+        ? 'loot'
+        : (type === 'system' || text.includes('關') || text.includes('技能') || text.includes('職業') ? 'system' : 'combat')
+    );
+
+    const container = document.getElementById('log-content');
+    if (container) {
+      const p = document.createElement('div');
+      p.className = `log-entry ${type}`;
+      p.textContent = line;
+      container.appendChild(p);
+      while (container.children.length > 100) container.removeChild(container.firstChild);
+      container.scrollTop = container.scrollHeight;
+    }
+
+    const fl = document.getElementById('floating-log-entries');
+    if (fl) {
+      const fp = document.createElement('div');
+      fp.className = `log-entry ${type}`;
+      fp.dataset.cat = cat;
+      fp.textContent = line;
+      if (this.activeLogFilter && this.activeLogFilter !== 'all' && cat !== this.activeLogFilter) {
+        fp.classList.add('hidden');
+      }
+      fl.appendChild(fp);
+      while (fl.children.length > 80) fl.removeChild(fl.firstChild);
+      fl.scrollTop = fl.scrollHeight;
+    }
   }
 }

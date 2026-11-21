@@ -147,7 +147,6 @@ export class BattleScene extends Phaser.Scene {
 
     this.cameras.main.setBounds(0, 0, MAP_W, MAP_H);
     this.createHero();
-    this.createMinimap();
 
     this.keys = this.input.keyboard.addKeys({
       w: Phaser.Input.Keyboard.KeyCodes.W,
@@ -160,10 +159,7 @@ export class BattleScene extends Phaser.Scene {
       right: Phaser.Input.Keyboard.KeyCodes.RIGHT,
     });
 
-    this.waveInfoText = this.add.text(this.scale.width / 2, 24, '', {
-      fontSize: '15px', color: '#fde68a', fontFamily: 'sans-serif', fontStyle: 'bold',
-      stroke: '#000000', strokeThickness: 4,
-    }).setOrigin(0.5).setScrollFactor(0).setDepth(5000);
+    this.hudTickTimer = 0;
 
     this.time.addEvent({
       delay: 240,
@@ -282,6 +278,11 @@ export class BattleScene extends Phaser.Scene {
       fontSize: '12px', color: '#f8fafc', fontFamily: 'sans-serif', fontStyle: 'bold',
       stroke: '#000000', strokeThickness: 3,
     }).setOrigin(0.5).setDepth(4002);
+    this.heroAfkText = this.add.text(cx, cy - 117, this.autoMoveEnabled ? '★ AFK' : '手動', {
+      fontSize: '11px', color: this.autoMoveEnabled ? '#fde047' : '#cbd5e1',
+      fontFamily: 'sans-serif', fontStyle: 'bold',
+      stroke: '#000000', strokeThickness: 3,
+    }).setOrigin(0.5).setDepth(4003);
 
     this.cameras.main.startFollow(this.hero, true, 0.14, 0.14);
   }
@@ -325,6 +326,10 @@ export class BattleScene extends Phaser.Scene {
   toggleAutoMove() {
     this.autoMoveEnabled = !this.autoMoveEnabled;
     if (this.autoMoveEnabled) this.manualOverrideTimer = 0;
+    if (this.heroAfkText) {
+      this.heroAfkText.setText(this.autoMoveEnabled ? '★ AFK' : '手動');
+      this.heroAfkText.setColor(this.autoMoveEnabled ? '#fde047' : '#cbd5e1');
+    }
     return this.autoMoveEnabled;
   }
 
@@ -698,7 +703,38 @@ export class BattleScene extends Phaser.Scene {
       });
     }
 
-    this.updateMinimap();
+    this.hudTickTimer = (this.hudTickTimer || 0) + delta;
+    if (this.hudTickTimer >= 100) {
+      this.hudTickTimer = 0;
+      if (this.callbacks?.onHudTick && this.hero) {
+        const remMobs = this.monsters.filter((m) => m.hp > 0);
+        const bossTarget = remMobs.find((m) => m.isBoss && this.bossEngaged);
+        const lockTarget = bossTarget || this.findNearestMonster(this.hero.x, this.hero.y, 900);
+        this.callbacks.onHudTick({
+          target: lockTarget ? {
+            name: lockTarget.name,
+            hp: lockTarget.hp,
+            maxHp: lockTarget.maxHp,
+            isBoss: !!lockTarget.isBoss,
+            stage: lockTarget.stage || this.getState()?.stage || 1,
+          } : null,
+          tracker: {
+            remaining: remMobs.length,
+            total: this.stageTotalMonsters || remMobs.length,
+            bossEngaged: !!this.bossEngaged,
+            bossTimeLeft: this.bossTimeLeft || 0,
+          },
+          minimap: {
+            heroX: this.hero.x,
+            heroY: this.hero.y,
+            mapW: MAP_W,
+            mapH: MAP_H,
+            obstacles: this.obstacles,
+            monsters: remMobs.map((m) => ({ x: m.sprite.x, y: m.sprite.y, hp: m.hp, isBoss: !!m.isBoss })),
+          },
+        });
+      }
+    }
     if (this.isTransitioning) return;
 
     const stats = this.getStats();
@@ -880,6 +916,7 @@ export class BattleScene extends Phaser.Scene {
     this.heroHpBg.setPosition(this.hero.x, this.hero.y - 86);
     this.heroHpFill.setPosition(this.hero.x - 54, this.hero.y - 86);
     this.heroHpText.setPosition(this.hero.x, this.hero.y - 101);
+    if (this.heroAfkText) this.heroAfkText.setPosition(this.hero.x, this.hero.y - 117);
   }
 
   updateHeroVisualPose(vx, vy, time = 0) {
@@ -2194,28 +2231,38 @@ export class BattleScene extends Phaser.Scene {
 
   spawnLootBeam(x, y, item) {
     const r = RARITIES[item.rarity] || RARITIES.common;
-    const beam = this.add.rectangle(x, y - 95, 18, 190, r.beam, 0.65).setBlendMode(Phaser.BlendModes.ADD).setDepth(4400);
-    const orb = this.add.circle(x, y - 6, 9, r.beam, 1).setStrokeStyle(2, 0xffffff).setDepth(4401);
-    const tag = this.add.text(x, y - 38, `[${r.label}] ${item.name}`, {
-      fontSize: '13px', color: r.color, fontFamily: 'sans-serif', fontStyle: 'bold',
-      stroke: '#000000', strokeThickness: 4,
-    }).setOrigin(0.5).setDepth(4402);
+    const isHigh = item.rarity === 'legendary' || item.rarity === 'rare';
+    const beamH = isHigh ? 240 : 170;
+    const beamW = isHigh ? 22 : 14;
+    const beam = this.add.rectangle(x, y - beamH / 2, beamW, beamH, r.beam, isHigh ? 0.78 : 0.55)
+      .setBlendMode(Phaser.BlendModes.ADD).setDepth(4400);
+    const orb = this.add.circle(x, y - 4, isHigh ? 10 : 7, r.beam, 1)
+      .setStrokeStyle(2, 0xffffff).setDepth(4401);
+
+    const labelStr = `[${r.label}] ${item.name}`;
+    const tag = this.add.text(x, y - 44, labelStr, {
+      fontSize: '12px', color: r.color, fontFamily: 'sans-serif', fontStyle: 'bold',
+      stroke: '#000000', strokeThickness: 3,
+    }).setOrigin(0.5).setDepth(4403);
+    const padW = Math.max(88, tag.width + 18);
+    const plate = this.add.rectangle(x, y - 44, padW, 22, 0x090b12, 0.88)
+      .setStrokeStyle(1.5, r.beam).setDepth(4402);
 
     this.tweens.add({
       targets: [beam, orb],
       alpha: 0,
-      scaleX: 0.4,
-      duration: 1200,
-      delay: 350,
+      scaleX: 0.35,
+      duration: 1600,
+      delay: 650,
       onComplete: () => { beam.destroy(); orb.destroy(); },
     });
     this.tweens.add({
-      targets: tag,
-      y: y - 80,
+      targets: [plate, tag],
+      y: '-=36',
       alpha: 0,
-      duration: 1400,
-      delay: 300,
-      onComplete: () => tag.destroy(),
+      duration: 1700,
+      delay: 700,
+      onComplete: () => { plate.destroy(); tag.destroy(); },
     });
   }
 

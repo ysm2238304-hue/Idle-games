@@ -299,7 +299,7 @@ function initPhaserGame() {
   }
   const stageEl = document.getElementById('phaser-stage');
   const w = Math.max(640, stageEl?.clientWidth || window.innerWidth);
-  const h = Math.max(400, stageEl?.clientHeight || (window.innerHeight - 122));
+  const h = Math.max(400, stageEl?.clientHeight || window.innerHeight);
 
   const config = {
     type: Phaser.AUTO,
@@ -320,6 +320,11 @@ function initPhaserGame() {
     callbacks: {
       onSkillTicks: (ratios, cdDetails) => ui.updateSkillProgress(ratios, cdDetails),
       onVitalsTick: (vitals) => ui.updateVitals(vitals),
+      onHudTick: (data) => {
+        ui.updateTargetFrame(data.target);
+        ui.updateStageTracker(data.tracker);
+        ui.renderMinimap(data.minimap);
+      },
       onMonsterKilled: (mob, waveCleared) => {
         const goldGain = Math.round(mob.gold * (1 + computedStats.goldFind / 100));
         gameState.gold += goldGain;
@@ -507,8 +512,14 @@ function toggleAutoMoveMode() {
   const isAuto = battleScene.toggleAutoMove();
   const label = document.getElementById('auto-mode-label');
   const btn = document.getElementById('btn-toggle-auto');
+  const pill = document.getElementById('hud-afk-pill');
   if (label) label.textContent = isAuto ? '自動' : '手動';
   if (btn) btn.classList.toggle('active', isAuto);
+  if (pill) {
+    pill.textContent = isAuto ? '★ AFK 自動掛機中' : '🎮 手動走位模式';
+    pill.classList.toggle('active', isAuto);
+    pill.classList.toggle('manual', !isAuto);
+  }
   ui.addLog(isAuto ? '切換為【自動巡邏模式】(按 WASD 可隨時介入走位)' : '切換為【純手動走位模式】(WASD / 方向鍵移動)', 'system');
 }
 
