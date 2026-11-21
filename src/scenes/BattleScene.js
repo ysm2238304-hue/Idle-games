@@ -106,6 +106,15 @@ export class BattleScene extends Phaser.Scene {
   }
 
   preload() {
+    ['walk', 'atk'].forEach((st) => {
+      for (let i = 0; i < 4; i++) {
+        this.load.image(`wraith_${st}_${i}`, `./assets/heroes/wraith_frames/${st}_${i}.png`);
+      }
+    });
+    ['skel_summon', 'skel_slash', 'frenzy', 'wraith_boom', 'golem_summon', 'golem_slam', 'blood_leech', 'bone_shield'].forEach((k) => {
+      this.load.image(`sfx_${k}`, `./assets/fx/sfx_${k}.png`);
+    });
+
     ['down', 'up', 'right'].forEach((d) => {
       ['walk', 'atk'].forEach((st) => {
         for (let i = 0; i < 4; i++) {
@@ -115,6 +124,8 @@ export class BattleScene extends Phaser.Scene {
           this.load.image(`pf_${d}_${st}_${i}`, `./assets/heroes/paladin_frames/${d}_${st}_${i}.png`);
           this.load.image(`nf_${d}_${st}_${i}`, `./assets/heroes/necro_frames/${d}_${st}_${i}.png`);
           this.load.image(`af_${d}_${st}_${i}`, `./assets/heroes/assassin_frames/${d}_${st}_${i}.png`);
+          this.load.image(`skel_${d}_${st}_${i}`, `./assets/heroes/skeleton_frames/${d}_${st}_${i}.png`);
+          this.load.image(`gol_${d}_${st}_${i}`, `./assets/heroes/golem_frames/${d}_${st}_${i}.png`);
         }
       });
     });
