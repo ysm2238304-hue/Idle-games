@@ -2,6 +2,9 @@ import { CLASSES } from '../data/classes.js';
 import { WARRIOR_SKILLS } from '../data/warriorSkills.js';
 import { RANGER_SKILLS } from '../data/rangerSkills.js';
 import { MAGE_SKILLS } from '../data/mageSkills.js';
+import { PALADIN_SKILLS } from '../data/paladinSkills.js';
+import { NECRO_SKILLS } from '../data/necroSkills.js';
+import { ASSASSIN_SKILLS } from '../data/assassinSkills.js';
 import { EQUIP_SLOTS, CLASS_REQ_LABELS, RARITIES, BASE_ITEMS } from '../data/items.js';
 import { STAGE_ZONES, getZoneName, getStageLabel, getSubStage, getChapterIdx } from '../data/monsters.js';
 import { CLASS_BUILD_INFO, SKILL_TREE_NODES, getTreeSpentPoints, isNodeBlockedByMutex, isNodeUnlocked } from '../data/skillTree.js';
@@ -33,6 +36,18 @@ const STAT_LABELS = {
   mpRegenFlat: '每秒回魔',
   cdrPct: '冷卻縮減',
   chillDmgPct: '對冰寒增傷',
+  holyDmgPct: '聖光增傷',
+  thornsPct: '格檔反傷',
+  stunDurPct: '暈眩延長',
+  blockHealPct: '聖盾回血',
+  summonDmgPct: '召喚物增傷',
+  boneDmgPct: '白骨增傷',
+  corpseRadiusPct: '屍爆範圍',
+  killEssence: '擊殺回魂',
+  poisonDmgPct: '劇毒增傷',
+  comboCritDmgPct: '連擊暴傷',
+  dodgeShadow: '閃避回影能',
+  moveAtkSpdPct: '移動攻速',
 };
 
 function resolveItemIcon(item) {
@@ -282,6 +297,9 @@ export class DashboardUI {
     if (miniMpBar) {
       miniMpBar.classList.toggle('warrior', state.classId === 'warrior');
       miniMpBar.classList.toggle('ranger', state.classId === 'ranger');
+      miniMpBar.classList.toggle('paladin', state.classId === 'paladin');
+      miniMpBar.classList.toggle('necro', state.classId === 'necro');
+      miniMpBar.classList.toggle('assassin', state.classId === 'assassin');
     }
     const zoneEl = document.getElementById('minimap-zone-name');
     if (zoneEl) zoneEl.textContent = getZoneName(state.stage);
@@ -317,10 +335,13 @@ export class DashboardUI {
     if (mpOrb) {
       mpOrb.classList.toggle('orb-warrior', state.classId === 'warrior');
       mpOrb.classList.toggle('orb-ranger', state.classId === 'ranger');
-      mpOrb.title = state.classId === 'warrior' ? '怒氣能量 (ENERGY)' : (state.classId === 'ranger' ? '疾風精力 (STAMINA)' : '魔力值 (MANA)');
+      mpOrb.classList.toggle('orb-paladin', state.classId === 'paladin');
+      mpOrb.classList.toggle('orb-necro', state.classId === 'necro');
+      mpOrb.classList.toggle('orb-assassin', state.classId === 'assassin');
+      mpOrb.title = state.classId === 'warrior' ? '怒氣能量 (ENERGY)' : (state.classId === 'ranger' ? '疾風精力 (STAMINA)' : (state.classId === 'paladin' ? '神聖聖能 (FAITH)' : (state.classId === 'necro' ? '冥界魂能 (ESSENCE)' : (state.classId === 'assassin' ? '暗影能量 (SHADOW)' : '魔力值 (MANA)'))));
     }
     if (mpLbl) {
-      mpLbl.textContent = state.classId === 'warrior' ? 'ENERGY' : (state.classId === 'ranger' ? 'STAMINA' : 'MANA');
+      mpLbl.textContent = state.classId === 'warrior' ? 'ENERGY' : (state.classId === 'ranger' ? 'STAMINA' : (state.classId === 'paladin' ? 'FAITH' : (state.classId === 'necro' ? 'ESSENCE' : (state.classId === 'assassin' ? 'SHADOW' : 'MANA'))));
     }
     this.renderDockSkillSlots(state);
   }
@@ -444,7 +465,7 @@ export class DashboardUI {
   renderDockSkillSlots(state) {
     const keyLabels = ['Space', 'E', 'R'];
     const cid = state.classId || 'warrior';
-    const book = cid === 'warrior' ? WARRIOR_SKILLS : (cid === 'ranger' ? RANGER_SKILLS : MAGE_SKILLS);
+    const book = cid === 'warrior' ? WARRIOR_SKILLS : (cid === 'ranger' ? RANGER_SKILLS : (cid === 'paladin' ? PALADIN_SKILLS : (cid === 'necro' ? NECRO_SKILLS : (cid === 'assassin' ? ASSASSIN_SKILLS : MAGE_SKILLS))));
     const eqList = state.equippedSkillsByClass?.[cid] || [];
 
     for (let i = 0; i < 3; i++) {
@@ -841,7 +862,7 @@ export class DashboardUI {
     const box = document.getElementById('skill-select-container');
     if (!box) return;
     const cid = state.classId || 'warrior';
-    const book = cid === 'warrior' ? WARRIOR_SKILLS : (cid === 'ranger' ? RANGER_SKILLS : MAGE_SKILLS);
+    const book = cid === 'warrior' ? WARRIOR_SKILLS : (cid === 'ranger' ? RANGER_SKILLS : (cid === 'paladin' ? PALADIN_SKILLS : (cid === 'necro' ? NECRO_SKILLS : (cid === 'assassin' ? ASSASSIN_SKILLS : MAGE_SKILLS))));
 
     if (!book) {
       box.innerHTML = `<div class="empty-tip">目前「狂戰士」與「暗影遊俠」已實裝 4 大技能配置頁，秘法師將於下一階段補齊。</div>`;

@@ -19,6 +19,24 @@ export const CLASS_BUILD_INFO = {
     buildA: { name: '☄️ 隕石星爆流', color: '#e879f9' },
     buildB: { name: '❄️ 永凍雷電控場流', color: '#38bdf8' },
   },
+  paladin: {
+    name: '聖殿騎士星圖',
+    color: '#fbbf24',
+    buildA: { name: '⚡ 審判重鎚流', color: '#fde047' },
+    buildB: { name: '🛡️ 荊棘聖盾流', color: '#fb923c' },
+  },
+  necro: {
+    name: '死靈法師星圖',
+    color: '#2dd4bf',
+    buildA: { name: '💀 亡靈君王召喚流', color: '#5eead4' },
+    buildB: { name: '🩸 白骨屍爆流', color: '#fb7185' },
+  },
+  assassin: {
+    name: '影殺刺客星圖',
+    color: '#c084fc',
+    buildA: { name: '⚡ 瞬影分身連斬流', color: '#d8b4fe' },
+    buildB: { name: '☠️ 劇毒暗器引爆流', color: '#4ade80' },
+  },
   shared: {
     name: '深淵通用星圖',
     color: '#f59e0b',
@@ -102,6 +120,84 @@ export const SKILL_TREE_NODES = [
 
   { id: 'm_key_astral',   tree: 'mage', tier: 6, reqPoints: 22, kind: 'keystone', shape: 'octagon', archetype: 'A', name: '關鍵被動：星界過載', maxLvl: 1, req: { id: 'm_void_beam', lvl: 1 }, mutexGroup: 'm_key', x: 30, y: 90, desc: '【關鍵二選一】法師技能傷害 +30%，且施放主動技能時 35% 機率不消耗魔力並返還 30% 冷卻！' },
   { id: 'm_key_zero',     tree: 'mage', tier: 6, reqPoints: 22, kind: 'keystone', shape: 'octagon', archetype: 'B', name: '關鍵被動：絕對零度', maxLvl: 1, req: { id: 'm_blackhole', lvl: 1 }, mutexGroup: 'm_key', x: 70, y: 90, desc: '【關鍵二選一】對【冰寒】敵人所有傷害額外 +45%，且閃電鏈／奧術彈擊殺冰寒敵人時全場濺射冰爆！' },
+
+
+  // ==================== 聖殿騎士星圖 (18 節點, 8 主動, 4 改造, 2 關鍵被動) ====================
+  { id: 'p_hammer',       tree: 'paladin', tier: 1, reqPoints: 0, kind: 'active',  shape: 'square',  archetype: 'core', name: '祝福之鎚', maxLvl: 5, req: null, x: 50, y: 8,  icon: './assets/skills/sk_p_hammer.png', desc: '核心主動技：召喚 3 把旋轉聖光戰鎚繞身盤旋絞殺敵群。' },
+  { id: 'p_p_faith',      tree: 'paladin', tier: 1, reqPoints: 0, kind: 'passive', shape: 'circle',  archetype: 'A',    name: '聖光狂熱', maxLvl: 5, req: { id: 'p_hammer', lvl: 1 }, x: 24, y: 10, desc: '每級攻擊力 +4%、聖光傷害 +6%。' },
+  { id: 'p_p_bulwark',    tree: 'paladin', tier: 1, reqPoints: 0, kind: 'passive', shape: 'circle',  archetype: 'B',    name: '聖殿壁壘', maxLvl: 5, req: { id: 'p_hammer', lvl: 1 }, x: 76, y: 10, desc: '每級最大生命 +5%、護甲 +10%。' },
+
+  { id: 'p_heaven',       tree: 'paladin', tier: 2, reqPoints: 3, kind: 'active',  shape: 'square',  archetype: 'A',    name: '天堂之拳', maxLvl: 5, req: { id: 'p_hammer', lvl: 1 }, x: 28, y: 24, icon: './assets/skills/sk_p_heaven.png', desc: '流派 A 主動技：降下金色聖雷天罰並分裂 6 道聖光箭。' },
+  { id: 'p_p_zeal',       tree: 'paladin', tier: 2, reqPoints: 3, kind: 'passive', shape: 'circle',  archetype: 'core', name: '熾天使之誓', maxLvl: 5, req: { id: 'p_hammer', lvl: 1 }, x: 50, y: 24, icon: './assets/skills/sk_p_seraph.png', desc: '每級暴擊率 +2%、最大聖能 +10、護甲轉攻擊 +5%。' },
+  { id: 'p_bash',         tree: 'paladin', tier: 2, reqPoints: 3, kind: 'active',  shape: 'square',  archetype: 'B',    name: '盾牌猛擊', maxLvl: 5, req: { id: 'p_hammer', lvl: 1 }, x: 72, y: 24, icon: './assets/skills/sk_p_bash.png', desc: '流派 B 主動技：持盾衝撞擊退敵人，附加護甲轉傷與暈眩。' },
+
+  { id: 'p_mod_spiral',   tree: 'paladin', tier: 3, reqPoints: 7, kind: 'mod',     shape: 'diamond', archetype: 'A',    name: '改造：雙倍聖鎚', maxLvl: 1, req: { id: 'p_heaven', lvl: 1 }, mutexGroup: 'p_m1', x: 16, y: 40, icon: './assets/skills/sk_p_edict.png', desc: '【二選一】祝福之鎚額外多召喚 2 把聖鎚且旋轉速度 +25%。' },
+  { id: 'p_mod_bolts',    tree: 'paladin', tier: 3, reqPoints: 7, kind: 'mod',     shape: 'diamond', archetype: 'A',    name: '改造：聖雷連爆', maxLvl: 1, req: { id: 'p_heaven', lvl: 1 }, mutexGroup: 'p_m1', x: 38, y: 40, desc: '【二選一】天堂之拳分裂聖光箭增至 8 道並暈眩目標 0.8 秒。' },
+  { id: 'p_mod_thorns',   tree: 'paladin', tier: 3, reqPoints: 7, kind: 'mod',     shape: 'diamond', archetype: 'B',    name: '改造：荊棘聖盾', maxLvl: 1, req: { id: 'p_bash', lvl: 1 }, mutexGroup: 'p_m2', x: 62, y: 40, desc: '【二選一】盾牌猛擊後獲得 3 秒 35% 減傷，反傷提高 50%。' },
+  { id: 'p_mod_taunt',    tree: 'paladin', tier: 3, reqPoints: 7, kind: 'mod',     shape: 'diamond', archetype: 'B',    name: '改造：堅毅回血', maxLvl: 1, req: { id: 'p_bash', lvl: 1 }, mutexGroup: 'p_m2', x: 84, y: 40, desc: '【二選一】盾牌猛擊每命中 1 敵人回復 3% 最大生命與 4 點聖能。' },
+
+  { id: 'p_storm',        tree: 'paladin', tier: 4, reqPoints: 12, kind: 'active', shape: 'square',  archetype: 'A',    name: '神聖風暴', maxLvl: 5, req: { id: 'p_heaven', lvl: 1 }, x: 26, y: 56, icon: './assets/skills/sk_p_storm.png', desc: '流派 A 主動技：釋放擴張型金色聖光環並回復聖能與生命。' },
+  { id: 'p_cdr',          tree: 'paladin', tier: 4, reqPoints: 12, kind: 'passive',shape: 'circle',  archetype: 'core', name: '天堂律令', maxLvl: 5, req: { id: 'p_p_zeal', lvl: 1 }, x: 50, y: 56, icon: './assets/skills/sk_p_edict.png', desc: '每級縮短聖騎士所有技能冷卻 6%、移速 +3%。' },
+  { id: 'p_aegis',        tree: 'paladin', tier: 4, reqPoints: 12, kind: 'active', shape: 'square',  archetype: 'B',    name: '聖光神盾', maxLvl: 5, req: { id: 'p_bash', lvl: 1 }, x: 74, y: 56, icon: './assets/skills/sk_p_aegis.png', desc: '流派 B 主動技：展開吸收傷害的聖盾，受擊觸發聖光反傷新星。' },
+
+  { id: 'p_judgment',     tree: 'paladin', tier: 5, reqPoints: 17, kind: 'active', shape: 'square',  archetype: 'A',    name: '聖光審判', maxLvl: 5, req: { id: 'p_storm', lvl: 1 }, x: 18, y: 73, icon: './assets/skills/sk_p_judgment.png', desc: '流派 A 大招：跳砸引發十字聖印爆破，高傷並暈眩 1.5 秒。' },
+  { id: 'p_aura',         tree: 'paladin', tier: 5, reqPoints: 17, kind: 'active', shape: 'square',  archetype: 'core', name: '熾光懲戒光環', maxLvl: 5, req: { id: 'p_cdr', lvl: 1 }, x: 50, y: 73, icon: './assets/skills/sk_p_aura.png', desc: '聖光領域：震退敵人並回 28 聖能，4.5 秒內全傷害 +25%。' },
+  { id: 'p_consecration', tree: 'paladin', tier: 5, reqPoints: 17, kind: 'active', shape: 'square',  archetype: 'B',    name: '奉獻聖地', maxLvl: 5, req: { id: 'p_aegis', lvl: 1 }, x: 82, y: 73, icon: './assets/skills/sk_p_consecration.png', desc: '流派 B 大招：腳下展開 4 秒金色聖光法陣持續灼燒敵人並回血。' },
+
+  { id: 'p_key_judgment', tree: 'paladin', tier: 6, reqPoints: 22, kind: 'keystone', shape: 'octagon', archetype: 'A', name: '關鍵被動：聖光裁決', maxLvl: 1, req: { id: 'p_judgment', lvl: 1 }, mutexGroup: 'p_key', x: 30, y: 90, icon: './assets/skills/sk_p_key_judgment.png', desc: '【關鍵二選一】聖騎士所有技能傷害 +35%，對暈眩目標必定暴擊！' },
+  { id: 'p_key_bulwark',  tree: 'paladin', tier: 6, reqPoints: 22, kind: 'keystone', shape: 'octagon', archetype: 'B', name: '關鍵被動：不朽聖壁', maxLvl: 1, req: { id: 'p_consecration', lvl: 1 }, mutexGroup: 'p_key', x: 70, y: 90, icon: './assets/skills/sk_p_key_bulwark.png', desc: '【關鍵二選一】護甲額外 +40% 並轉化為攻擊力，聖光反傷必定暴擊！' },
+
+
+  // ==================== 死靈法師星圖 (18 節點, 8 主動, 4 改造, 2 關鍵被動) ====================
+  { id: 'n_skeleton',     tree: 'necro', tier: 1, reqPoints: 0, kind: 'active',  shape: 'square',  archetype: 'core', name: '骷髏復生', maxLvl: 5, req: null, x: 50, y: 8,  icon: './assets/skills/sk_n_skeleton.png', desc: '核心主動技：召喚 2 名骷髏戰士在場上自動追擊砍殺敵人。' },
+  { id: 'n_p_summon',     tree: 'necro', tier: 1, reqPoints: 0, kind: 'passive', shape: 'circle',  archetype: 'A',    name: '亡靈統御', maxLvl: 5, req: { id: 'n_skeleton', lvl: 1 }, x: 24, y: 10, desc: '每級召喚物傷害 +8%、最大魂能 +10。' },
+  { id: 'n_p_bone',       tree: 'necro', tier: 1, reqPoints: 0, kind: 'passive', shape: 'circle',  archetype: 'B',    name: '骸骨護鎧', maxLvl: 5, req: { id: 'n_skeleton', lvl: 1 }, x: 76, y: 10, icon: './assets/skills/sk_n_bonearmor.png', desc: '每級最大生命 +5%、白骨技能傷害 +6%。' },
+
+  { id: 'n_golem',        tree: 'necro', tier: 2, reqPoints: 3, kind: 'active',  shape: 'square',  archetype: 'A',    name: '鮮血魔像', maxLvl: 5, req: { id: 'n_skeleton', lvl: 1 }, x: 28, y: 24, icon: './assets/skills/sk_n_golem.png', desc: '流派 A 主動技：召喚巨型鮮血魔像震擊敵群並為英雄回血。' },
+  { id: 'n_p_essence',    tree: 'necro', tier: 2, reqPoints: 3, kind: 'passive', shape: 'circle',  archetype: 'core', name: '魂能汲取', maxLvl: 5, req: { id: 'n_skeleton', lvl: 1 }, x: 50, y: 24, icon: './assets/skills/sk_n_phylactery.png', desc: '每級攻擊力 +4%、暴擊率 +2%、擊殺額外回復 3 魂能。' },
+  { id: 'n_spear',        tree: 'necro', tier: 2, reqPoints: 3, kind: 'active',  shape: 'square',  archetype: 'B',    name: '白骨長矛', maxLvl: 5, req: { id: 'n_skeleton', lvl: 1 }, x: 72, y: 24, icon: './assets/skills/sk_n_spear.png', desc: '流派 B 主動技：發射高速貫穿全排的蒼白骨矛並附加【詛咒】。' },
+
+  { id: 'n_mod_horde',    tree: 'necro', tier: 3, reqPoints: 7, kind: 'mod',     shape: 'diamond', archetype: 'A',    name: '改造：骸骨軍團', maxLvl: 1, req: { id: 'n_golem', lvl: 1 }, mutexGroup: 'n_m1', x: 16, y: 40, desc: '【二選一】骷髏上限 +2，且每次召喚額外多喚出 1 名骷髏。' },
+  { id: 'n_mod_leech',    tree: 'necro', tier: 3, reqPoints: 7, kind: 'mod',     shape: 'diamond', archetype: 'A',    name: '改造：血肉獻祭', maxLvl: 1, req: { id: 'n_golem', lvl: 1 }, mutexGroup: 'n_m1', x: 38, y: 40, desc: '【二選一】鮮血魔像震擊範圍 +30%，吸血回血效果翻倍。' },
+  { id: 'n_mod_split',    tree: 'necro', tier: 3, reqPoints: 7, kind: 'mod',     shape: 'diamond', archetype: 'B',    name: '改造：三叉骨矛', maxLvl: 1, req: { id: 'n_spear', lvl: 1 }, mutexGroup: 'n_m2', x: 62, y: 40, desc: '【二選一】白骨長矛變為扇形發射 3 支貫穿骨矛。' },
+  { id: 'n_mod_curse',    tree: 'necro', tier: 3, reqPoints: 7, kind: 'mod',     shape: 'diamond', archetype: 'B',    name: '改造：深淵劇毒', maxLvl: 1, req: { id: 'n_spear', lvl: 1 }, mutexGroup: 'n_m2', x: 84, y: 40, desc: '【二選一】白骨長矛命中目標必定暴擊並縮短冷卻 18%。' },
+
+  { id: 'n_frenzy',       tree: 'necro', tier: 4, reqPoints: 12, kind: 'active', shape: 'square',  archetype: 'A',    name: '亡靈狂熱', maxLvl: 5, req: { id: 'n_golem', lvl: 1 }, x: 26, y: 56, icon: './assets/skills/sk_n_frenzy.png', desc: '流派 A 主動技：全場召喚物攻速 +60%、傷害 +35% 並回 25 魂能。' },
+  { id: 'n_cdr',          tree: 'necro', tier: 4, reqPoints: 12, kind: 'passive',shape: 'circle',  archetype: 'core', name: '冥界秘術', maxLvl: 5, req: { id: 'n_p_essence', lvl: 1 }, x: 50, y: 56, desc: '每級縮短死靈法師所有技能冷卻 6%、掉寶率 +4%。' },
+  { id: 'n_corpse',       tree: 'necro', tier: 4, reqPoints: 12, kind: 'active', shape: 'square',  archetype: 'B',    name: '屍體爆破', maxLvl: 5, req: { id: 'n_spear', lvl: 1 }, x: 74, y: 56, icon: './assets/skills/sk_n_corpse.png', desc: '流派 B 主動技：引爆目標區域血氣造成大範圍爆破，詛咒目標 +35% 傷。' },
+
+  { id: 'n_wraith',       tree: 'necro', tier: 5, reqPoints: 17, kind: 'active', shape: 'square',  archetype: 'A',    name: '冥界幽魂軍', maxLvl: 5, req: { id: 'n_frenzy', lvl: 1 }, x: 18, y: 73, icon: './assets/skills/sk_n_wraith.png', desc: '流派 A 大招：放出 5 隻高速自爆幽魂衝向敵人引爆魂火。' },
+  { id: 'n_decrepify',    tree: 'necro', tier: 5, reqPoints: 17, kind: 'active', shape: 'square',  archetype: 'core', name: '衰老詛咒', maxLvl: 5, req: { id: 'n_cdr', lvl: 1 }, x: 50, y: 73, icon: './assets/skills/sk_n_decrepify.png', desc: '全場詛咒：大範圍降低敵攻 25% 並附加【詛咒】易傷。' },
+  { id: 'n_prison',       tree: 'necro', tier: 5, reqPoints: 17, kind: 'active', shape: 'square',  archetype: 'B',    name: '骸骨牢籠', maxLvl: 5, req: { id: 'n_corpse', lvl: 1 }, x: 82, y: 73, icon: './assets/skills/sk_n_prison.png', desc: '流派 B 大招：升起骨刺牢籠緩速敵人 2.5 秒並造成 4 波骨刺傷。' },
+
+  { id: 'n_key_overlord', tree: 'necro', tier: 6, reqPoints: 22, kind: 'keystone', shape: 'octagon', archetype: 'A', name: '關鍵被動：骸骨君王', maxLvl: 1, req: { id: 'n_wraith', lvl: 1 }, mutexGroup: 'n_key', x: 30, y: 90, icon: './assets/skills/sk_n_key_overlord.png', desc: '【關鍵二選一】骷髏上限 +2、召喚物傷害額外 +50% 且攻擊必帶魂火連鎖！' },
+  { id: 'n_key_plague',   tree: 'necro', tier: 6, reqPoints: 22, kind: 'keystone', shape: 'octagon', archetype: 'B', name: '關鍵被動：瘟疫屍爆王', maxLvl: 1, req: { id: 'n_prison', lvl: 1 }, mutexGroup: 'n_key', x: 70, y: 90, icon: './assets/skills/sk_n_key_plague.png', desc: '【關鍵二選一】任何敵人死亡時自動在原地觸發免費【屍體爆破】，且骨系技能必暴擊！' },
+
+
+  // ==================== 影殺刺客星圖 (18 節點, 8 主動, 4 改造, 2 關鍵被動) ====================
+  { id: 'a_blitz',       tree: 'assassin', tier: 1, reqPoints: 0, kind: 'active',  shape: 'square',  archetype: 'core', name: '瞬影閃襲', maxLvl: 5, req: null, x: 50, y: 8,  icon: './assets/skills/sk_a_blitz.png', desc: '核心主動技：閃現交叉雙刃斬擊，暴擊率 +25% 並提升閃避。' },
+  { id: 'a_p_swift',     tree: 'assassin', tier: 1, reqPoints: 0, kind: 'passive', shape: 'circle',  archetype: 'A',    name: '暗影疾步', maxLvl: 5, req: { id: 'a_blitz', lvl: 1 }, x: 24, y: 10, icon: './assets/skills/sk_a_swift.png', desc: '每級攻速 +5%、移速 +5%、閃避 +2%。' },
+  { id: 'a_p_venom',     tree: 'assassin', tier: 1, reqPoints: 0, kind: 'passive', shape: 'circle',  archetype: 'B',    name: '淬毒之刃', maxLvl: 5, req: { id: 'a_blitz', lvl: 1 }, x: 76, y: 10, desc: '每級攻擊力 +4%、劇毒傷害 +8%。' },
+
+  { id: 'a_clones',      tree: 'assassin', tier: 2, reqPoints: 3, kind: 'active',  shape: 'square',  archetype: 'A',    name: '影分身連擊', maxLvl: 5, req: { id: 'a_blitz', lvl: 1 }, x: 28, y: 24, icon: './assets/skills/sk_a_clones.png', desc: '流派 A 主動技：召喚 2 道暗紫影分身同步衝刺斬殺敵群。' },
+  { id: 'a_p_weakpoint', tree: 'assassin', tier: 2, reqPoints: 3, kind: 'passive', shape: 'circle',  archetype: 'core', name: '致命要害', maxLvl: 5, req: { id: 'a_blitz', lvl: 1 }, x: 50, y: 24, icon: './assets/skills/sk_a_weakpoint.png', desc: '每級暴擊率 +2.5%、暴擊傷害 +12%。' },
+  { id: 'a_kunai',       tree: 'assassin', tier: 2, reqPoints: 3, kind: 'active',  shape: 'square',  archetype: 'B',    name: '淬毒苦無', maxLvl: 5, req: { id: 'a_blitz', lvl: 1 }, x: 72, y: 24, icon: './assets/skills/sk_a_kunai.png', desc: '流派 B 主動技：扇形連射 5 把貫穿淬毒苦無並附加【劇毒】。' },
+
+  { id: 'a_mod_phantom', tree: 'assassin', tier: 3, reqPoints: 7, kind: 'mod',     shape: 'diamond', archetype: 'A',    name: '改造：三重幻影', maxLvl: 1, req: { id: 'a_clones', lvl: 1 }, mutexGroup: 'a_m1', x: 16, y: 40, desc: '【二選一】影分身連擊額外多召喚 1 道分身，且必暴擊。' },
+  { id: 'a_mod_leech',   tree: 'assassin', tier: 3, reqPoints: 7, kind: 'mod',     shape: 'diamond', archetype: 'A',    name: '改造：暗影吸血', maxLvl: 1, req: { id: 'a_clones', lvl: 1 }, mutexGroup: 'a_m1', x: 38, y: 40, desc: '【二選一】瞬影閃襲冷卻縮短 20%，命中回復 10% 最大生命。' },
+  { id: 'a_mod_fan',     tree: 'assassin', tier: 3, reqPoints: 7, kind: 'mod',     shape: 'diamond', archetype: 'B',    name: '改造：七刃苦無', maxLvl: 1, req: { id: 'a_kunai', lvl: 1 }, mutexGroup: 'a_m2', x: 62, y: 40, desc: '【二選一】淬毒苦無改為發射 7 把苦無且中毒時間延長至 6 秒。' },
+  { id: 'a_mod_refund',  tree: 'assassin', tier: 3, reqPoints: 7, kind: 'mod',     shape: 'diamond', archetype: 'B',    name: '改造：劇毒回能', maxLvl: 1, req: { id: 'a_kunai', lvl: 1 }, mutexGroup: 'a_m2', x: 84, y: 40, desc: '【二選一】淬毒苦無每命中 1 名敵人回復 3 點影能。' },
+
+  { id: 'a_flurry',      tree: 'assassin', tier: 4, reqPoints: 12, kind: 'active', shape: 'square',  archetype: 'A',    name: '劍刃亂舞', maxLvl: 5, req: { id: 'a_clones', lvl: 1 }, x: 26, y: 56, icon: './assets/skills/sk_a_flurry.png', desc: '流派 A 主動技：高速旋轉雙刃釋放 3 波刃氣風暴並回影能。' },
+  { id: 'a_cdr',         tree: 'assassin', tier: 4, reqPoints: 12, kind: 'passive',shape: 'circle',  archetype: 'core', name: '無影節奏', maxLvl: 5, req: { id: 'a_p_weakpoint', lvl: 1 }, x: 50, y: 56, desc: '每級縮短刺客所有技能冷卻 6%、最大影能 +8。' },
+  { id: 'a_smoke',       tree: 'assassin', tier: 4, reqPoints: 12, kind: 'active', shape: 'square',  archetype: 'B',    name: '煙霧隱遁', maxLvl: 5, req: { id: 'a_kunai', lvl: 1 }, x: 74, y: 56, icon: './assets/skills/sk_a_smoke.png', desc: '流派 B 主動技：釋放毒霧緩速敵人、回 25 影能且閃避 +30%。' },
+
+  { id: 'a_execute',     tree: 'assassin', tier: 5, reqPoints: 17, kind: 'active', shape: 'square',  archetype: 'A',    name: '暗影絕殺陣', maxLvl: 5, req: { id: 'a_flurry', lvl: 1 }, x: 18, y: 73, icon: './assets/skills/sk_a_execute.png', desc: '流派 A 大招：斬出 7 道十字影殺線，半血以下必暴擊且 +55% 傷。' },
+  { id: 'a_fangs',       tree: 'assassin', tier: 5, reqPoints: 17, kind: 'active', shape: 'square',  archetype: 'core', name: '致命毒牙', maxLvl: 5, req: { id: 'a_cdr', lvl: 1 }, x: 50, y: 73, icon: './assets/skills/sk_a_fangs.png', desc: '刺客爆發：4.5 秒內攻速 +45%、暴擊 +20% 且普攻必帶【劇毒】。' },
+  { id: 'a_burst',       tree: 'assassin', tier: 5, reqPoints: 17, kind: 'active', shape: 'square',  archetype: 'B',    name: '毒刃引爆', maxLvl: 5, req: { id: 'a_smoke', lvl: 1 }, x: 82, y: 73, icon: './assets/skills/sk_a_burst.png', desc: '流派 B 大招：引爆範圍內所有敵人的【劇毒】，中毒目標 +45% 傷。' },
+
+  { id: 'a_key_dancer',  tree: 'assassin', tier: 6, reqPoints: 22, kind: 'keystone', shape: 'octagon', archetype: 'A', name: '關鍵被動：無形影舞者', maxLvl: 1, req: { id: 'a_execute', lvl: 1 }, mutexGroup: 'a_key', x: 30, y: 90, icon: './assets/skills/sk_a_key_dancer.png', desc: '【關鍵二選一】閃避率上限提升至 75%，每次成功閃避自動反擊 150% 暗影斬並回 6 影能！' },
+  { id: 'a_key_venom',   tree: 'assassin', tier: 6, reqPoints: 22, kind: 'keystone', shape: 'octagon', archetype: 'B', name: '關鍵被動：萬毒之主', maxLvl: 1, req: { id: 'a_burst', lvl: 1 }, mutexGroup: 'a_key', x: 70, y: 90, icon: './assets/skills/sk_a_key_venom.png', desc: '【關鍵二選一】劇毒傷害可暴擊且 +60%，中毒怪物死亡時自動擴散免費毒爆雲！' },
 
   // ==================== 深淵通用星圖 (12 節點, 相容舊存檔) ====================
   { id: 'fury_atk',      tree: 'shared', tier: 1, reqPoints: 0, kind: 'passive', shape: 'circle', archetype: 'A', name: '戰意覺醒', maxLvl: 10, req: null, x: 20, y: 12, desc: '每級全職業攻擊力 +6%' },

@@ -2,6 +2,9 @@ import { CLASSES } from '../data/classes.js';
 import { WARRIOR_SKILLS } from '../data/warriorSkills.js';
 import { RANGER_SKILLS } from '../data/rangerSkills.js';
 import { MAGE_SKILLS } from '../data/mageSkills.js';
+import { PALADIN_SKILLS } from '../data/paladinSkills.js';
+import { NECRO_SKILLS } from '../data/necroSkills.js';
+import { ASSASSIN_SKILLS } from '../data/assassinSkills.js';
 import { RARITIES } from '../data/items.js';
 import { createStageEncounters, getChapterIdx, getStageLabel, ZONE_OBSTACLES } from '../data/monsters.js';
 import { formatNum } from '../logic/statCalc.js';
@@ -83,6 +86,13 @@ export class BattleScene extends Phaser.Scene {
     this.warcryUntil = 0;
     this.windwalkUntil = 0;
     this.overloadUntil = 0;
+    this.holyAegisHp = 0;
+    this.holyAegisUntil = 0;
+    this.radiantAuraUntil = 0;
+    this.thornsModUntil = 0;
+    this.summons = [];
+    this.undeadFrenzyUntil = 0;
+    this.lethalFangsUntil = 0;
   }
 
   init(data) {
@@ -99,6 +109,9 @@ export class BattleScene extends Phaser.Scene {
           this.load.image(`wf_${d}_${st}_${i}`, `./assets/heroes/warrior_frames/${d}_${st}_${i}.png`);
           this.load.image(`rf_${d}_${st}_${i}`, `./assets/heroes/ranger_frames/${d}_${st}_${i}.png`);
           this.load.image(`mf_${d}_${st}_${i}`, `./assets/heroes/mage_frames/${d}_${st}_${i}.png`);
+          this.load.image(`pf_${d}_${st}_${i}`, `./assets/heroes/paladin_frames/${d}_${st}_${i}.png`);
+          this.load.image(`nf_${d}_${st}_${i}`, `./assets/heroes/necro_frames/${d}_${st}_${i}.png`);
+          this.load.image(`af_${d}_${st}_${i}`, `./assets/heroes/assassin_frames/${d}_${st}_${i}.png`);
         }
       });
     });
@@ -199,6 +212,9 @@ export class BattleScene extends Phaser.Scene {
       { prefix: 'w', tex: 'wf', walkFps: 10, atkFps: 15 },
       { prefix: 'r', tex: 'rf', walkFps: 12, atkFps: 16 },
       { prefix: 'm', tex: 'mf', walkFps: 10, atkFps: 15 },
+      { prefix: 'p', tex: 'pf', walkFps: 10, atkFps: 15 },
+      { prefix: 'n', tex: 'nf', walkFps: 10, atkFps: 15 },
+      { prefix: 'a', tex: 'af', walkFps: 13, atkFps: 18 },
     ];
     defs.forEach(({ prefix, tex, walkFps, atkFps }) => {
       ['down', 'up', 'right'].forEach((d) => {
@@ -260,7 +276,7 @@ export class BattleScene extends Phaser.Scene {
     const cid = this.getState().classId || 'warrior';
     const cx = MAP_W / 2;
     const cy = MAP_H / 2;
-    const texKey = cid === 'warrior' ? 'wf_down_walk_0' : (cid === 'ranger' ? 'rf_down_walk_0' : 'mf_down_walk_0');
+    const texKey = cid === 'warrior' ? 'wf_down_walk_0' : (cid === 'ranger' ? 'rf_down_walk_0' : (cid === 'paladin' ? 'pf_down_walk_0' : (cid === 'necro' ? 'nf_down_walk_0' : (cid === 'assassin' ? 'af_down_walk_0' : 'mf_down_walk_0'))));
 
     this.heroGroundShadow = this.add.image(cx, cy + 44, 'fx_glow')
       .setTint(0x000000).setScale(1.7, 0.6).setAlpha(0.62).setDepth(2);
@@ -271,6 +287,9 @@ export class BattleScene extends Phaser.Scene {
     if (cid === 'warrior') this.hero.play('w_down_walk');
     else if (cid === 'ranger') this.hero.play('r_down_walk');
     else if (cid === 'mage') this.hero.play('m_down_walk');
+    else if (cid === 'paladin') this.hero.play('p_down_walk');
+    else if (cid === 'necro') this.hero.play('n_down_walk');
+    else if (cid === 'assassin') this.hero.play('a_down_walk');
 
     this.heroHpBg = this.add.rectangle(cx, cy - 86, 108, 10, 0x0b0e14).setStrokeStyle(1.5, 0xc89b3c).setDepth(4000);
     this.heroHpFill = this.add.rectangle(cx - 54, cy - 86, 108, 8, 0x22c55e).setOrigin(0, 0.5).setDepth(4001);
@@ -405,15 +424,15 @@ export class BattleScene extends Phaser.Scene {
     const cid = state.classId || 'warrior';
     const eqList = state.equippedSkillsByClass?.[cid] || [];
 
-    if (cid === 'warrior' || cid === 'ranger' || cid === 'mage') {
-      const book = cid === 'warrior' ? WARRIOR_SKILLS : (cid === 'ranger' ? RANGER_SKILLS : MAGE_SKILLS);
+    if (cid === 'warrior' || cid === 'ranger' || cid === 'mage' || cid === 'paladin' || cid === 'necro' || cid === 'assassin') {
+      const book = cid === 'warrior' ? WARRIOR_SKILLS : (cid === 'ranger' ? RANGER_SKILLS : (cid === 'paladin' ? PALADIN_SKILLS : (cid === 'necro' ? NECRO_SKILLS : (cid === 'assassin' ? ASSASSIN_SKILLS : MAGE_SKILLS))));
       const sid = eqList[slotIdx];
       if (!sid || !book[sid]) return null;
       const sk = book[sid];
       const lvl = state.skillTree?.[sk.treeNodeId] || 0;
       if (lvl <= 0) return null;
       const cd = Math.round(sk.cooldownMs * (this.getStats().cdrMult || 1));
-      const mpCost = ['bladestorm', 'phantombow', 'void_beam', 'execute_cleave', 'earth_stomp', 'shadow_clones', 'death_mark', 'black_hole'].includes(sid) ? 26 : (sid === 'mana_overload' ? 0 : 18);
+      const mpCost = ['bladestorm', 'phantombow', 'void_beam', 'execute_cleave', 'earth_stomp', 'shadow_clones', 'death_mark', 'black_hole', 'judgment', 'consecration', 'holy_aegis', 'blood_golem', 'wraith_army', 'bone_prison', 'shadow_execute', 'venom_burst', 'lethal_fangs'].includes(sid) ? 26 : (sid === 'mana_overload' ? 0 : 18);
       return { id: sid, name: sk.name, cooldownMs: cd, level: lvl, cid, mpCost };
     }
     if (slotIdx > 0) return null;
@@ -547,6 +566,10 @@ export class BattleScene extends Phaser.Scene {
   }
 
   clearAllMonsters() {
+    if (this.summons) {
+      this.summons.forEach((s) => s.sprite && s.sprite.destroy());
+      this.summons = [];
+    }
     this.monsters.forEach((m) => {
       m.sprite?.destroy();
       m.groundShadow?.destroy();
@@ -747,10 +770,11 @@ export class BattleScene extends Phaser.Scene {
     this.updateHeroMovement(time, delta, dt, stats, cid);
     this.updateMonstersAI(time, delta, dt, stats);
     this.updateProjectiles(dt, stats);
+    this.updateSummons(dt, stats);
 
     const nearest = this.findNearestMonster(this.hero.x, this.hero.y);
     if (nearest) {
-      const atkRange = cid === 'warrior' ? 165 : (cid === 'ranger' ? 430 : 370);
+      const atkRange = (cid === 'warrior' || cid === 'paladin' || cid === 'assassin') ? 170 : (cid === 'ranger' ? 430 : 370);
       const dist = Phaser.Math.Distance.Between(this.hero.x, this.hero.y, nearest.sprite.x, nearest.sprite.y);
 
       if (dist <= Math.max(260, atkRange)) {
@@ -762,7 +786,7 @@ export class BattleScene extends Phaser.Scene {
       this.heroAttackTimer += delta;
       const tree = this.getState().skillTree || {};
       const lowBloodKey = cid === 'warrior' && (tree.w_key_blood || 0) > 0 && this.playerHp < this.playerMaxHp * 0.55;
-      const spdMult = (time < this.warcryUntil ? 1.35 : 1) * (time < this.windwalkUntil ? 1.40 : 1) * (lowBloodKey ? 1.45 : 1);
+      const spdMult = (time < this.warcryUntil ? 1.35 : 1) * (time < this.windwalkUntil ? 1.40 : 1) * (time < (this.lethalFangsUntil || 0) ? 1.45 : 1) * (lowBloodKey ? 1.45 : 1);
       const effInterval = Math.max(180, Math.round(stats.atkIntervalMs / spdMult));
       if (this.heroAttackTimer >= effInterval && dist <= atkRange) {
         this.heroAttackTimer = 0;
@@ -807,7 +831,7 @@ export class BattleScene extends Phaser.Scene {
       if (this.autoMoveEnabled && this.manualOverrideTimer <= 0) {
         const nearest = this.findNearestMonster(this.hero.x, this.hero.y);
         if (nearest) {
-          const isRanged = classId !== 'warrior';
+          const isRanged = classId === 'ranger' || classId === 'mage' || classId === 'necro';
           if (isRanged) {
             // 遠攻智慧風箏：計算近身怪物合斥力 + 邊界安全避讓
             let repX = 0;
@@ -943,8 +967,8 @@ export class BattleScene extends Phaser.Scene {
     }
     this.hero.setFlipX(this.heroFlipX);
 
-    if (cid === 'warrior' || cid === 'ranger' || cid === 'mage') {
-      const prefix = cid === 'warrior' ? 'w' : (cid === 'ranger' ? 'r' : 'm');
+    if (cid === 'warrior' || cid === 'ranger' || cid === 'mage' || cid === 'paladin' || cid === 'necro' || cid === 'assassin') {
+      const prefix = cid === 'warrior' ? 'w' : (cid === 'ranger' ? 'r' : (cid === 'paladin' ? 'p' : (cid === 'necro' ? 'n' : (cid === 'assassin' ? 'a' : 'm'))));
       const animKey = `${prefix}_${this.heroDir}_${isAttacking ? 'atk' : 'walk'}`;
       if (isAttacking) {
         if (this.hero.anims.currentAnim?.key !== animKey) {
@@ -1140,9 +1164,9 @@ export class BattleScene extends Phaser.Scene {
   performHeroAttack(time, stats, classId, target) {
     this.faceHeroToward(target.sprite.x, target.sprite.y);
     this.heroAttackAnimUntil = time + 270;
-    const atkPrefix = classId === 'warrior' ? 'w' : (classId === 'ranger' ? 'r' : 'm');
+    const atkPrefix = classId === 'warrior' ? 'w' : (classId === 'ranger' ? 'r' : (classId === 'paladin' ? 'p' : (classId === 'necro' ? 'n' : (classId === 'assassin' ? 'a' : 'm'))));
     this.hero.play(`${atkPrefix}_${this.heroDir}_atk`, false);
-    const mpGain = classId === 'mage' ? 7 : (classId === 'ranger' ? 5 : 4);
+    const mpGain = classId === 'mage' ? 7 : (classId === 'ranger' || classId === 'paladin' ? 5 : 4);
     this.playerMp = Math.min(this.playerMaxMp, this.playerMp + mpGain);
     const baseAngle = Math.atan2(target.sprite.y - this.hero.y, target.sprite.x - this.hero.x);
 
@@ -1155,7 +1179,7 @@ export class BattleScene extends Phaser.Scene {
       return { dmg: Math.max(1, Math.round(dmg)), isCrit };
     };
 
-    if (classId === 'warrior') {
+    if (classId === 'warrior' || classId === 'paladin' || classId === 'assassin') {
       const step = this.basicComboStep % 3;
       this.basicComboStep = (this.basicComboStep + 1) % 3;
       const isFinisher = step === 2;
@@ -1165,7 +1189,7 @@ export class BattleScene extends Phaser.Scene {
 
       const cx = this.hero.x + Math.cos(baseAngle) * (isFinisher ? 68 : 56);
       const cy = this.hero.y + Math.sin(baseAngle) * (isFinisher ? 68 : 56);
-      this.playFxSprite('wfx_cleave', cx, cy, isFinisher ? 1.22 : 0.88, baseAngle + (step === 1 ? 0.3 : 0), 250);
+      this.playFxSprite(classId === 'paladin' ? 'pfx_slash' : (classId === 'assassin' ? 'afx_slash' : 'wfx_cleave'), cx, cy, isFinisher ? 1.22 : 0.88, baseAngle + (step === 1 ? 0.3 : 0), 250);
       this.playFxSprite('wfx_sparks', cx, cy, isFinisher ? 0.95 : 0.62, Math.random() * Math.PI, 260);
 
       let hitAny = false;
@@ -1175,7 +1199,9 @@ export class BattleScene extends Phaser.Scene {
           const mobAng = Math.atan2(m.sprite.y - this.hero.y, m.sprite.x - this.hero.x);
           const diff = Math.abs(Phaser.Math.Angle.Wrap(mobAng - baseAngle));
           if (diff <= Phaser.Math.DegToRad(arcDeg) || d <= 74) {
-            const { dmg, isCrit } = calcRollDmg(m, dmgMult);
+            const fangCrit = (classId === 'assassin' && time < (this.lethalFangsUntil || 0)) ? 20 : 0;
+          const { dmg, isCrit } = calcRollDmg(m, dmgMult, fangCrit);
+          if (classId === 'assassin' && time < (this.lethalFangsUntil || 0)) { m.bleedUntil = time + 4000; m.bleedDmg = Math.max(2, Math.round(stats.atk * 0.35 * (1 + (stats.poisonDmgPct || 0) / 100))); }
             this.playFxSprite('wfx_hitflash', m.sprite.x, m.sprite.y - 10, isFinisher ? 0.56 : 0.42, 0, 180);
             this.applyHitEffects(m, dmg, isCrit, stats);
             if (isFinisher) {
@@ -1238,6 +1264,24 @@ export class BattleScene extends Phaser.Scene {
           stats,
         });
       }
+    } else if (classId === 'necro') {
+      const mx = this.hero.x + Math.cos(baseAngle) * 32;
+      const my = this.hero.y - 16 + Math.sin(baseAngle) * 20;
+      this.playFxSprite('nfx_p_slash', mx, my, 0.36, baseAngle, 160);
+      const spr = this.add.image(mx, my, 'nfx_p_wraith')
+        .setScale(0.28).setRotation(baseAngle).setBlendMode(Phaser.BlendModes.ADD).setDepth(4508);
+      this.projectiles.push({
+        fromEnemy: false,
+        kind: 'mage_bolt',
+        sprite: spr,
+        vx: Math.cos(baseAngle) * 600,
+        vy: Math.sin(baseAngle) * 600,
+        lifeMs: 1100,
+        dmgMult: 1.05,
+        bouncesLeft: 1,
+        hitIds: new Set(),
+        stats,
+      });
     } else {
       this.arcaneChargeStacks = Math.min(5, this.arcaneChargeStacks + 1);
       const mx = this.hero.x + Math.cos(baseAngle) * 34;
@@ -1874,6 +1918,575 @@ export class BattleScene extends Phaser.Scene {
     this.tweens.add({ targets: banner, y: 42, alpha: 0, duration: 920, onComplete: () => banner.destroy() });
   }
 
+
+  castPaladinSkill(skillId, skillLvl, stats, isManual = false) {
+    const alive = this.monsters.filter((m) => m.hp > 0);
+    if (alive.length === 0) return;
+    const tree = this.getState().skillTree || {};
+    const aim = this.getAimPoint(isManual, 360);
+    this.faceHeroToward(aim.x, aim.y);
+    this.heroAttackAnimUntil = this.time.now + 420;
+    this.hero.play(`p_${this.heroDir}_atk`, false);
+
+    const auraBonus = this.time.now < this.radiantAuraUntil ? 1.25 : 1;
+    const dmgMult = (stats.skillDmgMult || 1) * auraBonus;
+    const stunMult = 1 + (stats.stunDurPct || 0) / 100;
+    const keyJudg = (tree.p_key_judgment || 0) > 0;
+
+    const dealHolyDmg = (mob, mult, forceCrit = false, color = '#fde047') => {
+      if (!mob || mob.hp <= 0) return;
+      const isStun = this.time.now < (mob.stunUntil || 0);
+      const isCrit = forceCrit || (keyJudg && isStun) || Math.random() * 100 < stats.critRate;
+      const dmg = Math.max(1, Math.round(stats.atk * mult * dmgMult * (isCrit ? stats.critDmg / 100 : 1)));
+      this.damageMonster(mob, dmg, isCrit, false, color, '✨');
+    };
+
+    if (skillId === 'blessed_hammer') {
+      const count = 3 + (skillLvl >= 4 ? 1 : 0) + ((tree.p_mod_spiral || 0) > 0 ? 2 : 0) + (stats.activeEffects.has('hammer_extra') ? 2 : 0);
+      const mult = 0.95 + skillLvl * 0.20;
+      const speedMult = (tree.p_mod_spiral || 0) > 0 ? 1.25 : 1;
+      for (let i = 0; i < count; i++) {
+        const startAng = (Math.PI * 2 * i) / count;
+        const spr = this.add.image(this.hero.x, this.hero.y, 'pfx_hammer')
+          .setScale(0.45).setBlendMode(Phaser.BlendModes.ADD).setDepth(4512);
+        const hitSet = new Set();
+        const stateObj = { t: 0 };
+        this.tweens.add({
+          targets: stateObj,
+          t: 1,
+          duration: Math.round(1700 / speedMult),
+          onUpdate: () => {
+            if (!spr.active || !this.hero) return;
+            const ang = startAng + stateObj.t * Math.PI * 4.2;
+            const rad = 45 + stateObj.t * 210;
+            spr.x = this.hero.x + Math.cos(ang) * rad;
+            spr.y = this.hero.y + Math.sin(ang) * rad;
+            spr.rotation += 0.28;
+            for (const m of this.monsters) {
+              if (m.hp <= 0 || hitSet.has(m.uid)) continue;
+              if (Phaser.Math.Distance.Between(spr.x, spr.y, m.sprite.x, m.sprite.y) <= 68) {
+                hitSet.add(m.uid);
+                const stunBoost = this.time.now < (m.stunUntil || 0) ? 1.25 : 1;
+                dealHolyDmg(m, mult * stunBoost);
+              }
+            }
+          },
+          onComplete: () => spr.destroy(),
+        });
+      }
+      return;
+    }
+
+    if (skillId === 'heaven_fist') {
+      this.playFxSprite('pfx_heaven', aim.x, aim.y - 45, 1.35, 0, 420);
+      this.cameras.main.shake(120, 0.006);
+      const mult = 2.10 + skillLvl * 0.36;
+      const hasMod = (tree.p_mod_bolts || 0) > 0;
+      for (const m of alive) {
+        if (Phaser.Math.Distance.Between(aim.x, aim.y, m.sprite.x, m.sprite.y) <= 185) {
+          if (hasMod) m.stunUntil = Math.max(m.stunUntil || 0, this.time.now + Math.round(800 * stunMult));
+          dealHolyDmg(m, mult);
+        }
+      }
+      const bolts = hasMod ? 8 : 6;
+      for (let i = 0; i < bolts; i++) {
+        const ang = (Math.PI * 2 * i) / bolts;
+        const spr = this.add.image(aim.x, aim.y - 10, 'pfx_slash')
+          .setScale(0.42).setRotation(ang).setBlendMode(Phaser.BlendModes.ADD).setDepth(4508);
+        this.projectiles.push({
+          fromEnemy: false, kind: 'mage_bolt', sprite: spr,
+          vx: Math.cos(ang) * 620, vy: Math.sin(ang) * 620,
+          lifeMs: 750, dmgMult: 0.65 + skillLvl * 0.12, bouncesLeft: 0, hitIds: new Set(), stats,
+        });
+      }
+      return;
+    }
+
+    if (skillId === 'judgment') {
+      this.playFxSprite('pfx_judgment', aim.x, aim.y - 12, 1.45, 0, 480);
+      this.cameras.main.shake(160, 0.008);
+      const mult = 2.35 + skillLvl * 0.42;
+      let hits = 0;
+      for (const m of alive) {
+        if (Phaser.Math.Distance.Between(aim.x, aim.y, m.sprite.x, m.sprite.y) <= 220) {
+          m.stunUntil = Math.max(m.stunUntil || 0, this.time.now + Math.round(1500 * stunMult));
+          dealHolyDmg(m, mult, false, '#fef08a');
+          hits++;
+        }
+      }
+      if (hits > 0) this.playerMp = Math.min(this.playerMaxMp, this.playerMp + hits * 4);
+      return;
+    }
+
+    if (skillId === 'divine_storm') {
+      this.playFxSprite('pfx_storm', this.hero.x, this.hero.y, 1.65, 0, 460);
+      const mult = 1.75 + skillLvl * 0.32;
+      let hits = 0;
+      for (const m of alive) {
+        if (Phaser.Math.Distance.Between(this.hero.x, this.hero.y, m.sprite.x, m.sprite.y) <= 260) {
+          dealHolyDmg(m, mult);
+          hits++;
+        }
+      }
+      if (hits > 0) {
+        this.healHero(Math.round(this.playerMaxHp * Math.min(0.30, hits * 0.03)));
+        this.playerMp = Math.min(this.playerMaxMp, this.playerMp + hits * 3);
+      }
+      return;
+    }
+
+    if (skillId === 'shield_bash') {
+      const ang = Math.atan2(aim.y - this.hero.y, aim.x - this.hero.x);
+      const dist = Math.min(260, Math.hypot(aim.x - this.hero.x, aim.y - this.hero.y));
+      const nx = Phaser.Math.Clamp(this.hero.x + Math.cos(ang) * dist, 180, MAP_W - 180);
+      const ny = Phaser.Math.Clamp(this.hero.y + Math.sin(ang) * dist, 220, MAP_H - 180);
+      this.hero.setPosition(nx, ny);
+      this.playFxSprite('pfx_bash', nx + Math.cos(ang) * 40, ny + Math.sin(ang) * 40, 1.15, ang, 380);
+      const mult = 1.55 + skillLvl * 0.28;
+      const armBonus = stats.armor * (0.65 + skillLvl * 0.10);
+      let hits = 0;
+      for (const m of alive) {
+        if (Phaser.Math.Distance.Between(nx, ny, m.sprite.x, m.sprite.y) <= 200) {
+          m.stunUntil = Math.max(m.stunUntil || 0, this.time.now + Math.round(1000 * stunMult));
+          const isCrit = keyJudg || Math.random() * 100 < stats.critRate;
+          const dmg = Math.max(1, Math.round((stats.atk * mult + armBonus) * dmgMult * (isCrit ? stats.critDmg / 100 : 1)));
+          this.damageMonster(m, dmg, isCrit, false, '#fbbf24', '🛡️');
+          hits++;
+        }
+      }
+      if ((tree.p_mod_thorns || 0) > 0) this.thornsModUntil = this.time.now + 3000;
+      if ((tree.p_mod_taunt || 0) > 0 && hits > 0) {
+        this.healHero(Math.round(this.playerMaxHp * Math.min(0.25, hits * 0.03)));
+        this.playerMp = Math.min(this.playerMaxMp, this.playerMp + hits * 4);
+      }
+      return;
+    }
+
+    if (skillId === 'holy_aegis') {
+      this.holyAegisHp = Math.round(this.playerMaxHp * (0.40 + skillLvl * 0.06));
+      this.holyAegisUntil = this.time.now + 5000;
+      const dome = this.add.image(this.hero.x, this.hero.y - 12, 'pfx_aegis')
+        .setScale(0.75).setAlpha(0.85).setBlendMode(Phaser.BlendModes.ADD).setDepth(4515);
+      this.tweens.add({
+        targets: dome, alpha: 0, scale: 1.05, duration: 1200,
+        onUpdate: () => { if (dome.active && this.hero) dome.setPosition(this.hero.x, this.hero.y - 12); },
+        onComplete: () => dome.destroy(),
+      });
+      this.spawnFloatingText(this.hero.x, this.hero.y - 90, `🛡️ 聖盾 +${formatNum(this.holyAegisHp)}`, '#fde047', 15);
+      return;
+    }
+
+    if (skillId === 'consecration') {
+      const cx = this.hero.x;
+      const cy = this.hero.y + 12;
+      const circle = this.add.image(cx, cy, 'pfx_consecration')
+        .setScale(1.25).setAlpha(0.9).setBlendMode(Phaser.BlendModes.ADD).setDepth(6);
+      const waveMult = 0.75 + skillLvl * 0.16;
+      const healPct = (3 + skillLvl * 0.8) / 100;
+      for (let w = 0; w < 4; w++) {
+        this.time.delayedCall(w * 950, () => {
+          if (this.isTransitioning) return;
+          this.healHero(Math.max(1, Math.round(this.playerMaxHp * healPct)));
+          for (const m of this.monsters) {
+            if (m.hp > 0 && Phaser.Math.Distance.Between(cx, cy, m.sprite.x, m.sprite.y) <= 230) {
+              dealHolyDmg(m, waveMult);
+            }
+          }
+        });
+      }
+      this.tweens.add({ targets: circle, angle: 90, alpha: 0, delay: 3200, duration: 800, onComplete: () => circle.destroy() });
+      return;
+    }
+
+    if (skillId === 'radiant_aura') {
+      this.radiantAuraUntil = this.time.now + 4500;
+      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 28);
+      this.playFxSprite('pfx_storm', this.hero.x, this.hero.y, 1.4, 0, 420);
+      const mult = 1.30 + skillLvl * 0.24;
+      for (const m of alive) {
+        if (Phaser.Math.Distance.Between(this.hero.x, this.hero.y, m.sprite.x, m.sprite.y) <= 240) {
+          dealHolyDmg(m, mult);
+        }
+      }
+      this.spawnFloatingText(this.hero.x, this.hero.y - 90, '✨ 熾光懲戒光環！', '#fef08a', 15);
+    }
+  }
+
+
+  updateSummons(dt, stats) {
+    if (!this.summons || this.summons.length === 0) return;
+    const now = this.time.now;
+    const frenzy = now < (this.undeadFrenzyUntil || 0);
+    const tree = this.getState().skillTree || {};
+    const keyOverlord = (tree.n_key_overlord || 0) > 0;
+
+    for (let i = this.summons.length - 1; i >= 0; i--) {
+      const s = this.summons[i];
+      s.lifeMs -= dt * 1000;
+      if (s.lifeMs <= 0 || !s.sprite || !s.sprite.active) {
+        if (s.sprite) s.sprite.destroy();
+        this.summons.splice(i, 1);
+        continue;
+      }
+
+      const target = this.findNearestMonster(s.sprite.x, s.sprite.y);
+      if (target) {
+        const dx = target.sprite.x - s.sprite.x;
+        const dy = target.sprite.y - s.sprite.y;
+        const dist = Math.hypot(dx, dy) || 1;
+        s.sprite.setFlipX(dx < 0);
+        const atkR = s.kind === 'golem' ? 115 : 85;
+        if (dist > atkR) {
+          const spd = (s.kind === 'golem' ? 170 : 210) * (frenzy ? 1.35 : 1);
+          s.sprite.x += (dx / dist) * spd * dt;
+          s.sprite.y += (dy / dist) * spd * dt;
+          s.sprite.setDepth(s.sprite.y);
+        }
+        s.atkTimer -= dt * 1000 * (frenzy ? 1.6 : 1);
+        if (dist <= atkR + 25 && s.atkTimer <= 0) {
+          s.atkTimer = s.kind === 'golem' ? 1350 : 920;
+          const sumMult = (1 + (stats.summonDmgPct || 0) / 100) * (frenzy ? 1.35 : 1);
+          const isCrit = Math.random() * 100 < stats.critRate;
+          if (s.kind === 'golem') {
+            this.playFxSprite('nfx_p_golem', s.sprite.x, s.sprite.y + 10, 0.95, 0, 320);
+            const mult = (1.35 + s.lvl * 0.28) * sumMult;
+            for (const m of this.monsters) {
+              if (m.hp > 0 && Phaser.Math.Distance.Between(s.sprite.x, s.sprite.y, m.sprite.x, m.sprite.y) <= 155) {
+                const dmg = Math.max(1, Math.round(stats.atk * mult * (isCrit ? stats.critDmg / 100 : 1)));
+                this.damageMonster(m, dmg, isCrit, false, '#fb7185', '🩸');
+              }
+            }
+            const healMult = (tree.n_mod_leech || 0) > 0 ? 2 : 1;
+            this.healHero(Math.max(1, Math.round(this.playerMaxHp * ((3 + s.lvl * 0.8) / 100) * healMult)));
+          } else {
+            this.playFxSprite('nfx_p_slash', target.sprite.x, target.sprite.y - 8, 0.55, Math.atan2(dy, dx), 200);
+            const mult = (0.75 + s.lvl * 0.18) * sumMult;
+            const dmg = Math.max(1, Math.round(stats.atk * mult * (isCrit ? stats.critDmg / 100 : 1)));
+            this.damageMonster(target, dmg, isCrit, false, '#5eead4', '💀');
+            if (keyOverlord) {
+              const sec = this.monsters.find((m) => m.hp > 0 && m !== target && Phaser.Math.Distance.Between(target.sprite.x, target.sprite.y, m.sprite.x, m.sprite.y) <= 200);
+              if (sec) this.damageMonster(sec, Math.round(dmg * 0.65), false, false, '#2dd4bf', '👻');
+            }
+          }
+        }
+      } else if (this.hero) {
+        const dx = this.hero.x + s.offX - s.sprite.x;
+        const dy = this.hero.y + s.offY - s.sprite.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > 30) {
+          s.sprite.x += (dx / dist) * 180 * dt;
+          s.sprite.y += (dy / dist) * 180 * dt;
+          s.sprite.setDepth(s.sprite.y);
+        }
+      }
+    }
+  }
+
+  castNecroSkill(skillId, skillLvl, stats, isManual = false) {
+    const alive = this.monsters.filter((m) => m.hp > 0);
+    if (alive.length === 0) return;
+    const tree = this.getState().skillTree || {};
+    const aim = this.getAimPoint(isManual, 420);
+    this.faceHeroToward(aim.x, aim.y);
+    this.heroAttackAnimUntil = this.time.now + 420;
+    this.hero.play(`n_${this.heroDir}_atk`, false);
+
+    const dmgMult = stats.skillDmgMult || 1;
+    const boneMult = 1 + (stats.boneDmgPct || 0) / 100;
+    const keyPlague = (tree.n_key_plague || 0) > 0;
+
+    if (skillId === 'raise_skeleton') {
+      const maxSk = 3 + Math.floor(skillLvl / 2) + ((tree.n_mod_horde || 0) > 0 ? 2 : 0) + ((tree.n_key_overlord || 0) > 0 ? 2 : 0) + (stats.activeEffects.has('skeleton_army') ? 2 : 0);
+      const count = 2 + ((tree.n_mod_horde || 0) > 0 ? 1 : 0);
+      this.playFxSprite('nfx_p_summon', this.hero.x, this.hero.y + 14, 1.15, 0, 420);
+      for (let i = 0; i < count; i++) {
+        const existingSk = this.summons.filter((s) => s.kind === 'skeleton');
+        if (existingSk.length >= maxSk) {
+          const oldest = existingSk[0];
+          oldest.lifeMs = 15000;
+          oldest.lvl = skillLvl;
+          continue;
+        }
+        const ox = Phaser.Math.Between(-90, 90);
+        const oy = Phaser.Math.Between(-60, 70);
+        const spr = this.add.image(this.hero.x + ox, this.hero.y + oy, 'necro_skeleton').setScale(0.36).setDepth(this.hero.y + oy);
+        this.summons.push({ kind: 'skeleton', sprite: spr, lifeMs: 16000, atkTimer: 250, lvl: skillLvl, offX: ox, offY: oy });
+      }
+      return;
+    }
+
+    if (skillId === 'blood_golem') {
+      this.playFxSprite('nfx_p_summon', aim.x, aim.y + 14, 1.35, 0, 460);
+      const existingG = this.summons.find((s) => s.kind === 'golem');
+      if (existingG) {
+        existingG.lifeMs = 14000;
+        existingG.lvl = skillLvl;
+        existingG.sprite.setPosition(aim.x, aim.y);
+      } else {
+        const spr = this.add.image(aim.x, aim.y, 'necro_golem').setScale(0.52).setDepth(aim.y);
+        this.summons.push({ kind: 'golem', sprite: spr, lifeMs: 14000, atkTimer: 300, lvl: skillLvl, offX: -75, offY: 30 });
+      }
+      return;
+    }
+
+    if (skillId === 'undead_frenzy') {
+      this.undeadFrenzyUntil = this.time.now + 5000;
+      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 25);
+      this.playFxSprite('nfx_p_summon', this.hero.x, this.hero.y + 10, 1.3, 0, 420);
+      this.summons.forEach((s) => { s.lifeMs += 4000; });
+      this.spawnFloatingText(this.hero.x, this.hero.y - 90, '💀 亡靈狂熱！', '#5eead4', 15);
+      return;
+    }
+
+    if (skillId === 'wraith_army') {
+      const count = 5 + (skillLvl >= 4 ? 2 : 0);
+      for (let i = 0; i < count; i++) {
+        const target = alive[i % alive.length];
+        const ang = Math.atan2(target.sprite.y - this.hero.y, target.sprite.x - this.hero.x) + Phaser.Math.FloatBetween(-0.25, 0.25);
+        const spr = this.add.image(this.hero.x, this.hero.y - 12, 'nfx_p_wraith')
+          .setScale(0.42).setRotation(ang).setBlendMode(Phaser.BlendModes.ADD).setDepth(4510);
+        this.projectiles.push({
+          fromEnemy: false, kind: 'mage_bolt', sprite: spr,
+          vx: Math.cos(ang) * 650, vy: Math.sin(ang) * 650,
+          lifeMs: 1050, dmgMult: (1.20 + skillLvl * 0.25) * dmgMult, bouncesLeft: 0, hitIds: new Set(), stats,
+        });
+      }
+      return;
+    }
+
+    if (skillId === 'bone_spear') {
+      const baseAng = Math.atan2(aim.y - this.hero.y, aim.x - this.hero.x);
+      const offsets = (tree.n_mod_split || 0) > 0 ? [-0.18, 0, 0.18] : [0];
+      const hasModCurse = (tree.n_mod_curse || 0) > 0;
+      const spearBonus = stats.activeEffects.has('bone_pierce') ? 1.35 : 1;
+      offsets.forEach((off) => {
+        const ang = baseAng + off;
+        const spr = this.add.image(this.hero.x, this.hero.y - 14, 'nfx_p_spear')
+          .setScale(0.56).setRotation(ang).setBlendMode(Phaser.BlendModes.ADD).setDepth(4512);
+        this.projectiles.push({
+          fromEnemy: false, kind: 'ranger_beam', sprite: spr,
+          vx: Math.cos(ang) * 860, vy: Math.sin(ang) * 860,
+          lifeMs: 1000,
+          fixedRawDmg: stats.atk * (1.95 + skillLvl * 0.35) * dmgMult * boneMult * spearBonus,
+          bonusCrit: (keyPlague || hasModCurse) ? 100 : 15,
+          appliesMark: false,
+          hitIds: new Set(), stats,
+        });
+      });
+      return;
+    }
+
+    if (skillId === 'corpse_explosion') {
+      const rad = 230 * (1 + (stats.corpseRadiusPct || 0) / 100);
+      this.playFxSprite('nfx_p_corpse', aim.x, aim.y - 10, 1.4 * (rad / 230), 0, 460);
+      this.cameras.main.shake(140, 0.007);
+      const mult = (2.20 + skillLvl * 0.40) * dmgMult;
+      for (const m of alive) {
+        if (Phaser.Math.Distance.Between(aim.x, aim.y, m.sprite.x, m.sprite.y) <= rad) {
+          const curseBoost = this.time.now < (m.cursedUntil || 0) ? 1.35 : 1;
+          const isCrit = keyPlague || Math.random() * 100 < stats.critRate;
+          const dmg = Math.max(1, Math.round(stats.atk * mult * curseBoost * (isCrit ? stats.critDmg / 100 : 1)));
+          this.damageMonster(m, dmg, isCrit, false, '#fb7185', '💥');
+        }
+      }
+      return;
+    }
+
+    if (skillId === 'bone_prison') {
+      this.playFxSprite('nfx_p_prison', aim.x, aim.y + 8, 1.3, 0, 520);
+      const mult = (0.70 + skillLvl * 0.15) * dmgMult * boneMult;
+      for (let w = 0; w < 4; w++) {
+        this.time.delayedCall(w * 600, () => {
+          if (this.isTransitioning) return;
+          for (const m of this.monsters) {
+            if (m.hp > 0 && Phaser.Math.Distance.Between(aim.x, aim.y, m.sprite.x, m.sprite.y) <= 215) {
+              m.chilledUntil = Math.max(m.chilledUntil || 0, this.time.now + 2500);
+              m.cursedUntil = Math.max(m.cursedUntil || 0, this.time.now + 5000);
+              const isCrit = keyPlague || Math.random() * 100 < stats.critRate;
+              const dmg = Math.max(1, Math.round(stats.atk * mult * (isCrit ? stats.critDmg / 100 : 1)));
+              this.damageMonster(m, dmg, isCrit, false, '#e2e8f0', '🦴');
+            }
+          }
+        });
+      }
+      return;
+    }
+
+    if (skillId === 'decrepify') {
+      this.playFxSprite('nfx_p_curse', aim.x, aim.y + 8, 1.55, 0, 500);
+      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 18);
+      const mult = (1.25 + skillLvl * 0.22) * dmgMult;
+      for (const m of alive) {
+        if (Phaser.Math.Distance.Between(aim.x, aim.y, m.sprite.x, m.sprite.y) <= 300) {
+          m.cursedUntil = Math.max(m.cursedUntil || 0, this.time.now + 6000);
+          m.chilledUntil = Math.max(m.chilledUntil || 0, this.time.now + 3500);
+          const dmg = Math.max(1, Math.round(stats.atk * mult));
+          this.damageMonster(m, dmg, false, false, '#a78bfa', '🔮');
+        }
+      }
+    }
+  }
+
+
+  castAssassinSkill(skillId, skillLvl, stats, isManual = false) {
+    const alive = this.monsters.filter((m) => m.hp > 0);
+    if (alive.length === 0) return;
+    const tree = this.getState().skillTree || {};
+    const aim = this.getAimPoint(isManual, 380);
+    this.faceHeroToward(aim.x, aim.y);
+    this.heroAttackAnimUntil = this.time.now + 360;
+    this.hero.play(`a_${this.heroDir}_atk`, false);
+
+    const dmgMult = stats.skillDmgMult || 1;
+    const poisonMult = 1 + (stats.poisonDmgPct || 0) / 100;
+    const keyVenom = (tree.a_key_venom || 0) > 0;
+    const poisonDur = stats.activeEffects.has('venom_core') ? 6000 : 4000;
+
+    const applyPoison = (mob) => {
+      if (!mob) return;
+      mob.bleedUntil = Math.max(mob.bleedUntil || 0, this.time.now + poisonDur);
+      mob.bleedDmg = Math.max(3, Math.round(stats.atk * 0.35 * poisonMult * (keyVenom ? 1.6 : 1)));
+      mob.poisonedUntil = Math.max(mob.poisonedUntil || 0, this.time.now + poisonDur);
+    };
+
+    if (skillId === 'shadow_blitz') {
+      const ang = Math.atan2(aim.y - this.hero.y, aim.x - this.hero.x);
+      this.playFxSprite('afx_dash', this.hero.x, this.hero.y - 10, 0.9, ang, 280);
+      const tx = Phaser.Math.Clamp(aim.x - Math.cos(ang) * 40, 180, MAP_W - 180);
+      const ty = Phaser.Math.Clamp(aim.y - Math.sin(ang) * 40, 220, MAP_H - 180);
+      this.hero.setPosition(tx, ty);
+      this.playFxSprite('afx_slash', aim.x, aim.y - 10, 1.15, ang, 320);
+      this.dodgeBuffUntil = Math.max(this.dodgeBuffUntil || 0, this.time.now + 2500);
+      const mult = (1.75 + skillLvl * 0.32) * dmgMult;
+      let hits = 0;
+      for (const m of alive) {
+        if (Phaser.Math.Distance.Between(aim.x, aim.y, m.sprite.x, m.sprite.y) <= 185) {
+          const isCrit = Math.random() * 100 < (stats.critRate + 25);
+          const dmg = Math.max(1, Math.round(stats.atk * mult * (isCrit ? stats.critDmg / 100 : 1)));
+          this.damageMonster(m, dmg, isCrit, false, '#d8b4fe', '⚡');
+          hits++;
+        }
+      }
+      if ((tree.a_mod_leech || 0) > 0 && hits > 0) this.healHero(Math.round(this.playerMaxHp * 0.10));
+      return;
+    }
+
+    if (skillId === 'shadow_clones') {
+      const count = 2 + (skillLvl >= 4 ? 1 : 0) + ((tree.a_mod_phantom || 0) > 0 ? 1 : 0) + (stats.activeEffects.has('extra_clone') ? 1 : 0);
+      const mult = (1.20 + skillLvl * 0.24) * dmgMult;
+      const forceCrit = (tree.a_mod_phantom || 0) > 0;
+      for (let i = 0; i < count; i++) {
+        const tgt = alive[i % alive.length];
+        const cx = tgt.sprite.x + Phaser.Math.Between(-50, 50);
+        const cy = tgt.sprite.y + Phaser.Math.Between(-35, 35);
+        const clone = this.add.image(cx, cy, 'af_down_atk_2').setScale(0.54).setTint(0xc084fc).setAlpha(0.85).setDepth(cy);
+        this.playFxSprite('afx_slash', tgt.sprite.x, tgt.sprite.y - 10, 0.95, Math.random() * Math.PI, 280);
+        const isCrit = forceCrit || Math.random() * 100 < stats.critRate;
+        const dmg = Math.max(1, Math.round(stats.atk * mult * (isCrit ? stats.critDmg / 100 : 1)));
+        this.damageMonster(tgt, dmg, isCrit, false, '#c084fc', '👥');
+        this.tweens.add({ targets: clone, alpha: 0, duration: 480, onComplete: () => clone.destroy() });
+      }
+      return;
+    }
+
+    if (skillId === 'blade_flurry') {
+      const mult = (0.82 + skillLvl * 0.18) * dmgMult;
+      for (let w = 0; w < 3; w++) {
+        this.time.delayedCall(w * 240, () => {
+          if (this.isTransitioning || !this.hero) return;
+          this.playFxSprite('afx_flurry', this.hero.x, this.hero.y - 6, 1.35, w * 0.8, 320);
+          let hits = 0;
+          for (const m of this.monsters) {
+            if (m.hp > 0 && Phaser.Math.Distance.Between(this.hero.x, this.hero.y, m.sprite.x, m.sprite.y) <= 240) {
+              const isCrit = Math.random() * 100 < stats.critRate;
+              const dmg = Math.max(1, Math.round(stats.atk * mult * (isCrit ? stats.critDmg / 100 : 1)));
+              this.damageMonster(m, dmg, isCrit, false, '#e9d5ff', '🌀');
+              hits++;
+            }
+          }
+          if (hits > 0) this.playerMp = Math.min(this.playerMaxMp, this.playerMp + hits * 3);
+        });
+      }
+      return;
+    }
+
+    if (skillId === 'shadow_execute') {
+      this.playFxSprite('afx_execute', aim.x, aim.y - 10, 1.5, 0, 520);
+      this.cameras.main.shake(170, 0.009);
+      const mult = (2.50 + skillLvl * 0.45) * dmgMult;
+      for (const m of alive) {
+        if (Phaser.Math.Distance.Between(aim.x, aim.y, m.sprite.x, m.sprite.y) <= 250) {
+          const lowHp = m.hp / m.maxHp < 0.50;
+          const isCrit = lowHp || Math.random() * 100 < stats.critRate;
+          const dmg = Math.max(1, Math.round(stats.atk * mult * (lowHp ? 1.55 : 1) * (isCrit ? stats.critDmg / 100 : 1)));
+          this.damageMonster(m, dmg, isCrit, false, '#f0abfc', '⚔️絕殺 ');
+        }
+      }
+      return;
+    }
+
+    if (skillId === 'poison_kunai') {
+      const baseAng = Math.atan2(aim.y - this.hero.y, aim.x - this.hero.x);
+      const count = (tree.a_mod_fan || 0) > 0 ? 7 : 5;
+      const spread = 0.65;
+      for (let i = 0; i < count; i++) {
+        const off = -spread / 2 + (spread * i) / (count - 1);
+        const ang = baseAng + off;
+        const spr = this.add.image(this.hero.x, this.hero.y - 12, 'afx_kunai')
+          .setScale(0.38).setRotation(ang).setBlendMode(Phaser.BlendModes.ADD).setDepth(4510);
+        this.projectiles.push({
+          fromEnemy: false, kind: 'pierce_arrow', sprite: spr,
+          vx: Math.cos(ang) * 780, vy: Math.sin(ang) * 780,
+          lifeMs: 900, pierceLeft: 2, dmgMult: (0.88 + skillLvl * 0.18) * dmgMult * poisonMult,
+          appliesMark: false, hitIds: new Set(), stats,
+        });
+      }
+      for (const m of alive) {
+        if (Phaser.Math.Distance.Between(aim.x, aim.y, m.sprite.x, m.sprite.y) <= 200) applyPoison(m);
+      }
+      return;
+    }
+
+    if (skillId === 'smoke_veil') {
+      this.playFxSprite('afx_smoke', this.hero.x, this.hero.y, 1.45, 0, 540);
+      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 25);
+      this.dodgeBuffUntil = Math.max(this.dodgeBuffUntil || 0, this.time.now + 3500);
+      const mult = (1.10 + skillLvl * 0.20) * dmgMult;
+      for (const m of alive) {
+        if (Phaser.Math.Distance.Between(this.hero.x, this.hero.y, m.sprite.x, m.sprite.y) <= 260) {
+          m.chilledUntil = Math.max(m.chilledUntil || 0, this.time.now + 3500);
+          applyPoison(m);
+          this.damageMonster(m, Math.max(1, Math.round(stats.atk * mult)), false, false, '#a855f7', '💨');
+        }
+      }
+      return;
+    }
+
+    if (skillId === 'venom_burst') {
+      this.playFxSprite('afx_venom', aim.x, aim.y - 10, 1.5, 0, 480);
+      this.cameras.main.shake(130, 0.007);
+      const mult = (2.10 + skillLvl * 0.38) * dmgMult * poisonMult;
+      for (const m of alive) {
+        if (Phaser.Math.Distance.Between(aim.x, aim.y, m.sprite.x, m.sprite.y) <= 240) {
+          const isPois = this.time.now < (m.bleedUntil || 0) || this.time.now < (m.poisonedUntil || 0);
+          const isCrit = (keyVenom || isPois) && Math.random() * 100 < stats.critRate;
+          const dmg = Math.max(1, Math.round(stats.atk * mult * (isPois ? 1.45 : 1) * (isCrit ? stats.critDmg / 100 : 1)));
+          this.damageMonster(m, dmg, isCrit, false, '#4ade80', '☠️');
+        }
+      }
+      return;
+    }
+
+    if (skillId === 'lethal_fangs') {
+      this.lethalFangsUntil = this.time.now + 4500;
+      this.playFxSprite('afx_fangs', this.hero.x, this.hero.y - 8, 1.35, 0, 440);
+      for (const m of alive) {
+        if (Phaser.Math.Distance.Between(this.hero.x, this.hero.y, m.sprite.x, m.sprite.y) <= 220) applyPoison(m);
+      }
+      this.spawnFloatingText(this.hero.x, this.hero.y - 90, '🐍 致命毒牙！', '#4ade80', 15);
+    }
+  }
+
   applyHitEffects(mob, dmg, isCrit, stats) {
     if (!mob || mob.hp <= 0) return;
     this.damageMonster(mob, dmg, isCrit, false);
@@ -2074,18 +2687,49 @@ export class BattleScene extends Phaser.Scene {
     if (Math.random() * 100 < totalDodge) {
       this.spawnFloatingText(this.hero.x, this.hero.y - 68, 'MISS', '#94a3b8', 14);
       if ((stats.dodgeHealPct || 0) > 0) this.healHero(Math.max(1, Math.round(this.playerMaxHp * (stats.dodgeHealPct / 100))));
+      if ((stats.dodgeShadow || 0) > 0) this.playerMp = Math.min(this.playerMaxMp, this.playerMp + stats.dodgeShadow);
+      const dTree = this.getState().skillTree || {};
+      if (this.getState().classId === 'assassin' && (dTree.a_key_dancer || 0) > 0 && m && m.hp > 0) {
+        this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 6);
+        this.playFxSprite('afx_slash', m.sprite.x, m.sprite.y - 8, 0.85, Math.random() * Math.PI, 240);
+        this.damageMonster(m, Math.max(1, Math.round(stats.atk * 1.5)), true, false, '#d8b4fe', '⚡閃反 ');
+      }
+      if (stats.activeEffects.has('dodge_kunai') && m && m.hp > 0) {
+        const kang = Math.atan2(m.sprite.y - this.hero.y, m.sprite.x - this.hero.x);
+        [-0.18, 0, 0.18].forEach((o) => {
+          const spr = this.add.image(this.hero.x, this.hero.y - 10, 'afx_kunai').setScale(0.32).setRotation(kang + o).setBlendMode(Phaser.BlendModes.ADD).setDepth(4510);
+          this.projectiles.push({ fromEnemy: false, kind: 'pierce_arrow', sprite: spr, vx: Math.cos(kang + o) * 760, vy: Math.sin(kang + o) * 760, lifeMs: 750, pierceLeft: 1, dmgMult: 0.75, hitIds: new Set(), stats });
+        });
+      }
       return;
     }
 
     const mitigation = stats.armor / (stats.armor + 45 + m.stage * 14);
     const guardBonus = (this.getState().classId === 'warrior' && this.time.now < (this.warriorGuardUntil || 0))
       ? Math.min(0.20, this.warriorGuardStacks * 0.04) : 0;
-    let dmg = Math.max(1, Math.round(m.atk * atkMult * (1 - mitigation) * (1 - guardBonus)));
+    const curseDr = (m && this.time.now < (m.cursedUntil || 0)) ? 0.25 : 0;
+    const thornsDr = this.time.now < (this.thornsModUntil || 0) ? 0.35 : 0;
+    let dmg = Math.max(1, Math.round(m.atk * atkMult * (1 - mitigation) * (1 - guardBonus) * (1 - thornsDr) * (1 - curseDr)));
     if (this.mageShieldHp > 0) {
       const absorbed = Math.min(this.mageShieldHp, dmg);
       this.mageShieldHp -= absorbed;
       dmg -= absorbed;
       if (absorbed > 0) this.spawnFloatingText(this.hero.x, this.hero.y - 84, `🛡️-${formatNum(absorbed)}`, '#38bdf8', 13);
+    }
+    if (this.holyAegisHp > 0 && this.time.now < (this.holyAegisUntil || 0)) {
+      const absorbed = Math.min(this.holyAegisHp, dmg);
+      this.holyAegisHp -= absorbed;
+      dmg -= absorbed;
+      if (absorbed > 0) this.spawnFloatingText(this.hero.x, this.hero.y - 84, `🛡️-${formatNum(absorbed)}`, '#fde047', 13);
+    }
+    const cid = this.getState().classId;
+    if (cid === 'paladin' && m.hp > 0 && (this.time.now < (this.holyAegisUntil || 0) || (stats.thornsPct || 0) > 0 || stats.activeEffects.has('thorns_nova'))) {
+      const tree = this.getState().skillTree || {};
+      const thornsMult = (0.8 + (stats.thornsPct || 0) / 100) * ((tree.p_mod_thorns || 0) > 0 ? 1.5 : 1) * (stats.activeEffects.has('aegis_judgment') ? 1.8 : 1);
+      const isThornsCrit = (tree.p_key_bulwark || 0) > 0 || Math.random() * 100 < stats.critRate;
+      const tDmg = Math.max(1, Math.round(stats.armor * thornsMult * (isThornsCrit ? stats.critDmg / 100 : 1)));
+      this.playFxSprite('pfx_storm', this.hero.x, this.hero.y, 0.75, 0, 260);
+      this.damageMonster(m, tDmg, isThornsCrit, false, '#fde047', '⚡反傷 ');
     }
     this.playerHp = Math.max(0, this.playerHp - dmg);
 
@@ -2111,6 +2755,7 @@ export class BattleScene extends Phaser.Scene {
       if (st.activeEffects.has('shadow_veil')) bonusMult += 0.25;
     }
     if (prefix === '🩸' && (st.bleedDmgPct || 0) > 0) bonusMult += st.bleedDmgPct / 100;
+    if (nowT < (m.cursedUntil || 0)) bonusMult += 0.20;
     dmg = Math.max(1, Math.round(dmg * bonusMult));
     m.hp = Math.max(0, m.hp - dmg);
 
@@ -2166,6 +2811,29 @@ export class BattleScene extends Phaser.Scene {
     m.hpFill.destroy();
     m.nameText.destroy();
 
+    const kStats = this.getStats();
+    const kTree = this.getState().skillTree || {};
+    if ((kStats.killEssence || 0) > 0) {
+      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + kStats.killEssence);
+    }
+    if (this.getState().classId === 'necro' && ((kTree.n_key_plague || 0) > 0 || (kStats.activeEffects.has('blood_corpse') && Math.random() < 0.5))) {
+      this.playFxSprite('nfx_p_corpse', mx, my, 1.05, 0, 380);
+      const ceDmg = Math.max(1, Math.round(kStats.atk * 1.45 * (kStats.skillDmgMult || 1)));
+      for (const om of this.monsters) {
+        if (om.hp > 0 && om !== m && Phaser.Math.Distance.Between(mx, my, om.sprite.x, om.sprite.y) <= 190) {
+          this.damageMonster(om, ceDmg, true, false, '#fb7185', '💥');
+        }
+      }
+    }
+    if (this.getState().classId === 'assassin' && (kTree.a_key_venom || 0) > 0 && (this.time.now < (m.bleedUntil || 0) || this.time.now < (m.poisonedUntil || 0))) {
+      this.playFxSprite('afx_venom', mx, my, 1.05, 0, 380);
+      const vDmg = Math.max(1, Math.round(kStats.atk * 1.45 * (1 + (kStats.poisonDmgPct || 0) / 100)));
+      for (const om of this.monsters) {
+        if (om.hp > 0 && om !== m && Phaser.Math.Distance.Between(mx, my, om.sprite.x, om.sprite.y) <= 195) {
+          this.damageMonster(om, vDmg, true, false, '#4ade80', '☠️');
+        }
+      }
+    }
     this.waveKills += 1;
     const remaining = this.monsters.filter((t) => t.hp > 0).length;
     const waveCleared = remaining === 0;

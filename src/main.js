@@ -3,6 +3,9 @@ import { getStageLabel, getSubStage } from './data/monsters.js';
 import { WARRIOR_SKILLS } from './data/warriorSkills.js';
 import { RANGER_SKILLS } from './data/rangerSkills.js';
 import { MAGE_SKILLS } from './data/mageSkills.js';
+import { PALADIN_SKILLS } from './data/paladinSkills.js';
+import { NECRO_SKILLS } from './data/necroSkills.js';
+import { ASSASSIN_SKILLS } from './data/assassinSkills.js';
 import { RARITIES } from './data/items.js';
 import { SKILL_TREE_NODES, isNodeUnlocked } from './data/skillTree.js';
 import { generateLoot, getSalvageReward, calcItemPower } from './logic/lootGen.js';
@@ -54,9 +57,9 @@ const ui = new DashboardUI({
 
   onEquipSkill: (slotIdx, skillId) => {
     const cid = gameState.classId || 'warrior';
-    const book = cid === 'warrior' ? WARRIOR_SKILLS : (cid === 'ranger' ? RANGER_SKILLS : MAGE_SKILLS);
+    const book = cid === 'warrior' ? WARRIOR_SKILLS : (cid === 'ranger' ? RANGER_SKILLS : (cid === 'paladin' ? PALADIN_SKILLS : (cid === 'necro' ? NECRO_SKILLS : (cid === 'assassin' ? ASSASSIN_SKILLS : MAGE_SKILLS))));
     if (!gameState.equippedSkillsByClass) {
-      gameState.equippedSkillsByClass = { warrior: ['whirlwind', null, null], ranger: ['volley', null, null], mage: ['meteor', null, null] };
+      gameState.equippedSkillsByClass = { warrior: ['whirlwind', null, null], ranger: ['volley', null, null], mage: ['meteor', null, null], paladin: ['blessed_hammer', null, null], necro: ['raise_skeleton', null, null], assassin: ['shadow_blitz', null, null] };
     }
     const eq = [...(gameState.equippedSkillsByClass[cid] || [null, null, null])];
     const existIdx = eq.indexOf(skillId);
@@ -180,6 +183,9 @@ const ui = new DashboardUI({
       { cid: 'warrior', book: WARRIOR_SKILLS },
       { cid: 'ranger',  book: RANGER_SKILLS },
       { cid: 'mage',    book: MAGE_SKILLS },
+      { cid: 'paladin', book: PALADIN_SKILLS },
+      { cid: 'necro',   book: NECRO_SKILLS },
+      { cid: 'assassin',book: ASSASSIN_SKILLS },
     ];
     allActive.forEach(({ cid, book }) => {
       const unlockedSk = Object.values(book).find((s) => s.treeNodeId === nodeId);
@@ -200,11 +206,11 @@ const ui = new DashboardUI({
 
   onResetSkillTree: () => {
     const tree = gameState.skillTree || {};
-    const spent = Object.values(tree).reduce((s, v) => s + v, 0) - 3;
+    const spent = Object.values(tree).reduce((s, v) => s + v, 0) - 6;
     if (spent <= 0) return;
     gameState.skillPoints = (gameState.skillPoints || 0) + spent;
-    gameState.skillTree = { w_whirlwind: 1, r_volley: 1, m_meteor: 1 };
-    gameState.equippedSkillsByClass = { warrior: ['whirlwind', null, null], ranger: ['volley', null, null], mage: ['meteor', null, null] };
+    gameState.skillTree = { w_whirlwind: 1, r_volley: 1, m_meteor: 1, p_hammer: 1, n_skeleton: 1, a_blitz: 1 };
+    gameState.equippedSkillsByClass = { warrior: ['whirlwind', null, null], ranger: ['volley', null, null], mage: ['meteor', null, null], paladin: ['blessed_hammer', null, null], necro: ['raise_skeleton', null, null], assassin: ['shadow_blitz', null, null] };
     ui.addLog(`已重置技能樹並返還 ${spent} 點技能點。`, 'system');
     refreshStatsAndUI();
     persistAll(true);
@@ -218,8 +224,8 @@ const ui = new DashboardUI({
     gameState.level = 1;
     gameState.exp = 0;
     gameState.skillPoints = 1;
-    gameState.skillTree = { w_whirlwind: 1, r_volley: 1, m_meteor: 1 };
-    gameState.equippedSkillsByClass = { warrior: ['whirlwind', null, null], ranger: ['volley', null, null], mage: ['meteor', null, null] };
+    gameState.skillTree = { w_whirlwind: 1, r_volley: 1, m_meteor: 1, p_hammer: 1, n_skeleton: 1, a_blitz: 1 };
+    gameState.equippedSkillsByClass = { warrior: ['whirlwind', null, null], ranger: ['volley', null, null], mage: ['meteor', null, null], paladin: ['blessed_hammer', null, null], necro: ['raise_skeleton', null, null], assassin: ['shadow_blitz', null, null] };
     gameState.gold = 0;
     gameState.stage = 1;
     gameState.wave = 1;
@@ -591,7 +597,7 @@ initCloudAuth(async (user) => {
         upgrades: { ...base.upgrades, ...(cloudData.upgrades || {}) },
         equipment: { ...base.equipment, ...(cloudData.equipment || {}) },
         autoSalvage: { ...base.autoSalvage, ...(cloudData.autoSalvage || {}) },
-        skillTree: { w_whirlwind: 1, r_volley: 1, m_meteor: 1, ...(cloudData.skillTree || {}) },
+        skillTree: { w_whirlwind: 1, r_volley: 1, m_meteor: 1, p_hammer: 1, n_skeleton: 1, a_blitz: 1, ...(cloudData.skillTree || {}) },
         equippedSkillsByClass: {
           ...base.equippedSkillsByClass,
           ...(cloudData.equippedSkillsByClass || {}),
