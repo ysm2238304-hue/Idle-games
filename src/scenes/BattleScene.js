@@ -218,7 +218,13 @@ export class BattleScene extends Phaser.Scene {
       { prefix: 'p', tex: 'pf', walkFps: 10, atkFps: 15 },
       { prefix: 'n', tex: 'nf', walkFps: 10, atkFps: 15 },
       { prefix: 'a', tex: 'af', walkFps: 13, atkFps: 18 },
+      { prefix: 'sum_skel', tex: 'skel', walkFps: 10, atkFps: 14 },
+      { prefix: 'sum_gol', tex: 'gol', walkFps: 8, atkFps: 12 },
     ];
+    if (!this.anims.exists('sum_wraith_walk')) {
+      this.anims.create({ key: 'sum_wraith_walk', frames: [0,1,2,3].map((i) => ({ key: `wraith_walk_${i}` })), frameRate: 10, repeat: -1 });
+      this.anims.create({ key: 'sum_wraith_atk', frames: [0,1,2,3].map((i) => ({ key: `wraith_atk_${i}` })), frameRate: 14, repeat: 0 });
+    }
     defs.forEach(({ prefix, tex, walkFps, atkFps }) => {
       ['down', 'up', 'right'].forEach((d) => {
         if (!this.anims.exists(`${prefix}_${d}_walk`)) {
@@ -798,19 +804,21 @@ export class BattleScene extends Phaser.Scene {
     this.updateProjectiles(dt, stats);
     this.updateSummons(dt, stats);
 
-    this.respawnTimer = (this.respawnTimer || 0) + delta;
-    if (this.respawnTimer >= 1200) {
-      this.respawnTimer = 0;
-      const aliveCount = this.monsters.filter((m) => m.hp > 0).length;
-      if (aliveCount < 13) {
+    const aliveCount = this.monsters.filter((m) => m.hp > 0).length;
+    if (aliveCount === 0 && !this.batchRespawning) {
+      this.batchRespawning = true;
+      this.time.delayedCall(800, () => {
+        this.batchRespawning = false;
         const curStage = this.getState().stage || 1;
-        const nm = spawnSingleMonster(curStage, false);
-        const ang = Math.random() * Math.PI * 2;
-        const dist = Phaser.Math.Between(480, 920);
-        const sx = Phaser.Math.Clamp(this.hero.x + Math.cos(ang) * dist, 220, MAP_W - 220);
-        const sy = Phaser.Math.Clamp(this.hero.y + Math.sin(ang) * dist * 0.72, 260, MAP_H - 220);
-        this.spawnMonsterInstance(nm, ang, sx, sy);
-      }
+        const encounters = createStageEncounters(curStage);
+        this.clearAllMonsters();
+        encounters.forEach((enc) => {
+          const rx = Phaser.Math.Clamp(this.hero.x + (enc.x - MAP_W / 2), 220, MAP_W - 220);
+          const ry = Phaser.Math.Clamp(this.hero.y + (enc.y - MAP_H / 2), 240, MAP_H - 200);
+          this.spawnMonsterInstance(enc.mob, Math.PI, rx, ry);
+        });
+        this.spawnFloatingText(this.hero.x, this.hero.y - 115, '⚔️ 新一批 60% 怪群已生成！', '#fde047', 15);
+      });
     }
 
     const nearest = this.findNearestMonster(this.hero.x, this.hero.y);
@@ -2215,16 +2223,29 @@ export class BattleScene extends Phaser.Scene {
         continue;
       }
 
-      const baseScale = s.kind === 'golem' ? 0.52 : 0.38;
-      const bob = Math.sin(now * 0.014 + i) * 0.03;
+      const baseScale = s.kind === 'golem' ? 0.54 : 0.42;
+      const bob = Math.sin(now * 0.015 + i) * 0.025;
       s.sprite.setScale(baseScale * (1 - bob * 0.5), baseScale * (1 + bob));
 
+      const animPref = s.kind === 'golem' ? 'sum_gol' : 'sum_skel';
+      const isSumAtk = now < (s.atkAnimUntil || 0);
       const target = this.findNearestMonster(s.sprite.x, s.sprite.y);
       if (target) {
         const dx = target.sprite.x - s.sprite.x;
         const dy = target.sprite.y - s.sprite.y;
         const dist = Math.hypot(dx, dy) || 1;
-        s.sprite.setFlipX(dx < 0);
+        let sDir = 'right';
+        let sFlip = dx < 0;
+        if (Math.abs(dy) > Math.abs(dx) * 1.25) {
+          sDir = dy < 0 ? 'up' : 'down';
+          sFlip = false;
+        }
+        s.dir = sDir;
+        s.sprite.setFlipX(sFlip);
+        const wantKey = `${animPref}_${sDir}_${isSumAtk ? 'atk' : 'walk'}`;
+        if (s.sprite.anims && s.sprite.anims.currentAnim?.key !== wantKey) {
+          s.sprite.play(wantKey, !isSumAtk);
+        }
         const atkR = s.kind === 'golem' ? 115 : 85;
         if (dist > atkR) {
           const spd = (s.kind === 'golem' ? 185 : 225) * (frenzy ? 1.35 : 1);
@@ -2235,10 +2256,13 @@ export class BattleScene extends Phaser.Scene {
         s.atkTimer -= dt * 1000 * (frenzy ? 1.6 : 1);
         if (dist <= atkR + 28 && s.atkTimer <= 0) {
           s.atkTimer = s.kind === 'golem' ? 1300 : 880;
+          s.atkAnimUntil = now + 360;
+          if (s.sprite.anims) s.sprite.play(`${animPref}_${s.dir || 'down'}_atk`, false);
           const sumMult = (1 + (stats.summonDmgPct || 0) / 100) * (frenzy ? 1.35 : 1);
           const isCrit = Math.random() * 100 < stats.critRate;
           if (s.kind === 'golem') {
-            this.playFxSprite('nfx_p_golem', s.sprite.x, s.sprite.y + 10, 0.95, 0, 320);
+            this.playFxSprite('sfx_golem_slam', s.sprite.x, s.sprite.y + 10, 1.05, 0, 340);
+            this.playFxSprite('sfx_blood_leech', this.hero.x, this.hero.y - 10, 0.65, 0, 300);
             const mult = (1.35 + s.lvl * 0.28) * sumMult;
             for (const m of this.monsters) {
               if (m.hp > 0 && Phaser.Math.Distance.Between(s.sprite.x, s.sprite.y, m.sprite.x, m.sprite.y) <= 155) {
@@ -2249,7 +2273,7 @@ export class BattleScene extends Phaser.Scene {
             const healMult = (tree.n_mod_leech || 0) > 0 ? 2 : 1;
             this.healHero(Math.max(1, Math.round(this.playerMaxHp * ((3 + s.lvl * 0.8) / 100) * healMult)));
           } else {
-            this.playFxSprite('nfx_p_slash', target.sprite.x, target.sprite.y - 8, 0.55, Math.atan2(dy, dx), 200);
+            this.playFxSprite('sfx_skel_slash', target.sprite.x, target.sprite.y - 8, 0.62, Math.atan2(dy, dx), 220);
             const mult = (0.75 + s.lvl * 0.18) * sumMult;
             const dmg = Math.max(1, Math.round(stats.atk * mult * (isCrit ? stats.critDmg / 100 : 1)));
             this.damageMonster(target, dmg, isCrit, false, '#5eead4', '💀');
@@ -2297,7 +2321,7 @@ export class BattleScene extends Phaser.Scene {
     if (skillId === 'raise_skeleton') {
       const maxSk = 3 + Math.floor(skillLvl / 2) + ((tree.n_mod_horde || 0) > 0 ? 2 : 0) + ((tree.n_key_overlord || 0) > 0 ? 2 : 0) + (stats.activeEffects.has('skeleton_army') ? 2 : 0);
       const count = 2 + ((tree.n_mod_horde || 0) > 0 ? 1 : 0);
-      this.playFxSprite('nfx_p_summon', this.hero.x, this.hero.y + 14, 1.15, 0, 420);
+      this.playFxSprite('sfx_skel_summon', this.hero.x, this.hero.y + 14, 1.15, 0, 440);
       for (let i = 0; i < count; i++) {
         const existingSk = this.summons.filter((s) => s.kind === 'skeleton');
         if (existingSk.length >= maxSk) {
@@ -2310,7 +2334,8 @@ export class BattleScene extends Phaser.Scene {
         const oy = Phaser.Math.Between(-60, 70);
         const sx = this.hero.x + ox;
         const sy = this.hero.y + oy;
-        const spr = this.add.image(sx, sy, 'necro_skeleton').setScale(0.38).setDepth(sy);
+        const spr = this.add.sprite(sx, sy, 'skel_down_walk_0').setScale(0.42).setDepth(sy);
+        spr.play('sum_skel_down_walk');
         const barBg = this.add.rectangle(sx, sy - 48, 48, 5, 0x090b10).setStrokeStyle(1, 0x2dd4bf).setDepth(3500);
         const barFill = this.add.rectangle(sx - 24, sy - 48, 48, 4, 0x2dd4bf).setOrigin(0, 0.5).setDepth(3501);
         const label = this.add.text(sx, sy - 60, '💀 骷髏戰士', { fontSize: '10px', color: '#5eead4', fontStyle: 'bold', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(3502);
@@ -2320,14 +2345,15 @@ export class BattleScene extends Phaser.Scene {
     }
 
     if (skillId === 'blood_golem') {
-      this.playFxSprite('nfx_p_summon', aim.x, aim.y + 14, 1.35, 0, 460);
+      this.playFxSprite('sfx_golem_summon', aim.x, aim.y + 14, 1.30, 0, 480);
       const existingG = this.summons.find((s) => s.kind === 'golem');
       if (existingG) {
         existingG.lifeMs = 14000;
         existingG.lvl = skillLvl;
         existingG.sprite.setPosition(aim.x, aim.y);
       } else {
-        const spr = this.add.image(aim.x, aim.y, 'necro_golem').setScale(0.52).setDepth(aim.y);
+        const spr = this.add.sprite(aim.x, aim.y, 'gol_down_walk_0').setScale(0.54).setDepth(aim.y);
+        spr.play('sum_gol_down_walk');
         const barBg = this.add.rectangle(aim.x, aim.y - 68, 56, 6, 0x090b10).setStrokeStyle(1, 0xfb7185).setDepth(3500);
         const barFill = this.add.rectangle(aim.x - 28, aim.y - 68, 56, 5, 0xf43f5e).setOrigin(0, 0.5).setDepth(3501);
         const label = this.add.text(aim.x, aim.y - 80, '🩸 鮮血魔像', { fontSize: '10.5px', color: '#fda4af', fontStyle: 'bold', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(3502);
@@ -2339,7 +2365,7 @@ export class BattleScene extends Phaser.Scene {
     if (skillId === 'undead_frenzy') {
       this.undeadFrenzyUntil = this.time.now + 5000;
       this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 25);
-      this.playFxSprite('nfx_p_summon', this.hero.x, this.hero.y + 10, 1.3, 0, 420);
+      this.playFxSprite('sfx_frenzy', this.hero.x, this.hero.y + 10, 1.35, 0, 460);
       this.summons.forEach((s) => { s.lifeMs += 4000; });
       this.spawnFloatingText(this.hero.x, this.hero.y - 90, '💀 亡靈狂熱！', '#5eead4', 15);
       return;
@@ -2350,8 +2376,9 @@ export class BattleScene extends Phaser.Scene {
       for (let i = 0; i < count; i++) {
         const target = alive[i % alive.length];
         const ang = Math.atan2(target.sprite.y - this.hero.y, target.sprite.x - this.hero.x) + Phaser.Math.FloatBetween(-0.25, 0.25);
-        const spr = this.add.image(this.hero.x, this.hero.y - 12, 'nfx_p_wraith')
-          .setScale(0.42).setRotation(ang).setBlendMode(Phaser.BlendModes.ADD).setDepth(4510);
+        const spr = this.add.sprite(this.hero.x, this.hero.y - 12, 'wraith_walk_0')
+          .setScale(0.38).setFlipX(Math.cos(ang) < 0).setDepth(4510);
+        spr.play('sum_wraith_walk');
         this.projectiles.push({
           fromEnemy: false, kind: 'mage_bolt', sprite: spr,
           vx: Math.cos(ang) * 650, vy: Math.sin(ang) * 650,

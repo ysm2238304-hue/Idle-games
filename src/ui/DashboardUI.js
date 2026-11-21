@@ -975,7 +975,7 @@ export class DashboardUI {
     const fillEl = document.getElementById('tracker-prog-fill');
     const bossEl = document.getElementById('tracker-boss-line');
     const prog = mapKills % bossEvery;
-    if (cntEl) cntEl.textContent = `場上 ${remaining} 隻・本圖擊殺 ${mapKills}`;
+    if (cntEl) cntEl.textContent = `本批 ${remaining} / 15 隻 (60%基數)・累積 ${mapKills}`;
     const pct = Math.max(0, Math.min(100, (prog / bossEvery) * 100));
     if (fillEl) fillEl.style.width = `${pct.toFixed(1)}%`;
     if (bossEl) {
@@ -984,7 +984,7 @@ export class DashboardUI {
         bossEl.textContent = `🔥 首領激戰中！（本圖持續刷怪）`;
       } else {
         bossEl.style.color = '#94a3b8';
-        bossEl.textContent = `持續刷怪中・再擊殺 ${bossEvery - prog} 隻出現地圖首領`;
+        bossEl.textContent = `殺完本批自動生成下一批 60% 怪群`;
       }
     }
   }

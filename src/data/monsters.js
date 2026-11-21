@@ -288,7 +288,7 @@ export function createStageEncounters(stage) {
   const spawns = [];
   const cx = 2048;
   const cy = 1152;
-  const totalMobs = 12 + Math.min(8, Math.floor(sub * 0.8));
+  const totalMobs = 15; // 佔地圖滿編(25隻) 60% 基數
 
   // 怪物從遠處四面八方（距離英雄 760~1380px 外圍）預先生成，全部擊殺才算通關
   for (let i = 0; i < totalMobs; i++) {
