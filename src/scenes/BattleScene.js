@@ -221,8 +221,8 @@ export class BattleScene extends Phaser.Scene {
         if (!this.anims.exists(`${prefix}_${d}_walk`)) {
           this.anims.create({
             key: `${prefix}_${d}_walk`,
-            frames: [0, 1, 2, 3, 2, 1].map((i) => ({ key: `${tex}_${d}_walk_${i}` })),
-            frameRate: Math.max(12, walkFps + 2),
+            frames: [0, 1, 2, 3].map((i) => ({ key: `${tex}_${d}_walk_${i}` })),
+            frameRate: Math.max(9, walkFps),
             repeat: -1,
           });
         }
@@ -500,25 +500,41 @@ export class BattleScene extends Phaser.Scene {
     const cost = info.mpCost || 18;
     const tree = this.getState().skillTree || {};
     const freeAstral = (this.getState().classId === 'mage' && (tree.m_key_astral || 0) > 0 && Math.random() < 0.35);
+    const curCid = this.getState().classId;
     if (!freeAstral && this.playerMp < cost) {
       if (isManual) {
-        const rName = this.getState().classId === 'warrior' ? '能量不足!' : (this.getState().classId === 'ranger' ? '精力不足!' : '魔力不足!');
-        const rCol = this.getState().classId === 'warrior' ? '#fb923c' : (this.getState().classId === 'ranger' ? '#34d399' : '#60a5fa');
+        const rMap = {
+          warrior: ['能量不足!', '#fb923c'],
+          ranger:  ['精力不足!', '#34d399'],
+          mage:    ['魔力不足!', '#60a5fa'],
+          paladin: ['聖能不足!', '#fde047'],
+          necro:   ['魂能不足!', '#5eead4'],
+          assassin:['影能不足!', '#d8b4fe'],
+        };
+        const [rName, rCol] = rMap[curCid] || rMap.mage;
         this.spawnFloatingText(this.hero.x, this.hero.y - 90, rName, rCol, 14);
       }
       return false;
     }
     if (!freeAstral) this.playerMp = Math.max(0, this.playerMp - cost);
-    const echoRefund = (this.getState().classId === 'mage' && this.getStats().activeEffects.has('arcane_echo') && Math.random() < 0.25);
+    const echoRefund = (curCid === 'mage' && this.getStats().activeEffects.has('arcane_echo') && Math.random() < 0.25);
     this.slotCdTimers[slotIdx] = freeAstral ? Math.round(info.cooldownMs * 0.3) : (echoRefund ? Math.round(info.cooldownMs * 0.5) : 0);
 
+    const stNow = this.getStats();
     if (info.cid === 'warrior') {
-      this.castWarriorSkill(info.id, info.level, this.getStats(), isManual);
+      this.castWarriorSkill(info.id, info.level, stNow, isManual);
     } else if (info.cid === 'ranger') {
-      this.castRangerSkill(info.id, info.level, this.getStats(), isManual);
+      this.castRangerSkill(info.id, info.level, stNow, isManual);
     } else if (info.cid === 'mage') {
-      this.castMageSkill(info.id, info.level, this.getStats(), isManual);
+      this.castMageSkill(info.id, info.level, stNow, isManual);
+    } else if (info.cid === 'paladin') {
+      this.castPaladinSkill(info.id, info.level, stNow, isManual);
+    } else if (info.cid === 'necro') {
+      this.castNecroSkill(info.id, info.level, stNow, isManual);
+    } else if (info.cid === 'assassin') {
+      this.castAssassinSkill(info.id, info.level, stNow, isManual);
     }
+    this.lungeHeroJuice(1.09, 0.93);
     return true;
   }
 
@@ -866,13 +882,16 @@ export class BattleScene extends Phaser.Scene {
               const dx = nearest.sprite.x - this.hero.x;
               const dy = nearest.sprite.y - this.hero.y;
               const dist = Math.hypot(dx, dy) || 1;
-              const idealR = classId === 'ranger' ? 310 : 330;
-              if (dist > idealR) {
+              const idealR = classId === 'ranger' ? 310 : 335;
+              if (dist > idealR + 35) {
                 vx = (dx / dist) * stats.moveSpeed;
                 vy = (dy / dist) * stats.moveSpeed;
+              } else if (dist < idealR - 45) {
+                vx = (-dx / dist) * stats.moveSpeed * 0.65;
+                vy = (-dy / dist) * stats.moveSpeed * 0.65;
               } else {
-                vx = (-dy / dist) * stats.moveSpeed * 0.5;
-                vy = (dx / dist) * stats.moveSpeed * 0.5;
+                vx = (-dy / dist) * stats.moveSpeed * 0.48;
+                vy = (dx / dist) * stats.moveSpeed * 0.48;
               }
             }
           } else {
@@ -883,12 +902,12 @@ export class BattleScene extends Phaser.Scene {
             const dx = tx - this.hero.x;
             const dy = ty - this.hero.y;
             const dist = Math.hypot(dx, dy) || 1;
-            if (dist > 95) {
+            if (dist > 112) {
               vx = (dx / dist) * stats.moveSpeed;
               vy = (dy / dist) * stats.moveSpeed;
-            } else {
-              vx = (-dy / dist) * stats.moveSpeed * 0.35;
-              vy = (dx / dist) * stats.moveSpeed * 0.35;
+            } else if (dist > 78) {
+              vx = (-dy / dist) * stats.moveSpeed * 0.32;
+              vy = (dx / dist) * stats.moveSpeed * 0.32;
             }
           }
         } else {
@@ -952,20 +971,30 @@ export class BattleScene extends Phaser.Scene {
     if (isMoving && !isAttacking && time >= (this.heroDirLockUntil || 0)) {
       let nextDir = this.heroDir;
       let nextFlip = this.heroFlipX;
-      if (Math.abs(vy) > Math.abs(vx) * 1.25) {
+      if (Math.abs(vy) > Math.abs(vx) * 1.35 && Math.abs(vy) > 18) {
         nextDir = vy < 0 ? 'up' : 'down';
         nextFlip = false;
-      } else if (Math.abs(vx) > 10) {
+      } else if (Math.abs(vx) > 20) {
         nextDir = 'right';
         nextFlip = vx < 0;
       }
       if (nextDir !== this.heroDir || nextFlip !== this.heroFlipX) {
         this.heroDir = nextDir;
         this.heroFlipX = nextFlip;
-        this.heroDirLockUntil = time + 110;
+        this.heroDirLockUntil = time + 260;
       }
     }
     this.hero.setFlipX(this.heroFlipX);
+    if (!isAttacking) {
+      if (isMoving) {
+        const bob = Math.sin(time * 0.018) * 0.026;
+        this.hero.setScale(0.56 * (1 - bob * 0.6), 0.56 * (1 + bob));
+        this.hero.anims.timeScale = Phaser.Math.Clamp(spd / 145, 0.8, 1.45);
+      } else {
+        this.hero.setScale(0.56, 0.56);
+        this.hero.anims.timeScale = 1;
+      }
+    }
 
     if (cid === 'warrior' || cid === 'ranger' || cid === 'mage' || cid === 'paladin' || cid === 'necro' || cid === 'assassin') {
       const prefix = cid === 'warrior' ? 'w' : (cid === 'ranger' ? 'r' : (cid === 'paladin' ? 'p' : (cid === 'necro' ? 'n' : (cid === 'assassin' ? 'a' : 'm'))));
@@ -1161,9 +1190,24 @@ export class BattleScene extends Phaser.Scene {
     });
   }
 
+
+  lungeHeroJuice(sx = 1.08, sy = 0.94) {
+    if (!this.hero || !this.hero.active) return;
+    this.tweens.killTweensOf(this.hero);
+    this.hero.setScale(0.56 * sx, 0.56 * sy);
+    this.tweens.add({
+      targets: this.hero,
+      scaleX: 0.56,
+      scaleY: 0.56,
+      duration: 180,
+      ease: 'Back.easeOut',
+    });
+  }
+
   performHeroAttack(time, stats, classId, target) {
     this.faceHeroToward(target.sprite.x, target.sprite.y);
-    this.heroAttackAnimUntil = time + 270;
+    this.heroAttackAnimUntil = time + 340;
+    this.lungeHeroJuice(1.07, 0.94);
     const atkPrefix = classId === 'warrior' ? 'w' : (classId === 'ranger' ? 'r' : (classId === 'paladin' ? 'p' : (classId === 'necro' ? 'n' : (classId === 'assassin' ? 'a' : 'm'))));
     this.hero.play(`${atkPrefix}_${this.heroDir}_atk`, false);
     const mpGain = classId === 'mage' ? 7 : (classId === 'ranger' || classId === 'paladin' ? 5 : 4);

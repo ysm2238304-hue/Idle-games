@@ -81,6 +81,15 @@ export function loadGame() {
     if (!merged.equippedSkillsByClass.mage || merged.equippedSkillsByClass.mage.every((s) => !s)) {
       merged.equippedSkillsByClass.mage = ['meteor', null, null];
     }
+    if (!merged.equippedSkillsByClass.paladin || merged.equippedSkillsByClass.paladin.every((s) => !s)) {
+      merged.equippedSkillsByClass.paladin = ['blessed_hammer', null, null];
+    }
+    if (!merged.equippedSkillsByClass.necro || merged.equippedSkillsByClass.necro.every((s) => !s)) {
+      merged.equippedSkillsByClass.necro = ['raise_skeleton', null, null];
+    }
+    if (!merged.equippedSkillsByClass.assassin || merged.equippedSkillsByClass.assassin.every((s) => !s)) {
+      merged.equippedSkillsByClass.assassin = ['shadow_blitz', null, null];
+    }
     // 相容舊版單一 equippedSkills
     if (Array.isArray(parsed.equippedSkills) && !parsed.equippedSkillsByClass) {
       merged.equippedSkillsByClass.warrior = parsed.equippedSkills;
