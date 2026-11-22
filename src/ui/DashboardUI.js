@@ -1,3 +1,4 @@
+import { TOWN_SPLASHES } from '../data/towns/splashes.js';
 import { CLASSES } from '../data/classes.js';
 import { WARRIOR_SKILLS } from '../data/warriorSkills.js';
 import { RANGER_SKILLS } from '../data/rangerSkills.js';
@@ -1360,6 +1361,49 @@ export class DashboardUI {
       bodyEl.querySelector('#btn-portal-map').onclick = () => { modal.classList.add('hidden'); ctx.onOpenWorldMap(); };
     }
     modal.classList.remove('hidden');
+  }
+
+
+  showTownSplash(chapterIdx = 0) {
+    const ov = document.getElementById('town-splash-overlay');
+    const card = document.getElementById('town-splash-card');
+    const bg = document.getElementById('town-splash-bg');
+    const badge = document.getElementById('town-splash-badge');
+    const title = document.getElementById('town-splash-title');
+    const style = document.getElementById('town-splash-style');
+    const quote = document.getElementById('town-splash-quote');
+    const tip = document.getElementById('town-splash-tip');
+    if (!ov || !card) return;
+
+    const cfg = TOWN_SPLASHES[chapterIdx] || TOWN_SPLASHES[0];
+    card.className = `town-splash-card ${cfg.themeClass}`;
+    if (bg) bg.style.backgroundImage = `url('${cfg.bgUrl}')`;
+    if (badge) badge.textContent = cfg.badge;
+    if (title) title.textContent = cfg.title;
+    if (style) style.textContent = cfg.styleTag;
+    if (quote) quote.textContent = cfg.quote;
+    if (tip) tip.textContent = cfg.tip;
+    this.updateTownSplashProgress(0.08);
+    ov.classList.remove('hidden', 'fading');
+    return cfg;
+  }
+
+  updateTownSplashProgress(ratio) {
+    const fill = document.getElementById('town-splash-progress-fill');
+    const txt = document.getElementById('town-splash-progress-text');
+    const pct = Math.max(0, Math.min(100, Math.round((ratio || 0) * 100)));
+    if (fill) fill.style.width = `${pct}%`;
+    if (txt) txt.textContent = pct >= 100 ? '✨ 傳送完成，點擊或即將進入主城...' : `傳送陣共鳴中... ${pct}%`;
+  }
+
+  hideTownSplash() {
+    const ov = document.getElementById('town-splash-overlay');
+    if (!ov || ov.classList.contains('hidden')) return;
+    ov.classList.add('fading');
+    setTimeout(() => {
+      ov.classList.add('hidden');
+      ov.classList.remove('fading');
+    }, 380);
   }
 
 }

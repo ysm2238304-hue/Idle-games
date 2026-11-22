@@ -54,12 +54,21 @@ export class TownScene extends Phaser.Scene {
 
   preload() {
     const td = this.townData;
+    const cid = this.callbacks?.getState?.()?.classId || 'warrior';
+    const heroAtlas = `atlas_${cid}`;
+    if (!this.textures.exists(heroAtlas)) {
+      this.load.atlas(heroAtlas, `./assets/heroes/atlas_${cid}.png`, `./assets/heroes/atlas_${cid}.json`);
+    }
     if (!this.textures.exists(td.bgKey)) {
       this.load.image(td.bgKey, td.bgUrl);
     }
     if (!this.textures.exists(td.atlasKey)) {
       this.load.atlas(td.atlasKey, td.atlasPng, td.atlasJson);
     }
+    this.load.off('progress');
+    this.load.on('progress', (val) => {
+      this.callbacks?.onTownLoadProgress?.(val);
+    });
   }
 
   create() {
@@ -192,11 +201,11 @@ export class TownScene extends Phaser.Scene {
       });
     }
 
-    // 9. 建立玩家英雄角色
+    // 9. 建立玩家英雄角色（使用與 BattleScene 一致的 atlas_${cid} 與專屬幀前綴）
     const cid = this.callbacks?.getState?.()?.classId || 'warrior';
-    const prefix = this.getHeroPrefix(cid);
-    const atlasKey = `hero_${cid}`;
-    const initFrame = `${prefix}_down_walk_0`;
+    const framePrefix = this.getHeroFramePrefix(cid);
+    const atlasKey = `atlas_${cid}`;
+    const initFrame = `${framePrefix}_down_walk_0`;
 
     this.heroShadow = this.add.image(td.spawn.x, td.spawn.y + 42, 'fx_glow')
       .setTint(0x000000).setScale(1.15, 0.42).setAlpha(0.55).setDepth(3);
@@ -280,6 +289,23 @@ export class TownScene extends Phaser.Scene {
         }
       },
     });
+
+    // 進城傳送光環與鏡頭柔順淡入
+    this.cameras.main.fadeIn(420, 0, 0, 0);
+    if (this.textures.exists('fx_glow')) {
+      const ring = this.add.image(td.spawn.x, td.spawn.y + 18, 'fx_glow')
+        .setTint(td.ambientColor || 0xfbbf24).setScale(1.6).setAlpha(0.75).setDepth(4900);
+      this.tweens.add({
+        targets: ring,
+        scale: 0.2,
+        alpha: 0,
+        duration: 650,
+        ease: 'Cubic.easeOut',
+        onComplete: () => ring.destroy(),
+      });
+    }
+    this.callbacks?.onTownLoadProgress?.(1);
+    this.callbacks?.onTownReady?.();
   }
 
   placeBuilding(atlasKey, b) {
@@ -344,13 +370,22 @@ export class TownScene extends Phaser.Scene {
       : 'm';
   }
 
+  getHeroFramePrefix(cid) {
+    return cid === 'warrior' ? 'wf'
+      : cid === 'ranger' ? 'rf'
+      : cid === 'paladin' ? 'pf'
+      : cid === 'necro' ? 'nf'
+      : cid === 'assassin' ? 'af'
+      : 'mf';
+  }
+
   syncHeroAppearance() {
     if (!this.hero) return;
     const cid = this.callbacks?.getState?.()?.classId || 'warrior';
-    const atlasKey = `hero_${cid}`;
-    const prefix = this.getHeroPrefix(cid);
+    const atlasKey = `atlas_${cid}`;
+    const fp = this.getHeroFramePrefix(cid);
     if (this.hero.texture.key !== atlasKey && this.textures.exists(atlasKey)) {
-      this.hero.setTexture(atlasKey, `${prefix}_${this.heroDir}_walk_0`);
+      this.hero.setTexture(atlasKey, `${fp}_${this.heroDir}_walk_0`);
     }
   }
 

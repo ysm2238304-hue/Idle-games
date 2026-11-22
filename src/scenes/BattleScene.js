@@ -522,6 +522,58 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
+  playRecallAnimation(tintColor = 0x38bdf8, onComplete) {
+    if (!this.hero) {
+      onComplete?.();
+      return;
+    }
+    const hx = this.hero.x;
+    const hy = this.hero.y;
+    const sigil = this.textures.exists('fx_sigil')
+      ? this.add.image(hx, hy + 24, 'fx_sigil').setTint(tintColor).setScale(0.25).setAlpha(0.95).setDepth(4200)
+      : null;
+    const beam = this.textures.exists('fx_glow')
+      ? this.add.image(hx, hy - 40, 'fx_glow').setTint(tintColor).setScale(0.45, 2.4).setAlpha(0).setDepth(4300)
+      : null;
+
+    if (sigil) {
+      this.tweens.add({
+        targets: sigil,
+        scale: 1.05,
+        angle: 180,
+        alpha: 0,
+        duration: 720,
+        ease: 'Cubic.easeOut',
+        onComplete: () => sigil.destroy(),
+      });
+    }
+    if (beam) {
+      this.tweens.add({
+        targets: beam,
+        alpha: 0.78,
+        scaleX: 0.85,
+        duration: 340,
+        yoyo: true,
+        onComplete: () => beam.destroy(),
+      });
+    }
+    this.tweens.add({
+      targets: this.hero,
+      alpha: 0.2,
+      scaleX: 0.64,
+      scaleY: 0.64,
+      duration: 680,
+      ease: 'Quad.easeIn',
+      onComplete: () => {
+        if (this.hero) {
+          this.hero.setAlpha(1);
+          this.hero.setScale(0.56);
+        }
+        onComplete?.();
+      },
+    });
+  }
+
   setPaused(paused) {
     this.isPaused = paused;
   }

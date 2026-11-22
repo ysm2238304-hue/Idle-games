@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./style.css?v=51" />
+  <link rel="stylesheet" href="./style.css?v=52" />
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
 </head>
 <body>
@@ -346,6 +346,26 @@
     </div>
   </div>
 
+  <div id="town-splash-overlay" class="town-splash-overlay hidden">
+    <div id="town-splash-card" class="town-splash-card splash-ch1">
+      <div class="town-splash-bg" id="town-splash-bg"></div>
+      <div class="town-splash-vignette"></div>
+      <div class="town-splash-content">
+        <div class="town-splash-badge" id="town-splash-badge">第一章・邊境防線</div>
+        <h1 class="town-splash-title" id="town-splash-title">曙光哨站堡壘</h1>
+        <div class="town-splash-style" id="town-splash-style">粗獷木石軍營風</div>
+        <p class="town-splash-quote" id="town-splash-quote"></p>
+        <div class="town-splash-progress-wrap">
+          <div class="town-splash-progress-track">
+            <div class="town-splash-progress-fill" id="town-splash-progress-fill"></div>
+          </div>
+          <span class="town-splash-progress-text" id="town-splash-progress-text">傳送陣共鳴中... 0%</span>
+        </div>
+        <div class="town-splash-tip" id="town-splash-tip"></div>
+      </div>
+    </div>
+  </div>
+
   <div id="modal-town-facility" class="modal-overlay hidden">
     <div class="modal-card town-modal-card">
       <div class="modal-header">
@@ -364,6 +384,6 @@
     </div>
   </div>
 
-  <script type="module" src="./src/main.js?v=51"></script>
+  <script type="module" src="./src/main.js?v=52"></script>
 </body>
 </html>

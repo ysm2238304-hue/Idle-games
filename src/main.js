@@ -21,6 +21,7 @@ import {
 } from './auth/firebase.js';
 import { BattleScene } from './scenes/BattleScene.js';
 import { TownScene } from './scenes/TownScene.js';
+import { TOWN_SPLASHES } from './data/towns/splashes.js';
 import { DashboardUI } from './ui/DashboardUI.js';
 
 let gameState = loadGame() || createInitialState('warrior');
@@ -29,6 +30,7 @@ let phaserGame = null;
 let battleScene = null;
 let townScene = null;
 let isInTown = false;
+let isRecalling = false;
 let selectedLobbyClass = gameState.classId || 'warrior';
 let gameStarted = false;
 
@@ -544,13 +546,30 @@ function initPhaserGame() {
 
 
 function enterTown(chapterIdx = 0) {
-  if (!phaserGame) return;
-  isInTown = true;
+  if (!phaserGame || isRecalling || isInTown) return;
+  isRecalling = true;
+  const splashCfg = TOWN_SPLASHES[chapterIdx] || TOWN_SPLASHES[0];
   battleScene?.setPaused(true);
-  phaserGame.scene.sleep('BattleScene');
+
+  const startTownTransfer = () => {
+    isRecalling = false;
+    isInTown = true;
+    const splashShownAt = Date.now();
+    ui.showTownSplash(chapterIdx);
+    const ovEl = document.getElementById('town-splash-overlay');
+    if (ovEl) ovEl.onclick = () => ui.hideTownSplash();
+
+    phaserGame.scene.sleep('BattleScene');
   const townCallbacks = {
     getState: () => gameState,
     getComputedStats: () => computedStats,
+    onTownLoadProgress: (val) => ui.updateTownSplashProgress(val),
+    onTownReady: () => {
+      ui.updateTownSplashProgress(1);
+      const elapsed = Date.now() - splashShownAt;
+      const waitMs = Math.max(420, 1250 - elapsed);
+      setTimeout(() => ui.hideTownSplash(), waitMs);
+    },
     onHudUpdate: (data) => ui.renderMinimap(data.minimap),
     onTownAction: (action, data) => {
       if (action === 'drawer_upgrade') ui.openDrawer('upgrade');
@@ -958,16 +977,25 @@ function enterTown(chapterIdx = 0) {
     btn.textContent = '⚔️ 出城戰鬥 (G)';
     btn.classList.add('in-town');
   }
-  const townNames = ["曙光哨站堡壘", "地下菌菇黑市", "守夜人聖骨禮拜堂", "黑曜石熔爐要塞", "緋紅魔獄王庭", "極光冰晶堡", "翠玉樹冠水寨", "蒼穹電弧浮空城", "聖血薔薇修道院", "永恆星辰聖域"];
-  const townTitle = `第 ${chapterIdx + 1} 章主城「${townNames[chapterIdx] || townNames[0]}」`;
-  ui.addLog(`🏰 已傳送至${townTitle}（安全區）`, 'system');
+    const townNames = ["曙光哨站堡壘", "地下菌菇黑市", "守夜人聖骨禮拜堂", "黑曜石熔爐要塞", "緋紅魔獄王庭", "極光冰晶堡", "翠玉樹冠水寨", "蒼穹電弧浮空城", "聖血薔薇修道院", "永恆星辰聖域"];
+    const townTitle = `第 ${chapterIdx + 1} 章主城「${townNames[chapterIdx] || townNames[0]}」`;
+    ui.addLog(`🏰 已傳送至${townTitle}（安全區）`, 'system');
+  };
+
+  if (battleScene?.playRecallAnimation) {
+    battleScene.playRecallAnimation(splashCfg.tintColor, startTownTransfer);
+  } else {
+    startTownTransfer();
+  }
 }
 
 function exitTownToBattle() {
   if (!phaserGame || !isInTown) return;
   isInTown = false;
+  ui.hideTownSplash();
   phaserGame.scene.sleep('TownScene');
   phaserGame.scene.wake('BattleScene');
+  battleScene?.cameras?.main?.fadeIn?.(350, 0, 0, 0);
   battleScene?.setPaused(false);
   const btn = document.getElementById('btn-town-toggle');
   if (btn) {
