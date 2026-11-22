@@ -306,6 +306,14 @@ export class TownScene extends Phaser.Scene {
     }
     this.callbacks?.onTownLoadProgress?.(1);
     this.callbacks?.onTownReady?.();
+    this.events.off('wake');
+    this.events.on('wake', (sys, data) => {
+      if (data?.callbacks) this.callbacks = data.callbacks;
+      this.syncHeroAppearance();
+      this.cameras.main.fadeIn(380, 0, 0, 0);
+      this.callbacks?.onTownLoadProgress?.(1);
+      this.callbacks?.onTownReady?.();
+    });
   }
 
   placeBuilding(atlasKey, b) {

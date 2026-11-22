@@ -964,13 +964,13 @@ function enterTown(chapterIdx = 0) {
   if (phaserGame.scene.isSleeping('TownScene') || phaserGame.scene.isActive('TownScene')) {
     if (townScene && townScene.townData?.chapterIdx !== chapterIdx) {
       phaserGame.scene.stop('TownScene');
-      phaserGame.scene.launch('TownScene', { chapterIdx, callbacks: townCallbacks });
+      phaserGame.scene.start('TownScene', { chapterIdx, callbacks: townCallbacks });
     } else {
       phaserGame.scene.wake('TownScene', { chapterIdx, callbacks: townCallbacks });
       townScene?.syncHeroAppearance?.();
     }
   } else {
-    phaserGame.scene.launch('TownScene', { chapterIdx, callbacks: townCallbacks });
+    phaserGame.scene.start('TownScene', { chapterIdx, callbacks: townCallbacks });
   }
   const btn = document.getElementById('btn-town-toggle');
   if (btn) {
