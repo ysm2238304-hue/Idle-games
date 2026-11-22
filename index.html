@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./style.css?v=39" />
+  <link rel="stylesheet" href="./style.css?v=40" />
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
 </head>
 <body>
@@ -16,9 +16,9 @@
     <div class="welcome-vignette"></div>
     <div class="welcome-content">
       <div class="welcome-crest">
-        <div class="crest-sub">2.5D ABYSSAL IDLE ARPG</div>
+        <div class="crest-sub">暗黑深淵動作掛機</div>
         <h1 class="crest-title">暗黑桌面掛機</h1>
-        <p class="crest-desc">2.5D 大地圖自動/WASD走位・群怪圍攻・技能樹・深淵輪迴</p>
+        <p class="crest-desc">大地圖自由探索・群怪圍攻・技能樹・深淵輪迴</p>
       </div>
 
       <div id="welcome-step-auth" class="welcome-panel">
@@ -52,8 +52,8 @@
           </div>
           <div class="hero-card-info">
             <div class="hero-card-row">
-              <span id="hud-class-badge" class="badge">狂戰士 Lv.1</span>
-              <span id="hud-dps" class="badge dps">DPS 0</span>
+              <span id="hud-class-badge" class="badge">狂戰士 等級 1</span>
+              <span id="hud-dps" class="badge dps">秒傷 0</span>
               <span id="hud-cloud-status" class="cloud-badge">☁️ 未登入</span>
               <button id="btn-cloud-logout" class="btn-ghost-xs hidden">登出</button>
             </div>
@@ -95,7 +95,7 @@
           <div class="target-head">
             <span id="target-badge" class="target-badge">⚔️</span>
             <span id="target-name" class="target-name">深淵怪物</span>
-            <span id="target-lv" class="target-lv">Lv.1</span>
+            <span id="target-lv" class="target-lv">等級 1</span>
           </div>
           <div class="target-hp-track">
             <div id="target-hp-fill" class="target-hp-fill"></div>
@@ -108,7 +108,7 @@
       <div id="hud-top-right" class="hud-corner">
         <div class="mmo-top-menu">
           <button id="btn-world-map" class="mmo-micro-btn" data-tip="世界大地圖選關 [M]"><img class="mmo-ui-img" src="./assets/ui/ui_worldmap.png" alt="地圖" /><small>M</small></button>
-          <button class="mmo-micro-btn" data-drawer="gear" data-tip="角色紙娃娃與裝備 [I / 1]"><img class="mmo-ui-img" src="./assets/ui/ui_gear.png" alt="裝備" /><small>I</small></button>
+          <button class="mmo-micro-btn" data-drawer="gear" data-tip="角色與裝備 [I / 1]"><img class="mmo-ui-img" src="./assets/ui/ui_gear.png" alt="裝備" /><small>I</small></button>
           <button class="mmo-micro-btn" data-drawer="bag" data-tip="暗黑網格物品欄 [2]">
             <img class="mmo-ui-img" src="./assets/ui/ui_bag.png" alt="背包" /><small id="inv-count">0</small>
             <span id="bag-dot" class="notify-dot hidden"></span>
@@ -151,7 +151,7 @@
       <aside id="rpg-drawer" class="hidden">
         <div class="drawer-header">
           <h3 id="drawer-title">🛡️ 角色與裝備</h3>
-          <button id="btn-close-drawer" class="btn-ghost">✕ [Esc]</button>
+          <button id="btn-close-drawer" class="btn-ghost">✕ 關閉</button>
         </div>
 
         <div class="drawer-body">
@@ -220,7 +220,7 @@
             <div class="orb-gloss"></div>
             <div class="orb-readout">
               <span id="orb-hp-text">240 / 240</span>
-              <small>LIFE</small>
+              <small>生命</small>
             </div>
           </div>
         </div>
@@ -234,7 +234,7 @@
             </button>
 
             <button id="skill-slot-0" class="mmo-slot mmo-skill" data-slot="0">
-              <span class="mmo-hotkey">SPC</span>
+              <span class="mmo-hotkey">空白</span>
               <img class="sk-slot-img hidden" src="" alt="" />
               <span class="mmo-empty-plus">+</span>
               <div class="mmo-cd-curtain"></div>
@@ -260,7 +260,7 @@
               <span class="mmo-mp-cost"></span>
             </button>
 
-            <button id="btn-toggle-auto" class="mmo-slot mmo-auto active" data-tip="自動巡邏／手動模式切換 [T]（可隨時按 WASD 介入）">
+            <button id="btn-toggle-auto" class="mmo-slot mmo-auto active" data-tip="自動狩獵／手動控制切換 [T]（可隨時移動介入）">
               <span class="mmo-hotkey">T</span>
               <img class="mmo-ui-img" src="./assets/ui/ui_auto.png" alt="自動" />
               <span class="mmo-badge-br" id="auto-mode-label">自動</span>
@@ -268,8 +268,8 @@
           </div>
 
           <div class="mmo-status-strip">
-            <span id="hud-afk-pill" class="afk-pill active">★ AFK 自動掛機中</span>
-            <button id="btn-quick-salvage" class="strip-btn" title="一鍵分解普通/魔法裝備 [Q]">🧹 一鍵分解 [Q]</button>
+            <span id="hud-afk-pill" class="afk-pill active">★ 自動狩獵中</span>
+            <button id="btn-quick-salvage" class="strip-btn" title="一鍵分解低階裝備 [Q]">🧹 一鍵分解 [Q]</button>
           </div>
 
           <div class="diablo-exp-bar" id="diablo-exp-bar" title="經驗值進度 (10 格暗金刻度)">
@@ -278,7 +278,7 @@
               <span></span><span></span><span></span><span></span><span></span>
               <span></span><span></span><span></span><span></span><span></span>
             </div>
-            <span class="diablo-exp-text" id="diablo-exp-text">Lv.1 • EXP 0 / 90 (0%)</span>
+            <span class="diablo-exp-text" id="diablo-exp-text">等級 1 • 經驗 0 / 90 (0%)</span>
           </div>
         </div>
 
@@ -290,7 +290,7 @@
             <div class="orb-gloss"></div>
             <div class="orb-readout">
               <span id="orb-mp-text">100 / 100</span>
-              <small id="orb-mp-label">MANA</small>
+              <small id="orb-mp-label">魔力</small>
             </div>
           </div>
         </div>
@@ -304,7 +304,7 @@
     <div class="modal-card modal-world">
       <div class="modal-header">
         <h2>🗺️ 暗黑世界大陸・10 大章節選關傳送門</h2>
-        <button id="btn-close-world-map" class="btn-ghost">關閉 [Esc]</button>
+        <button id="btn-close-world-map" class="btn-ghost">關閉</button>
       </div>
       <div class="world-map-layout">
         <div class="world-map-canvas" id="world-map-canvas">
@@ -349,6 +349,6 @@
     </div>
   </div>
 
-  <script type="module" src="./src/main.js?v=39"></script>
+  <script type="module" src="./src/main.js?v=40"></script>
 </body>
 </html>

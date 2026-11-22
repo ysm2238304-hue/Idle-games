@@ -416,7 +416,7 @@ export class BattleScene extends Phaser.Scene {
       fontSize: '12px', color: '#f8fafc', fontFamily: 'sans-serif', fontStyle: 'bold',
       stroke: '#000000', strokeThickness: 3,
     }).setOrigin(0.5).setDepth(4002);
-    this.heroAfkText = this.add.text(cx, cy - 117, this.autoMoveEnabled ? '★ AFK' : '手動', {
+    this.heroAfkText = this.add.text(cx, cy - 117, this.autoMoveEnabled ? '★ 自動狩獵' : '手動', {
       fontSize: '11px', color: this.autoMoveEnabled ? '#fde047' : '#cbd5e1',
       fontFamily: 'sans-serif', fontStyle: 'bold',
       stroke: '#000000', strokeThickness: 3,
@@ -465,7 +465,7 @@ export class BattleScene extends Phaser.Scene {
     this.autoMoveEnabled = !this.autoMoveEnabled;
     if (this.autoMoveEnabled) this.manualOverrideTimer = 0;
     if (this.heroAfkText) {
-      this.heroAfkText.setText(this.autoMoveEnabled ? '★ AFK' : '手動');
+      this.heroAfkText.setText(this.autoMoveEnabled ? '★ 自動狩獵' : '手動');
       this.heroAfkText.setColor(this.autoMoveEnabled ? '#fde047' : '#cbd5e1');
     }
     return this.autoMoveEnabled;
@@ -2996,6 +2996,7 @@ export class BattleScene extends Phaser.Scene {
       this.playFxSprite('pfx_storm', this.hero.x, this.hero.y, 0.75, 0, 260);
       this.damageMonster(m, tDmg, isThornsCrit, false, '#fde047', '⚡反傷 ');
     }
+    if ((stats.dmgReducePct || 0) > 0) dmg = Math.max(1, Math.round(dmg * (1 - stats.dmgReducePct / 100)));
     this.playerHp = Math.max(0, this.playerHp - dmg);
 
     this.hero.setTintFill(0xff4444);

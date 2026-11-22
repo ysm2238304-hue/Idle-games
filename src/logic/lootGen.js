@@ -10,13 +10,23 @@ function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
-export function rollRarity(isBoss, magicFindPct = 0) {
-  const mfMult = 1 + Math.max(0, magicFindPct) / 100;
-  const roll = Math.random() * 100;
-  const legChance = (isBoss ? 15 : 2.2) * mfMult;
-  const rareChance = (isBoss ? 45 : 14) * mfMult;
-  const magicChance = (isBoss ? 40 : 36) * mfMult;
+export function rollRarity(isBoss, magicFindPct = 0, stage = 1) {
+  const mfMult = 1 + Math.min(2.0, Math.max(0, magicFindPct) / 120);
+  let legBase = 0.5, rareBase = 4.5, magicBase = 27;
+  if (stage > 80) {
+    legBase = 11.0; rareBase = 34.0; magicBase = 40.0;
+  } else if (stage > 50) {
+    legBase = 6.0; rareBase = 24.0; magicBase = 42.0;
+  } else if (stage > 20) {
+    legBase = 2.5; rareBase = 13.5; magicBase = 36.0;
+  }
 
+  const isChapterBoss = isBoss && (stage % 10 === 0);
+  const legChance = legBase * (isChapterBoss ? 3.0 : (isBoss ? 2.2 : 1.0)) * mfMult;
+  const rareChance = rareBase * (isChapterBoss ? 2.0 : (isBoss ? 1.65 : 1.0)) * mfMult;
+  const magicChance = isChapterBoss ? Math.max(0, 100 - legChance - rareChance) : magicBase;
+
+  const roll = Math.random() * 100;
   if (roll < legChance) return 'legendary';
   if (roll < legChance + rareChance) return 'rare';
   if (roll < legChance + rareChance + magicChance) return 'magic';
@@ -24,12 +34,13 @@ export function rollRarity(isBoss, magicFindPct = 0) {
 }
 
 export function generateLoot(stage, isBoss = false, magicFindPct = 0, guaranteed = false, playerClassId = 'warrior') {
-  const dropChance = guaranteed ? 100 : (isBoss ? 100 : Math.min(50, 15 + magicFindPct * 0.15));
+  const isChapterBoss = isBoss && (stage % 10 === 0);
+  const dropChance = guaranteed ? 100 : (isChapterBoss ? 100 : (isBoss ? Math.min(75, 50 + magicFindPct * 0.15) : Math.min(18, 5 + magicFindPct * 0.08)));
   if (Math.random() * 100 > dropChance) return null;
 
   const slotKeys = Object.keys(EQUIP_SLOTS);
   const slot = pickRandom(slotKeys);
-  const rarityId = rollRarity(isBoss, magicFindPct);
+  const rarityId = rollRarity(isBoss, magicFindPct, stage);
   const rarity = RARITIES[rarityId];
 
   const allBases = BASE_ITEMS[slot];

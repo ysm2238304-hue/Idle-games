@@ -40,27 +40,33 @@ export function recalcPlayerStats(state) {
     magicFind: cls.baseStats.magicFind,
     moveSpeed: state.classId === 'assassin' ? 176 : (state.classId === 'ranger' ? 168 : (state.classId === 'mage' ? 152 : 145)),
   };
+  const innate = cls.innateBonus || {};
+  flat.critRate += innate.critRate || 0;
+  flat.critDmg += innate.critDmg || 0;
+  flat.atkSpeedPct += innate.atkSpeedPct || 0;
+  flat.dodge += innate.dodge || 0;
+  flat.lifesteal += innate.lifesteal || 0;
 
-  let atkPct = 0;
-  let hpPct = 0;
-  let armorPct = 0;
+  let atkPct = innate.atkPct || 0;
+  let hpPct = innate.hpPct || 0;
+  let armorPct = innate.armorPct || 0;
   let bleedDmgPct = 0;
   let skillRadiusPct = 0;
   let stunDmgPct = 0;
   let armorToAtkPct = 0;
-  let moveSpeedPct = 0;
+  let moveSpeedPct = innate.moveSpeedPct || 0;
   let pierceDmgPct = 0;
   let markCritDmgPct = 0;
   let dodgeHealPct = 0;
-  let maxMpFlat = 0;
-  let mpRegenFlat = 0;
-  let cdrPct = 0;
+  let maxMpFlat = innate.maxMpFlat || 0;
+  let mpRegenFlat = innate.mpRegenFlat || 0;
+  let cdrPct = innate.cdrPct || 0;
   let chillDmgPct = 0;
   let holyDmgPct = 0;
   let thornsPct = 0;
   let stunDurPct = 0;
   let blockHealPct = 0;
-  let summonDmgPct = 0;
+  let summonDmgPct = innate.summonDmgPct || 0;
   let boneDmgPct = 0;
   let corpseRadiusPct = 0;
   let killEssence = 0;
@@ -132,7 +138,7 @@ export function recalcPlayerStats(state) {
   summonDmgPct += (tree.n_p_summon || 0) * 8 + (state.classId === 'necro' && (tree.n_key_overlord || 0) > 0 ? 50 : 0);
   boneDmgPct += (tree.n_p_bone || 0) * 6;
   killEssence += (tree.n_p_essence || 0) * 3;
-  const skillDmgMult = 1 + (tree.fury_aoe || 0) * 0.15 + (keyW_Earth ? 0.35 : 0) + (keyM_Astral ? 0.30 : 0) + (keyP_Judg ? 0.35 : 0) + (state.classId === 'paladin' ? holyDmgPct / 100 : 0) + (activeEffects.has('lava_core') ? 0.22 : 0);
+  const skillDmgMult = 1 + (innate.skillDmgPct || 0) / 100 + (tree.fury_aoe || 0) * 0.15 + (keyW_Earth ? 0.35 : 0) + (keyM_Astral ? 0.30 : 0) + (keyP_Judg ? 0.35 : 0) + (state.classId === 'paladin' ? holyDmgPct / 100 : 0) + (activeEffects.has('lava_core') ? 0.22 : 0);
   const skillRadiusMult = 1 + (tree.fury_aoe || 0) * 0.16 + (keyW_Earth ? 0.20 : 0) + skillRadiusPct / 100;
   const treeBoltChance = [0, 35, 70, 100][tree.fury_bolt || 0] || 0;
   const cdrLvl = state.classId === 'ranger'
@@ -220,6 +226,7 @@ export function recalcPlayerStats(state) {
     poisonDmgPct: poisonDmgPct + (tree.a_p_venom || 0) * 8 + (activeEffects.has('venom_core') ? 45 : 0),
     comboCritDmgPct,
     dodgeShadow,
+    dmgReducePct: innate.dmgReducePct || 0,
     dps,
     activeEffects,
   };

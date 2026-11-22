@@ -283,7 +283,7 @@ export class DashboardUI {
     const timeStr = hrs > 0 ? `${hrs} 小時 ${mins % 60} 分鐘` : `${mins} 分鐘`;
 
     body.innerHTML = `
-      <p>你離開了 <strong>${timeStr}</strong>，英雄在 2.5D 地下城持續自動戰鬥：</p>
+      <p>你離開了 <strong>${timeStr}</strong>，英雄在 深淵戰場持續自動戰鬥：</p>
       <ul class="offline-list">
         <li>擊殺怪物：<strong>${formatNum(report.kills)} 隻</strong></li>
         <li>獲得金幣：<strong style="color:#facc15">+${formatNum(report.goldEarned)}</strong></li>
@@ -312,9 +312,9 @@ export class DashboardUI {
     }
     const zoneEl = document.getElementById('minimap-zone-name');
     if (zoneEl) zoneEl.textContent = getZoneName(state.stage);
-    document.getElementById('hud-class-badge').textContent = `${cls.name} Lv.${state.level}`;
+    document.getElementById('hud-class-badge').textContent = `${cls.name} 等級 ${state.level}`;
     document.getElementById('hud-class-badge').style.borderColor = cls.color;
-    document.getElementById('hud-dps').textContent = `DPS ${formatNum(stats.dps)}`;
+    document.getElementById('hud-dps').textContent = `秒傷 ${formatNum(stats.dps)}`;
     document.getElementById('hud-gold').textContent = formatNum(state.gold);
     document.getElementById('hud-dust').textContent = formatNum(state.dust);
     document.getElementById('hud-crystals').textContent = formatNum(state.soulCrystals || 0);
@@ -324,12 +324,12 @@ export class DashboardUI {
     const fillEl = document.getElementById('diablo-exp-fill');
     const txtEl = document.getElementById('diablo-exp-text');
     if (fillEl) fillEl.style.width = `${expPct}%`;
-    if (txtEl) txtEl.textContent = `Lv.${state.level} • EXP ${formatNum(state.exp)} / ${formatNum(need)} (${expPct}%)`;
+    if (txtEl) txtEl.textContent = `等級 ${state.level} • 經驗 ${formatNum(state.exp)} / ${formatNum(need)} (${expPct}%)`;
 
     const sLabel = getStageLabel(state.stage);
     const sub = getSubStage(state.stage);
     document.getElementById('hud-stage-title').textContent = `第 ${sLabel} 關・${getZoneName(state.stage)}`;
-    document.getElementById('hud-wave-badge').textContent = `難度 Lv.${state.stage}`;
+    document.getElementById('hud-wave-badge').textContent = `難度 ${state.stage} 階`;
     document.getElementById('btn-stage-next').disabled = state.stage >= 100;
     document.getElementById('btn-stage-prev').disabled = state.stage <= 1;
 
@@ -347,10 +347,10 @@ export class DashboardUI {
       mpOrb.classList.toggle('orb-paladin', state.classId === 'paladin');
       mpOrb.classList.toggle('orb-necro', state.classId === 'necro');
       mpOrb.classList.toggle('orb-assassin', state.classId === 'assassin');
-      mpOrb.title = state.classId === 'warrior' ? '怒氣能量 (ENERGY)' : (state.classId === 'ranger' ? '疾風精力 (STAMINA)' : (state.classId === 'paladin' ? '神聖聖能 (FAITH)' : (state.classId === 'necro' ? '冥界魂能 (ESSENCE)' : (state.classId === 'assassin' ? '暗影能量 (SHADOW)' : '魔力值 (MANA)'))));
+      mpOrb.title = state.classId === 'warrior' ? '怒氣值' : (state.classId === 'ranger' ? '精力值' : (state.classId === 'paladin' ? '聖能值' : (state.classId === 'necro' ? '魂能值' : (state.classId === 'assassin' ? '影能值' : '魔力值'))));
     }
     if (mpLbl) {
-      mpLbl.textContent = state.classId === 'warrior' ? 'ENERGY' : (state.classId === 'ranger' ? 'STAMINA' : (state.classId === 'paladin' ? 'FAITH' : (state.classId === 'necro' ? 'ESSENCE' : (state.classId === 'assassin' ? 'SHADOW' : 'MANA'))));
+      mpLbl.textContent = state.classId === 'warrior' ? '怒氣' : (state.classId === 'ranger' ? '精力' : (state.classId === 'paladin' ? '聖能' : (state.classId === 'necro' ? '魂能' : (state.classId === 'assassin' ? '影能' : '魔力'))));
     }
     this.renderDockSkillSlots(state);
   }
@@ -432,7 +432,7 @@ export class DashboardUI {
 
     tt.innerHTML = `
       <div class="tt-title" style="color:${r.color}">[${r.label}] ${item.name}${item.upgradeLevel ? ` +${item.upgradeLevel}` : ''}</div>
-      <div class="tt-meta">${item.subType || EQUIP_SLOTS[item.slot].label} • Lv.${item.level} • 戰力 ${pwr} <span style="color:${canWear ? reqInfo.color : '#ef4444'};font-weight:700;">[${reqInfo.label}]</span></div>
+      <div class="tt-meta">${item.subType || EQUIP_SLOTS[item.slot].label} • ${item.level} 級 • 戰力 ${pwr} <span style="color:${canWear ? reqInfo.color : '#ef4444'};font-weight:700;">[${reqInfo.label}]</span></div>
       <div class="tt-affix" style="color:#fde68a;">基礎：${STAT_LABELS[item.baseStat.key] || item.baseStat.key} +${item.baseStat.value}</div>
       ${affixesHtml}
       ${item.legendaryEffect ? `<div style="color:#fb923c;margin-top:4px;font-size:11px;">★ ${item.legendaryEffect.name}：${item.legendaryEffect.desc}</div>` : ''}
@@ -499,7 +499,7 @@ export class DashboardUI {
           if (!tt) return;
           tt.innerHTML = `
             <div class="tt-title" style="color:#fde047">${sk.name} [${keyLabels[i]}]</div>
-            <div class="tt-meta">Lv.${lvl} • 冷卻 ${(sk.cooldownMs / 1000).toFixed(1)}s • 消耗 ${mpCost} ${cid === 'warrior' ? '能量' : (cid === 'ranger' ? '精力' : 'MP')}</div>
+            <div class="tt-meta">等級 ${lvl} • 冷卻 ${(sk.cooldownMs / 1000).toFixed(1)}s • 消耗 ${mpCost} ${cid === 'warrior' ? '能量' : (cid === 'ranger' ? '精力' : 'MP')}</div>
             <div class="tt-affix">${sk.getDetail(lvl)}</div>
           `;
           tt.style.borderColor = '#e0a63b';
@@ -649,7 +649,7 @@ export class DashboardUI {
       const badge = delta > 0 ? '<span class="power-up">▲</span>' : (delta < 0 ? '<span class="power-down">▼</span>' : '');
       cell.innerHTML = `
         <img class="inv-item-img" src="${resolveItemIcon(item)}" alt="${item.name}" />
-        <div class="inv-lvl">Lv.${item.level}</div>
+        <div class="inv-lvl">${item.level}級</div>
         ${badge}
       `;
       cell.onclick = () => {
@@ -707,7 +707,7 @@ export class DashboardUI {
             <span>[${r.label}] ${item.name}${item.upgradeLevel ? ` +${item.upgradeLevel}` : ''}</span>
             <span style="font-size:12px;">${deltaHtml}</span>
           </div>
-          <div class="insp-meta">${item.subType || EQUIP_SLOTS[item.slot].label} • Lv.${item.level} • 戰力 ${myPower} • <span style="color:${canWear ? reqInfo.color : '#ef4444'};font-weight:700;">${reqInfo.label}</span></div>
+          <div class="insp-meta">${item.subType || EQUIP_SLOTS[item.slot].label} • ${item.level} 級 • 戰力 ${myPower} • <span style="color:${canWear ? reqInfo.color : '#ef4444'};font-weight:700;">${reqInfo.label}</span></div>
           <div class="insp-base">基礎屬性：${STAT_LABELS[item.baseStat.key]} +${item.baseStat.value}</div>
         </div>
       </div>
@@ -741,7 +741,7 @@ export class DashboardUI {
       row.className = 'upgrade-row';
       row.innerHTML = `
         <div>
-          <div class="upg-name">${d.name} <span class="upg-lvl">Lv.${lvl}</span></div>
+          <div class="upg-name">${d.name} <span class="upg-lvl">等級 ${lvl}</span></div>
           <div class="upg-desc">${d.desc}</div>
         </div>
         <button class="btn-primary" ${state.gold < cost ? 'disabled' : ''}>💰 ${formatNum(cost)}</button>
@@ -906,7 +906,7 @@ export class DashboardUI {
             <div class="sk-lib-head">
               <strong>${sk.name}</strong>
               <span style="color:${unlocked ? '#fde047' : '#64748b'};font-size:12px;">
-                ${unlocked ? `Lv.${lvl} • 冷卻 ${(sk.cooldownMs / 1000).toFixed(1)}s` : '尚未解鎖'}
+                ${unlocked ? `等級 ${lvl} • 冷卻 ${(sk.cooldownMs / 1000).toFixed(1)}s` : '尚未解鎖'}
               </span>
             </div>
             <div class="sk-lib-desc">${sk.desc}</div>

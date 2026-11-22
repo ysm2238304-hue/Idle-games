@@ -20,6 +20,7 @@ export const CLASSES = {
       magicFind: 0,
     },
     perLevel: { hp: 28, atk: 3.2, armor: 1.5 },
+    innateBonus: { label: '最大生命 +18%・受傷減免 +10%・吸血 +3%', hpPct: 18, dmgReducePct: 10, lifesteal: 3 },
     skill: {
       name: '旋風重斬',
       cooldownMs: 4800,
@@ -51,6 +52,7 @@ export const CLASSES = {
       magicFind: 5,
     },
     perLevel: { hp: 18, atk: 2.6, armor: 0.8 },
+    innateBonus: { label: '攻擊速度 +18%・移動速度 +12%・暴擊率 +8%', atkSpeedPct: 18, moveSpeedPct: 12, critRate: 8 },
     skill: {
       name: '穿透連射',
       cooldownMs: 4200,
@@ -83,6 +85,7 @@ export const CLASSES = {
       magicFind: 18,
     },
     perLevel: { hp: 15, atk: 4.0, armor: 0.6 },
+    innateBonus: { label: '技能傷害 +20%・魔力上限 +35・回魔 +2.5/秒', skillDmgPct: 20, maxMpFlat: 35, mpRegenFlat: 2.5 },
     skill: {
       name: '深淵隕石',
       cooldownMs: 5200,
@@ -113,6 +116,7 @@ export const CLASSES = {
       magicFind: 5,
     },
     perLevel: { hp: 30, atk: 3.0, armor: 2.0 },
+    innateBonus: { label: '護甲 +25%・受傷減免 +15%・聖能回復 +2/秒', armorPct: 25, dmgReducePct: 15, mpRegenFlat: 2.0 },
     skill: {
       name: '祝福之鎚',
       cooldownMs: 4800,
@@ -143,6 +147,7 @@ export const CLASSES = {
       magicFind: 12,
     },
     perLevel: { hp: 17, atk: 3.6, armor: 0.8 },
+    innateBonus: { label: '召喚物全屬性 +20%・冷卻縮減 +8%・回魔 +2/秒', summonDmgPct: 20, cdrPct: 8, mpRegenFlat: 2.0 },
     skill: {
       name: '骷髏復生',
       cooldownMs: 5200,
@@ -173,6 +178,7 @@ export const CLASSES = {
       magicFind: 8,
     },
     perLevel: { hp: 18, atk: 2.9, armor: 0.8 },
+    innateBonus: { label: '閃避率 +10%・暴擊傷害 +30%・攻速 +12%', dodge: 10, critDmg: 30, atkSpeedPct: 12 },
     skill: {
       name: '瞬影閃襲',
       cooldownMs: 4400,

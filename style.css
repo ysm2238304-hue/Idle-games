@@ -1511,7 +1511,7 @@ button { font-family: inherit; }
 
 /* 抽屜在右上系統列下方打開，避免遮住系統列 */
 #rpg-drawer {
-  top: 86px;
+  top: 102px;
   right: 14px;
   bottom: 14px;
   z-index: 35;
@@ -1651,7 +1651,7 @@ button { font-family: inherit; }
   transform-origin: top center;
 }
 #hud-top-right {
-  transform: scale(1.35);
+  transform: scale(1.58);
   transform-origin: top right;
 }
 #hud-bottom-left {
@@ -1667,7 +1667,7 @@ button { font-family: inherit; }
 @media (max-width: 1440px) {
   #hud-top-left { transform: scale(1.18); }
   #hud-top-center { transform: translateX(-50%) scale(1.18); }
-  #hud-top-right { transform: scale(1.18); }
+  #hud-top-right { transform: scale(1.36); }
   #hud-bottom-left { transform: scale(1.18); max-width: calc((50vw - 360px) / 1.18); }
   #diablo-hud.floating-altar { transform: translateX(-50%) scale(1.18); }
 }
@@ -1675,7 +1675,7 @@ button { font-family: inherit; }
 @media (max-width: 1120px) {
   #hud-top-left { transform: scale(1); }
   #hud-top-center { transform: translateX(-50%) scale(1); }
-  #hud-top-right { transform: scale(1); }
+  #hud-top-right { transform: scale(1.15); }
   #hud-bottom-left { transform: scale(1); max-width: calc(50vw - 260px); }
   #diablo-hud.floating-altar { transform: translateX(-50%) scale(1); }
 }
