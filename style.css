@@ -1511,7 +1511,7 @@ button { font-family: inherit; }
 
 /* 抽屜在右上系統列下方打開，避免遮住系統列 */
 #rpg-drawer {
-  top: 66px;
+  top: 86px;
   right: 14px;
   bottom: 14px;
   z-index: 35;
@@ -1640,3 +1640,42 @@ button { font-family: inherit; }
   padding: 5px 8px; font-size: 11px; font-weight: 700; cursor: pointer;
 }
 .btn-ghost-sm:hover { border-color: #94a3b8; }
+
+/* ========== v38 整體四角 HUD 與底部祭壇 1.35x 等比放大（維持比例） ========== */
+#hud-top-left {
+  transform: scale(1.35);
+  transform-origin: top left;
+}
+#hud-top-center {
+  transform: translateX(-50%) scale(1.35);
+  transform-origin: top center;
+}
+#hud-top-right {
+  transform: scale(1.35);
+  transform-origin: top right;
+}
+#hud-bottom-left {
+  transform: scale(1.35);
+  transform-origin: bottom left;
+  max-width: calc((50vw - 420px) / 1.35);
+}
+#diablo-hud.floating-altar {
+  transform: translateX(-50%) scale(1.35);
+  transform-origin: bottom center;
+}
+
+@media (max-width: 1440px) {
+  #hud-top-left { transform: scale(1.18); }
+  #hud-top-center { transform: translateX(-50%) scale(1.18); }
+  #hud-top-right { transform: scale(1.18); }
+  #hud-bottom-left { transform: scale(1.18); max-width: calc((50vw - 360px) / 1.18); }
+  #diablo-hud.floating-altar { transform: translateX(-50%) scale(1.18); }
+}
+
+@media (max-width: 1120px) {
+  #hud-top-left { transform: scale(1); }
+  #hud-top-center { transform: translateX(-50%) scale(1); }
+  #hud-top-right { transform: scale(1); }
+  #hud-bottom-left { transform: scale(1); max-width: calc(50vw - 260px); }
+  #diablo-hud.floating-altar { transform: translateX(-50%) scale(1); }
+}

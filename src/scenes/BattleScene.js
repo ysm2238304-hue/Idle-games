@@ -106,55 +106,30 @@ export class BattleScene extends Phaser.Scene {
   }
 
   preload() {
-    ['walk', 'atk'].forEach((st) => {
-      for (let i = 0; i < 4; i++) {
-        this.load.image(`wraith_${st}_${i}`, `./assets/heroes/wraith_frames/${st}_${i}.png`);
-      }
-    });
-    ['skel_summon', 'skel_slash', 'frenzy', 'wraith_boom', 'golem_summon', 'golem_slam', 'blood_leech', 'bone_shield'].forEach((k) => {
-      this.load.image(`sfx_${k}`, `./assets/fx/sfx_${k}.png`);
-    });
+    const state = this.getState ? this.getState() : {};
+    const initCid = state.classId || 'warrior';
+    const initZone = getChapterIdx(state.stage || 1);
+    const initCh = initZone + 1;
 
-    ['down', 'up', 'right'].forEach((d) => {
-      ['walk', 'atk'].forEach((st) => {
-        for (let i = 0; i < 4; i++) {
-          this.load.image(`wf_${d}_${st}_${i}`, `./assets/heroes/warrior_frames/${d}_${st}_${i}.png`);
-          this.load.image(`rf_${d}_${st}_${i}`, `./assets/heroes/ranger_frames/${d}_${st}_${i}.png`);
-          this.load.image(`mf_${d}_${st}_${i}`, `./assets/heroes/mage_frames/${d}_${st}_${i}.png`);
-          this.load.image(`pf_${d}_${st}_${i}`, `./assets/heroes/paladin_frames/${d}_${st}_${i}.png`);
-          this.load.image(`nf_${d}_${st}_${i}`, `./assets/heroes/necro_frames/${d}_${st}_${i}.png`);
-          this.load.image(`af_${d}_${st}_${i}`, `./assets/heroes/assassin_frames/${d}_${st}_${i}.png`);
-          this.load.image(`skel_${d}_${st}_${i}`, `./assets/heroes/skeleton_frames/${d}_${st}_${i}.png`);
-          this.load.image(`gol_${d}_${st}_${i}`, `./assets/heroes/golem_frames/${d}_${st}_${i}.png`);
-        }
+    this.loadedClasses = new Set([initCid]);
+    this.loadedChapters = new Set([initCh]);
+    this.isLoadingAssets = false;
+
+    this.load.atlas(`atlas_${initCid}`, `./assets/heroes/atlas_${initCid}.png`, `./assets/heroes/atlas_${initCid}.json`);
+    if (initCid === 'necro') {
+      this.loadedSummons = true;
+      this.load.atlas('atlas_summons', './assets/heroes/atlas_summons.png', './assets/heroes/atlas_summons.json');
+      ['skel_summon', 'skel_slash', 'frenzy', 'wraith_boom', 'golem_summon', 'golem_slam', 'blood_leech', 'bone_shield'].forEach((k) => {
+        this.load.image(`sfx_${k}`, `./assets/fx/sfx_${k}.png`);
       });
-    });
-
-    ['down', 'up', 'right'].forEach((d) => {
-      ['move', 'atk'].forEach((s) => {
-        this.load.image(`hero_mage_${d}_${s}`, `./assets/heroes/mage_${d}_${s}.png`);
-      });
-    });
-
-    ['goblin', 'spider', 'skeleton', 'imp', 'orc', 'necromancer', 'boss_demon', 'ch1_wolf', 'ch1_bandit', 'ch1_boar', 'ch1_slime', 'ch1_militia', 'ch1_treant', 'ch1_crow', 'ch1_raider', 'ch1_rat', 'ch1_warlord', 'ch2_shaman', 'ch2_bomber', 'ch2_rider', 'ch2_bat', 'ch2_spore', 'ch2_sapper', 'ch2_worm', 'ch2_stalker', 'ch2_arachne', 'ch2_chieftain', 'ch3_ghoul', 'ch3_archer', 'ch3_bonemage', 'ch3_wraith', 'ch3_abom', 'ch3_mummy', 'ch3_hound', 'ch3_scarab', 'ch3_guard', 'ch3_lord', 'ch4_imp', 'ch4_hound', 'ch4_elemental', 'ch4_salamander', 'ch4_golem', 'ch4_harpy', 'ch4_cultist', 'ch4_knight', 'ch4_scorpion', 'ch4_ifrit', 'ch5_thrall', 'ch5_succubus', 'ch5_warlock', 'ch5_gargoyle', 'ch5_cerberus', 'ch5_torturer', 'ch5_eye', 'ch5_guard', 'ch5_archfiend', 'ch5_general', 'ch6_wolf', 'ch6_sprite', 'ch6_yeti', 'ch6_witch', 'ch6_crab', 'ch6_golem', 'ch6_knight', 'ch6_wyvern', 'ch6_banshee', 'ch6_titan', 'ch7_toad', 'ch7_mosquito', 'ch7_slime', 'ch7_lizard', 'ch7_shaman', 'ch7_plant', 'ch7_leech', 'ch7_spider', 'ch7_croc', 'ch7_hydra', 'ch8_spark', 'ch8_eagle', 'ch8_mage', 'ch8_golem', 'ch8_harpy', 'ch8_knight', 'ch8_elemental', 'ch8_wyrm', 'ch8_centaur', 'ch8_titan', 'ch9_thrall', 'ch9_bat', 'ch9_nun', 'ch9_inquisitor', 'ch9_gargoyle', 'ch9_knight', 'ch9_priest', 'ch9_hound', 'ch9_executioner', 'ch9_lord', 'ch10_wisp', 'ch10_stalker', 'ch10_horror', 'ch10_mage', 'ch10_construct', 'ch10_seraph', 'ch10_devourer', 'ch10_knight', 'ch10_eye', 'ch10_titan'].forEach((mid) => {
-      ['walk', 'atk'].forEach((st) => {
-        for (let i = 0; i < 4; i++) {
-          this.load.image(`mob_${mid}_${st}_${i}`, `./assets/monsters/${mid}_frames/${st}_${i}.png`);
-        }
-      });
-    });
-
-    this.load.image('mob_goblin', './assets/monsters/goblin.png');
-    this.load.image('mob_spider', './assets/monsters/spider.png');
-    this.load.image('mob_skeleton', './assets/monsters/skeleton.png');
-    this.load.image('mob_imp', './assets/monsters/imp.png');
-    this.load.image('mob_orc', './assets/monsters/orc.png');
-    this.load.image('mob_necromancer', './assets/monsters/necromancer.png');
-    this.load.image('mob_boss_demon', './assets/monsters/boss_demon.png');
-
-    for (let i = 0; i < 10; i++) {
-      this.load.image(`map_zone_${i}`, `./assets/bg/map_${i}.jpg`);
+    } else {
+      this.loadedSummons = false;
     }
+
+    this.load.atlas(`atlas_ch${initCh}`, `./assets/monsters/atlas_ch${initCh}.png`, `./assets/monsters/atlas_ch${initCh}.json`);
+    this.load.atlas('atlas_legacy', './assets/monsters/atlas_legacy.png', './assets/monsters/atlas_legacy.json');
+    this.load.image(`map_zone_${initZone}`, `./assets/bg/map_${initZone}.jpg`);
+
     for (let i = 0; i < 8; i++) {
       this.load.image(`obs_${i}`, `./assets/props/obs_${i}.png`);
     }
@@ -164,11 +139,79 @@ export class BattleScene extends Phaser.Scene {
     });
   }
 
+  getHeroAtlasKey(cid) {
+    return `atlas_${cid || 'warrior'}`;
+  }
+
+  getMobAtlasKey(mid) {
+    if (mid && mid.startsWith('ch')) {
+      return `atlas_${mid.split('_')[0]}`;
+    }
+    return 'atlas_legacy';
+  }
+
+  ensureClassLoaded(cid, cb) {
+    const needSummons = cid === 'necro' && !this.loadedSummons;
+    const needClass = !this.loadedClasses.has(cid) || !this.textures.exists(`atlas_${cid}`);
+    if (!needClass && !needSummons) {
+      if (cb) cb();
+      return;
+    }
+    this.isLoadingAssets = true;
+    if (needClass) {
+      this.load.atlas(`atlas_${cid}`, `./assets/heroes/atlas_${cid}.png`, `./assets/heroes/atlas_${cid}.json`);
+    }
+    if (needSummons) {
+      this.load.atlas('atlas_summons', './assets/heroes/atlas_summons.png', './assets/heroes/atlas_summons.json');
+      ['skel_summon', 'skel_slash', 'frenzy', 'wraith_boom', 'golem_summon', 'golem_slam', 'blood_leech', 'bone_shield'].forEach((k) => {
+        if (!this.textures.exists(`sfx_${k}`)) this.load.image(`sfx_${k}`, `./assets/fx/sfx_${k}.png`);
+      });
+    }
+    this.load.once('complete', () => {
+      this.loadedClasses.add(cid);
+      this.registerClassAnims(cid);
+      if (needSummons) {
+        this.loadedSummons = true;
+        this.registerSummonAnims();
+      }
+      this.isLoadingAssets = false;
+      if (cb) cb();
+    });
+    this.load.start();
+  }
+
+  ensureChapterLoaded(zoneIdx, cb) {
+    const chNum = zoneIdx + 1;
+    const ak = `atlas_ch${chNum}`;
+    const mk = `map_zone_${zoneIdx}`;
+    const needAtlas = !this.loadedChapters.has(chNum) || !this.textures.exists(ak);
+    const needMap = !this.textures.exists(mk);
+    if (!needAtlas && !needMap) {
+      if (cb) cb();
+      return;
+    }
+    this.isLoadingAssets = true;
+    if (needAtlas) {
+      this.load.atlas(ak, `./assets/monsters/${ak}.png`, `./assets/monsters/${ak}.json`);
+    }
+    if (needMap) {
+      this.load.image(mk, `./assets/bg/map_${zoneIdx}.jpg`);
+    }
+    this.load.once('complete', () => {
+      this.loadedChapters.add(chNum);
+      this.registerChapterAnims(chNum);
+      this.isLoadingAssets = false;
+      if (cb) cb();
+    });
+    this.load.start();
+  }
+
   create() {
     this.generateFxTextures();
     this.createClassAnims();
 
-    this.bgImage = this.add.image(MAP_W / 2, MAP_H / 2, 'map_zone_0')
+    const initZone = this.getZoneIdx();
+    this.bgImage = this.add.image(MAP_W / 2, MAP_H / 2, `map_zone_${initZone}`)
       .setDisplaySize(MAP_W, MAP_H)
       .setDepth(0);
 
@@ -222,47 +265,81 @@ export class BattleScene extends Phaser.Scene {
   }
 
   createClassAnims() {
-    const defs = [
-      { prefix: 'w', tex: 'wf', walkFps: 10, atkFps: 15 },
-      { prefix: 'r', tex: 'rf', walkFps: 12, atkFps: 16 },
-      { prefix: 'm', tex: 'mf', walkFps: 10, atkFps: 15 },
-      { prefix: 'p', tex: 'pf', walkFps: 10, atkFps: 15 },
-      { prefix: 'n', tex: 'nf', walkFps: 10, atkFps: 15 },
-      { prefix: 'a', tex: 'af', walkFps: 13, atkFps: 18 },
-      { prefix: 'sum_skel', tex: 'skel', walkFps: 10, atkFps: 14 },
-      { prefix: 'sum_gol', tex: 'gol', walkFps: 8, atkFps: 12 },
-    ];
+    const state = this.getState ? this.getState() : {};
+    const initCid = state.classId || 'warrior';
+    const initCh = getChapterIdx(state.stage || 1) + 1;
+    this.registerClassAnims(initCid);
+    if (initCid === 'necro') this.registerSummonAnims();
+    this.registerChapterAnims(initCh);
+    this.registerLegacyAnims();
+  }
+
+  registerClassAnims(cid) {
+    const map = {
+      warrior:  { prefix: 'w', tex: 'wf', walkFps: 10, atkFps: 15 },
+      ranger:   { prefix: 'r', tex: 'rf', walkFps: 12, atkFps: 16 },
+      mage:     { prefix: 'm', tex: 'mf', walkFps: 10, atkFps: 15 },
+      paladin:  { prefix: 'p', tex: 'pf', walkFps: 10, atkFps: 15 },
+      necro:    { prefix: 'n', tex: 'nf', walkFps: 10, atkFps: 15 },
+      assassin: { prefix: 'a', tex: 'af', walkFps: 13, atkFps: 18 },
+    };
+    const def = map[cid];
+    if (!def) return;
+    const atlasKey = `atlas_${cid}`;
+    ['down', 'up', 'right'].forEach((d) => {
+      if (!this.anims.exists(`${def.prefix}_${d}_walk`)) {
+        this.anims.create({
+          key: `${def.prefix}_${d}_walk`,
+          frames: [0, 1, 2, 3].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_walk_${i}` })),
+          frameRate: Math.max(9, def.walkFps),
+          repeat: -1,
+        });
+      }
+      if (!this.anims.exists(`${def.prefix}_${d}_atk`)) {
+        this.anims.create({
+          key: `${def.prefix}_${d}_atk`,
+          frames: [0, 1, 2, 3].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_atk_${i}` })),
+          frameRate: def.atkFps,
+          repeat: 0,
+        });
+      }
+    });
+  }
+
+  registerSummonAnims() {
     if (!this.anims.exists('sum_wraith_walk')) {
-      this.anims.create({ key: 'sum_wraith_walk', frames: [0,1,2,3].map((i) => ({ key: `wraith_walk_${i}` })), frameRate: 10, repeat: -1 });
-      this.anims.create({ key: 'sum_wraith_atk', frames: [0,1,2,3].map((i) => ({ key: `wraith_atk_${i}` })), frameRate: 14, repeat: 0 });
+      this.anims.create({ key: 'sum_wraith_walk', frames: [0, 1, 2, 3].map((i) => ({ key: 'atlas_summons', frame: `wraith_walk_${i}` })), frameRate: 10, repeat: -1 });
+      this.anims.create({ key: 'sum_wraith_atk', frames: [0, 1, 2, 3].map((i) => ({ key: 'atlas_summons', frame: `wraith_atk_${i}` })), frameRate: 14, repeat: 0 });
     }
-    defs.forEach(({ prefix, tex, walkFps, atkFps }) => {
+    [{ prefix: 'sum_skel', tex: 'skel', walkFps: 10, atkFps: 14 }, { prefix: 'sum_gol', tex: 'gol', walkFps: 8, atkFps: 12 }].forEach(({ prefix, tex, walkFps, atkFps }) => {
       ['down', 'up', 'right'].forEach((d) => {
         if (!this.anims.exists(`${prefix}_${d}_walk`)) {
           this.anims.create({
             key: `${prefix}_${d}_walk`,
-            frames: [0, 1, 2, 3].map((i) => ({ key: `${tex}_${d}_walk_${i}` })),
-            frameRate: Math.max(9, walkFps),
+            frames: [0, 1, 2, 3].map((i) => ({ key: 'atlas_summons', frame: `${tex}_${d}_walk_${i}` })),
+            frameRate: walkFps,
             repeat: -1,
           });
         }
         if (!this.anims.exists(`${prefix}_${d}_atk`)) {
           this.anims.create({
             key: `${prefix}_${d}_atk`,
-            frames: [0, 1, 2, 3].map((i) => ({ key: `${tex}_${d}_atk_${i}` })),
+            frames: [0, 1, 2, 3].map((i) => ({ key: 'atlas_summons', frame: `${tex}_${d}_atk_${i}` })),
             frameRate: atkFps,
             repeat: 0,
           });
         }
       });
     });
+  }
 
-    ['goblin', 'spider', 'skeleton', 'imp', 'orc', 'necromancer', 'boss_demon', 'ch1_wolf', 'ch1_bandit', 'ch1_boar', 'ch1_slime', 'ch1_militia', 'ch1_treant', 'ch1_crow', 'ch1_raider', 'ch1_rat', 'ch1_warlord', 'ch2_shaman', 'ch2_bomber', 'ch2_rider', 'ch2_bat', 'ch2_spore', 'ch2_sapper', 'ch2_worm', 'ch2_stalker', 'ch2_arachne', 'ch2_chieftain', 'ch3_ghoul', 'ch3_archer', 'ch3_bonemage', 'ch3_wraith', 'ch3_abom', 'ch3_mummy', 'ch3_hound', 'ch3_scarab', 'ch3_guard', 'ch3_lord', 'ch4_imp', 'ch4_hound', 'ch4_elemental', 'ch4_salamander', 'ch4_golem', 'ch4_harpy', 'ch4_cultist', 'ch4_knight', 'ch4_scorpion', 'ch4_ifrit', 'ch5_thrall', 'ch5_succubus', 'ch5_warlock', 'ch5_gargoyle', 'ch5_cerberus', 'ch5_torturer', 'ch5_eye', 'ch5_guard', 'ch5_archfiend', 'ch5_general', 'ch6_wolf', 'ch6_sprite', 'ch6_yeti', 'ch6_witch', 'ch6_crab', 'ch6_golem', 'ch6_knight', 'ch6_wyvern', 'ch6_banshee', 'ch6_titan', 'ch7_toad', 'ch7_mosquito', 'ch7_slime', 'ch7_lizard', 'ch7_shaman', 'ch7_plant', 'ch7_leech', 'ch7_spider', 'ch7_croc', 'ch7_hydra', 'ch8_spark', 'ch8_eagle', 'ch8_mage', 'ch8_golem', 'ch8_harpy', 'ch8_knight', 'ch8_elemental', 'ch8_wyrm', 'ch8_centaur', 'ch8_titan', 'ch9_thrall', 'ch9_bat', 'ch9_nun', 'ch9_inquisitor', 'ch9_gargoyle', 'ch9_knight', 'ch9_priest', 'ch9_hound', 'ch9_executioner', 'ch9_lord', 'ch10_wisp', 'ch10_stalker', 'ch10_horror', 'ch10_mage', 'ch10_construct', 'ch10_seraph', 'ch10_devourer', 'ch10_knight', 'ch10_eye', 'ch10_titan'].forEach((mid) => {
+  registerMobAnimsList(mids, atlasKey) {
+    mids.forEach((mid) => {
       const walkFps = mid === 'spider' ? 12 : (mid === 'imp' ? 10 : (mid === 'orc' || mid === 'boss_demon' ? 7 : 9));
       if (!this.anims.exists(`mob_${mid}_walk`)) {
         this.anims.create({
           key: `mob_${mid}_walk`,
-          frames: [0, 1, 2, 3].map((i) => ({ key: `mob_${mid}_walk_${i}` })),
+          frames: [0, 1, 2, 3].map((i) => ({ key: atlasKey, frame: `mob_${mid}_walk_${i}` })),
           frameRate: walkFps,
           repeat: -1,
         });
@@ -270,12 +347,33 @@ export class BattleScene extends Phaser.Scene {
       if (!this.anims.exists(`mob_${mid}_atk`)) {
         this.anims.create({
           key: `mob_${mid}_atk`,
-          frames: [0, 1, 2, 3].map((i) => ({ key: `mob_${mid}_atk_${i}` })),
+          frames: [0, 1, 2, 3].map((i) => ({ key: atlasKey, frame: `mob_${mid}_atk_${i}` })),
           frameRate: 13,
           repeat: 0,
         });
       }
     });
+  }
+
+  registerChapterAnims(chNum) {
+    const CH_MOBS = {
+      1: ['ch1_wolf', 'ch1_bandit', 'ch1_boar', 'ch1_slime', 'ch1_militia', 'ch1_treant', 'ch1_crow', 'ch1_raider', 'ch1_rat', 'ch1_warlord'],
+      2: ['ch2_shaman', 'ch2_bomber', 'ch2_rider', 'ch2_bat', 'ch2_spore', 'ch2_sapper', 'ch2_worm', 'ch2_stalker', 'ch2_arachne', 'ch2_chieftain'],
+      3: ['ch3_ghoul', 'ch3_archer', 'ch3_bonemage', 'ch3_wraith', 'ch3_abom', 'ch3_mummy', 'ch3_hound', 'ch3_scarab', 'ch3_guard', 'ch3_lord'],
+      4: ['ch4_imp', 'ch4_hound', 'ch4_elemental', 'ch4_salamander', 'ch4_golem', 'ch4_harpy', 'ch4_cultist', 'ch4_knight', 'ch4_scorpion', 'ch4_ifrit'],
+      5: ['ch5_thrall', 'ch5_succubus', 'ch5_warlock', 'ch5_gargoyle', 'ch5_cerberus', 'ch5_torturer', 'ch5_eye', 'ch5_guard', 'ch5_archfiend', 'ch5_general'],
+      6: ['ch6_wolf', 'ch6_sprite', 'ch6_yeti', 'ch6_witch', 'ch6_crab', 'ch6_golem', 'ch6_knight', 'ch6_wyvern', 'ch6_banshee', 'ch6_titan'],
+      7: ['ch7_toad', 'ch7_mosquito', 'ch7_slime', 'ch7_lizard', 'ch7_shaman', 'ch7_plant', 'ch7_leech', 'ch7_spider', 'ch7_croc', 'ch7_hydra'],
+      8: ['ch8_spark', 'ch8_eagle', 'ch8_mage', 'ch8_golem', 'ch8_harpy', 'ch8_knight', 'ch8_elemental', 'ch8_wyrm', 'ch8_centaur', 'ch8_titan'],
+      9: ['ch9_thrall', 'ch9_bat', 'ch9_nun', 'ch9_inquisitor', 'ch9_gargoyle', 'ch9_knight', 'ch9_priest', 'ch9_hound', 'ch9_executioner', 'ch9_lord'],
+      10: ['ch10_wisp', 'ch10_stalker', 'ch10_horror', 'ch10_mage', 'ch10_construct', 'ch10_seraph', 'ch10_devourer', 'ch10_knight', 'ch10_eye', 'ch10_titan'],
+    };
+    const mids = CH_MOBS[chNum];
+    if (mids) this.registerMobAnimsList(mids, `atlas_ch${chNum}`);
+  }
+
+  registerLegacyAnims() {
+    this.registerMobAnimsList(['goblin', 'spider', 'skeleton', 'imp', 'orc', 'necromancer', 'boss_demon'], 'atlas_legacy');
   }
 
   generateFxTextures() {
@@ -300,10 +398,11 @@ export class BattleScene extends Phaser.Scene {
 
     this.heroGroundShadow = this.add.image(cx, cy + 44, 'fx_glow')
       .setTint(0x000000).setScale(1.7, 0.6).setAlpha(0.62).setDepth(2);
-    this.heroCastShadow = this.add.image(cx - 14, cy + 28, texKey)
+    const heroAtlas = this.getHeroAtlasKey(cid);
+    this.heroCastShadow = this.add.image(cx - 14, cy + 28, heroAtlas, texKey)
       .setTint(0x000000).setScale(0.56, 0.25).setAlpha(0.32).setDepth(3);
 
-    this.hero = this.add.sprite(cx, cy, texKey).setScale(0.56).setDepth(cy);
+    this.hero = this.add.sprite(cx, cy, heroAtlas, texKey).setScale(0.56).setDepth(cy);
     if (cid === 'warrior') this.hero.play('w_down_walk');
     else if (cid === 'ranger') this.hero.play('r_down_walk');
     else if (cid === 'mage') this.hero.play('m_down_walk');
@@ -576,6 +675,13 @@ export class BattleScene extends Phaser.Scene {
   }
 
   refreshHeroClass() {
+    const cid = this.getState().classId || 'warrior';
+    this.ensureClassLoaded(cid, () => {
+      this._applyRefreshHeroClass();
+    });
+  }
+
+  _applyRefreshHeroClass() {
     if (this.summons) {
       this.summons.forEach((s) => { s.sprite?.destroy(); s.barBg?.destroy(); s.barFill?.destroy(); s.label?.destroy(); });
       this.summons = [];
@@ -628,11 +734,12 @@ export class BattleScene extends Phaser.Scene {
 
     const groundShadow = this.add.image(sx, sy + 40, 'fx_glow')
       .setTint(0x000000).setScale(data.isBoss ? 2.1 : 1.3, data.isBoss ? 0.72 : 0.45).setAlpha(0.58).setDepth(2);
+    const mak = this.getMobAtlasKey(data.id);
     const initKey = `mob_${data.id}_walk_0`;
-    const castShadow = this.add.image(sx - 12, sy + 26, initKey)
+    const castShadow = this.add.image(sx - 12, sy + 26, mak, initKey)
       .setTint(0x000000).setScale(data.scale, data.scale * 0.42).setAlpha(0.28).setDepth(3);
 
-    const sprite = this.add.sprite(sx, sy, initKey).setScale(data.scale).setDepth(sy).setAlpha(0);
+    const sprite = this.add.sprite(sx, sy, mak, initKey).setScale(data.scale).setDepth(sy).setAlpha(0);
     sprite.play(`mob_${data.id}_walk`);
     this.tweens.add({ targets: sprite, alpha: 1, duration: 260 });
 
@@ -670,6 +777,13 @@ export class BattleScene extends Phaser.Scene {
   }
 
   spawnWaveSquad() {
+    const zoneIdx = this.getZoneIdx();
+    this.ensureChapterLoaded(zoneIdx, () => {
+      this._applySpawnWaveSquad();
+    });
+  }
+
+  _applySpawnWaveSquad() {
     this.updateZoneBackground();
     this.clearAllMonsters();
 
@@ -815,21 +929,27 @@ export class BattleScene extends Phaser.Scene {
     this.updateProjectiles(dt, stats);
     this.updateSummons(dt, stats);
 
-    const aliveCount = this.monsters.filter((m) => m.hp > 0).length;
-    if (aliveCount === 0 && !this.batchRespawning) {
-      this.batchRespawning = true;
-      this.time.delayedCall(800, () => {
-        this.batchRespawning = false;
+    const TARGET_MOBS = 29;
+    this.rollingSpawnTimer = (this.rollingSpawnTimer || 0) + delta;
+    if (this.rollingSpawnTimer >= 850) {
+      this.rollingSpawnTimer = 0;
+      // 清理已死亡的殘留物件引用，保持陣列輕量
+      if (this.monsters.length > 60) {
+        this.monsters = this.monsters.filter((m) => m.hp > 0);
+      }
+      const aliveCount = this.monsters.filter((m) => m.hp > 0).length;
+      if (aliveCount < TARGET_MOBS) {
         const curStage = this.getState().stage || 1;
-        const encounters = createStageEncounters(curStage);
-        this.clearAllMonsters();
-        encounters.forEach((enc) => {
-          const rx = Phaser.Math.Clamp(this.hero.x + (enc.x - MAP_W / 2), 220, MAP_W - 220);
-          const ry = Phaser.Math.Clamp(this.hero.y + (enc.y - MAP_H / 2), 240, MAP_H - 200);
-          this.spawnMonsterInstance(enc.mob, Math.PI, rx, ry);
-        });
-        this.spawnFloatingText(this.hero.x, this.hero.y - 115, '⚔️ 新一批 60% 怪群已生成！', '#fde047', 15);
-      });
+        const need = Math.min(3, TARGET_MOBS - aliveCount);
+        for (let i = 0; i < need; i++) {
+          const mob = spawnSingleMonster(curStage, false);
+          const ang = Math.random() * Math.PI * 2;
+          const dist = 620 + Math.random() * 340;
+          const rx = Phaser.Math.Clamp(this.hero.x + Math.cos(ang) * dist, 220, MAP_W - 220);
+          const ry = Phaser.Math.Clamp(this.hero.y + Math.sin(ang) * dist * 0.72, 240, MAP_H - 200);
+          this.spawnMonsterInstance(mob, ang, rx, ry);
+        }
+      }
     }
 
     const nearest = this.findNearestMonster(this.hero.x, this.hero.y);
@@ -997,7 +1117,7 @@ export class BattleScene extends Phaser.Scene {
 
     this.heroGroundShadow.setPosition(this.hero.x, this.hero.y + 44);
     this.heroCastShadow.setPosition(this.hero.x - 14, this.hero.y + 28).setFlipX(this.heroFlipX);
-    this.heroCastShadow.setTexture(this.hero.texture.key);
+    this.heroCastShadow.setTexture(this.hero.texture.key, this.hero.frame.name);
     this.heroHpBg.setPosition(this.hero.x, this.hero.y - 86);
     this.heroHpFill.setPosition(this.hero.x - 54, this.hero.y - 86);
     this.heroHpText.setPosition(this.hero.x, this.hero.y - 101);
@@ -1146,7 +1266,7 @@ export class BattleScene extends Phaser.Scene {
         .setScale(m.scale * squashX, m.scale * squashY)
         .setRotation(tilt);
       m.groundShadow.setPosition(m.sprite.x, m.sprite.y + 40);
-      m.castShadow.setPosition(m.sprite.x - 12, m.sprite.y + 26).setFlipX(mobFlip).setTexture(m.sprite.texture.key);
+      m.castShadow.setPosition(m.sprite.x - 12, m.sprite.y + 26).setFlipX(mobFlip).setTexture(m.sprite.texture.key, m.sprite.frame.name);
 
       m.dustTimer = (m.dustTimer || 0) + delta;
       if (m.dustTimer >= (m.isBoss ? 520 : 880) && dist > stopRange) {
@@ -2345,7 +2465,7 @@ export class BattleScene extends Phaser.Scene {
         const oy = Phaser.Math.Between(-60, 70);
         const sx = this.hero.x + ox;
         const sy = this.hero.y + oy;
-        const spr = this.add.sprite(sx, sy, 'skel_down_walk_0').setScale(0.48).setDepth(sy);
+        const spr = this.add.sprite(sx, sy, 'atlas_summons', 'skel_down_walk_0').setScale(0.48).setDepth(sy);
         spr.play('sum_skel_down_walk');
         const barBg = this.add.rectangle(sx, sy - 48, 48, 5, 0x090b10).setStrokeStyle(1, 0x2dd4bf).setDepth(3500);
         const barFill = this.add.rectangle(sx - 24, sy - 48, 48, 4, 0x2dd4bf).setOrigin(0, 0.5).setDepth(3501);
@@ -2363,7 +2483,7 @@ export class BattleScene extends Phaser.Scene {
         existingG.lvl = skillLvl;
         existingG.sprite.setPosition(aim.x, aim.y);
       } else {
-        const spr = this.add.sprite(aim.x, aim.y, 'gol_down_walk_0').setScale(0.58).setDepth(aim.y);
+        const spr = this.add.sprite(aim.x, aim.y, 'atlas_summons', 'gol_down_walk_0').setScale(0.58).setDepth(aim.y);
         spr.play('sum_gol_down_walk');
         const barBg = this.add.rectangle(aim.x, aim.y - 68, 56, 6, 0x090b10).setStrokeStyle(1, 0xfb7185).setDepth(3500);
         const barFill = this.add.rectangle(aim.x - 28, aim.y - 68, 56, 5, 0xf43f5e).setOrigin(0, 0.5).setDepth(3501);
@@ -2387,7 +2507,7 @@ export class BattleScene extends Phaser.Scene {
       for (let i = 0; i < count; i++) {
         const target = alive[i % alive.length];
         const ang = Math.atan2(target.sprite.y - this.hero.y, target.sprite.x - this.hero.x) + Phaser.Math.FloatBetween(-0.25, 0.25);
-        const spr = this.add.sprite(this.hero.x, this.hero.y - 12, 'wraith_walk_0')
+        const spr = this.add.sprite(this.hero.x, this.hero.y - 12, 'atlas_summons', 'wraith_walk_0')
           .setScale(0.38).setFlipX(Math.cos(ang) < 0).setDepth(4510);
         spr.play('sum_wraith_walk');
         this.projectiles.push({
@@ -2524,7 +2644,7 @@ export class BattleScene extends Phaser.Scene {
         const tgt = alive[i % alive.length];
         const cx = tgt.sprite.x + Phaser.Math.Between(-50, 50);
         const cy = tgt.sprite.y + Phaser.Math.Between(-35, 35);
-        const clone = this.add.image(cx, cy, 'af_down_atk_2').setScale(0.54).setTint(0xc084fc).setAlpha(0.85).setDepth(cy);
+        const clone = this.add.image(cx, cy, 'atlas_assassin', 'af_down_atk_2').setScale(0.54).setTint(0xc084fc).setAlpha(0.85).setDepth(cy);
         this.playFxSprite('afx_slash', tgt.sprite.x, tgt.sprite.y - 10, 0.95, Math.random() * Math.PI, 280);
         const isCrit = forceCrit || Math.random() * 100 < stats.critRate;
         const dmg = Math.max(1, Math.round(stats.atk * mult * (isCrit ? stats.critDmg / 100 : 1)));
