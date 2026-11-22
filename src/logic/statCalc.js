@@ -164,6 +164,16 @@ export function recalcPlayerStats(state) {
   const crystalMult = 1 + crystals * 0.15;
   flat.goldFind += crystals * 5;
   flat.magicFind += crystals * 5;
+  const nowTs = Date.now();
+  const buffs = state.potionBuffs || {};
+  if ((buffs.furyUntil || 0) > nowTs) {
+    flat.atkSpeedPct += 25;
+    flat.critRate += 10;
+  }
+  if ((buffs.mfUntil || 0) > nowTs) {
+    flat.magicFind += 40;
+    flat.goldFind += 30;
+  }
 
   const maxHp = Math.round(flat.hp * (1 + hpPct / 100) * crystalMult);
   const armorPre = Math.round(flat.armor * (1 + armorPct / 100));

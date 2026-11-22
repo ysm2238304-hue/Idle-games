@@ -357,6 +357,16 @@ export class DashboardUI {
 
 
   updateVitals({ hp, maxHp, mp, maxMp, potions, maxPotions }) {
+    const buffWrap = document.getElementById('hud-potion-buffs');
+    if (buffWrap && this.getState) {
+      const b = this.getState().potionBuffs || {};
+      const nowTs = Date.now();
+      const pills = [];
+      if ((b.expUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill">🟡 經驗+50% ${Math.ceil((b.expUntil - nowTs)/1000)}s</span>`);
+      if ((b.furyUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill fury">🟣 狂暴 ${Math.ceil((b.furyUntil - nowTs)/1000)}s</span>`);
+      if ((b.mfUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill mf">🟢 尋寶 ${Math.ceil((b.mfUntil - nowTs)/1000)}s</span>`);
+      buffWrap.innerHTML = pills.join('');
+    }
     const hpPct = Math.max(0, Math.min(100, (hp / Math.max(1, maxHp)) * 100));
     const mpPct = Math.max(0, Math.min(100, (mp / Math.max(1, maxMp)) * 100));
     const hpFill = document.getElementById('orb-hp-fill');

@@ -290,8 +290,8 @@ export class BattleScene extends Phaser.Scene {
       if (!this.anims.exists(`${def.prefix}_${d}_walk`)) {
         this.anims.create({
           key: `${def.prefix}_${d}_walk`,
-          frames: [0, 1, 2, 3].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_walk_${i}` })),
-          frameRate: Math.max(9, def.walkFps),
+          frames: [0, 1, 2, 3, 2, 1].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_walk_${i}` })),
+          frameRate: Math.max(12, def.walkFps + 2),
           repeat: -1,
         });
       }
@@ -493,31 +493,19 @@ export class BattleScene extends Phaser.Scene {
     this.obstacles = [];
 
     const pool = ZONE_OBSTACLES[zoneIdx] || ZONE_OBSTACLES[0];
-    let seed = (zoneIdx + 1) * 9301 + 49297;
-    const rand = () => {
-      seed = (seed * 9301 + 49297) % 233280;
-      return seed / 233280;
-    };
-
-    const cx = MAP_W / 2;
-    const cy = MAP_H / 2;
-    let attempts = 0;
-    while (this.obstacles.length < 22 && attempts < 220) {
-      attempts++;
-      const ox = 380 + rand() * (MAP_W - 760);
-      const oy = 320 + rand() * (MAP_H - 640);
-      if (Math.hypot(ox - cx, oy - cy) < 380) continue;
-      if (this.obstacles.some((o) => Math.hypot(o.x - ox, o.y - oy) < 360)) continue;
-
-      const key = pool[this.obstacles.length % pool.length];
-      const sc = 0.62 + rand() * 0.22;
-      const r = Math.round(52 * sc / 0.72);
-      const shadow = this.add.image(ox, oy + 14, 'fx_glow')
-        .setTint(0x000000).setScale(2.1 * sc, 0.75 * sc).setAlpha(0.55).setDepth(2);
-      const sprite = this.add.image(ox, oy, key)
-        .setOrigin(0.5, 0.88).setScale(sc).setDepth(oy);
-      this.obstacles.push({ x: ox, y: oy, r, sprite, shadow });
-    }
+    // 淨空中央主戰區 (1050~3050, 620~1680)，僅在外圍邊界與角落配置主題地標，絕不隨機擋路
+    const slots = [
+      [420, 380], [920, 340], [1680, 310], [2420, 310], [3180, 340], [3660, 390],
+      [380, 1140], [3710, 1140],
+      [440, 1920], [980, 1960], [1740, 1990], [2380, 1990], [3120, 1960], [3650, 1910],
+    ];
+    slots.forEach(([ox, oy], idx) => {
+      const texKey = pool[idx % pool.length];
+      const sc = 0.42 + (idx % 3) * 0.05;
+      const shadow = this.add.image(ox, oy + 26, 'fx_glow').setTint(0x000000).setScale(1.4, 0.5).setAlpha(0.45).setDepth(2);
+      const spr = this.add.image(ox, oy, texKey).setScale(sc).setDepth(oy);
+      this.obstacles.push({ x: ox, y: oy, radius: 28, sprite: spr, shadow });
+    });
   }
 
   resolveObstacleCollision(ent, entRadius = 26) {
@@ -1124,10 +1112,38 @@ export class BattleScene extends Phaser.Scene {
     if (this.heroAfkText) this.heroAfkText.setPosition(this.hero.x, this.hero.y - 117);
   }
 
+  triggerHeroAttackAnim(durationMs = 340) {
+    const now = this.time?.now || 0;
+    this.heroAttackAnimUntil = now + durationMs;
+    if (!this.hero) return;
+    const cid = this.getState().classId || 'warrior';
+    const prefix = cid === 'warrior' ? 'w' : (cid === 'ranger' ? 'r' : (cid === 'paladin' ? 'p' : (cid === 'necro' ? 'n' : (cid === 'assassin' ? 'a' : 'm'))));
+    const atkKey = `${prefix}_${this.heroDir || 'down'}_atk`;
+    if (this.anims.exists(atkKey)) {
+      this.hero.anims.timeScale = 1;
+      if (this.hero.anims.isPaused) this.hero.anims.resume();
+      this.hero.play(atkKey, false);
+    }
+    this.tweens.add({
+      targets: this.hero,
+      scaleX: 0.61,
+      scaleY: 0.53,
+      duration: 95,
+      yoyo: true,
+      ease: 'Quad.easeOut',
+    });
+  }
+
   updateHeroVisualPose(vx, vy, time = 0) {
     const cid = this.getState().classId || 'warrior';
     const spd = Math.hypot(vx, vy);
-    const isMoving = spd > 14;
+    if (spd > 18) {
+      this.heroIsMoving = true;
+      this.heroStopAt = time + 140;
+    } else if (spd < 8 && time >= (this.heroStopAt || 0)) {
+      this.heroIsMoving = false;
+    }
+    const isMoving = !!this.heroIsMoving;
     const isAttacking = time < this.heroAttackAnimUntil;
 
     if (isMoving && !isAttacking && time >= (this.heroDirLockUntil || 0)) {
@@ -1149,9 +1165,14 @@ export class BattleScene extends Phaser.Scene {
     this.hero.setFlipX(this.heroFlipX);
     if (!isAttacking) {
       if (isMoving) {
-        const bob = Math.sin(time * 0.018) * 0.026;
-        this.hero.setScale(0.56 * (1 - bob * 0.6), 0.56 * (1 + bob));
-        this.hero.anims.timeScale = Phaser.Math.Clamp(spd / 145, 0.8, 1.45);
+        const bob = Math.sin(time * 0.020) * 0.032;
+        this.hero.setScale(0.56 * (1 - bob * 0.55), 0.56 * (1 + bob));
+        this.hero.anims.timeScale = Phaser.Math.Clamp(spd / 135, 0.9, 1.5);
+        if (time >= (this.heroStepDustAt || 0)) {
+          this.heroStepDustAt = time + 260;
+          const d = this.add.image(this.hero.x, this.hero.y + 38, 'fx_glow').setTint(0x94a3b8).setScale(0.24).setAlpha(0.35).setDepth(4);
+          this.tweens.add({ targets: d, y: d.y - 10, scale: 0.06, alpha: 0, duration: 300, onComplete: () => d.destroy() });
+        }
       } else {
         this.hero.setScale(0.56, 0.56);
         this.hero.anims.timeScale = 1;
@@ -1384,7 +1405,7 @@ export class BattleScene extends Phaser.Scene {
 
   performHeroAttack(time, stats, classId, target) {
     this.faceHeroToward(target.sprite.x, target.sprite.y);
-    this.heroAttackAnimUntil = time + 340;
+    this.triggerHeroAttackAnim(340);
     this.lungeHeroJuice(1.07, 0.94);
     const atkPrefix = classId === 'warrior' ? 'w' : (classId === 'ranger' ? 'r' : (classId === 'paladin' ? 'p' : (classId === 'necro' ? 'n' : (classId === 'assassin' ? 'a' : 'm'))));
     this.hero.play(`${atkPrefix}_${this.heroDir}_atk`, false);
@@ -1536,7 +1557,7 @@ export class BattleScene extends Phaser.Scene {
     const sk = WARRIOR_SKILLS[skillId];
     const aim = this.getAimPoint(isManual, 320);
     this.faceHeroToward(aim.x, aim.y);
-    this.heroAttackAnimUntil = this.time.now + 420;
+    this.triggerHeroAttackAnim(420);
 
     const dmgMult = (stats.skillDmgMult || 1) * (this.time.now < this.overloadUntil ? 1.35 : 1);
     const radMult = stats.skillRadiusMult || 1;
@@ -1748,7 +1769,7 @@ export class BattleScene extends Phaser.Scene {
     const sk = RANGER_SKILLS[skillId];
     const aim = this.getAimPoint(isManual, 480);
     this.faceHeroToward(aim.x, aim.y);
-    this.heroAttackAnimUntil = this.time.now + 400;
+    this.triggerHeroAttackAnim(400);
 
     const dmgMult = (stats.skillDmgMult || 1) * (this.time.now < this.overloadUntil ? 1.35 : 1);
     const radMult = stats.skillRadiusMult || 1;
@@ -1922,7 +1943,7 @@ export class BattleScene extends Phaser.Scene {
     const sk = MAGE_SKILLS[skillId];
     const aim = this.getAimPoint(isManual, 480);
     this.faceHeroToward(aim.x, aim.y);
-    this.heroAttackAnimUntil = this.time.now + 420;
+    this.triggerHeroAttackAnim(420);
 
     const dmgMult = (stats.skillDmgMult || 1) * (this.time.now < this.overloadUntil ? 1.35 : 1);
     const radMult = stats.skillRadiusMult || 1;
@@ -2147,7 +2168,7 @@ export class BattleScene extends Phaser.Scene {
     const tree = this.getState().skillTree || {};
     const aim = this.getAimPoint(isManual, 360);
     this.faceHeroToward(aim.x, aim.y);
-    this.heroAttackAnimUntil = this.time.now + 420;
+    this.triggerHeroAttackAnim(420);
     this.hero.play(`p_${this.heroDir}_atk`, false);
 
     const auraBonus = this.time.now < this.radiantAuraUntil ? 1.25 : 1;
@@ -2442,7 +2463,7 @@ export class BattleScene extends Phaser.Scene {
     const tree = this.getState().skillTree || {};
     const aim = this.getAimPoint(isManual, 420);
     this.faceHeroToward(aim.x, aim.y);
-    this.heroAttackAnimUntil = this.time.now + 420;
+    this.triggerHeroAttackAnim(420);
     this.hero.play(`n_${this.heroDir}_atk`, false);
 
     const dmgMult = stats.skillDmgMult || 1;
@@ -2599,7 +2620,7 @@ export class BattleScene extends Phaser.Scene {
     const tree = this.getState().skillTree || {};
     const aim = this.getAimPoint(isManual, 380);
     this.faceHeroToward(aim.x, aim.y);
-    this.heroAttackAnimUntil = this.time.now + 360;
+    this.triggerHeroAttackAnim(360);
     this.hero.play(`a_${this.heroDir}_atk`, false);
 
     const dmgMult = stats.skillDmgMult || 1;
@@ -3111,6 +3132,21 @@ export class BattleScene extends Phaser.Scene {
     if (dropResult && dropResult.item) {
       this.spawnLootBeam(mx, my + 24, dropResult.item);
     }
+    if (dropResult && dropResult.potion) {
+      const p = dropResult.potion;
+      const orb = this.add.image(mx, my, 'fx_glow').setTint(p.color).setScale(0.42).setDepth(3600);
+      this.spawnFloatingText(mx, my - 28, p.label, '#fde68a', 13);
+      this.tweens.add({
+        targets: orb,
+        x: this.hero.x,
+        y: this.hero.y - 10,
+        scale: 0.14,
+        alpha: 0,
+        duration: 480,
+        ease: 'Cubic.easeIn',
+        onComplete: () => orb.destroy(),
+      });
+    }
     if (this.mapKills % 24 === 0) {
       this.potionCharges = Math.min(this.potionMaxCharges, this.potionCharges + 1);
       const curStage = this.getState().stage || 1;
@@ -3137,6 +3173,15 @@ export class BattleScene extends Phaser.Scene {
     if (amount <= 0) return;
     this.playerHp = Math.min(this.playerMaxHp, this.playerHp + amount);
     this.updateHeroHpBar();
+  }
+
+  addPotionCharge(cnt = 1) {
+    this.potionCharges = Math.min(this.potionMaxCharges, (this.potionCharges || 0) + cnt);
+  }
+
+  restoreMana(amount) {
+    if (amount <= 0) return;
+    this.playerMp = Math.min(this.playerMaxMp, this.playerMp + amount);
   }
 
   updateHeroHpBar() {

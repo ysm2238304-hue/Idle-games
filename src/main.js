@@ -339,7 +339,8 @@ const ui = new DashboardUI({
 });
 
 function grantExp(amount) {
-  const gained = Math.round(amount * (computedStats.expMult || 1));
+  const expBuffMult = ((gameState.potionBuffs?.expUntil || 0) > Date.now()) ? 1.5 : 1.0;
+  const gained = Math.round(amount * (computedStats.expMult || 1) * expBuffMult);
   gameState.exp += gained;
   let need = getExpToNext(gameState.level);
   while (gameState.exp >= need) {
@@ -429,8 +430,40 @@ function initPhaserGame() {
           persistAll(true);
         }
 
+        let droppedPotion = null;
+        const potRoll = Math.random() * 100;
+        const potChance = mob.isBoss ? 55 : 14;
+        if (potRoll < potChance) {
+          const r2 = Math.random();
+          if (r2 < 0.30) droppedPotion = { id: 'hp_pot', label: '🔴 生命藥水', color: 0xef4444 };
+          else if (r2 < 0.56) droppedPotion = { id: 'mp_pot', label: '🔵 魔力藥水', color: 0x38bdf8 };
+          else if (r2 < 0.76) droppedPotion = { id: 'exp_pot', label: '🟡 經驗藥水', color: 0xfacc15 };
+          else if (r2 < 0.90) droppedPotion = { id: 'fury_pot', label: '🟣 狂暴藥水', color: 0xc084fc };
+          else droppedPotion = { id: 'mf_pot', label: '🟢 尋寶藥水', color: 0x4ade80 };
+
+          if (!gameState.potionBuffs) gameState.potionBuffs = {};
+          const nowTs = Date.now();
+          if (droppedPotion.id === 'hp_pot') {
+            battleScene?.healHero(Math.round(computedStats.maxHp * 0.35));
+            battleScene?.addPotionCharge?.(1);
+            ui.addLog('🔴 拾取生命藥水：回復 35% 生命並補充藥水次數！', 'loot');
+          } else if (droppedPotion.id === 'mp_pot') {
+            battleScene?.restoreMana?.(Math.round((computedStats.maxMp || 100) * 0.45));
+            ui.addLog('🔵 拾取魔力藥水：立即回復 45% 能量！', 'loot');
+          } else if (droppedPotion.id === 'exp_pot') {
+            gameState.potionBuffs.expUntil = Math.max(nowTs, gameState.potionBuffs.expUntil || 0) + 60000;
+            ui.addLog('🟡 拾取經驗藥水：獲得 60 秒經驗值 +50% 加成！', 'loot');
+          } else if (droppedPotion.id === 'fury_pot') {
+            gameState.potionBuffs.furyUntil = Math.max(nowTs, gameState.potionBuffs.furyUntil || 0) + 45000;
+            ui.addLog('🟣 拾取狂暴藥水：獲得 45 秒攻速 +25%、暴擊 +10%！', 'loot');
+          } else if (droppedPotion.id === 'mf_pot') {
+            gameState.potionBuffs.mfUntil = Math.max(nowTs, gameState.potionBuffs.mfUntil || 0) + 60000;
+            ui.addLog('🟢 拾取尋寶藥水：獲得 60 秒掉寶率 +40%、金幣 +30%！', 'loot');
+          }
+        }
+
         refreshStatsAndUI();
-        return { item: keptItem || dropped };
+        return { item: keptItem || dropped, potion: droppedPotion };
       },
       onStageClearedDisabled: (clearedStage) => {
         const modal = document.getElementById('modal-stage-clear');
@@ -632,6 +665,21 @@ window.addEventListener('keydown', (e) => {
     wm?.classList.contains('hidden') ? ui.openWorldMapModal(gameState) : wm.classList.add('hidden');
   } else if (e.code === 'KeyI') {
     ui.activeDrawer === 'gear' ? ui.closeDrawer() : ui.openDrawer('gear');
+  } else if (e.code === 'KeyB') {
+    ui.activeDrawer === 'bag' ? ui.closeDrawer() : ui.openDrawer('bag');
+  } else if (e.code === 'KeyU') {
+    ui.activeDrawer === 'upgrade' ? ui.closeDrawer() : ui.openDrawer('upgrade');
+  } else if (e.code === 'KeyK') {
+    ui.activeDrawer === 'tree' ? ui.closeDrawer() : ui.openDrawer('tree');
+  } else if (e.code === 'KeyN') {
+    ui.activeDrawer === 'skills' ? ui.closeDrawer() : ui.openDrawer('skills');
+  } else if (e.code === 'KeyV') {
+    ui.activeDrawer === 'rebirth' ? ui.closeDrawer() : ui.openDrawer('rebirth');
+  } else if (e.code === 'KeyC') {
+    const cm = document.getElementById('modal-class');
+    cm?.classList.contains('hidden') ? ui.openClassModal(gameState) : cm.classList.add('hidden');
+  } else if (e.code === 'KeyL') {
+    ui.activeDrawer === 'log' ? ui.closeDrawer() : ui.openDrawer('log');
   } else if (e.code === 'KeyQ') {
     document.getElementById('btn-salvage-junk')?.click();
   } else if (e.code === 'Escape') {
