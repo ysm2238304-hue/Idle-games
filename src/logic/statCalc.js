@@ -179,6 +179,52 @@ export function recalcPlayerStats(state) {
     flat.defPct += 15;
     flat.magicFind += 15;
   }
+  if ((buffs.sporeUntil || 0) > nowTs) {
+    flat.atkSpeedPct += 20;
+    flat.critRate += 15;
+    flat.goldFind += 20;
+  }
+  if ((buffs.soulUntil || 0) > nowTs) {
+    flat.atkPct += 18;
+    flat.critDmg += 25;
+    flat.magicFind += 15;
+  }
+  if ((buffs.lavaUntil || 0) > nowTs) {
+    flat.atkPct += 25;
+    flat.critDmg += 20;
+    flat.skillDmgPct += 20;
+  }
+  if ((buffs.abyssUntil || 0) > nowTs) {
+    flat.atkPct += 30;
+    flat.critDmg += 20;
+    flat.magicFind += 25;
+  }
+  if ((buffs.auroraUntil || 0) > nowTs) {
+    flat.defPct += 25;
+    flat.atkSpeedPct += 25;
+    flat.dmgReducePct += 10;
+  }
+  if ((buffs.emeraldUntil || 0) > nowTs) {
+    flat.atkPct += 25;
+    flat.atkSpeedPct += 25;
+    flat.magicFind += 30;
+  }
+  if ((buffs.stormUntil || 0) > nowTs) {
+    flat.atkSpeedPct += 30;
+    flat.skillDmgPct += 25;
+    flat.critRate += 20;
+  }
+  if ((buffs.roseUntil || 0) > nowTs) {
+    flat.atkPct += 35;
+    flat.critDmg += 25;
+    flat.lifeSteal += 5;
+  }
+  if ((buffs.astralUntil || 0) > nowTs) {
+    flat.atkPct += 45;
+    flat.critDmg += 35;
+    flat.atkSpeedPct += 30;
+    flat.magicFind += 40;
+  }
 
   const maxHp = Math.round(flat.hp * (1 + hpPct / 100) * crystalMult);
   const armorPre = Math.round(flat.armor * (1 + armorPct / 100));

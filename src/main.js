@@ -563,6 +563,104 @@ function enterTown(chapterIdx = 0) {
         ui.addLog('🔥 點燃曙光烽火台！獲得 5 分鐘「曙光祝福」（攻擊/防禦/掉寶 +15%）！', 'victory');
         refreshStatsAndUI();
         persistAll();
+      } else if (action === 'gimmick_spore_fountain') {
+        if (!gameState.potionBuffs) gameState.potionBuffs = {};
+        gameState.potionBuffs.sporeUntil = Date.now() + 300000;
+        ui.addLog('🍄 觸發螢光孢子噴泉！獲得 5 分鐘「孢子狂熱」（攻速+20% / 爆擊+15% / 金幣+20%）！', 'victory');
+        refreshStatsAndUI();
+        persistAll();
+      } else if (action === 'gimmick_steam_valve') {
+        battleScene?.restoreMana?.(computedStats.maxMp || 200);
+        ui.addLog('⚙️ 轉動高壓蒸汽閥門！蒸汽灌注使你的能量瞬間回滿！', 'loot');
+        refreshStatsAndUI();
+      } else if (action === 'gimmick_soul_brazier') {
+        if (!gameState.potionBuffs) gameState.potionBuffs = {};
+        gameState.potionBuffs.soulUntil = Date.now() + 300000;
+        ui.addLog('🕯️ 點燃靈魂永恆火盆！獲得 5 分鐘「魂火祝福」（攻擊+18% / 爆傷+25% / 掉寶+15%）！', 'victory');
+        refreshStatsAndUI();
+        persistAll();
+      } else if (action === 'gimmick_candle_shrine') {
+        battleScene?.healHero?.(computedStats.maxHp);
+        battleScene?.restoreMana?.(computedStats.maxMp || 200);
+        ui.addLog('🕯️ 點燃祈禱幽藍燭台！生命與能量已完全恢復！', 'loot');
+        refreshStatsAndUI();
+      } else if (action === 'gimmick_lava_fountain') {
+        if (!gameState.potionBuffs) gameState.potionBuffs = {};
+        gameState.potionBuffs.lavaUntil = Date.now() + 300000;
+        ui.addLog('🌋 觸發雙頭巨龍熔岩噴泉！獲得 5 分鐘「熔爐狂怒」（攻擊+25% / 爆傷+20% / 技能傷+20%）！', 'victory');
+        refreshStatsAndUI();
+        persistAll();
+      } else if (action === 'gimmick_lava_sluice') {
+        battleScene?.healHero?.(computedStats.maxHp);
+        battleScene?.restoreMana?.(computedStats.maxMp || 200);
+        ui.addLog('⚙️ 轉動熔岩閘門冷卻閥！生命與能量已完全恢復！', 'loot');
+        refreshStatsAndUI();
+      } else if (action === 'gimmick_abyss_sigil') {
+        if (!gameState.potionBuffs) gameState.potionBuffs = {};
+        gameState.potionBuffs.abyssUntil = Date.now() + 300000;
+        ui.addLog('🩸 啟動深淵召喚巨陣！獲得 5 分鐘「魔王血契」（攻擊+30% / 爆傷+20% / 掉寶+25%）！', 'victory');
+        refreshStatsAndUI();
+        persistAll();
+      } else if (action === 'gimmick_blood_chalice') {
+        battleScene?.healHero?.(computedStats.maxHp);
+        battleScene?.restoreMana?.(computedStats.maxMp || 200);
+        ui.addLog('🍷 飲用猩紅聖血聖杯！生命與能量已完全恢復！', 'loot');
+        refreshStatsAndUI();
+      } else if (action === 'gimmick_aurora_spire') {
+        if (!gameState.potionBuffs) gameState.potionBuffs = {};
+        gameState.potionBuffs.auroraUntil = Date.now() + 300000;
+        ui.addLog('❄️ 共鳴永凍極光水晶塔！獲得 5 分鐘「極光祝福」（防禦+25% / 攻速+25% / 減傷+10%）！', 'victory');
+        refreshStatsAndUI();
+        persistAll();
+      } else if (action === 'gimmick_runic_brazier') {
+        battleScene?.healHero?.(computedStats.maxHp);
+        battleScene?.restoreMana?.(computedStats.maxMp || 200);
+        ui.addLog('🔥 靠近北歐符文暖火盆驅散寒霜！生命與能量已完全恢復！', 'loot');
+        refreshStatsAndUI();
+      } else if (action === 'gimmick_emerald_waterfall') {
+        if (!gameState.potionBuffs) gameState.potionBuffs = {};
+        gameState.potionBuffs.emeraldUntil = Date.now() + 300000;
+        ui.addLog('🌿 共鳴翡翠毒液瀑布池！獲得 5 分鐘「翠玉生機」（攻擊+25% / 攻速+25% / 掉寶+30%）！', 'victory');
+        refreshStatsAndUI();
+        persistAll();
+      } else if (action === 'gimmick_voodoo_horn') {
+        battleScene?.healHero?.(computedStats.maxHp);
+        battleScene?.restoreMana?.(computedStats.maxMp || 200);
+        ui.addLog('📯 吹響沼澤巫毒號角！治癒螢火蟲群使你恢復全部生命與能量！', 'loot');
+        refreshStatsAndUI();
+      } else if (action === 'gimmick_storm_core') {
+        if (!gameState.potionBuffs) gameState.potionBuffs = {};
+        gameState.potionBuffs.stormUntil = Date.now() + 300000;
+        ui.addLog('⚡ 共鳴聚雷磁能核心球！獲得 5 分鐘「蒼穹雷霆」（攻速+30% / 技能傷+25% / 爆擊+20%）！', 'victory');
+        refreshStatsAndUI();
+        persistAll();
+      } else if (action === 'gimmick_tesla_coil') {
+        battleScene?.healHero?.(computedStats.maxHp);
+        battleScene?.restoreMana?.(computedStats.maxMp || 200);
+        ui.addLog('⚡ 啟動蓄電共鳴特斯拉線圈！高壓充能使你恢復全部生命與能量！', 'loot');
+        refreshStatsAndUI();
+      } else if (action === 'gimmick_blood_fountain') {
+        if (!gameState.potionBuffs) gameState.potionBuffs = {};
+        gameState.potionBuffs.roseUntil = Date.now() + 300000;
+        ui.addLog('🌹 沐浴垂淚聖母血泉！獲得 5 分鐘「聖血薔薇」（攻擊+35% / 爆傷+25% / 吸血+5%）！', 'victory');
+        refreshStatsAndUI();
+        persistAll();
+      } else if (action === 'gimmick_abbey_bell') {
+        battleScene?.healHero?.(computedStats.maxHp);
+        battleScene?.restoreMana?.(computedStats.maxMp || 200);
+        ui.addLog('🔔 敲響修道院黃金大鐘！神聖鐘聲使你恢復全部生命與能量！', 'loot');
+        refreshStatsAndUI();
+      } else if (action === 'gimmick_astral_orrery') {
+        if (!gameState.potionBuffs) gameState.potionBuffs = {};
+        gameState.potionBuffs.astralUntil = Date.now() + 300000;
+        ui.addLog('🌌 校準旋轉黑洞星象儀！獲得 5 分鐘「永恆星辰」（攻擊+45% / 爆傷+35% / 攻速+30% / 掉寶+40%）！', 'victory');
+        refreshStatsAndUI();
+        persistAll();
+      } else if (action === 'gimmick_star_well') {
+        battleScene?.healHero?.(computedStats.maxHp);
+        battleScene?.restoreMana?.(computedStats.maxMp || 200);
+        ui.addLog('✨ 許願於星界銀河許願泉！星塵洗禮使你恢復全部生命與能量！', 'loot');
+        refreshStatsAndUI();
       } else {
         ui.openTownFacilityModal(action, data, {
           onBrewPotion: (brewId) => {
@@ -605,6 +703,114 @@ function enterTown(chapterIdx = 0) {
               gameState.gold += 2500;
               handleLootDrop(generateLoot(Math.max(5, gameState.maxStageReached || 5), true, 300, false, gameState.classId));
               ui.addLog('📜 完成懸賞「百戰哨兵試煉」：獲得 2,500 金幣與高階傳說箱！', 'victory');
+            } else if (qid === 'ch2_q1') {
+              gameState.gold += 1800;
+              handleLootDrop(generateLoot(Math.max(11, gameState.maxStageReached || 11), true, 160, false, gameState.classId));
+              ui.addLog('📜 完成洞窟懸賞「清剿巢穴哥布林」：獲得 1,800 金幣與高階稀有箱！', 'victory');
+            } else if (qid === 'ch2_q2') {
+              gameState.gold += 3200;
+              gameState.skillPoints = (gameState.skillPoints || 0) + 1;
+              ui.addLog('📜 完成洞窟懸賞「討伐地下巢穴首領」：獲得 3,200 金幣與 +1 技能點！', 'victory');
+            } else if (qid === 'ch2_q3') {
+              gameState.gold += 6000;
+              handleLootDrop(generateLoot(Math.max(15, gameState.maxStageReached || 15), true, 350, false, gameState.classId));
+              ui.addLog('📜 完成洞窟懸賞「深淵礦脈清道夫」：獲得 6,000 金幣與傳說保底箱！', 'victory');
+            } else if (qid === 'ch3_q1') {
+              gameState.gold += 4200;
+              handleLootDrop(generateLoot(Math.max(21, gameState.maxStageReached || 21), true, 200, false, gameState.classId));
+              ui.addLog('📜 完成墓園懸賞「淨化白骨墓穴食屍鬼」：獲得 4,200 金幣與高階稀有箱！', 'victory');
+            } else if (qid === 'ch3_q2') {
+              gameState.gold += 7500;
+              gameState.skillPoints = (gameState.skillPoints || 0) + 1;
+              ui.addLog('📜 完成墓園懸賞「討伐白骨領主首領」：獲得 7,500 金幣與 +1 技能點！', 'victory');
+            } else if (qid === 'ch3_q3') {
+              gameState.gold += 12000;
+              handleLootDrop(generateLoot(Math.max(25, gameState.maxStageReached || 25), true, 420, false, gameState.classId));
+              ui.addLog('📜 完成墓園懸賞「守夜人聖骨試煉」：獲得 12,000 金幣與傳說保底箱！', 'victory');
+            } else if (qid === 'ch4_q1') {
+              gameState.gold += 8500;
+              handleLootDrop(generateLoot(Math.max(31, gameState.maxStageReached || 31), true, 250, false, gameState.classId));
+              ui.addLog('📜 完成裂谷懸賞「清剿焦土炎魔與火蜥蜴」：獲得 8,500 金幣與高階稀有箱！', 'victory');
+            } else if (qid === 'ch4_q2') {
+              gameState.gold += 15000;
+              gameState.skillPoints = (gameState.skillPoints || 0) + 1;
+              ui.addLog('📜 完成裂谷懸賞「討伐伊弗利特烈焰首領」：獲得 15,000 金幣與 +1 技能點！', 'victory');
+            } else if (qid === 'ch4_q3') {
+              gameState.gold += 24000;
+              handleLootDrop(generateLoot(Math.max(35, gameState.maxStageReached || 35), true, 500, false, gameState.classId));
+              ui.addLog('📜 完成裂谷懸賞「黑曜石熔爐宗師試煉」：獲得 24,000 金幣與傳說保底箱！', 'victory');
+            } else if (qid === 'ch5_q1') {
+              gameState.gold += 18000;
+              handleLootDrop(generateLoot(Math.max(41, gameState.maxStageReached || 41), true, 300, false, gameState.classId));
+              ui.addLog('📜 完成血契懸賞「肅清深淵聖殿魅魔」：獲得 18,000 金幣與高階稀有箱！', 'victory');
+            } else if (qid === 'ch5_q2') {
+              gameState.gold += 30000;
+              gameState.skillPoints = (gameState.skillPoints || 0) + 1;
+              ui.addLog('📜 完成血契懸賞「討伐深淵將軍與魔王」：獲得 30,000 金幣與 +1 技能點！', 'victory');
+            } else if (qid === 'ch5_q3') {
+              gameState.gold += 48000;
+              handleLootDrop(generateLoot(Math.max(45, gameState.maxStageReached || 45), true, 600, false, gameState.classId));
+              ui.addLog('📜 完成血契懸賞「緋紅王庭血戰試煉」：獲得 48,000 金幣與傳說保底箱！', 'victory');
+            } else if (qid === 'ch6_q1') {
+              gameState.gold += 36000;
+              handleLootDrop(generateLoot(Math.max(51, gameState.maxStageReached || 51), true, 360, false, gameState.classId));
+              ui.addLog('📜 完成雪原懸賞「獵殺永凍雪原冰狼」：獲得 36,000 金幣與高階稀有箱！', 'victory');
+            } else if (qid === 'ch6_q2') {
+              gameState.gold += 55000;
+              gameState.skillPoints = (gameState.skillPoints || 0) + 1;
+              ui.addLog('📜 完成雪原懸賞「討伐冰霜泰坦首領」：獲得 55,000 金幣與 +1 技能點！', 'victory');
+            } else if (qid === 'ch6_q3') {
+              gameState.gold += 88000;
+              handleLootDrop(generateLoot(Math.max(55, gameState.maxStageReached || 55), true, 700, false, gameState.classId));
+              ui.addLog('📜 完成雪原懸賞「英靈殿女武神試煉」：獲得 88,000 金幣與傳說保底箱！', 'victory');
+            } else if (qid === 'ch7_q1') {
+              gameState.gold += 68000;
+              handleLootDrop(generateLoot(Math.max(61, gameState.maxStageReached || 61), true, 420, false, gameState.classId));
+              ui.addLog('📜 完成沼澤懸賞「肅清毒沼巨蛙」：獲得 68,000 金幣與高階稀有箱！', 'victory');
+            } else if (qid === 'ch7_q2') {
+              gameState.gold += 95000;
+              gameState.skillPoints = (gameState.skillPoints || 0) + 1;
+              ui.addLog('📜 完成沼澤懸賞「討伐劇毒九頭蛇首領」：獲得 95,000 金幣與 +1 技能點！', 'victory');
+            } else if (qid === 'ch7_q3') {
+              gameState.gold += 150000;
+              handleLootDrop(generateLoot(Math.max(65, gameState.maxStageReached || 65), true, 800, false, gameState.classId));
+              ui.addLog('📜 完成沼澤懸賞「翠玉樹冠水寨守護試煉」：獲得 150,000 金幣與傳說保底箱！', 'victory');
+            } else if (qid === 'ch8_q1') {
+              gameState.gold += 120000;
+              handleLootDrop(generateLoot(Math.max(71, gameState.maxStageReached || 71), true, 480, false, gameState.classId));
+              ui.addLog('📜 完成蒼穹懸賞「攔截風暴高塔電弧元素」：獲得 120,000 金幣與高階稀有箱！', 'victory');
+            } else if (qid === 'ch8_q2') {
+              gameState.gold += 180000;
+              gameState.skillPoints = (gameState.skillPoints || 0) + 1;
+              ui.addLog('📜 完成蒼穹懸賞「討伐雷鳴風暴泰坦首領」：獲得 180,000 金幣與 +1 技能點！', 'victory');
+            } else if (qid === 'ch8_q3') {
+              gameState.gold += 280000;
+              handleLootDrop(generateLoot(Math.max(75, gameState.maxStageReached || 75), true, 900, false, gameState.classId));
+              ui.addLog('📜 完成蒼穹懸賞「蒼穹浮空城制空試煉」：獲得 280,000 金幣與傳說保底箱！', 'victory');
+            } else if (qid === 'ch9_q1') {
+              gameState.gold += 210000;
+              handleLootDrop(generateLoot(Math.max(81, gameState.maxStageReached || 81), true, 550, false, gameState.classId));
+              ui.addLog('📜 完成審判懸賞「淨化血色修道院」：獲得 210,000 金幣與高階稀有箱！', 'victory');
+            } else if (qid === 'ch9_q2') {
+              gameState.gold += 320000;
+              gameState.skillPoints = (gameState.skillPoints || 0) + 1;
+              ui.addLog('📜 完成審判懸賞「討伐血色大主教領主」：獲得 320,000 金幣與 +1 技能點！', 'victory');
+            } else if (qid === 'ch9_q3') {
+              gameState.gold += 500000;
+              handleLootDrop(generateLoot(Math.max(85, gameState.maxStageReached || 85), true, 1000, false, gameState.classId));
+              ui.addLog('📜 完成審判懸賞「聖血薔薇修道院聖戰試煉」：獲得 500,000 金幣與傳說保底箱！', 'victory');
+            } else if (qid === 'ch10_q1') {
+              gameState.gold += 380000;
+              handleLootDrop(generateLoot(Math.max(91, gameState.maxStageReached || 91), true, 700, false, gameState.classId));
+              ui.addLog('📜 完成星圖懸賞「肅清混沌星界星靈」：獲得 380,000 金幣與高階稀有箱！', 'victory');
+            } else if (qid === 'ch10_q2') {
+              gameState.gold += 600000;
+              gameState.skillPoints = (gameState.skillPoints || 0) + 2;
+              ui.addLog('📜 完成星圖懸賞「討伐混沌星界終極泰坦」：獲得 600,000 金幣與 +2 技能點！', 'victory');
+            } else if (qid === 'ch10_q3') {
+              gameState.gold += 1000000;
+              handleLootDrop(generateLoot(Math.max(98, gameState.maxStageReached || 98), true, 1500, false, gameState.classId));
+              ui.addLog('📜 完成星圖懸賞「永恆星辰聖域終局試煉」：獲得 1,000,000 金幣與神話保底箱！', 'victory');
             }
             refreshStatsAndUI();
             persistAll(true);
@@ -617,6 +823,98 @@ function enterTown(chapterIdx = 0) {
             handleLootDrop(item);
             refreshStatsAndUI();
             persistAll();
+          },
+          onClaimWeaverGift: () => {
+            if (gameState.ch10WeaverGiftClaimed) return;
+            gameState.ch10WeaverGiftClaimed = true;
+            gameState.gold += 150000;
+            if (!gameState.potionBuffs) gameState.potionBuffs = {};
+            const nowTs = Date.now();
+            gameState.potionBuffs.furyUntil = Math.max(nowTs, gameState.potionBuffs.furyUntil || 0) + 45000;
+            gameState.potionBuffs.mfUntil = Math.max(nowTs, gameState.potionBuffs.mfUntil || 0) + 60000;
+            ui.addLog('🌌 領取星界編織者終極贈禮：獲得 150,000 金幣與狂暴＋尋寶雙藥水！', 'victory');
+            refreshStatsAndUI();
+            persistAll(true);
+          },
+          onClaimPenitentGift: () => {
+            if (gameState.ch9PenitentGiftClaimed) return;
+            gameState.ch9PenitentGiftClaimed = true;
+            gameState.gold += 80000;
+            if (!gameState.potionBuffs) gameState.potionBuffs = {};
+            gameState.potionBuffs.mfUntil = Math.max(Date.now(), gameState.potionBuffs.mfUntil || 0) + 60000;
+            ui.addLog('🌹 領取苦行聖女賜福：獲得 80,000 金幣與 60 秒尋寶藥水！', 'victory');
+            refreshStatsAndUI();
+            persistAll(true);
+          },
+          onClaimEngineerGift: () => {
+            if (gameState.ch8EngineerGiftClaimed) return;
+            gameState.ch8EngineerGiftClaimed = true;
+            gameState.gold += 50000;
+            if (!gameState.potionBuffs) gameState.potionBuffs = {};
+            gameState.potionBuffs.furyUntil = Math.max(Date.now(), gameState.potionBuffs.furyUntil || 0) + 45000;
+            ui.addLog('⚙️ 領取風暴首席工程師補給：獲得 50,000 金幣與 45 秒狂暴藥水！', 'victory');
+            refreshStatsAndUI();
+            persistAll(true);
+          },
+          onClaimWitchdoctorGift: () => {
+            if (gameState.ch7WitchdoctorGiftClaimed) return;
+            gameState.ch7WitchdoctorGiftClaimed = true;
+            gameState.gold += 30000;
+            if (!gameState.potionBuffs) gameState.potionBuffs = {};
+            gameState.potionBuffs.expUntil = Math.max(Date.now(), gameState.potionBuffs.expUntil || 0) + 60000;
+            ui.addLog('🎭 領取沼澤巫醫長聖禮：獲得 30,000 金幣與 60 秒經驗藥水！', 'victory');
+            refreshStatsAndUI();
+            persistAll(true);
+          },
+          onClaimShamanGift: () => {
+            if (gameState.ch6ShamanGiftClaimed) return;
+            gameState.ch6ShamanGiftClaimed = true;
+            gameState.gold += 18000;
+            if (!gameState.potionBuffs) gameState.potionBuffs = {};
+            gameState.potionBuffs.furyUntil = Math.max(Date.now(), gameState.potionBuffs.furyUntil || 0) + 45000;
+            ui.addLog('❄️ 領取極地先知贈禮：獲得 18,000 金幣與 45 秒狂暴藥水！', 'victory');
+            refreshStatsAndUI();
+            persistAll(true);
+          },
+          onClaimContractorGift: () => {
+            if (gameState.ch5ContractorGiftClaimed) return;
+            gameState.ch5ContractorGiftClaimed = true;
+            gameState.gold += 10000;
+            if (!gameState.potionBuffs) gameState.potionBuffs = {};
+            gameState.potionBuffs.mfUntil = Math.max(Date.now(), gameState.potionBuffs.mfUntil || 0) + 60000;
+            ui.addLog('📜 簽訂王庭黃金魔契：獲得 10,000 金幣與 60 秒尋寶藥水！', 'victory');
+            refreshStatsAndUI();
+            persistAll(true);
+          },
+          onClaimForgemasterGift: () => {
+            if (gameState.ch4ForgemasterGiftClaimed) return;
+            gameState.ch4ForgemasterGiftClaimed = true;
+            gameState.gold += 5000;
+            if (!gameState.potionBuffs) gameState.potionBuffs = {};
+            gameState.potionBuffs.furyUntil = Math.max(Date.now(), gameState.potionBuffs.furyUntil || 0) + 45000;
+            ui.addLog('🔥 領取火元素鍛造宗師贈禮：獲得 5,000 金幣與 45 秒狂暴藥水！', 'victory');
+            refreshStatsAndUI();
+            persistAll(true);
+          },
+          onClaimChroniclerGift: () => {
+            if (gameState.ch3ChroniclerGiftClaimed) return;
+            gameState.ch3ChroniclerGiftClaimed = true;
+            gameState.gold += 2500;
+            if (!gameState.potionBuffs) gameState.potionBuffs = {};
+            gameState.potionBuffs.mfUntil = Math.max(Date.now(), gameState.potionBuffs.mfUntil || 0) + 60000;
+            ui.addLog('🪶 領取亡靈記錄者補給：獲得 2,500 金幣與 60 秒尋寶藥水！', 'victory');
+            refreshStatsAndUI();
+            persistAll(true);
+          },
+          onClaimSmugglerGift: () => {
+            if (gameState.ch2SmugglerGiftClaimed) return;
+            gameState.ch2SmugglerGiftClaimed = true;
+            gameState.gold += 1200;
+            if (!gameState.potionBuffs) gameState.potionBuffs = {};
+            gameState.potionBuffs.furyUntil = Math.max(Date.now(), gameState.potionBuffs.furyUntil || 0) + 45000;
+            ui.addLog('🎒 領取洞窟走私客見面禮：獲得 1,200 金幣與 45 秒狂暴藥水！', 'victory');
+            refreshStatsAndUI();
+            persistAll(true);
           },
           onClaimScoutGift: () => {
             if (gameState.ch1ScoutGiftClaimed) return;
@@ -645,8 +943,13 @@ function enterTown(chapterIdx = 0) {
   };
 
   if (phaserGame.scene.isSleeping('TownScene') || phaserGame.scene.isActive('TownScene')) {
-    phaserGame.scene.wake('TownScene', { chapterIdx, callbacks: townCallbacks });
-    townScene?.syncHeroAppearance?.();
+    if (townScene && townScene.townData?.chapterIdx !== chapterIdx) {
+      phaserGame.scene.stop('TownScene');
+      phaserGame.scene.launch('TownScene', { chapterIdx, callbacks: townCallbacks });
+    } else {
+      phaserGame.scene.wake('TownScene', { chapterIdx, callbacks: townCallbacks });
+      townScene?.syncHeroAppearance?.();
+    }
   } else {
     phaserGame.scene.launch('TownScene', { chapterIdx, callbacks: townCallbacks });
   }
@@ -655,7 +958,9 @@ function enterTown(chapterIdx = 0) {
     btn.textContent = '⚔️ 出城戰鬥 (G)';
     btn.classList.add('in-town');
   }
-  ui.addLog('🏰 已傳送至第 1 章主城「曙光哨站堡壘」（安全區）', 'system');
+  const townNames = ["曙光哨站堡壘", "地下菌菇黑市", "守夜人聖骨禮拜堂", "黑曜石熔爐要塞", "緋紅魔獄王庭", "極光冰晶堡", "翠玉樹冠水寨", "蒼穹電弧浮空城", "聖血薔薇修道院", "永恆星辰聖域"];
+  const townTitle = `第 ${chapterIdx + 1} 章主城「${townNames[chapterIdx] || townNames[0]}」`;
+  ui.addLog(`🏰 已傳送至${townTitle}（安全區）`, 'system');
 }
 
 function exitTownToBattle() {
@@ -674,7 +979,7 @@ function exitTownToBattle() {
 
 document.getElementById('btn-town-toggle')?.addEventListener('click', () => {
   if (isInTown) exitTownToBattle();
-  else enterTown(0);
+  else enterTown(Math.min(9, getChapterIdx(gameState.stage)));
 });
 
 // --- 全螢幕暗黑歡迎頁 ---
@@ -822,7 +1127,7 @@ window.addEventListener('keydown', (e) => {
     const cm = document.getElementById('modal-class');
     cm?.classList.contains('hidden') ? ui.openClassModal(gameState) : cm.classList.add('hidden');
   } else if (e.code === 'KeyG') {
-    if (isInTown) exitTownToBattle(); else enterTown(0);
+    if (isInTown) exitTownToBattle(); else enterTown(Math.min(9, getChapterIdx(gameState.stage)));
   } else if (e.code === 'KeyL') {
     ui.activeDrawer === 'log' ? ui.closeDrawer() : ui.openDrawer('log');
   } else if (e.code === 'KeyQ') {

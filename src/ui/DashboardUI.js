@@ -366,6 +366,15 @@ export class DashboardUI {
       if ((b.furyUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill fury">🟣 狂暴 ${Math.ceil((b.furyUntil - nowTs)/1000)}s</span>`);
       if ((b.mfUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill mf">🟢 尋寶 ${Math.ceil((b.mfUntil - nowTs)/1000)}s</span>`);
       if ((b.beaconUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill beacon">🔥 曙光祝福 ${Math.ceil((b.beaconUntil - nowTs)/1000)}s</span>`);
+      if ((b.sporeUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill fury">🍄 孢子狂熱 ${Math.ceil((b.sporeUntil - nowTs)/1000)}s</span>`);
+      if ((b.soulUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill">🕯️ 魂火祝福 ${Math.ceil((b.soulUntil - nowTs)/1000)}s</span>`);
+      if ((b.lavaUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill beacon">🌋 熔爐狂怒 ${Math.ceil((b.lavaUntil - nowTs)/1000)}s</span>`);
+      if ((b.abyssUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill fury">🩸 魔王血契 ${Math.ceil((b.abyssUntil - nowTs)/1000)}s</span>`);
+      if ((b.auroraUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill">❄️ 極光祝福 ${Math.ceil((b.auroraUntil - nowTs)/1000)}s</span>`);
+      if ((b.emeraldUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill mf">🌿 翠玉生機 ${Math.ceil((b.emeraldUntil - nowTs)/1000)}s</span>`);
+      if ((b.stormUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill">⚡ 蒼穹雷霆 ${Math.ceil((b.stormUntil - nowTs)/1000)}s</span>`);
+      if ((b.roseUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill beacon">🌹 聖血薔薇 ${Math.ceil((b.roseUntil - nowTs)/1000)}s</span>`);
+      if ((b.astralUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill fury">🌌 永恆星辰 ${Math.ceil((b.astralUntil - nowTs)/1000)}s</span>`);
       buffWrap.innerHTML = pills.join('');
     }
     const hpPct = Math.max(0, Math.min(100, (hp / Math.max(1, maxHp)) * 100));
@@ -1140,13 +1149,77 @@ export class DashboardUI {
         };
       });
     } else if (action === 'modal_bounty') {
-      titleEl.textContent = '📜 第 1 章・曙光哨站懸賞告示板';
+      const stg = st.stage || 1;
+      const isCh10 = stg >= 91;
+      const isCh9 = stg >= 81 && stg < 91;
+      const isCh8 = stg >= 71 && stg < 81;
+      const isCh7 = stg >= 61 && stg < 71;
+      const isCh6 = stg >= 51 && stg < 61;
+      const isCh5 = stg >= 41 && stg < 51;
+      const isCh4 = stg >= 31 && stg < 41;
+      const isCh3 = stg >= 21 && stg < 31;
+      const isCh2 = stg >= 11 && stg < 21;
+      titleEl.textContent = isCh10 ? '📜 第 10 章・星圖天命懸賞羅盤' : (isCh9 ? '📜 第 9 章・審判庭紅蠟懸賞聖碑' : (isCh8 ? '📜 第 8 章・黃銅電弧懸賞觀測塔' : (isCh7 ? '📜 第 7 章・巫毒圖騰懸賞柱' : (isCh6 ? '📜 第 6 章・北歐符文懸賞巨石' : (isCh5 ? '📜 第 5 章・魔王通緝血契柱' : (isCh4 ? '📜 第 4 章・焦土戰功鐵碑' : (isCh3 ? '📜 第 3 章・墓園亡靈通緝碑' : (isCh2 ? '📜 第 2 章・地下洞窟懸賞石柱' : '📜 第 1 章・曙光哨站懸賞告示板'))))))));
       const bp = st.bountyProgress || { kills: st.kills || 0, bossKills: 0, claimed: {} };
-      const quests = [
-        { id: 'ch1_q1', name: '🐺 清剿腐朽野狼群', cur: st.kills || 0, goal: 30, reward: '600 金幣 ＋ 稀有裝備箱' },
-        { id: 'ch1_q2', name: '💀 討伐邊境首領（5/10 關）', cur: bp.bossKills || 0, goal: 2, reward: '1,200 金幣 ＋ +1 技能點' },
-        { id: 'ch1_q3', name: '⚔️ 百戰哨兵試煉', cur: st.kills || 0, goal: 120, reward: '2,500 金幣 ＋ 傳說保底箱' },
-      ];
+      const quests = isCh10
+        ? [
+            { id: 'ch10_q1', name: '🌌 肅清混沌星界星靈與吞噬者', cur: st.kills || 0, goal: 25000, reward: '380,000 金幣 ＋ 高階稀有箱' },
+            { id: 'ch10_q2', name: '🌠 討伐混沌星界終極泰坦首領', cur: bp.bossKills || 0, goal: 150, reward: '600,000 金幣 ＋ +2 技能點' },
+            { id: 'ch10_q3', name: '🪐 永恆星辰聖域終局試煉', cur: st.kills || 0, goal: 32000, reward: '1,000,000 金幣 ＋ 神話保底箱' },
+          ]
+        : isCh9
+        ? [
+            { id: 'ch9_q1', name: '🌹 淨化血色修道院墮落審判官', cur: st.kills || 0, goal: 16000, reward: '210,000 金幣 ＋ 高階稀有箱' },
+            { id: 'ch9_q2', name: '⚔️ 討伐血色大主教領主首領', cur: bp.bossKills || 0, goal: 100, reward: '320,000 金幣 ＋ +1 技能點' },
+            { id: 'ch9_q3', name: '🔔 聖血薔薇修道院聖戰試煉', cur: st.kills || 0, goal: 20000, reward: '500,000 金幣 ＋ 傳說保底箱' },
+          ]
+        : isCh8
+        ? [
+            { id: 'ch8_q1', name: '⚡ 攔截風暴高塔電弧元素', cur: st.kills || 0, goal: 10500, reward: '120,000 金幣 ＋ 高階稀有箱' },
+            { id: 'ch8_q2', name: '🌩️ 討伐雷鳴風暴泰坦首領', cur: bp.bossKills || 0, goal: 75, reward: '180,000 金幣 ＋ +1 技能點' },
+            { id: 'ch8_q3', name: '⚙️ 蒼穹浮空城制空試煉', cur: st.kills || 0, goal: 13500, reward: '280,000 金幣 ＋ 傳說保底箱' },
+          ]
+        : isCh7
+        ? [
+            { id: 'ch7_q1', name: '🐸 肅清毒沼巨蛙與劇毒食人花', cur: st.kills || 0, goal: 6500, reward: '68,000 金幣 ＋ 高階稀有箱' },
+            { id: 'ch7_q2', name: '🐍 討伐劇毒九頭蛇首領', cur: bp.bossKills || 0, goal: 55, reward: '95,000 金幣 ＋ +1 技能點' },
+            { id: 'ch7_q3', name: '🌿 翠玉樹冠水寨守護試煉', cur: st.kills || 0, goal: 8500, reward: '150,000 金幣 ＋ 傳說保底箱' },
+          ]
+        : isCh6
+        ? [
+            { id: 'ch6_q1', name: '❄️ 獵殺永凍雪原冰狼與雪怪', cur: st.kills || 0, goal: 3800, reward: '36,000 金幣 ＋ 高階稀有箱' },
+            { id: 'ch6_q2', name: '🧊 討伐冰霜泰坦首領', cur: bp.bossKills || 0, goal: 40, reward: '55,000 金幣 ＋ +1 技能點' },
+            { id: 'ch6_q3', name: '🛡️ 英靈殿女武神試煉', cur: st.kills || 0, goal: 5200, reward: '88,000 金幣 ＋ 傳說保底箱' },
+          ]
+        : isCh5
+        ? [
+            { id: 'ch5_q1', name: '😈 肅清深淵聖殿魅魔與魔僕', cur: st.kills || 0, goal: 2200, reward: '18,000 金幣 ＋ 高階稀有箱' },
+            { id: 'ch5_q2', name: '👑 討伐深淵將軍與魔王首領', cur: bp.bossKills || 0, goal: 28, reward: '30,000 金幣 ＋ +1 技能點' },
+            { id: 'ch5_q3', name: '🩸 緋紅王庭血戰試煉', cur: st.kills || 0, goal: 3200, reward: '48,000 金幣 ＋ 傳說保底箱' },
+          ]
+        : isCh4
+        ? [
+            { id: 'ch4_q1', name: '🔥 清剿焦土炎魔與火蜥蜴', cur: st.kills || 0, goal: 1150, reward: '8,500 金幣 ＋ 高階稀有箱' },
+            { id: 'ch4_q2', name: '🌋 討伐伊弗利特烈焰首領', cur: bp.bossKills || 0, goal: 18, reward: '15,000 金幣 ＋ +1 技能點' },
+            { id: 'ch4_q3', name: '⚒️ 黑曜石熔爐宗師試煉', cur: st.kills || 0, goal: 1700, reward: '24,000 金幣 ＋ 傳說保底箱' },
+          ]
+        : isCh3
+        ? [
+            { id: 'ch3_q1', name: '💀 淨化白骨墓穴食屍鬼', cur: st.kills || 0, goal: 550, reward: '4,200 金幣 ＋ 高階稀有箱' },
+            { id: 'ch3_q2', name: '👑 討伐白骨領主首領', cur: bp.bossKills || 0, goal: 10, reward: '7,500 金幣 ＋ +1 技能點' },
+            { id: 'ch3_q3', name: '🕯️ 守夜人聖骨試煉', cur: st.kills || 0, goal: 900, reward: '12,000 金幣 ＋ 傳說保底箱' },
+          ]
+        : isCh2
+        ? [
+            { id: 'ch2_q1', name: '🍄 清剿巢穴哥布林與孢子怪', cur: st.kills || 0, goal: 200, reward: '1,800 金幣 ＋ 高階稀有箱' },
+            { id: 'ch2_q2', name: '🕷️ 討伐地下巢穴首領', cur: bp.bossKills || 0, goal: 5, reward: '3,200 金幣 ＋ +1 技能點' },
+            { id: 'ch2_q3', name: '⛏️ 深淵礦脈清道夫', cur: st.kills || 0, goal: 450, reward: '6,000 金幣 ＋ 傳說保底箱' },
+          ]
+        : [
+            { id: 'ch1_q1', name: '🐺 清剿腐朽野狼群', cur: st.kills || 0, goal: 30, reward: '600 金幣 ＋ 稀有裝備箱' },
+            { id: 'ch1_q2', name: '💀 討伐邊境首領（5/10 關）', cur: bp.bossKills || 0, goal: 2, reward: '1,200 金幣 ＋ +1 技能點' },
+            { id: 'ch1_q3', name: '⚔️ 百戰哨兵試煉', cur: st.kills || 0, goal: 120, reward: '2,500 金幣 ＋ 傳說保底箱' },
+          ];
       bodyEl.innerHTML = banner + `<div class="town-option-grid">${quests.map((q) => {
         const done = !!bp.claimed?.[q.id];
         const ready = !done && q.cur >= q.goal;
@@ -1163,7 +1236,9 @@ export class DashboardUI {
       });
     } else if (action === 'modal_market') {
       titleEl.textContent = '🎪 深淵黑市帳篷・神秘賭裝';
-      const stageCost = Math.max(350, (st.stage || 1) * 180);
+      const isCh2 = (st.stage || 1) >= 11;
+      const baseCost = Math.max(350, (st.stage || 1) * 180);
+      const stageCost = isCh2 ? Math.round(baseCost * 0.8) : baseCost;
       const highCost = stageCost * 3;
       bodyEl.innerHTML = banner + `<div class="town-option-grid">
         <div class="town-option-card">
@@ -1179,6 +1254,87 @@ export class DashboardUI {
       const b2 = bodyEl.querySelector('#btn-gamble-high');
       if (b1) b1.onclick = () => { ctx.onGambleGear(stageCost, false); this.openTownFacilityModal(action, data, ctx); };
       if (b2) b2.onclick = () => { ctx.onGambleGear(highCost, true); this.openTownFacilityModal(action, data, ctx); };
+    } else if (action === 'modal_weaver') {
+      titleEl.textContent = '🌌 星界編織者・伊莉雅的終極贈禮';
+      const claimed = !!st.ch10WeaverGiftClaimed;
+      bodyEl.innerHTML = banner + `<div class="town-option-card">
+        <div><h4>🎁 永恆星辰聖域終極秘藏</h4><p>內含：150,000 金幣 ＋ 狂暴藥水 ＋ 尋寶藥水！<br>提示：中央「旋轉黑洞星象儀」可賜予永恆星辰祝福，南門「銀河許願泉」可回滿狀態。</p></div>
+        <button id="btn-claim-weaver" ${claimed ? 'disabled' : ''}>${claimed ? '已領取終極贈禮' : '領取星界終極贈禮'}</button>
+      </div>`;
+      const bwv = bodyEl.querySelector('#btn-claim-weaver');
+      if (bwv) bwv.onclick = () => { ctx.onClaimWeaverGift(); this.openTownFacilityModal(action, data, ctx); };
+    } else if (action === 'modal_penitent') {
+      titleEl.textContent = '🌹 苦行聖女・特蕾莎的聖光賜福';
+      const claimed = !!st.ch9PenitentGiftClaimed;
+      bodyEl.innerHTML = banner + `<div class="town-option-card">
+        <div><h4>🎁 聖血薔薇修道院賜福包</h4><p>內含：80,000 金幣 ＋ 尋寶藥水（60 秒 掉寶+40%、金幣+30%）！<br>提示：中央「垂淚聖母血泉」可賜予聖血薔薇祝福，南門「黃金大鐘」可降下聖光回滿狀態。</p></div>
+        <button id="btn-claim-penitent" ${claimed ? 'disabled' : ''}>${claimed ? '已領取聖女賜福' : '領取聖女賜福'}</button>
+      </div>`;
+      const bpn = bodyEl.querySelector('#btn-claim-penitent');
+      if (bpn) bpn.onclick = () => { ctx.onClaimPenitentGift(); this.openTownFacilityModal(action, data, ctx); };
+    } else if (action === 'modal_engineer') {
+      titleEl.textContent = '⚙️ 風暴首席工程師・艾迪生的蒼穹補給';
+      const claimed = !!st.ch8EngineerGiftClaimed;
+      bodyEl.innerHTML = banner + `<div class="town-option-card">
+        <div><h4>🎁 蒼穹電弧首席工程包</h4><p>內含：50,000 金幣 ＋ 狂暴藥水（45 秒 攻速+25%、暴擊+10%）！<br>提示：中央「聚雷磁能核心球」可賜予蒼穹雷霆祝福，南側「蓄電共鳴特斯拉線圈」可回滿狀態。</p></div>
+        <button id="btn-claim-engineer" ${claimed ? 'disabled' : ''}>${claimed ? '已領取工程師補給' : '領取蒼穹補給'}</button>
+      </div>`;
+      const beg = bodyEl.querySelector('#btn-claim-engineer');
+      if (beg) beg.onclick = () => { ctx.onClaimEngineerGift(); this.openTownFacilityModal(action, data, ctx); };
+    } else if (action === 'modal_witchdoctor') {
+      titleEl.textContent = '🎭 沼澤巫醫長・祖爾的部族聖禮';
+      const claimed = !!st.ch7WitchdoctorGiftClaimed;
+      bodyEl.innerHTML = banner + `<div class="town-option-card">
+        <div><h4>🎁 翠玉樹冠巫醫補給箱</h4><p>內含：30,000 金幣 ＋ 經驗藥水（60 秒 +50% 經驗）！<br>提示：中央「翡翠毒液瀑布池」可賜予翠玉生機祝福，南門「沼澤巫毒號角柱」可召喚螢火蟲回滿狀態。</p></div>
+        <button id="btn-claim-witchdoctor" ${claimed ? 'disabled' : ''}>${claimed ? '已領取部族聖禮' : '領取部族聖禮'}</button>
+      </div>`;
+      const bwd = bodyEl.querySelector('#btn-claim-witchdoctor');
+      if (bwd) bwd.onclick = () => { ctx.onClaimWitchdoctorGift(); this.openTownFacilityModal(action, data, ctx); };
+    } else if (action === 'modal_shaman') {
+      titleEl.textContent = '❄️ 極地先知長老・奧丁森的北境贈禮';
+      const claimed = !!st.ch6ShamanGiftClaimed;
+      bodyEl.innerHTML = banner + `<div class="town-option-card">
+        <div><h4>🎁 極光冰晶先知補給袋</h4><p>內含：18,000 金幣 ＋ 狂暴藥水（45 秒 攻速+25%、暴擊+10%）！<br>提示：中央「永凍極光水晶塔」可賜予極光祝福，南側「北歐符文暖火盆」可回滿狀態。</p></div>
+        <button id="btn-claim-shaman" ${claimed ? 'disabled' : ''}>${claimed ? '已領取先知贈禮' : '領取北境贈禮'}</button>
+      </div>`;
+      const bsh = bodyEl.querySelector('#btn-claim-shaman');
+      if (bsh) bsh.onclick = () => { ctx.onClaimShamanGift(); this.openTownFacilityModal(action, data, ctx); };
+    } else if (action === 'modal_contractor') {
+      titleEl.textContent = '📜 墮落契約官・墨菲斯托的黃金魔契';
+      const claimed = !!st.ch5ContractorGiftClaimed;
+      bodyEl.innerHTML = banner + `<div class="town-option-card">
+        <div><h4>🎁 緋紅王庭魔契補給箱</h4><p>內含：10,000 金幣 ＋ 尋寶藥水（60 秒 掉寶+40%、金幣+30%）！<br>提示：中央「深淵召喚巨陣」可賜予魔王血契祝福，南門「猩紅聖血聖杯座」可回滿狀態。</p></div>
+        <button id="btn-claim-contractor" ${claimed ? 'disabled' : ''}>${claimed ? '已簽訂王庭魔契' : '簽訂領取補給'}</button>
+      </div>`;
+      const bct = bodyEl.querySelector('#btn-claim-contractor');
+      if (bct) bct.onclick = () => { ctx.onClaimContractorGift(); this.openTownFacilityModal(action, data, ctx); };
+    } else if (action === 'modal_forgemaster') {
+      titleEl.textContent = '🔥 火元素鍛造宗師・赫菲斯的贈禮';
+      const claimed = !!st.ch4ForgemasterGiftClaimed;
+      bodyEl.innerHTML = banner + `<div class="town-option-card">
+        <div><h4>🎁 黑曜石熔爐宗師補給</h4><p>內含：5,000 金幣 ＋ 狂暴藥水（45 秒 攻速+25%、暴擊+10%）！<br>提示：中央火山島「雙頭巨龍熔岩噴泉」可賜予熔爐狂怒祝福。</p></div>
+        <button id="btn-claim-forgemaster" ${claimed ? 'disabled' : ''}>${claimed ? '已領取宗師贈禮' : '領取宗師贈禮'}</button>
+      </div>`;
+      const bfg = bodyEl.querySelector('#btn-claim-forgemaster');
+      if (bfg) bfg.onclick = () => { ctx.onClaimForgemasterGift(); this.openTownFacilityModal(action, data, ctx); };
+    } else if (action === 'modal_chronicler') {
+      titleEl.textContent = '🪶 亡靈記錄者・阿爾文的墓穴手札';
+      const claimed = !!st.ch3ChroniclerGiftClaimed;
+      bodyEl.innerHTML = banner + `<div class="town-option-card">
+        <div><h4>🎁 守夜人聖骨補給匣</h4><p>內含：2,500 金幣 ＋ 尋寶藥水（60 秒 掉寶+40%、金幣+30%）！<br>提示：中央「靈魂永恆火盆」可賜予魂火祝福，南側「祈禱幽藍燭台」可隨時回滿狀態。</p></div>
+        <button id="btn-claim-chronicler" ${claimed ? 'disabled' : ''}>${claimed ? '已領取記錄者補給' : '領取聖骨補給'}</button>
+      </div>`;
+      const bch = bodyEl.querySelector('#btn-claim-chronicler');
+      if (bch) bch.onclick = () => { ctx.onClaimChroniclerGift(); this.openTownFacilityModal(action, data, ctx); };
+    } else if (action === 'modal_smuggler') {
+      titleEl.textContent = '🎒 洞窟走私客・尼克的黑貨見面禮';
+      const claimed = !!st.ch2SmugglerGiftClaimed;
+      bodyEl.innerHTML = banner + `<div class="town-option-card">
+        <div><h4>🎁 地下黑市走私補給袋</h4><p>內含：1,200 金幣 ＋ 狂暴藥水（45 秒 攻速+25%、暴擊+10%）！<br>提示：點擊中央「螢光孢子噴泉」或西側「高壓蒸汽閥門」可觸發洞窟機關。</p></div>
+        <button id="btn-claim-smuggler" ${claimed ? 'disabled' : ''}>${claimed ? '已領取走私客見面禮' : '領取見面禮'}</button>
+      </div>`;
+      const bsm = bodyEl.querySelector('#btn-claim-smuggler');
+      if (bsm) bsm.onclick = () => { ctx.onClaimSmugglerGift(); this.openTownFacilityModal(action, data, ctx); };
     } else if (action === 'modal_scout') {
       titleEl.textContent = '🏹 邊境斥候長・莉娜的哨站補給';
       const claimed = !!st.ch1ScoutGiftClaimed;

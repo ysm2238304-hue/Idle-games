@@ -1,8 +1,26 @@
 import { TOWN_CH1 } from '../data/towns/ch1.js';
+import { TOWN_CH2 } from '../data/towns/ch2.js';
+import { TOWN_CH3 } from '../data/towns/ch3.js';
+import { TOWN_CH4 } from '../data/towns/ch4.js';
+import { TOWN_CH5 } from '../data/towns/ch5.js';
+import { TOWN_CH6 } from '../data/towns/ch6.js';
+import { TOWN_CH7 } from '../data/towns/ch7.js';
+import { TOWN_CH8 } from '../data/towns/ch8.js';
+import { TOWN_CH9 } from '../data/towns/ch9.js';
+import { TOWN_CH10 } from '../data/towns/ch10.js';
 import { formatNum } from '../logic/statCalc.js';
 
 const TOWN_REGISTRY = {
   0: TOWN_CH1,
+  1: TOWN_CH2,
+  2: TOWN_CH3,
+  3: TOWN_CH4,
+  4: TOWN_CH5,
+  5: TOWN_CH6,
+  6: TOWN_CH7,
+  7: TOWN_CH8,
+  8: TOWN_CH9,
+  9: TOWN_CH10,
 };
 
 export class TownScene extends Phaser.Scene {
@@ -141,11 +159,11 @@ export class TownScene extends Phaser.Scene {
       }
       const spr = this.add.image(p.x, p.y, td.atlasKey, p.frame)
         .setScale(p.scale)
-        .setDepth(p.y);
+        .setDepth(p.depthOverride ?? p.y);
       if (p.flipX) spr.setFlipX(true);
       if (p.glow) {
         const g = this.add.image(p.x, p.y - 24, 'fx_glow')
-          .setTint(0xfbbf24).setScale(1.2).setAlpha(0.28).setDepth(p.y + 1);
+          .setTint(p.glowColor || 0xfbbf24).setScale(1.2).setAlpha(0.28).setDepth(p.y + 1);
         this.tweens.add({
           targets: g,
           alpha: 0.42,
@@ -372,8 +390,30 @@ export class TownScene extends Phaser.Scene {
       }
     }
 
-    this.hero.x = Phaser.Math.Clamp(this.hero.x + vx * dt, 180, td.mapWidth - 180);
-    this.hero.y = Phaser.Math.Clamp(this.hero.y + vy * dt, 220, td.mapHeight - 160);
+    let nx = Phaser.Math.Clamp(this.hero.x + vx * dt, 180, td.mapWidth - 180);
+    let ny = Phaser.Math.Clamp(this.hero.y + vy * dt, 220, td.mapHeight - 160);
+    if (td.walkableZones && td.walkableZones.length > 0) {
+      const inside = td.walkableZones.some((z) => nx >= z.x1 && nx <= z.x2 && ny >= z.y1 && ny <= z.y2);
+      if (!inside) {
+        let bestX = nx;
+        let bestY = ny;
+        let bestDist = Infinity;
+        for (const z of td.walkableZones) {
+          const cx = Phaser.Math.Clamp(nx, z.x1, z.x2);
+          const cy = Phaser.Math.Clamp(ny, z.y1, z.y2);
+          const d = Math.hypot(nx - cx, ny - cy);
+          if (d < bestDist) {
+            bestDist = d;
+            bestX = cx;
+            bestY = cy;
+          }
+        }
+        nx = bestX;
+        ny = bestY;
+      }
+    }
+    this.hero.x = nx;
+    this.hero.y = ny;
 
     for (const ob of this.obstacles) {
       const dx = this.hero.x - ob.x;
@@ -532,6 +572,23 @@ export class TownScene extends Phaser.Scene {
       }).setOrigin(0.5).setDepth(4800);
       this.tweens.add({ targets: txt, y: txt.y - 44, alpha: 0, duration: 680, onComplete: () => txt.destroy() });
       return;
+    }
+
+    if (obj.action === 'gimmick_spore_fountain' || obj.action === 'gimmick_steam_valve' || obj.action === 'gimmick_soul_brazier' || obj.action === 'gimmick_candle_shrine' || obj.action === 'gimmick_lava_fountain' || obj.action === 'gimmick_lava_sluice' || obj.action === 'gimmick_abyss_sigil' || obj.action === 'gimmick_blood_chalice' || obj.action === 'gimmick_aurora_spire' || obj.action === 'gimmick_runic_brazier' || obj.action === 'gimmick_emerald_waterfall' || obj.action === 'gimmick_voodoo_horn' || obj.action === 'gimmick_storm_core' || obj.action === 'gimmick_tesla_coil' || obj.action === 'gimmick_blood_fountain' || obj.action === 'gimmick_abbey_bell' || obj.action === 'gimmick_astral_orrery' || obj.action === 'gimmick_star_well') {
+      const tint = (obj.action === 'gimmick_spore_fountain' || obj.action === 'gimmick_abyss_sigil' || obj.action === 'gimmick_blood_chalice') ? 0xe879f9 : (obj.action === 'gimmick_steam_valve' ? 0x34d399 : ((obj.action === 'gimmick_lava_fountain' || obj.action === 'gimmick_lava_sluice') ? 0xf97316 : 0x38bdf8));
+      for (let i = 0; i < 16; i++) {
+        const sp = this.add.image(obj.x + Phaser.Math.Between(-35, 35), obj.y - 12, 'fx_glow')
+          .setTint(tint).setScale(0.35).setDepth(4500);
+        this.tweens.add({
+          targets: sp,
+          x: obj.x + Phaser.Math.Between(-135, 135),
+          y: obj.y - Phaser.Math.Between(90, 210),
+          alpha: 0,
+          scale: 0.05,
+          duration: 800,
+          onComplete: () => sp.destroy(),
+        });
+      }
     }
 
     if (obj.action === 'gimmick_beacon') {
