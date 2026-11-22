@@ -145,3 +145,82 @@ export function getSalvageReward(item) {
   const dust = Math.max(1, Math.round((1 + item.level * 0.5) * rarityMult));
   return { gold, dust };
 }
+
+
+export function rerollItemAffixes(item) {
+  if (!item) return null;
+  const rarity = RARITIES[item.rarity] || RARITIES.common;
+  const stage = Math.max(1, item.level || 1);
+  const oldAffixes = (item.affixes || []).map((a) => ({ ...a }));
+  const oldPower = calcItemPower(item);
+
+  const affixCount = Math.max(1, randInt(rarity.affixes[0], rarity.affixes[1]));
+  const itemCls = item.classReq || 'all';
+  const eligibleAffixes = AFFIX_POOL.filter((a) => !a.classReq || itemCls === 'all' || a.classReq === itemCls);
+  const shuffledPool = [...eligibleAffixes].sort(() => Math.random() - 0.5);
+  const newAffixes = [];
+  for (let i = 0; i < affixCount && i < shuffledPool.length; i++) {
+    const a = shuffledPool[i];
+    const rawVal = randInt(a.min, a.max) + (stage - 1) * a.scalePerLvl;
+    const val = Math.max(1, Math.round(rawVal * (0.85 + Math.random() * 0.3)));
+    newAffixes.push({
+      key: a.key,
+      label: a.label,
+      unit: a.unit,
+      value: val,
+    });
+  }
+  item.affixes = newAffixes;
+  item.powerScore = calcItemPower(item);
+  return { oldAffixes, oldPower, newPower: item.powerScore };
+}
+
+export function generateBlackMarketItem(stage, playerClassId = 'warrior', forceRarity = null) {
+  const slotKeys = Object.keys(EQUIP_SLOTS);
+  const slot = pickRandom(slotKeys);
+  const rarityId = forceRarity || (Math.random() < 0.25 ? 'legendary' : (Math.random() < 0.65 ? 'rare' : 'magic'));
+  const rarity = RARITIES[rarityId] || RARITIES.rare;
+  const allBases = BASE_ITEMS[slot];
+  const smartPool = allBases.filter((b) => !b.classReq || b.classReq === 'all' || b.classReq === playerClassId);
+  const bases = (Math.random() < 0.85 && smartPool.length > 0) ? smartPool : allBases;
+  const tierRatio = Math.min(1, (Math.max(1, stage) - 1) / 90);
+  const maxIdx = Math.min(bases.length - 1, Math.floor(tierRatio * bases.length) + 1);
+  const minIdx = Math.max(0, maxIdx - 2);
+  const baseTpl = bases[randInt(minIdx, maxIdx)];
+
+  const levelFactor = 1 + (stage - 1) * 0.22;
+  const baseValue = Math.max(1, Math.round(baseTpl.baseVal * levelFactor * rarity.mult * (0.95 + Math.random() * 0.25)));
+  const affixCount = randInt(rarity.affixes[0], rarity.affixes[1]);
+  const itemCls = baseTpl.classReq || 'all';
+  const eligibleAffixes = AFFIX_POOL.filter((a) => !a.classReq || itemCls === 'all' || a.classReq === itemCls);
+  const shuffledPool = [...eligibleAffixes].sort(() => Math.random() - 0.5);
+  const affixes = [];
+  for (let i = 0; i < affixCount && i < shuffledPool.length; i++) {
+    const a = shuffledPool[i];
+    const rawVal = randInt(a.min, a.max) + (stage - 1) * a.scalePerLvl;
+    const val = Math.max(1, Math.round(rawVal * (0.9 + Math.random() * 0.3)));
+    affixes.push({ key: a.key, label: a.label, unit: a.unit, value: val });
+  }
+  let legendaryEffect = null;
+  if (rarityId === 'legendary') {
+    const legPool = LEGENDARY_EFFECTS.filter((le) => le.classReq === 'all' || itemCls === 'all' || le.classReq === itemCls);
+    legendaryEffect = pickRandom(legPool.length > 0 ? legPool : LEGENDARY_EFFECTS);
+  }
+  const prefixLabel = rarityId === 'legendary' ? '黑市・遠古' : (rarityId === 'rare' ? '黑市・精良' : '黑市・');
+  const item = {
+    uid: `item_${++itemUidCounter}_${Math.random().toString(36).slice(2, 6)}`,
+    name: `${prefixLabel}${baseTpl.name}`,
+    icon: baseTpl.icon,
+    slot,
+    classReq: itemCls,
+    subType: baseTpl.subType || EQUIP_SLOTS[slot].label,
+    rarity: rarityId,
+    level: stage,
+    upgradeLevel: 0,
+    baseStat: { key: baseTpl.baseStat, value: baseValue },
+    affixes,
+    legendaryEffect,
+  };
+  item.powerScore = calcItemPower(item);
+  return item;
+}

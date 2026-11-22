@@ -220,7 +220,7 @@ export const STAGE_ZONES = [
   '混沌星界虛空',
 ];
 
-const ZONE_POOLS = [
+export const ZONE_POOLS = [
   ['ch1_wolf', 'ch1_bandit', 'ch1_boar', 'ch1_slime', 'ch1_militia', 'ch1_treant', 'ch1_crow', 'ch1_raider', 'ch1_rat', 'ch1_warlord'],
   ['ch2_shaman', 'ch2_bomber', 'ch2_rider', 'ch2_bat', 'ch2_spore', 'ch2_sapper', 'ch2_worm', 'ch2_stalker', 'ch2_arachne', 'ch2_chieftain'],
   ['ch3_ghoul', 'ch3_archer', 'ch3_bonemage', 'ch3_wraith', 'ch3_abom', 'ch3_mummy', 'ch3_hound', 'ch3_scarab', 'ch3_guard', 'ch3_lord'],

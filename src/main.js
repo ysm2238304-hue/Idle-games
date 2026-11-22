@@ -8,7 +8,7 @@ import { NECRO_SKILLS } from './data/necroSkills.js';
 import { ASSASSIN_SKILLS } from './data/assassinSkills.js';
 import { RARITIES } from './data/items.js';
 import { SKILL_TREE_NODES, isNodeUnlocked } from './data/skillTree.js';
-import { generateLoot, getSalvageReward, calcItemPower } from './logic/lootGen.js';
+import { generateLoot, calcItemPower, getSalvageReward, rerollItemAffixes, generateBlackMarketItem } from './logic/lootGen.js';
 import { recalcPlayerStats, getExpToNext, getUpgradeCost, calcRebirthCrystals, formatNum } from './logic/statCalc.js';
 import { createInitialState, loadGame, saveGame, calcOfflineProgress } from './logic/saveSystem.js';
 import {
@@ -539,13 +539,16 @@ function initPhaserGame() {
   phaserGame.events.once('ready', () => {
     battleScene = phaserGame.scene.getScene('BattleScene');
     townScene = phaserGame.scene.getScene('TownScene');
-    battleScene?.setPaused(false);
-    requestAnimationFrame(() => phaserGame?.scale?.refresh());
+    battleScene?.setPaused(true);
+    requestAnimationFrame(() => {
+      phaserGame?.scale?.refresh();
+      enterTown(Math.min(9, getChapterIdx(gameState.stage)), true);
+    });
   });
 }
 
 
-function enterTown(chapterIdx = 0) {
+function enterTown(chapterIdx = 0, instant = false) {
   if (!phaserGame || isRecalling || isInTown) return;
   isRecalling = true;
   const splashCfg = TOWN_SPLASHES[chapterIdx] || TOWN_SPLASHES[0];
@@ -572,9 +575,7 @@ function enterTown(chapterIdx = 0) {
     },
     onHudUpdate: (data) => ui.renderMinimap(data.minimap),
     onTownAction: (action, data) => {
-      if (action === 'drawer_upgrade') ui.openDrawer('upgrade');
-      else if (action === 'drawer_bag') ui.openDrawer('bag');
-      else if (action === 'drawer_skills') ui.openDrawer('skills');
+      if (action === 'drawer_bag') ui.openDrawer('bag');
       else if (action === 'drawer_rebirth') ui.openDrawer('rebirth');
       else if (action === 'gimmick_beacon') {
         if (!gameState.potionBuffs) gameState.potionBuffs = {};
@@ -681,9 +682,17 @@ function enterTown(chapterIdx = 0) {
         ui.addLog('✨ 許願於星界銀河許願泉！星塵洗禮使你恢復全部生命與能量！', 'loot');
         refreshStatsAndUI();
       } else {
-        ui.openTownFacilityModal(action, data, {
+        const modalAction = action === 'drawer_upgrade' ? 'modal_blacksmith' : (action === 'drawer_skills' ? 'modal_trainer' : action);
+        const modalData = { ...(data || {}), chapterIdx };
+        ui.openTownFacilityModal(modalAction, modalData, {
           onBrewPotion: (brewId) => {
-            const prices = { hp_refill: 150, exp_pot: 300, fury_pot: 400, mf_pot: 450 };
+            const chMult = 1 + getChapterIdx(gameState.stage || 1) * 0.4;
+            const prices = {
+              hp_refill: 150, exp_pot: 300, fury_pot: 400, mf_pot: 450,
+              titan_pot: Math.round(1400 * chMult),
+              iron_pot: Math.round(1400 * chMult),
+              sage_pot: Math.round(1800 * chMult),
+            };
             const cost = prices[brewId] || 300;
             if ((gameState.gold || 0) < cost) return;
             gameState.gold -= cost;
@@ -702,6 +711,15 @@ function enterTown(chapterIdx = 0) {
             } else if (brewId === 'mf_pot') {
               gameState.potionBuffs.mfUntil = Math.max(nowTs, gameState.potionBuffs.mfUntil || 0) + 60000;
               ui.addLog('🟢 煉金工坊：獲得 60 秒尋寶藥水效果！', 'loot');
+            } else if (brewId === 'titan_pot') {
+              gameState.potionBuffs.titanUntil = Math.max(nowTs, gameState.potionBuffs.titanUntil || 0) + 180000;
+              ui.addLog('🔥 煉金工坊：獲得 180 秒「泰坦巨力秘藥」（攻擊+30% / 爆傷+40%）！', 'victory');
+            } else if (brewId === 'iron_pot') {
+              gameState.potionBuffs.ironUntil = Math.max(nowTs, gameState.potionBuffs.ironUntil || 0) + 180000;
+              ui.addLog('🛡️ 煉金工坊：獲得 180 秒「鋼鐵壁壘秘藥」（防禦+35% / 減傷+12%）！', 'victory');
+            } else if (brewId === 'sage_pot') {
+              gameState.potionBuffs.sageUntil = Math.max(nowTs, gameState.potionBuffs.sageUntil || 0) + 180000;
+              ui.addLog('🌟 煉金工坊：獲得 180 秒「秘法先知秘藥」（冷卻縮減+18% / 掉寶+50%）！', 'victory');
             }
             refreshStatsAndUI();
             persistAll();
@@ -834,14 +852,132 @@ function enterTown(chapterIdx = 0) {
             refreshStatsAndUI();
             persistAll(true);
           },
-          onGambleGear: (cost, highTier) => {
+          onEnsureMarketShelf: () => {
+            const nowTs = Date.now();
+            if (!gameState.blackMarket) gameState.blackMarket = { nextRefreshAt: 0, items: [], pityCount: 0 };
+            if (!gameState.blackMarket.items?.length || nowTs >= (gameState.blackMarket.nextRefreshAt || 0)) {
+              const stg = gameState.stage || 1;
+              const items = [0, 1, 2, 3].map((idx) => {
+                const it = generateBlackMarketItem(stg, gameState.classId, idx === 3 ? 'legendary' : null);
+                const price = Math.max(400, Math.round((it.powerScore || 100) * (it.rarity === 'legendary' ? 18 : 9)));
+                return { item: it, price, sold: false };
+              });
+              gameState.blackMarket.items = items;
+              gameState.blackMarket.nextRefreshAt = nowTs + 1800000;
+              persistAll();
+            }
+          },
+          onRefreshMarketShelf: (cost) => {
             if ((gameState.gold || 0) < cost) return;
             gameState.gold -= cost;
-            const stg = Math.max(1, gameState.maxStageReached || gameState.stage || 1);
-            const item = generateLoot(stg, highTier, highTier ? 280 : 60, false, gameState.classId);
-            handleLootDrop(item);
+            const stg = gameState.stage || 1;
+            if (!gameState.blackMarket) gameState.blackMarket = { nextRefreshAt: 0, items: [], pityCount: 0 };
+            gameState.blackMarket.items = [0, 1, 2, 3].map((idx) => {
+              const it = generateBlackMarketItem(stg, gameState.classId, idx === 3 ? 'legendary' : null);
+              const price = Math.max(400, Math.round((it.powerScore || 100) * (it.rarity === 'legendary' ? 18 : 9)));
+              return { item: it, price, sold: false };
+            });
+            gameState.blackMarket.nextRefreshAt = Date.now() + 1800000;
+            ui.addLog('🔄 已手動刷新黑市限時貨架！', 'loot');
             refreshStatsAndUI();
             persistAll();
+          },
+          onBuyMarketShelf: (idx) => {
+            const entry = gameState.blackMarket?.items?.[idx];
+            if (!entry || entry.sold || (gameState.gold || 0) < entry.price) return;
+            gameState.gold -= entry.price;
+            entry.sold = true;
+            gameState.inventory.unshift(entry.item);
+            ui.addLog(`🛒 黑市直購獲得：${entry.item.name}（戰力 ${entry.item.powerScore}）！`, 'loot');
+            refreshStatsAndUI();
+            persistAll();
+          },
+          onGambleGear: (cost, isHigh) => {
+            if ((gameState.gold || 0) < cost) return;
+            gameState.gold -= cost;
+            if (!gameState.blackMarket) gameState.blackMarket = { nextRefreshAt: 0, items: [], pityCount: 0 };
+            const hitPity = (gameState.blackMarket.pityCount || 0) >= 10;
+            const stg = Math.max(1, gameState.maxStageReached || gameState.stage || 1);
+            const item = hitPity
+              ? generateBlackMarketItem(stg, gameState.classId, 'legendary')
+              : generateLoot(stg, isHigh, isHigh ? 280 : 60, true, gameState.classId);
+            if (hitPity) {
+              gameState.blackMarket.pityCount = 0;
+              ui.addLog(`🌟 黑市保底觸發！必得傳說裝備：${item.name}（戰力 ${item.powerScore}）！`, 'victory');
+            } else {
+              gameState.blackMarket.pityCount = Math.min(10, (gameState.blackMarket.pityCount || 0) + (isHigh ? 2 : 1));
+              if (item) ui.addLog(`🎪 黑市鑑定獲得：${item.name}（戰力 ${item.powerScore}）！`, 'loot');
+            }
+            if (item && !hitPity) gameState.inventory.unshift(item);
+            else if (item && hitPity) gameState.inventory.unshift(item);
+            refreshStatsAndUI();
+            persistAll();
+          },
+          getComputedStats: () => computedStats,
+          onOpenDrawer: (drawerName) => ui.openDrawer(drawerName),
+          onRerollItem: (uid, isEq) => {
+            const item = isEq
+              ? Object.values(gameState.equipment || {}).find((i) => i && i.uid === uid)
+              : (gameState.inventory || []).find((i) => i && i.uid === uid);
+            if (!item) return;
+            const cost = Math.max(200, (item.level || 1) * 120 * (item.rarity === 'legendary' ? 2 : 1));
+            if ((gameState.gold || 0) < cost) return;
+            gameState.gold -= cost;
+            const res = rerollItemAffixes(item);
+            if (res) {
+              const delta = res.newPower - res.oldPower;
+              ui.addLog(`🎲 鐵匠洗鍊「${item.name}」：戰力 ${res.oldPower} → ${res.newPower} (${delta >= 0 ? '+' : ''}${delta})`, delta >= 0 ? 'victory' : 'loot');
+            }
+            refreshStatsAndUI();
+            persistAll();
+          },
+          onRefineItem: (uid, isEq) => {
+            const item = isEq
+              ? Object.values(gameState.equipment || {}).find((i) => i && i.uid === uid)
+              : (gameState.inventory || []).find((i) => i && i.uid === uid);
+            if (!item || (item.upgradeLevel || 0) >= 10) return;
+            const lv = item.upgradeLevel || 0;
+            const cost = Math.max(300, (item.level || 1) * 160 * (lv + 1));
+            if ((gameState.gold || 0) < cost) return;
+            gameState.gold -= cost;
+            const succRate = lv < 3 ? 100 : (lv < 6 ? 80 : 60);
+            if (Math.random() * 100 < succRate) {
+              item.upgradeLevel = lv + 1;
+              item.powerScore = calcItemPower(item);
+              ui.addLog(`⚒️ 精煉成功！「${item.name}」強化至 +${item.upgradeLevel}（戰力 ${item.powerScore}）！`, 'victory');
+            } else {
+              ui.addLog(`💨 精煉失敗，「${item.name}」維持 +${lv}（未降級）。`, 'system');
+            }
+            refreshStatsAndUI();
+            persistAll();
+          },
+          onSaveSkillPreset: (slotIdx) => {
+            const cid = gameState.classId || 'warrior';
+            if (!gameState.skillPresetsByClass) gameState.skillPresetsByClass = {};
+            if (!gameState.skillPresetsByClass[cid]) gameState.skillPresetsByClass[cid] = [null, null, null];
+            gameState.skillPresetsByClass[cid][slotIdx] = [...(gameState.equippedSkillsByClass?.[cid] || [null, null, null])];
+            ui.addLog(`💾 已將目前技能配置儲存至預設 #${slotIdx + 1}！`, 'loot');
+            persistAll();
+          },
+          onApplySkillPreset: (slotIdx) => {
+            const cid = gameState.classId || 'warrior';
+            const preset = gameState.skillPresetsByClass?.[cid]?.[slotIdx];
+            if (!preset) return;
+            if (!gameState.equippedSkillsByClass) gameState.equippedSkillsByClass = {};
+            gameState.equippedSkillsByClass[cid] = [...preset];
+            ui.addLog(`⚡ 已切換並套用技能預設 #${slotIdx + 1}！`, 'victory');
+            refreshStatsAndUI();
+            persistAll();
+          },
+          onRecordDummyDps: (dps, totalDmg, maxCrit) => {
+            if (dps > (gameState.bestDummyDps || 0)) gameState.bestDummyDps = dps;
+            ui.addLog(`🪵 10 秒木樁測試完成：平均 ${dps.toLocaleString()} DPS（總傷 ${totalDmg.toLocaleString()} / 最高單發 ${maxCrit.toLocaleString()}）！`, 'victory');
+            persistAll();
+          },
+          onTeleportTown: (targetChIdx) => {
+            isInTown = false;
+            enterTown(targetChIdx, true);
+            ui.addLog(`🌀 星門傳送完成！已抵達第 ${targetChIdx + 1} 章主城！`, 'victory');
           },
           onClaimWeaverGift: () => {
             if (gameState.ch10WeaverGiftClaimed) return;
@@ -945,6 +1081,41 @@ function enterTown(chapterIdx = 0) {
             refreshStatsAndUI();
             persistAll(true);
           },
+          getPortrait: (ak, fr) => townScene?.getSpriteDataUrl?.(ak, fr) || '',
+          onTavernRest: () => {
+            battleScene?.healHero?.(computedStats.maxHp);
+            battleScene?.restoreMana?.(computedStats.maxMp || 200);
+            ui.addLog('🍺 在冒險者酒館壁爐旁休憩完畢，生命與魔力已回滿！', 'loot');
+            refreshStatsAndUI();
+          },
+          onTavernFeast: (cost) => {
+            if ((gameState.gold || 0) < cost) return;
+            gameState.gold -= cost;
+            if (!gameState.potionBuffs) gameState.potionBuffs = {};
+            gameState.potionBuffs.tavernUntil = Date.now() + 1800000;
+            ui.addLog('🍖 享用了冒險者大餐！獲得 30 分鐘「酒館飽足」（經驗+15% / 金幣+15%）！', 'victory');
+            refreshStatsAndUI();
+            persistAll();
+          },
+          onGuardBlessing: () => {
+            if ((gameState.guardBlessCdUntil || 0) > Date.now()) return;
+            gameState.guardBlessCdUntil = Date.now() + 300000;
+            if (!gameState.potionBuffs) gameState.potionBuffs = {};
+            gameState.potionBuffs.guardUntil = Date.now() + 180000;
+            ui.addLog('🛡️ 獲得巡邏衛兵激勵！3 分鐘內防禦力 +10%！', 'victory');
+            refreshStatsAndUI();
+            persistAll();
+          },
+          onVillagerGift: () => {
+            if ((gameState.villagerGiftCdUntil || 0) > Date.now()) return;
+            gameState.villagerGiftCdUntil = Date.now() + 180000;
+            const bonus = (getChapterIdx(gameState.stage) + 1) * 180;
+            gameState.gold += bonus;
+            battleScene?.healHero?.(Math.round(computedStats.maxHp * 0.25));
+            ui.addLog(`💬 旅人贈送了 ${bonus.toLocaleString()} 金幣與點心（回復 25% 生命）！`, 'loot');
+            refreshStatsAndUI();
+            persistAll();
+          },
           onExitTown: () => exitTownToBattle(),
           onOpenWorldMap: () => {
             exitTownToBattle();
@@ -982,7 +1153,7 @@ function enterTown(chapterIdx = 0) {
     ui.addLog(`🏰 已傳送至${townTitle}（安全區）`, 'system');
   };
 
-  if (battleScene?.playRecallAnimation) {
+  if (!instant && battleScene?.playRecallAnimation) {
     battleScene.playRecallAnimation(splashCfg.tintColor, startTownTransfer);
   } else {
     startTownTransfer();

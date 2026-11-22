@@ -144,7 +144,7 @@ export function recalcPlayerStats(state) {
   const cdrLvl = state.classId === 'ranger'
     ? (tree.r_cdr || 0)
     : (state.classId === 'mage' ? (tree.m_cdr || 0) : (state.classId === 'paladin' ? (tree.p_cdr || 0) : (state.classId === 'necro' ? (tree.n_cdr || 0) : (state.classId === 'assassin' ? (tree.a_cdr || 0) : (tree.w_cdr || 0)))));
-  const cdrMult = Math.max(0.45, 1 - cdrLvl * 0.06 - cdrPct / 100);
+  let cdrMult = Math.max(0.45, 1 - cdrLvl * 0.06 - cdrPct / 100);
 
   hpPct += (tree.guard_hp || 0) * 8 + (tree.w_p_iron || 0) * 5 + (tree.m_p_ward || 0) * 5 + (tree.p_p_bulwark || 0) * 5 + (tree.n_p_bone || 0) * 5;
   armorPct += (tree.guard_def || 0) * 12 + (tree.w_p_iron || 0) * 8 + (tree.p_p_bulwark || 0) * 10 + (keyP_Bulwark ? 40 : 0) + (activeEffects.has('seraph_grace') ? 20 : 0);
@@ -158,7 +158,7 @@ export function recalcPlayerStats(state) {
 
   flat.goldFind += (tree.greed_gold || 0) * 10;
   flat.magicFind += (tree.greed_mf || 0) * 8 + (tree.r_cdr || 0) * 4 + (tree.m_p_sage || 0) * 6 + (tree.n_cdr || 0) * 4;
-  const expMult = 1 + (tree.greed_exp || 0) * 0.12;
+  let expMult = 1 + (tree.greed_exp || 0) * 0.12;
 
   const crystals = state.soulCrystals || 0;
   const crystalMult = 1 + crystals * 0.15;
@@ -225,6 +225,25 @@ export function recalcPlayerStats(state) {
     flat.atkSpeedPct += 30;
     flat.magicFind += 40;
   }
+  if ((buffs.tavernUntil || 0) > nowTs) {
+    flat.goldFind += 15;
+    expMult += 0.15;
+  }
+  if ((buffs.guardUntil || 0) > nowTs) {
+    flat.defPct += 10;
+  }
+  if ((buffs.titanUntil || 0) > nowTs) {
+    flat.atkPct += 30;
+    flat.critDmg += 40;
+  }
+  if ((buffs.ironUntil || 0) > nowTs) {
+    flat.defPct += 35;
+    flat.dmgReducePct = (flat.dmgReducePct || 0) + 12;
+  }
+  if ((buffs.sageUntil || 0) > nowTs) {
+    flat.magicFind += 50;
+    cdrMult = Math.max(0.45, cdrMult - 0.18);
+  }
 
   const maxHp = Math.round(flat.hp * (1 + hpPct / 100) * crystalMult);
   const armorPre = Math.round(flat.armor * (1 + armorPct / 100));
@@ -287,7 +306,7 @@ export function recalcPlayerStats(state) {
     poisonDmgPct: poisonDmgPct + (tree.a_p_venom || 0) * 8 + (activeEffects.has('venom_core') ? 45 : 0),
     comboCritDmgPct,
     dodgeShadow,
-    dmgReducePct: innate.dmgReducePct || 0,
+    dmgReducePct: (innate.dmgReducePct || 0) + (flat.dmgReducePct || 0),
     dps,
     activeEffects,
   };

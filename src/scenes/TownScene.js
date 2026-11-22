@@ -39,6 +39,10 @@ export class TownScene extends Phaser.Scene {
     this.obstacles = [];
     this.interactables = [];
     this.patrolActors = [];
+    this.roamNpcs = [];
+    this.hoverRing = null;
+    this.speechBubble = null;
+    this._portraitCache = new Map();
     this.nearestTarget = null;
     this.promptBox = null;
     this.dummySprite = null;
@@ -76,6 +80,7 @@ export class TownScene extends Phaser.Scene {
     this.obstacles = [];
     this.interactables = [];
     this.patrolActors = [];
+    this.roamNpcs = [];
     this.moveTarget = null;
     this.nearestTarget = null;
 
@@ -184,17 +189,32 @@ export class TownScene extends Phaser.Scene {
       }
     }
 
-    // 8. 巡邏衛兵與商販平民
+    // 8. 巡邏衛兵與商販平民（支援靠近停步轉向與點擊/F 互動）
     for (const pt of td.patrols || []) {
       const start = pt.waypoints[0];
+      const isGuard = pt.frame.includes('guard');
       const sh = this.add.image(start.x, start.y + 34, 'fx_glow')
         .setTint(0x000000).setScale(0.95, 0.34).setAlpha(0.45).setDepth(2);
       const spr = this.add.image(start.x, start.y, td.atlasKey, pt.frame)
         .setScale(pt.scale)
         .setDepth(start.y);
+      const plate = this.addNameplate(start.x, start.y - 68, `${isGuard ? '🛡️' : '💬'} ${pt.name}`, isGuard ? '#93c5fd' : '#bbf7d0');
+      const interactObj = {
+        id: `patrol_${pt.name}_${Math.random().toString(36).slice(2, 6)}`,
+        x: start.x,
+        y: start.y,
+        radius: 125,
+        title: `${isGuard ? '🛡️' : '💬'} ${pt.name}`,
+        sub: isGuard ? '[F] 詢問首領情報・領取護衛祝福' : '[F] 與旅人交談・領取小補給',
+        action: isGuard ? 'modal_patrol_guard' : 'modal_patrol_villager',
+        data: { atlasKey: td.atlasKey, frame: pt.frame, name: pt.name, title: isGuard ? '城防巡邏衛兵' : '城鎮旅人', greeting: isGuard ? '警戒中！隨時可以向我打聽本章節首領情報。' : '冒險者你好！這是我剛採集到的小心意。' },
+      };
+      this.interactables.push(interactObj);
       this.patrolActors.push({
         spr,
         shadow: sh,
+        plate,
+        interactObj,
         waypoints: pt.waypoints,
         wpIdx: 1 % pt.waypoints.length,
         speed: pt.speed,
@@ -214,6 +234,38 @@ export class TownScene extends Phaser.Scene {
       .setDepth(td.spawn.y);
 
     this.cameras.main.startFollow(this.hero, true, 0.14, 0.14);
+
+    // 9.5 地面選取光環與 NPC 隨機閒聊氣泡
+    this.hoverRing = this.add.image(0, 0, 'fx_glow')
+      .setTint(td.ambientColor || 0xfbbf24).setScale(1.15, 0.45).setAlpha(0.55).setDepth(3).setVisible(false);
+    this.speechBubble = this.add.text(0, 0, '', {
+      fontFamily: 'Noto Sans TC, sans-serif',
+      fontSize: '11.5px',
+      color: '#f8fafc',
+      backgroundColor: 'rgba(15, 23, 42, 0.92)',
+      padding: { x: 8, y: 4 },
+    }).setOrigin(0.5, 1).setDepth(5200).setVisible(false);
+
+    this.time.addEvent({
+      delay: 4200,
+      loop: true,
+      callback: () => {
+        if (!this.scene.isActive('TownScene') || !this.roamNpcs.length || !this.speechBubble) return;
+        const pick = this.roamNpcs[Math.floor(Math.random() * this.roamNpcs.length)];
+        const lines = [
+          '今天天氣真不錯，適合出城打寶！',
+          '剛進了一批好貨，隨時來看看。',
+          '記得先點燃城裡的地標祝福再出發！',
+          '聽說深處的首領最近特別躁動…',
+          '酒館的大餐能讓人精神百倍！',
+        ];
+        const txt = lines[Math.floor(Math.random() * lines.length)];
+        this.speechBubble.setText(`💬 ${txt}`).setPosition(pick.spr.x, pick.spr.y - 108).setVisible(true);
+        this.time.delayedCall(2400, () => {
+          if (this.speechBubble) this.speechBubble.setVisible(false);
+        });
+      },
+    });
 
     // 10. 頭頂互動提示條（跟隨玩家附近目標）
     this.promptBox = this.add.text(0, 0, '', {
@@ -328,11 +380,48 @@ export class TownScene extends Phaser.Scene {
     }
     if (b.name && b.action) {
       this.addNameplate(b.x, b.y - 125, b.name, '#fde68a');
+    } else if (b.name && b.frame && b.frame.includes('tavern')) {
+      this.addNameplate(b.x, b.y - 125, `🍺 ${b.name}`, '#fcd34d');
+      this.interactables.push({
+        id: `tavern_${b.name}`,
+        x: b.x,
+        y: b.y + 40,
+        radius: 155,
+        title: `🍺 ${b.name}`,
+        sub: '[F] 免費休憩回滿・點購冒險者大餐',
+        action: 'modal_tavern',
+        data: { atlasKey, frame: b.frame, name: b.name, title: '冒險者酒館', greeting: '歡迎光臨！進來喝杯麥酒歇息一下，恢復全部體力再戰吧！' },
+      });
+    } else if (b.name && b.frame && /(tower|belltower|windmill|spire|prism|watchhut|bellows)/.test(b.frame)) {
+      this.addNameplate(b.x, b.y - 135, `🔭 ${b.name}`, '#a5f3fc');
+      this.interactables.push({
+        id: `tower_${b.name}`,
+        x: b.x,
+        y: b.y + 40,
+        radius: 155,
+        title: `🔭 ${b.name}`,
+        sub: '[F] 登高望遠・查看本章怪物掉落圖鑑',
+        action: 'modal_tower',
+        data: { atlasKey, frame: b.frame, name: b.name, title: '城防瞭望哨塔', greeting: '從哨塔頂端可一覽本章節所有出沒魔物與掉寶情報！' },
+      });
     }
   }
 
+  getActionIcon(action) {
+    if (action === 'drawer_upgrade') return '🔨';
+    if (action === 'modal_alchemy') return '⚗️';
+    if (action === 'drawer_bag') return '🎒';
+    if (action === 'drawer_skills') return '⚔️';
+    if (action === 'modal_bounty') return '📜';
+    if (action === 'modal_market') return '🎲';
+    if (action === 'drawer_rebirth') return '🌀';
+    if (action === 'modal_portal') return '🚪';
+    if (action.startsWith('gimmick_')) return '✨';
+    return '🎁';
+  }
+
   placeNpc(atlasKey, npc, facilityName, action, actionLabel, parentObj) {
-    this.add.image(npc.x, npc.y + 36, 'fx_glow')
+    const sh = this.add.image(npc.x, npc.y + 36, 'fx_glow')
       .setTint(0x000000).setScale(0.95, 0.36).setAlpha(0.45).setDepth(2);
     const spr = this.add.image(npc.x, npc.y, atlasKey, npc.frame)
       .setScale(npc.scale || 0.62)
@@ -345,17 +434,45 @@ export class TownScene extends Phaser.Scene {
       repeat: -1,
       ease: 'Sine.easeInOut',
     });
-    this.addNameplate(npc.x, npc.y - 72, `${npc.title}・${npc.name}`, '#7dd3fc');
-    this.interactables.push({
+    const plate = this.addNameplate(npc.x, npc.y - 72, `${npc.title}・${npc.name}`, '#7dd3fc');
+    const iconStr = this.getActionIcon(action);
+    const icon = this.add.text(npc.x, npc.y - 98, iconStr, {
+      fontSize: '18px',
+    }).setOrigin(0.5, 1).setDepth(4550);
+    this.tweens.add({
+      targets: icon,
+      y: npc.y - 106,
+      duration: 900 + Math.random() * 300,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut',
+    });
+
+    const interactObj = {
       id: `${action}_${npc.name}`,
       x: npc.x,
       y: npc.y,
       radius: 130,
-      title: `${npc.title}・${npc.name}`,
+      title: `${iconStr} ${npc.title}・${npc.name}`,
       sub: `[F] ${actionLabel}`,
       action,
-      data: { npc, facilityName, parentObj },
-    });
+      data: { npc, facilityName, parentObj, atlasKey, frame: npc.frame },
+    };
+    this.interactables.push(interactObj);
+    if (!action.startsWith('gimmick_')) {
+      this.roamNpcs.push({
+        spr,
+        shadow: sh,
+        plate,
+        icon,
+        interactObj,
+        homeX: npc.x,
+        homeY: npc.y,
+        targetX: npc.x,
+        targetY: npc.y,
+        waitUntil: 1500 + Math.random() * 2500,
+      });
+    }
   }
 
   addNameplate(x, y, label, color = '#fde68a') {
@@ -476,7 +593,7 @@ export class TownScene extends Phaser.Scene {
     }
 
     this.updateHeroAnim(vx, vy, time);
-    this.updatePatrols(dt);
+    this.updatePatrols(dt, time);
     this.updateNearestPrompt();
 
     if (Phaser.Input.Keyboard.JustDown(this.wasd.interact) && this.nearestTarget) {
@@ -552,21 +669,59 @@ export class TownScene extends Phaser.Scene {
     }
   }
 
-  updatePatrols(dt) {
+  updatePatrols(dt, time = 0) {
     for (const p of this.patrolActors) {
-      const target = p.waypoints[p.wpIdx];
-      const dx = target.x - p.spr.x;
-      const dy = target.y - p.spr.y;
-      const dist = Math.hypot(dx, dy);
-      if (dist < 10) {
-        p.wpIdx = (p.wpIdx + 1) % p.waypoints.length;
+      const distHero = this.hero ? Phaser.Math.Distance.Between(this.hero.x, this.hero.y, p.spr.x, p.spr.y) : 999;
+      if (distHero < 145 && this.hero) {
+        p.spr.setFlipX(this.hero.x < p.spr.x);
       } else {
-        p.spr.x += (dx / dist) * p.speed * dt;
-        p.spr.y += (dy / dist) * p.speed * dt;
-        if (Math.abs(dx) > 4) p.spr.setFlipX(dx < 0);
-        p.spr.setDepth(p.spr.y);
-        p.shadow.setPosition(p.spr.x, p.spr.y + 34);
+        const target = p.waypoints[p.wpIdx];
+        const dx = target.x - p.spr.x;
+        const dy = target.y - p.spr.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 10) {
+          p.wpIdx = (p.wpIdx + 1) % p.waypoints.length;
+        } else {
+          p.spr.x += (dx / dist) * p.speed * dt;
+          p.spr.y += (dy / dist) * p.speed * dt;
+          if (Math.abs(dx) > 4) p.spr.setFlipX(dx < 0);
+        }
       }
+      p.spr.setDepth(p.spr.y);
+      p.shadow.setPosition(p.spr.x, p.spr.y + 34);
+      if (p.plate) p.plate.setPosition(p.spr.x, p.spr.y - 68);
+      if (p.interactObj) {
+        p.interactObj.x = p.spr.x;
+        p.interactObj.y = p.spr.y;
+      }
+    }
+
+    // 設施 NPC 小範圍踱步與靠近時自動面向玩家
+    for (const r of this.roamNpcs) {
+      const distHero = this.hero ? Phaser.Math.Distance.Between(this.hero.x, this.hero.y, r.spr.x, r.spr.y) : 999;
+      if (distHero < 195 && this.hero) {
+        r.spr.setFlipX(this.hero.x < r.spr.x);
+      } else if (time >= r.waitUntil) {
+        const dx = r.targetX - r.spr.x;
+        const dy = r.targetY - r.spr.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 6) {
+          r.waitUntil = time + 2200 + Math.random() * 2400;
+          r.targetX = r.homeX + Phaser.Math.Between(-30, 30);
+          r.targetY = r.homeY + Phaser.Math.Between(-14, 14);
+        } else {
+          const spd = 28;
+          r.spr.x += (dx / dist) * spd * dt;
+          r.spr.y += (dy / dist) * spd * dt;
+          if (Math.abs(dx) > 2) r.spr.setFlipX(dx < 0);
+        }
+      }
+      r.spr.setDepth(r.spr.y);
+      r.shadow.setPosition(r.spr.x, r.spr.y + 36);
+      r.plate.setPosition(r.spr.x, r.spr.y - 72);
+      r.icon.setX(r.spr.x);
+      r.interactObj.x = r.spr.x;
+      r.interactObj.y = r.spr.y;
     }
   }
 
@@ -584,11 +739,34 @@ export class TownScene extends Phaser.Scene {
     if (best) {
       this.promptBox
         .setText(`${best.title}｜${best.sub}`)
-        .setPosition(best.x, best.y - 102)
+        .setPosition(best.x, best.y - 108)
         .setVisible(true);
+      if (this.hoverRing) {
+        this.hoverRing.setPosition(best.x, best.y + 34).setVisible(true);
+      }
     } else {
       this.promptBox.setVisible(false);
+      if (this.hoverRing) this.hoverRing.setVisible(false);
     }
+  }
+
+  getSpriteDataUrl(atlasKey, frameName) {
+    if (!atlasKey || !frameName) return '';
+    const cacheKey = `${atlasKey}:${frameName}`;
+    if (this._portraitCache.has(cacheKey)) return this._portraitCache.get(cacheKey);
+    const tex = this.textures.get(atlasKey);
+    if (!tex || !tex.has(frameName)) return '';
+    const fr = tex.get(frameName);
+    const srcImg = tex.getSourceImage();
+    if (!srcImg || !fr) return '';
+    const cv = document.createElement('canvas');
+    cv.width = fr.cutWidth;
+    cv.height = fr.cutHeight;
+    const ctx2d = cv.getContext('2d');
+    ctx2d.drawImage(srcImg, fr.cutX, fr.cutY, fr.cutWidth, fr.cutHeight, 0, 0, fr.cutWidth, fr.cutHeight);
+    const url = cv.toDataURL('image/png');
+    this._portraitCache.set(cacheKey, url);
+    return url;
   }
 
   executeInteraction(obj) {

@@ -7,7 +7,7 @@ import { PALADIN_SKILLS } from '../data/paladinSkills.js';
 import { NECRO_SKILLS } from '../data/necroSkills.js';
 import { ASSASSIN_SKILLS } from '../data/assassinSkills.js';
 import { EQUIP_SLOTS, CLASS_REQ_LABELS, RARITIES, BASE_ITEMS } from '../data/items.js';
-import { STAGE_ZONES, getZoneName, getStageLabel, getSubStage, getChapterIdx } from '../data/monsters.js';
+import { MONSTER_TEMPLATES, STAGE_ZONES, ZONE_POOLS, getZoneName, getStageLabel, getSubStage, getChapterIdx } from '../data/monsters.js';
 import { CLASS_BUILD_INFO, SKILL_TREE_NODES, getTreeSpentPoints, isNodeBlockedByMutex, isNodeUnlocked } from '../data/skillTree.js';
 import { calcItemPower, getSalvageReward } from '../logic/lootGen.js';
 import { formatNum, getExpToNext, getUpgradeCost, calcRebirthCrystals } from '../logic/statCalc.js';
@@ -366,6 +366,11 @@ export class DashboardUI {
       if ((b.expUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill">🟡 經驗+50% ${Math.ceil((b.expUntil - nowTs)/1000)}s</span>`);
       if ((b.furyUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill fury">🟣 狂暴 ${Math.ceil((b.furyUntil - nowTs)/1000)}s</span>`);
       if ((b.mfUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill mf">🟢 尋寶 ${Math.ceil((b.mfUntil - nowTs)/1000)}s</span>`);
+      if ((b.titanUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill titan">🔥 泰坦 ${Math.ceil((b.titanUntil - nowTs)/1000)}s</span>`);
+      if ((b.ironUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill iron">🛡️ 鋼鐵 ${Math.ceil((b.ironUntil - nowTs)/1000)}s</span>`);
+      if ((b.sageUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill sage">🌟 先知 ${Math.ceil((b.sageUntil - nowTs)/1000)}s</span>`);
+      if ((b.tavernUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill tavern">🍖 飽足 ${Math.ceil((b.tavernUntil - nowTs)/1000)}s</span>`);
+      if ((b.guardUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill guard">🏰 守備 ${Math.ceil((b.guardUntil - nowTs)/1000)}s</span>`);
       if ((b.beaconUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill beacon">🔥 曙光祝福 ${Math.ceil((b.beaconUntil - nowTs)/1000)}s</span>`);
       if ((b.sporeUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill fury">🍄 孢子狂熱 ${Math.ceil((b.sporeUntil - nowTs)/1000)}s</span>`);
       if ((b.soulUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill">🕯️ 魂火祝福 ${Math.ceil((b.soulUntil - nowTs)/1000)}s</span>`);
@@ -376,6 +381,8 @@ export class DashboardUI {
       if ((b.stormUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill">⚡ 蒼穹雷霆 ${Math.ceil((b.stormUntil - nowTs)/1000)}s</span>`);
       if ((b.roseUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill beacon">🌹 聖血薔薇 ${Math.ceil((b.roseUntil - nowTs)/1000)}s</span>`);
       if ((b.astralUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill fury">🌌 永恆星辰 ${Math.ceil((b.astralUntil - nowTs)/1000)}s</span>`);
+      if ((b.tavernUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill">🍺 酒館飽足 ${Math.ceil((b.tavernUntil - nowTs)/60000)}m</span>`);
+      if ((b.guardUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill mf">🛡️ 衛兵激勵 ${Math.ceil((b.guardUntil - nowTs)/1000)}s</span>`);
       buffWrap.innerHTML = pills.join('');
     }
     const hpPct = Math.max(0, Math.min(100, (hp / Math.max(1, maxHp)) * 100));
@@ -1126,17 +1133,23 @@ export class DashboardUI {
 
     const st = this.getState();
     const npc = data?.npc || data || {};
+    const portraitUrl = ctx.getPortrait?.(data?.atlasKey, data?.frame || npc?.frame) || '';
+    const portraitHtml = portraitUrl ? `<img class="town-npc-portrait" src="${portraitUrl}" alt="${npc.name || ''}" />` : '';
     const banner = npc.greeting
-      ? `<div class="town-npc-banner"><b>${npc.title || ''} ${npc.name || ''}：</b>「${npc.greeting}」<br><span style="color:#fde047;font-size:12px;">目前持有金幣：${Math.floor(st.gold || 0).toLocaleString()} G</span></div>`
+      ? `<div class="town-npc-banner">${portraitHtml}<div><b>${npc.title || ''} ${npc.name || ''}：</b>「${npc.greeting}」<br><span style="color:#fde047;font-size:12px;">目前持有金幣：${Math.floor(st.gold || 0).toLocaleString()} G</span></div></div>`
       : '';
 
     if (action === 'modal_alchemy') {
-      titleEl.textContent = '⚗️ 祕法煉金工坊';
+      titleEl.textContent = '⚗️ 祕法煉金工坊・高階秘藥';
+      const chMult = 1 + getChapterIdx(st.stage || 1) * 0.4;
       const brews = [
         { id: 'hp_refill', name: '🔴 補滿生命藥水', desc: '立即補滿戰鬥藥水次數並回復 100% 生命。', cost: 150 },
         { id: 'exp_pot', name: '🟡 濃稠經驗藥水 (60秒)', desc: '擊殺經驗值 +50%，可疊加持續時間。', cost: 300 },
         { id: 'fury_pot', name: '🟣 狂戰士藥水 (45秒)', desc: '攻速 +25%、暴擊率 +10%。', cost: 400 },
         { id: 'mf_pot', name: '🟢 黃金尋寶藥水 (60秒)', desc: '掉寶率 +40%、金幣獲取 +30%。', cost: 450 },
+        { id: 'titan_pot', name: '🔥 泰坦巨力秘藥 (180秒)', desc: '高階秘藥：攻擊力 +30%、暴擊傷害 +40%。', cost: Math.round(1400 * chMult) },
+        { id: 'iron_pot', name: '🛡️ 鋼鐵壁壘秘藥 (180秒)', desc: '高階秘藥：防禦力 +35%、減傷 +12%。', cost: Math.round(1400 * chMult) },
+        { id: 'sage_pot', name: '🌟 秘法先知秘藥 (180秒)', desc: '高階秘藥：技能冷卻縮減 +18%、掉寶率 +50%。', cost: Math.round(1800 * chMult) },
       ];
       bodyEl.innerHTML = banner + `<div class="town-option-grid">${brews.map((b) => `
         <div class="town-option-card">
@@ -1236,21 +1249,62 @@ export class DashboardUI {
         };
       });
     } else if (action === 'modal_market') {
-      titleEl.textContent = '🎪 深淵黑市帳篷・神秘賭裝';
+      titleEl.textContent = '🎪 深淵黑市帳篷・定時貨架與保底盲盒';
+      ctx.onEnsureMarketShelf?.();
+      const bm = st.blackMarket || { nextRefreshAt: Date.now() + 1800000, items: [], pityCount: 0 };
+      const pity = bm.pityCount || 0;
+      const pityPct = Math.min(100, Math.round((pity / 10) * 100));
+      const secLeft = Math.max(0, Math.ceil((bm.nextRefreshAt - Date.now()) / 1000));
+      const mm = String(Math.floor(secLeft / 60)).padStart(2, '0');
+      const ss = String(secLeft % 60).padStart(2, '0');
       const isCh2 = (st.stage || 1) >= 11;
       const baseCost = Math.max(350, (st.stage || 1) * 180);
       const stageCost = isCh2 ? Math.round(baseCost * 0.8) : baseCost;
       const highCost = stageCost * 3;
-      bodyEl.innerHTML = banner + `<div class="town-option-grid">
-        <div class="town-option-card">
-          <div><h4>🎲 神秘黑市裝備盲盒</h4><p>依照當前最高關卡隨機鑑定一件 精良～傳說 裝備。</p></div>
-          <button id="btn-gamble-std" ${(st.gold || 0) < stageCost ? 'disabled' : ''}>購買鑑定（${stageCost.toLocaleString()} G）</button>
+      const refreshCost = Math.max(500, Math.round(stageCost * 0.6));
+
+      const shelfHtml = (bm.items || []).map((entry, idx) => {
+        const it = entry.item;
+        const rName = RARITIES[it.rarity]?.name || it.rarity;
+        const rColor = RARITIES[it.rarity]?.color || '#e2e8f0';
+        return `<div class="town-option-card">
+          <div>
+            <h4 style="color:${rColor}">${it.icon || '⚔️'} ${it.name}</h4>
+            <p>${rName}・戰力 ${it.powerScore || 0}<br>${(it.affixes || []).slice(0, 2).map((a) => `${a.label}+${a.value}${a.unit}`).join(' / ') || '基礎屬性強化'}</p>
+          </div>
+          <button data-shelf="${idx}" ${entry.sold || (st.gold || 0) < entry.price ? 'disabled' : ''}>${entry.sold ? '已售出' : `直購 (${entry.price.toLocaleString()} G)`}</button>
+        </div>`;
+      }).join('');
+
+      bodyEl.innerHTML = banner + `
+        <div class="bm-pity-wrap">
+          <div style="display:flex;justify-content:space-between;font-size:12px;">
+            <span>🎯 <b>黑市貴賓傳說保底：</b>${pity >= 10 ? '<span style="color:#fb923c">已達保底！下次盲盒必出傳說！</span>' : `${pity} / 10 次`}</span>
+            <span style="color:#94a3b8;">貨架刷新倒數：${mm}:${ss}</span>
+          </div>
+          <div class="bm-pity-bar"><div class="bm-pity-fill" style="width:${pityPct}%"></div></div>
         </div>
-        <div class="town-option-card">
-          <div><h4>💎 走私者高階秘寶箱</h4><p>保證 稀有 以上品質，大幅提高 傳說／神話 出現機率！</p></div>
-          <button id="btn-gamble-high" ${(st.gold || 0) < highCost ? 'disabled' : ''}>購買高階盲盒（${highCost.toLocaleString()} G）</button>
+        <div class="town-section-title">
+          <span>🛒 黑市限時特賣貨架 (每30分自動刷新)</span>
+          <button id="btn-bm-refresh" class="town-item-chip" ${(st.gold || 0) < refreshCost ? 'disabled' : ''}>🔄 立即刷新 (${refreshCost.toLocaleString()} G)</button>
         </div>
-      </div>`;
+        <div class="bm-shelf-grid">${shelfHtml}</div>
+        <div class="town-section-title"><span>🎲 神秘盲盒鑑定</span></div>
+        <div class="town-option-grid">
+          <div class="town-option-card">
+            <div><h4>🎲 神秘黑市裝備盲盒</h4><p>隨機鑑定 精良～傳說 裝備，累積 +1 保底點數。</p></div>
+            <button id="btn-gamble-std" ${(st.gold || 0) < stageCost ? 'disabled' : ''}>購買鑑定（${stageCost.toLocaleString()} G）</button>
+          </div>
+          <div class="town-option-card">
+            <div><h4>💎 走私者高階秘寶箱</h4><p>保證 稀有 以上品質，大幅提高傳說機率，累積 +2 保底點數！</p></div>
+            <button id="btn-gamble-high" ${(st.gold || 0) < highCost ? 'disabled' : ''}>購買高階盲盒（${highCost.toLocaleString()} G）</button>
+          </div>
+        </div>`;
+      bodyEl.querySelectorAll('button[data-shelf]').forEach((btn) => {
+        btn.onclick = () => { ctx.onBuyMarketShelf?.(Number(btn.dataset.shelf)); this.openTownFacilityModal(action, data, ctx); };
+      });
+      const brf = bodyEl.querySelector('#btn-bm-refresh');
+      if (brf) brf.onclick = () => { ctx.onRefreshMarketShelf?.(refreshCost); this.openTownFacilityModal(action, data, ctx); };
       const b1 = bodyEl.querySelector('#btn-gamble-std');
       const b2 = bodyEl.querySelector('#btn-gamble-high');
       if (b1) b1.onclick = () => { ctx.onGambleGear(stageCost, false); this.openTownFacilityModal(action, data, ctx); };
@@ -1345,8 +1399,211 @@ export class DashboardUI {
       </div>`;
       const bs = bodyEl.querySelector('#btn-claim-scout');
       if (bs) bs.onclick = () => { ctx.onClaimScoutGift(); this.openTownFacilityModal(action, data, ctx); };
+    } else if (action === 'modal_tavern') {
+      titleEl.textContent = `🍺 ${data?.name || '冒險者酒館'}`;
+      const chIdx = getChapterIdx(st.stage || 1);
+      const feastCost = (chIdx + 1) * 350;
+      bodyEl.innerHTML = banner + `<div class="town-option-grid">
+        <div class="town-option-card">
+          <div><h4>🛏️ 免費休憩整頓</h4><p>在酒館壁爐旁稍作歇息，立即回滿 100% 生命與魔力。</p></div>
+          <button id="btn-tavern-rest">免費休憩回滿</button>
+        </div>
+        <div class="town-option-card">
+          <div><h4>🍖 冒險者大餐與麥酒 (30分鐘)</h4><p>獲得 30 分鐘「酒館飽足」祝福：打怪經驗 +15%、金幣 +15%！</p></div>
+          <button id="btn-tavern-feast" ${(st.gold || 0) < feastCost ? 'disabled' : ''}>點購大餐（${feastCost.toLocaleString()} G）</button>
+        </div>
+      </div>`;
+      bodyEl.querySelector('#btn-tavern-rest').onclick = () => { ctx.onTavernRest(); modal.classList.add('hidden'); };
+      bodyEl.querySelector('#btn-tavern-feast').onclick = () => { ctx.onTavernFeast(feastCost); this.openTownFacilityModal(action, data, ctx); };
+    } else if (action === 'modal_tower') {
+      const chIdx = getChapterIdx(st.stage || 1);
+      titleEl.textContent = `🔭 ${data?.name || '瞭望哨塔'}・第 ${chIdx + 1} 章怪物圖鑑`;
+      const pool = ZONE_POOLS[chIdx] || ZONE_POOLS[0];
+      const cards = pool.map((mid, i) => {
+        const m = MONSTER_TEMPLATES[mid];
+        if (!m) return '';
+        const isBoss = i === 9;
+        const dropTxt = isBoss ? '首領掉裝 100%・技能點' : (i >= 7 ? '高階精英掉裝 50%' : '普通掉裝 5%・藥水 14%');
+        return `<div class="codex-card ${isBoss ? 'is-boss' : ''}"><b>${isBoss ? '👑 ' : ''}${m.name}</b><br>特性：${m.atkStyle || '近戰'}｜${dropTxt}</div>`;
+      }).join('');
+      bodyEl.innerHTML = banner + `<div class="codex-grid">${cards}</div>`;
+    } else if (action === 'modal_patrol_guard') {
+      const chIdx = getChapterIdx(st.stage || 1);
+      const pool = ZONE_POOLS[chIdx] || ZONE_POOLS[0];
+      const boss = MONSTER_TEMPLATES[pool[9]];
+      const cdLeft = Math.max(0, Math.ceil(((st.guardBlessCdUntil || 0) - Date.now()) / 1000));
+      titleEl.textContent = `🛡️ ${data?.name || '城防巡邏衛兵'}`;
+      bodyEl.innerHTML = banner + `<div class="town-option-card">
+        <div><h4>📋 本章首領情報：${boss?.name || '章節首領'}</h4><p>出沒於第 ${chIdx + 1}-5 與 ${chIdx + 1}-10 關！建議在主城點燃中央地標祝福並飲用狂暴藥水後再前往討伐。</p></div>
+        <button id="btn-guard-bless" ${cdLeft > 0 ? 'disabled' : ''}>${cdLeft > 0 ? `衛兵激勵冷卻中 (${cdLeft}s)` : '領取衛兵激勵（3分鐘 防禦+10%）'}</button>
+      </div>`;
+      bodyEl.querySelector('#btn-guard-bless').onclick = () => { ctx.onGuardBlessing(); this.openTownFacilityModal(action, data, ctx); };
+    } else if (action === 'modal_patrol_villager') {
+      const cdLeft = Math.max(0, Math.ceil(((st.villagerGiftCdUntil || 0) - Date.now()) / 1000));
+      titleEl.textContent = `💬 ${data?.name || '城鎮旅人'}`;
+      bodyEl.innerHTML = banner + `<div class="town-option-card">
+        <div><h4>🎁 旅人的熱情贈禮</h4><p>城鎮裡的居民很感謝你的守護！每隔 3 分鐘可向巡邏平民領取一次旅途盤纏或補給。</p></div>
+        <button id="btn-villager-gift" ${cdLeft > 0 ? 'disabled' : ''}>${cdLeft > 0 ? `冷卻中 (${cdLeft}s)` : '收下旅人贈禮'}</button>
+      </div>`;
+      bodyEl.querySelector('#btn-villager-gift').onclick = () => { ctx.onVillagerGift(); this.openTownFacilityModal(action, data, ctx); };
+    } else if (action === 'modal_blacksmith') {
+      titleEl.textContent = '🔨 鐵匠鍛造工坊・詞綴洗鍊與精煉';
+      const eqList = Object.entries(st.equipment || {})
+        .filter(([, it]) => !!it)
+        .map(([slot, it]) => ({ uid: it.uid, isEq: true, slot, item: it }));
+      const bagList = (st.inventory || [])
+        .filter((it) => it && (it.rarity === 'rare' || it.rarity === 'legendary' || it.rarity === 'magic'))
+        .slice(0, 12)
+        .map((it) => ({ uid: it.uid, isEq: false, slot: it.slot, item: it }));
+      const allTargets = [...eqList, ...bagList];
+      if (!this._bsSelectedUid || !allTargets.some((t) => t.uid === this._bsSelectedUid)) {
+        this._bsSelectedUid = allTargets[0]?.uid || null;
+      }
+      const curTarget = allTargets.find((t) => t.uid === this._bsSelectedUid) || null;
+      const chipsHtml = allTargets.map((t) => {
+        const it = t.item;
+        const lvTag = (it.upgradeLevel || 0) > 0 ? ` +${it.upgradeLevel}` : '';
+        return `<button class="town-item-chip rarity-${it.rarity} ${t.uid === this._bsSelectedUid ? 'active' : ''}" data-bs-uid="${it.uid}">${t.isEq ? '[穿戴]' : '[背包]'} ${it.icon || ''}${it.name}${lvTag}</button>`;
+      }).join('');
+
+      let detailHtml = '<p style="color:#94a3b8;">目前沒有可鍛造的裝備。</p>';
+      if (curTarget) {
+        const it = curTarget.item;
+        const lv = it.upgradeLevel || 0;
+        const rerollCost = Math.max(200, (it.level || 1) * 120 * (it.rarity === 'legendary' ? 2 : 1));
+        const refineCost = Math.max(300, (it.level || 1) * 160 * (lv + 1));
+        const succRate = lv < 3 ? 100 : (lv < 6 ? 80 : 60);
+        const rColor = RARITIES[it.rarity]?.color || '#e2e8f0';
+        const statName = STAT_LABELS[it.baseStat?.key] || it.baseStat?.key || '基礎';
+        detailHtml = `
+          <div class="town-affix-box">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+              <b style="color:${rColor};font-size:14px;">${it.icon || '⚔️'} ${it.name} ${lv > 0 ? `<span style="color:#38bdf8;">+${lv}</span>` : ''}</b>
+              <span style="color:#fde047;">戰力評分：${it.powerScore || 0}</span>
+            </div>
+            <div style="color:#cbd5e1;">主屬性：${statName} +${Math.round((it.baseStat?.value || 0) * (1 + lv * 0.12))}</div>
+            <div style="color:#93c5fd;margin-top:4px;">隨機詞綴：${(it.affixes || []).length ? it.affixes.map((a) => `${a.label} +${a.value}${a.unit}`).join(' ｜ ') : '無隨機詞綴'}</div>
+            ${it.legendaryEffect ? `<div style="color:#fb923c;margin-top:4px;">★ 傳奇特效：${it.legendaryEffect.name} — ${it.legendaryEffect.desc}</div>` : ''}
+          </div>
+          <div class="town-option-grid">
+            <div class="town-option-card">
+              <div><h4>🎲 詞綴重鑄洗鍊</h4><p>保留部位與傳奇特效，重新隨機抽取所有詞綴屬性。</p></div>
+              <button id="btn-bs-reroll" ${(st.gold || 0) < rerollCost || (it.affixes || []).length === 0 ? 'disabled' : ''}>洗鍊詞綴 (${rerollCost.toLocaleString()} G)</button>
+            </div>
+            <div class="town-option-card">
+              <div><h4>⚒️ 裝備精煉昇華 (+${lv} → +${Math.min(10, lv + 1)})</h4><p>每級提升該裝備全屬性 +12%（本次成功率 ${succRate}%，失敗不降級）。</p></div>
+              <button id="btn-bs-refine" ${lv >= 10 || (st.gold || 0) < refineCost ? 'disabled' : ''}>${lv >= 10 ? '已達精煉上限 (+10)' : `進行精煉 (${refineCost.toLocaleString()} G)`}</button>
+            </div>
+          </div>`;
+      }
+
+      bodyEl.innerHTML = banner + `
+        <div class="town-section-title">
+          <span>選擇要鍛造的裝備</span>
+          <button id="btn-bs-drawer" class="town-item-chip">⚙️ 開啟全身部位強化面板 (U)</button>
+        </div>
+        <div class="town-item-selector">${chipsHtml}</div>
+        ${detailHtml}`;
+      bodyEl.querySelectorAll('button[data-bs-uid]').forEach((btn) => {
+        btn.onclick = () => { this._bsSelectedUid = btn.dataset.bsUid; this.openTownFacilityModal(action, data, ctx); };
+      });
+      bodyEl.querySelector('#btn-bs-drawer')?.addEventListener('click', () => { modal.classList.add('hidden'); ctx.onOpenDrawer?.('upgrade'); });
+      bodyEl.querySelector('#btn-bs-reroll')?.addEventListener('click', () => {
+        if (curTarget) ctx.onRerollItem?.(curTarget.uid, curTarget.isEq);
+        this.openTownFacilityModal(action, data, ctx);
+      });
+      bodyEl.querySelector('#btn-bs-refine')?.addEventListener('click', () => {
+        if (curTarget) ctx.onRefineItem?.(curTarget.uid, curTarget.isEq);
+        this.openTownFacilityModal(action, data, ctx);
+      });
+    } else if (action === 'modal_trainer') {
+      titleEl.textContent = '⚔️ 技能訓練師・木樁測試與流派預設';
+      const cid = st.classId || 'warrior';
+      const presets = st.skillPresetsByClass?.[cid] || [null, null, null];
+      const presetNames = ['預設 A (清圖群攻)', '預設 B (單體首領)', '預設 C (自訂流派)'];
+      const curSkills = st.equippedSkillsByClass?.[cid] || [null, null, null];
+      const bestDps = Math.round(st.bestDummyDps || 0);
+      const cs = ctx.getComputedStats?.() || { atk: 100, critRate: 10, critDmg: 150, atkSpeed: 1, skillDmgMult: 1, dps: 150 };
+
+      bodyEl.innerHTML = banner + `
+        <div class="dps-meter-box">
+          <div style="font-size:12px;color:#94a3b8;">🪵 10 秒木樁實戰演練（依當前屬性、爆擊率、技能倍率模擬）</div>
+          <div class="dps-big-num" id="dummy-dps-val">${bestDps > 0 ? `最高紀錄 ${bestDps.toLocaleString()} DPS` : '尚未測試'}</div>
+          <div id="dummy-dps-sub" style="font-size:12px;color:#cbd5e1;margin-bottom:8px;">面板預估秒傷：${Math.round(cs.dps || 0).toLocaleString()}｜暴擊率：${Math.round(cs.critRate || 0)}%</div>
+          <button id="btn-start-dummy" class="town-item-chip active" style="padding:7px 18px;font-weight:700;">⚔️ 開始 10 秒木樁實戰測試</button>
+        </div>
+        <div class="town-section-title">
+          <span>📋 職業技能組快速預設（當前：${curSkills.map((s) => s || '空').join(' / ')}）</span>
+          <button id="btn-tr-drawer" class="town-item-chip">📖 開啟天賦與技能面板 (K)</button>
+        </div>
+        <div class="preset-row">${presetNames.map((nm, i) => {
+          const saved = presets[i];
+          return `<div class="town-option-card" style="padding:8px;">
+            <div><h4 style="font-size:12px;">${nm}</h4><p style="font-size:11px;">${saved ? saved.map((s) => s || '空').join(' / ') : '尚未儲存'}</p></div>
+            <div style="display:flex;gap:4px;">
+              <button data-save-preset="${i}" style="flex:1;font-size:11px;">💾 儲存</button>
+              <button data-apply-preset="${i}" ${saved ? '' : 'disabled'} style="flex:1;font-size:11px;">⚡ 套用</button>
+            </div>
+          </div>`;
+        }).join('')}</div>`;
+
+      bodyEl.querySelector('#btn-tr-drawer')?.addEventListener('click', () => { modal.classList.add('hidden'); ctx.onOpenDrawer?.('skills'); });
+      bodyEl.querySelectorAll('button[data-save-preset]').forEach((b) => {
+        b.onclick = () => { ctx.onSaveSkillPreset?.(Number(b.dataset.savePreset)); this.openTownFacilityModal(action, data, ctx); };
+      });
+      bodyEl.querySelectorAll('button[data-apply-preset]').forEach((b) => {
+        b.onclick = () => { ctx.onApplySkillPreset?.(Number(b.dataset.applyPreset)); this.openTownFacilityModal(action, data, ctx); };
+      });
+
+      const dummyBtn = bodyEl.querySelector('#btn-start-dummy');
+      if (dummyBtn) {
+        dummyBtn.onclick = () => {
+          if (this._dummyTimer) clearInterval(this._dummyTimer);
+          dummyBtn.disabled = true;
+          let ticks = 0;
+          const totalTicks = 40; // 10 seconds @ 250ms
+          let totalDmg = 0;
+          let maxCrit = 0;
+          const valEl = bodyEl.querySelector('#dummy-dps-val');
+          const subEl = bodyEl.querySelector('#dummy-dps-sub');
+          this._dummyTimer = setInterval(() => {
+            if (modal.classList.contains('hidden')) { clearInterval(this._dummyTimer); return; }
+            ticks += 1;
+            const elapsedSec = ticks * 0.25;
+            const baseHit = (cs.atk || 50) * (cs.atkSpeed || 1) * 0.25 * (cs.skillDmgMult || 1) * (0.9 + Math.random() * 0.25);
+            const isCrit = Math.random() * 100 < (cs.critRate || 10);
+            const hit = Math.round(baseHit * (isCrit ? (cs.critDmg || 150) / 100 : 1));
+            totalDmg += hit;
+            if (hit > maxCrit) maxCrit = hit;
+            const curDps = Math.round(totalDmg / elapsedSec);
+            if (valEl) valEl.textContent = `${curDps.toLocaleString()} DPS`;
+            if (subEl) subEl.textContent = `剩餘 ${(10 - elapsedSec).toFixed(1)}s｜累計傷害：${totalDmg.toLocaleString()}｜最高單發：${maxCrit.toLocaleString()}${isCrit ? ' 💥暴擊' : ''}`;
+            if (ticks >= totalTicks) {
+              clearInterval(this._dummyTimer);
+              dummyBtn.disabled = false;
+              dummyBtn.textContent = '🔁 再測一次 10 秒木樁';
+              ctx.onRecordDummyDps?.(curDps, totalDmg, maxCrit);
+            }
+          }, 250);
+        };
+      }
     } else if (action === 'modal_portal') {
-      titleEl.textContent = '🐎 邊境馬車傳送驛站';
+      titleEl.textContent = '🌀 跨章節主城星門傳送驛站';
+      const townNames = [
+        '第1章・曙光哨站堡壘', '第2章・地下菌菇黑市', '第3章・守夜人聖骨禮拜堂', '第4章・黑曜石熔爐要塞', '第5章・緋紅魔獄王庭',
+        '第6章・極光冰晶堡', '第7章・翠玉樹冠水寨', '第8章・蒼穹電弧浮空城', '第9章・聖血薔薇修道院', '第10章・永恆星辰聖域',
+      ];
+      const maxUnlockedCh = Math.min(9, getChapterIdx(st.maxStageReached || st.maxStage || st.stage || 1));
+      const curTownCh = data?.chapterIdx ?? getChapterIdx(st.stage || 1);
+      const chCards = townNames.map((tName, idx) => {
+        const unlocked = idx <= maxUnlockedCh;
+        const isCur = idx === curTownCh;
+        return `<div class="portal-chapter-card ${isCur ? 'is-current' : ''}">
+          <div style="font-size:12px;font-weight:700;color:${isCur ? '#7dd3fc' : '#e2e8f0'}">${tName}</div>
+          <button data-tp-ch="${idx}" ${!unlocked || isCur ? 'disabled' : ''}>${isCur ? '目前所在主城' : (unlocked ? '🌀 傳送至此主城' : `需解鎖第 ${idx + 1} 章`)}</button>
+        </div>`;
+      }).join('');
+
       bodyEl.innerHTML = banner + `<div class="town-option-grid">
         <div class="town-option-card">
           <div><h4>⚔️ 立即出城戰鬥</h4><p>返回當前關卡前線，繼續自動巡邏刷怪掉寶。</p></div>
@@ -1356,9 +1613,14 @@ export class DashboardUI {
           <div><h4>🗺️ 開啟世界大地圖</h4><p>選擇要傳送挑戰的章節與第 1–10 小關卡。</p></div>
           <button id="btn-portal-map">開啟大地圖選關</button>
         </div>
-      </div>`;
+      </div>
+      <div class="town-section-title"><span>🌌 跨章節主城星門傳送陣</span></div>
+      <div class="portal-chapter-grid">${chCards}</div>`;
       bodyEl.querySelector('#btn-portal-battle').onclick = () => { modal.classList.add('hidden'); ctx.onExitTown(); };
       bodyEl.querySelector('#btn-portal-map').onclick = () => { modal.classList.add('hidden'); ctx.onOpenWorldMap(); };
+      bodyEl.querySelectorAll('button[data-tp-ch]').forEach((btn) => {
+        btn.onclick = () => { modal.classList.add('hidden'); ctx.onTeleportTown?.(Number(btn.dataset.tpCh)); };
+      });
     }
     modal.classList.remove('hidden');
   }
