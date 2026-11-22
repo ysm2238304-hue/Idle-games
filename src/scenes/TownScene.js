@@ -61,7 +61,7 @@ export class TownScene extends Phaser.Scene {
     const cid = this.callbacks?.getState?.()?.classId || 'warrior';
     const heroAtlas = `atlas_${cid}`;
     if (!this.textures.exists(heroAtlas)) {
-      this.load.atlas(heroAtlas, `./assets/heroes/atlas_${cid}.png`, `./assets/heroes/atlas_${cid}.json`);
+      this.load.atlas(heroAtlas, `./assets/heroes/atlas_${cid}.png?v=61`, `./assets/heroes/atlas_${cid}.json?v=61`);
     }
     if (!this.textures.exists(td.bgKey)) {
       this.load.image(td.bgKey, td.bgUrl);
@@ -69,11 +69,11 @@ export class TownScene extends Phaser.Scene {
     if (!this.textures.exists(td.atlasKey)) {
       this.load.atlas(td.atlasKey, td.atlasPng, td.atlasJson);
     }
-    const npcAtlasKey = td.atlasKey.replace('atlas_town_', 'atlas_town_npc_');
+    const npcAtlasKey = td.atlasKey.replace('town_atlas_', 'town_npc_atlas_');
     const npcPng = td.atlasPng.replace('atlas_town_', 'atlas_town_npc_');
     const npcJson = td.atlasJson.replace('atlas_town_', 'atlas_town_npc_');
     if (!this.textures.exists(npcAtlasKey)) {
-      this.load.atlas(npcAtlasKey, npcPng, npcJson);
+      this.load.atlas(npcAtlasKey, `${npcPng}?v=61`, `${npcJson}?v=61`);
     }
     this.load.off('progress');
     this.load.on('progress', (val) => {
@@ -90,7 +90,7 @@ export class TownScene extends Phaser.Scene {
     this.moveTarget = null;
     this.nearestTarget = null;
 
-    const npcAtlasKey = td.atlasKey.replace('atlas_town_', 'atlas_town_npc_');
+    const npcAtlasKey = td.atlasKey.replace('town_atlas_', 'town_npc_atlas_');
     this.npcAtlasKey = npcAtlasKey;
     this.registerNpcAnims(npcAtlasKey);
     this.registerHeroAnims(this.callbacks?.getState?.()?.classId || 'warrior');
@@ -470,7 +470,7 @@ export class TownScene extends Phaser.Scene {
   placeNpc(atlasKey, npc, facilityName, action, actionLabel, parentObj) {
     const sh = this.add.image(npc.x, npc.y + 2, 'fx_glow')
       .setTint(0x000000).setScale(0.95, 0.36).setAlpha(0.48).setDepth(2);
-    const nAtlas = this.npcAtlasKey || atlasKey.replace('atlas_town_', 'atlas_town_npc_');
+    const nAtlas = this.npcAtlasKey || atlasKey.replace('town_atlas_', 'town_npc_atlas_');
     const hasAnim = this.anims.exists(`${npc.frame}_idle`);
     const spr = (hasAnim
       ? this.add.sprite(npc.x, npc.y, nAtlas, `${npc.frame}_idle_0`)
@@ -574,7 +574,9 @@ export class TownScene extends Phaser.Scene {
     const def = map[cid];
     const atlasKey = `atlas_${cid}`;
     if (!def || !this.textures.exists(atlasKey)) return;
+    const tex = this.textures.get(atlasKey);
     ['down', 'up', 'right'].forEach((d) => {
+      if (!tex.has(`${def.tex}_${d}_walk_7`)) return;
       if (!this.anims.exists(`${def.prefix}_${d}_walk`)) {
         this.anims.create({
           key: `${def.prefix}_${d}_walk`,

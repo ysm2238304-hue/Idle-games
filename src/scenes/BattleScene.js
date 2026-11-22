@@ -115,7 +115,7 @@ export class BattleScene extends Phaser.Scene {
     this.loadedChapters = new Set([initCh]);
     this.isLoadingAssets = false;
 
-    this.load.atlas(`atlas_${initCid}`, `./assets/heroes/atlas_${initCid}.png`, `./assets/heroes/atlas_${initCid}.json`);
+    this.load.atlas(`atlas_${initCid}`, `./assets/heroes/atlas_${initCid}.png?v=61`, `./assets/heroes/atlas_${initCid}.json?v=61`);
     if (initCid === 'necro') {
       this.loadedSummons = true;
       this.load.atlas('atlas_summons', './assets/heroes/atlas_summons.png', './assets/heroes/atlas_summons.json');
@@ -159,7 +159,7 @@ export class BattleScene extends Phaser.Scene {
     }
     this.isLoadingAssets = true;
     if (needClass) {
-      this.load.atlas(`atlas_${cid}`, `./assets/heroes/atlas_${cid}.png`, `./assets/heroes/atlas_${cid}.json`);
+      this.load.atlas(`atlas_${cid}`, `./assets/heroes/atlas_${cid}.png?v=61`, `./assets/heroes/atlas_${cid}.json?v=61`);
     }
     if (needSummons) {
       this.load.atlas('atlas_summons', './assets/heroes/atlas_summons.png', './assets/heroes/atlas_summons.json');
@@ -286,7 +286,9 @@ export class BattleScene extends Phaser.Scene {
     const def = map[cid];
     if (!def) return;
     const atlasKey = `atlas_${cid}`;
+    const tex = this.textures.get(atlasKey);
     ['down', 'up', 'right'].forEach((d) => {
+      if (!tex.has(`${def.tex}_${d}_walk_7`)) return;
       if (!this.anims.exists(`${def.prefix}_${d}_walk`)) {
         this.anims.create({
           key: `${def.prefix}_${d}_walk`,
