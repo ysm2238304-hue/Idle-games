@@ -1601,7 +1601,7 @@ export class DashboardUI {
         const isCur = idx === curTownCh;
         return `<div class="portal-chapter-card ${isCur ? 'is-current' : ''}">
           <div style="font-size:12px;font-weight:700;color:${isCur ? '#7dd3fc' : '#e2e8f0'}">${tName}</div>
-          <button data-tp-ch="${idx}" ${!unlocked || isCur ? 'disabled' : ''}>${isCur ? '目前所在主城' : (unlocked ? '🌀 傳送至此主城' : `需解鎖第 ${idx + 1} 章`)}</button>
+          <button data-tp-ch="${idx}" ${isCur ? 'disabled' : ''}>${isCur ? '目前所在主城' : (unlocked ? '🌀 傳送至此主城' : '🔭 搶先觀光傳送')}</button>
         </div>`;
       }).join('');
 
@@ -1633,9 +1633,8 @@ export class DashboardUI {
       ];
       const wpHtml = wps.map((w, idx) => `<button class="waypoint-btn" data-wp-idx="${idx}">${w.label}</button>`).join('');
       const chHtml = townNames.map((nm, idx) => {
-        const unlocked = idx <= maxCh;
         const isCur = idx === curCh;
-        return `<button class="waypoint-btn" data-wp-ch="${idx}" ${!unlocked || isCur ? 'disabled' : ''}>${isCur ? '📍 ' : '🌀 '}${nm}</button>`;
+        return `<button class="waypoint-btn" data-wp-ch="${idx}" ${isCur ? 'disabled' : ''}>${isCur ? '📍 ' : (idx <= maxCh ? '🌀 ' : '🔭 ')}${nm}</button>`;
       }).join('');
       const maxStg = st.maxStageReached || st.stage || 1;
       const quickStages = [curCh * 10 + 1, curCh * 10 + 5, curCh * 10 + 10].filter((s) => s <= maxStg);

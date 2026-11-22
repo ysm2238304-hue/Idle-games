@@ -17,16 +17,11 @@ export const TOWN_CH8 = {
 
   // 五座雲端浮島＋四道奧術光橋連接：浮島外緣雲海雷暴禁行
   walkableZones: [
-    { x1: 1040, y1: 640, x2: 1760, y2: 1160 }, // 中央聚雷核心浮島
-    { x1: 230, y1: 380, x2: 860, y2: 1420 },   // 西側黃銅工坊飛艇浮島
-    { x1: 1940, y1: 380, x2: 2570, y2: 1420 }, // 東側神殿電弧浮島
-    { x1: 1060, y1: 220, x2: 1740, y2: 520 },  // 北側雲端輪迴聖殿浮島
-    { x1: 1060, y1: 1280, x2: 1740, y2: 1580 },// 南側凱旋門浮島
-    // 連接中央島與東西南北浮島的四座發光天橋
-    { x1: 800, y1: 820, x2: 1100, y2: 980 },   // 西向奧術天橋
-    { x1: 1700, y1: 820, x2: 2000, y2: 980 },  // 東向奧術天橋
-    { x1: 1310, y1: 480, x2: 1490, y2: 680 },  // 北向奧術天橋
-    { x1: 1310, y1: 1120, x2: 1490, y2: 1320 },// 南向奧術天橋
+    // 沿對角線浮空神殿大橋鋪設（嚴格避開左上與右下萬丈雲海）
+    { x1: 200, y1: 1020, x2: 960, y2: 1600 },  // 左下神殿大圓盤
+    { x1: 760, y1: 740, x2: 1420, y2: 1260 },  // 中下黃金神殿橋段
+    { x1: 1220, y1: 480, x2: 1880, y2: 980 },  // 中上黃金神殿橋段
+    { x1: 1740, y1: 220, x2: 2580, y2: 780 },  // 右上神殿大圓盤
   ],
 
   landmark: {
@@ -46,8 +41,8 @@ export const TOWN_CH8 = {
       id: 'smith',
       name: '奧術黃銅避雷針鍛造台',
       frame: 'ch8_bld_smith',
-      x: 470,
-      y: 520,
+      x: 420,
+      y: 1180,
       scale: 0.95,
       radius: 115,
       npc: {
@@ -106,8 +101,8 @@ export const TOWN_CH8 = {
       id: 'temple',
       name: '蒼穹翼騎兵演武神殿',
       frame: 'ch8_bld_temple',
-      x: 2330,
-      y: 1220,
+      x: 2320,
+      y: 460,
       scale: 0.95,
       radius: 115,
       npc: {
@@ -126,8 +121,8 @@ export const TOWN_CH8 = {
       id: 'bounty',
       name: '黃銅電弧懸賞觀測塔',
       frame: 'ch8_bld_bounty',
-      x: 1140,
-      y: 730,
+      x: 1120,
+      y: 880,
       scale: 0.84,
       radius: 82,
       npc: {
@@ -146,8 +141,8 @@ export const TOWN_CH8 = {
       id: 'market',
       name: '浮空飛艇零件黑市攤',
       frame: 'ch8_bld_market',
-      x: 1660,
-      y: 730,
+      x: 1580,
+      y: 820,
       scale: 0.88,
       radius: 95,
       npc: {
@@ -166,8 +161,8 @@ export const TOWN_CH8 = {
       id: 'altar',
       name: '雷鳴雲端輪迴聖殿',
       frame: 'ch8_bld_altar',
-      x: 1400,
-      y: 340,
+      x: 1960,
+      y: 440,
       scale: 0.92,
       radius: 105,
       npc: {
@@ -186,8 +181,8 @@ export const TOWN_CH8 = {
       id: 'portal',
       name: '高壓電弧跳躍傳送塔',
       frame: 'ch8_bld_portal',
-      x: 2070,
-      y: 880,
+      x: 2260,
+      y: 620,
       scale: 0.92,
       radius: 104,
       npc: {
@@ -235,8 +230,8 @@ export const TOWN_CH8 = {
     id: 'dummy',
     name: '黃銅發條電弧靶偶',
     frame: 'ch8_prop_dummy',
-    x: 2040,
-    y: 1120,
+    x: 1620,
+    y: 640,
     scale: 0.72,
     radius: 42,
   },

@@ -123,8 +123,8 @@ export const TOWN_CH9 = {
       id: 'bounty',
       name: '審判庭紅蠟懸賞聖碑',
       frame: 'ch9_bld_bounty',
-      x: 1140,
-      y: 730,
+      x: 1190,
+      y: 760,
       scale: 0.84,
       radius: 82,
       npc: {
@@ -143,8 +143,8 @@ export const TOWN_CH9 = {
       id: 'market',
       name: '聖物贖罪券黑市攤',
       frame: 'ch9_bld_market',
-      x: 1660,
-      y: 730,
+      x: 1610,
+      y: 760,
       scale: 0.88,
       radius: 95,
       npc: {

@@ -17,13 +17,20 @@ export const TOWN_CH2 = {
 
   // 雙斷崖三平台＋四座懸索吊橋：玩家必須走過吊橋才能穿梭東西與中央平台
   walkableZones: [
-    { x1: 200, y1: 230, x2: 920, y2: 1580 },   // 西側洞窟平台
-    { x1: 1120, y1: 230, x2: 1680, y2: 1580 }, // 中央菌菇廣場
-    { x1: 1880, y1: 230, x2: 2600, y2: 1580 }, // 東側煉金與礦車站
-    { x1: 860, y1: 600, x2: 1180, y2: 730 },   // 西北吊橋
-    { x1: 860, y1: 1090, x2: 1180, y2: 1220 }, // 西南吊橋
-    { x1: 1620, y1: 600, x2: 1940, y2: 730 },  // 東北吊橋
-    { x1: 1620, y1: 1090, x2: 1940, y2: 1220 },// 東南吊橋
+    // 西側岩台（隨斜裂谷上寬下窄階梯貼合）
+    { x1: 200, y1: 240, x2: 1060, y2: 760 },
+    { x1: 200, y1: 720, x2: 880, y2: 1560 },
+    // 中央礦場平台（隨斜裂谷梯形貼合）
+    { x1: 1220, y1: 240, x2: 1860, y2: 780 },
+    { x1: 1040, y1: 740, x2: 1720, y2: 1560 },
+    // 東側岩台
+    { x1: 2080, y1: 240, x2: 2600, y2: 820 },
+    { x1: 1900, y1: 780, x2: 2600, y2: 1560 },
+    // 4 座跨斜裂谷實體吊橋通道
+    { x1: 1000, y1: 600, x2: 1280, y2: 730 },
+    { x1: 820, y1: 1090, x2: 1100, y2: 1220 },
+    { x1: 1800, y1: 600, x2: 2140, y2: 730 },
+    { x1: 1660, y1: 1090, x2: 1960, y2: 1220 },
   ],
 
   landmark: {
@@ -247,10 +254,10 @@ export const TOWN_CH2 = {
 
   props: [
     // 4 座跨峽谷懸索吊橋（設 depthOverride: 1 讓角色踩在橋面上！）
-    { frame: 'ch2_prop_bridge', x: 1020, y: 665, scale: 0.96, radius: 0, depthOverride: 1 },
-    { frame: 'ch2_prop_bridge', x: 1020, y: 1155, scale: 0.96, radius: 0, depthOverride: 1 },
-    { frame: 'ch2_prop_bridge', x: 1780, y: 665, scale: 0.96, radius: 0, depthOverride: 1, flipX: true },
-    { frame: 'ch2_prop_bridge', x: 1780, y: 1155, scale: 0.96, radius: 0, depthOverride: 1, flipX: true },
+    { frame: 'ch2_prop_bridge', x: 1140, y: 665, scale: 0.96, radius: 0, depthOverride: 1 },
+    { frame: 'ch2_prop_bridge', x: 960, y: 1155, scale: 0.96, radius: 0, depthOverride: 1 },
+    { frame: 'ch2_prop_bridge', x: 1970, y: 665, scale: 0.96, radius: 0, depthOverride: 1, flipX: true },
+    { frame: 'ch2_prop_bridge', x: 1810, y: 1155, scale: 0.96, radius: 0, depthOverride: 1, flipX: true },
     // 螢光蘑菇路燈
     { frame: 'ch2_prop_lantern', x: 1210, y: 740, scale: 0.68, radius: 18, glow: true, glowColor: 0x34d399 },
     { frame: 'ch2_prop_lantern', x: 1590, y: 740, scale: 0.68, radius: 18, glow: true, glowColor: 0xa855f7 },

@@ -179,7 +179,7 @@ export class TownScene extends Phaser.Scene {
       if (p.radius > 0) {
         this.add.image(p.x, p.y + 24, 'fx_glow')
           .setTint(0x000000).setScale(1.0, 0.38).setAlpha(0.38).setDepth(2);
-        this.obstacles.push({ x: p.x, y: p.y + 10, radius: p.radius });
+        this.obstacles.push({ x: p.x, y: p.y + 24, radius: Math.max(12, Math.round(p.radius * 0.65)) });
       }
       const spr = this.add.image(p.x, p.y, td.atlasKey, p.frame)
         .setScale(p.scale)

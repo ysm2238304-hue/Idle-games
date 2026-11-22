@@ -17,10 +17,8 @@ export const TOWN_CH3 = {
 
   // 十字對稱大聖堂中軸＋東西耳堂大道，四角為封閉墓園禁行區
   walkableZones: [
-    { x1: 1120, y1: 230, x2: 1680, y2: 1580 }, // 中央南北聖堂主軸
-    { x1: 240, y1: 680, x2: 2560, y2: 1120 },  // 東西橫向耳堂大道
-    { x1: 820, y1: 230, x2: 1980, y2: 530 },   // 北側聖壇前庭
-    { x1: 860, y1: 1260, x2: 1940, y2: 1580 }, // 南側墓園正門廣場
+    { x1: 1110, y1: 240, x2: 1690, y2: 1580 }, // 中央南北聖堂石板主軸（嚴格避開四角墓園矮牆）
+    { x1: 240, y1: 680, x2: 2560, y2: 1120 },  // 東西橫向石板大道
   ],
 
   landmark: {
@@ -80,7 +78,7 @@ export const TOWN_CH3 = {
       id: 'guild',
       name: '守夜人聖物保管庫',
       frame: 'ch3_bld_guild',
-      x: 940,
+      x: 1150,
       y: 1360,
       scale: 0.92,
       radius: 112,
@@ -100,7 +98,7 @@ export const TOWN_CH3 = {
       id: 'temple',
       name: '聖骨騎士演武殿',
       frame: 'ch3_bld_temple',
-      x: 1860,
+      x: 1650,
       y: 1360,
       scale: 0.94,
       radius: 115,
@@ -180,8 +178,8 @@ export const TOWN_CH3 = {
       id: 'portal',
       name: '哥德刻文傳送墓碑門',
       frame: 'ch3_bld_portal',
-      x: 1860,
-      y: 365,
+      x: 1620,
+      y: 420,
       scale: 0.92,
       radius: 105,
       npc: {
