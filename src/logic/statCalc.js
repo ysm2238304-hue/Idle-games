@@ -160,6 +160,23 @@ export function recalcPlayerStats(state) {
   flat.magicFind += (tree.greed_mf || 0) * 8 + (tree.r_cdr || 0) * 4 + (tree.m_p_sage || 0) * 6 + (tree.n_cdr || 0) * 4;
   let expMult = 1 + (tree.greed_exp || 0) * 0.12;
 
+  const sanctum = state.sanctumLevels || {};
+  const sAtk = sanctum.atk_aura || 0;
+  const sLoot = sanctum.loot_aura || 0;
+  const sBoss = sanctum.boss_aura || 0;
+  if (sAtk > 0) {
+    atkPct += sAtk * 6;
+    hpPct += sAtk * 6;
+  }
+  if (sLoot > 0) {
+    flat.magicFind += sLoot * 12;
+    flat.goldFind += sLoot * 12;
+  }
+  if (sBoss > 0) {
+    flat.critDmg += sBoss * 15;
+    flat.dmgReducePct = (flat.dmgReducePct || 0) + sBoss * 2;
+  }
+
   const crystals = state.soulCrystals || 0;
   const crystalMult = 1 + crystals * 0.15;
   flat.goldFind += crystals * 5;

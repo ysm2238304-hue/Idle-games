@@ -135,8 +135,17 @@ const ui = new DashboardUI({
     const targets = new Set(['common', 'magic', 'rare', 'legendary'].filter((r) => gameState.autoSalvage?.[r]));
     if (targets.size === 0) { targets.add('common'); targets.add('magic'); }
     let count = 0, totalGold = 0, totalDust = 0;
+    const vr = gameState.vaultRules || {};
+    const isProtected = (it) => {
+      if (vr.keepClassReq && it.classReq === gameState.classId) return true;
+      if (vr.keepDoubleCrit) {
+        const keys = new Set((it.affixes || []).map((a) => a.key));
+        if (keys.has('critRate') && keys.has('critDmg')) return true;
+      }
+      return false;
+    };
     gameState.inventory = gameState.inventory.filter((item) => {
-      if (targets.has(item.rarity)) {
+      if (targets.has(item.rarity) && !isProtected(item)) {
         const rew = getSalvageReward(item);
         totalGold += rew.gold;
         totalDust += rew.dust;
@@ -163,8 +172,17 @@ const ui = new DashboardUI({
     const targets = new Set(['common', 'magic', 'rare', 'legendary'].filter((r) => gameState.autoSalvage?.[r]));
     if (targets.size === 0) { targets.add('common'); targets.add('magic'); }
     let count = 0, totalGold = 0;
+    const vr = gameState.vaultRules || {};
+    const isProtected = (it) => {
+      if (vr.keepClassReq && it.classReq === gameState.classId) return true;
+      if (vr.keepDoubleCrit) {
+        const keys = new Set((it.affixes || []).map((a) => a.key));
+        if (keys.has('critRate') && keys.has('critDmg')) return true;
+      }
+      return false;
+    };
     gameState.inventory = gameState.inventory.filter((item) => {
-      if (targets.has(item.rarity)) {
+      if (targets.has(item.rarity) && !isProtected(item)) {
         const rew = getSalvageReward(item);
         totalGold += Math.round(rew.gold * 2.5 + rew.dust * 8);
         count++;
@@ -325,9 +343,10 @@ const ui = new DashboardUI({
     const target = Math.max(1, Math.min(100, targetStage));
     gameState.stage = target;
     gameState.wave = 1;
+    if (isInTown) exitTownToBattle(true);
     ui.addLog(`傳送至第 ${getStageLabel(target)} 關刷寶。`, 'system');
     refreshStatsAndUI();
-    if (battleScene) battleScene.spawnWaveSquad();
+    if (battleScene && battleScene.scene?.isActive()) battleScene.spawnWaveSquad();
     persistAll(true);
   },
 
@@ -336,9 +355,10 @@ const ui = new DashboardUI({
     if (target === gameState.stage) return;
     gameState.stage = target;
     gameState.wave = 1;
+    if (isInTown) exitTownToBattle(true);
     ui.addLog(`切換至第 ${getStageLabel(target)} 關刷寶。`, 'system');
     refreshStatsAndUI();
-    if (battleScene) battleScene.spawnWaveSquad();
+    if (battleScene && battleScene.scene?.isActive()) battleScene.spawnWaveSquad();
     persistAll();
   },
 });
@@ -575,8 +595,7 @@ function enterTown(chapterIdx = 0, instant = false) {
     },
     onHudUpdate: (data) => ui.renderMinimap(data.minimap),
     onTownAction: (action, data) => {
-      if (action === 'drawer_bag') ui.openDrawer('bag');
-      else if (action === 'drawer_rebirth') ui.openDrawer('rebirth');
+      if (false) {}
       else if (action === 'gimmick_beacon') {
         if (!gameState.potionBuffs) gameState.potionBuffs = {};
         gameState.potionBuffs.beaconUntil = Date.now() + 300000;
@@ -682,7 +701,7 @@ function enterTown(chapterIdx = 0, instant = false) {
         ui.addLog('✨ 許願於星界銀河許願泉！星塵洗禮使你恢復全部生命與能量！', 'loot');
         refreshStatsAndUI();
       } else {
-        const modalAction = action === 'drawer_upgrade' ? 'modal_blacksmith' : (action === 'drawer_skills' ? 'modal_trainer' : action);
+        const modalAction = action === 'drawer_upgrade' ? 'modal_blacksmith' : (action === 'drawer_skills' ? 'modal_trainer' : (action === 'drawer_bag' ? 'modal_vault' : (action === 'drawer_rebirth' ? 'modal_sanctum' : action)));
         const modalData = { ...(data || {}), chapterIdx };
         ui.openTownFacilityModal(modalAction, modalData, {
           onBrewPotion: (brewId) => {
@@ -979,6 +998,57 @@ function enterTown(chapterIdx = 0, instant = false) {
             enterTown(targetChIdx, true);
             ui.addLog(`🌀 星門傳送完成！已抵達第 ${targetChIdx + 1} 章主城！`, 'victory');
           },
+          getWaypoints: () => townScene?.getWaypointList?.() || [],
+          onTeleportWaypoint: (wx, wy, label) => {
+            townScene?.teleportHeroTo?.(wx, wy);
+            ui.addLog(`🧭 已傳送至「${label}」！`, 'system');
+          },
+          onTeleportToStage: (stg) => {
+            gameState.stage = stg;
+            gameState.wave = 1;
+            exitTownToBattle(true);
+            refreshStatsAndUI();
+            if (battleScene && battleScene.scene?.isActive()) battleScene.spawnWaveSquad();
+            ui.addLog(`🚀 已從星門出城傳送至第 ${getStageLabel(stg)} 關！`, 'victory');
+            persistAll(true);
+          },
+          onVaultDeposit: (uid) => {
+            if (!gameState.vaultItems) gameState.vaultItems = [];
+            if (gameState.vaultItems.length >= 6) return;
+            const idx = (gameState.inventory || []).findIndex((i) => i && i.uid === uid);
+            if (idx < 0) return;
+            const [item] = gameState.inventory.splice(idx, 1);
+            gameState.vaultItems.push(item);
+            ui.addLog(`🔒 已將「${item.name}」鎖定存入保險箱！`, 'loot');
+            refreshStatsAndUI();
+            persistAll();
+          },
+          onVaultWithdraw: (slotIdx) => {
+            const it = gameState.vaultItems?.[slotIdx];
+            if (!it) return;
+            gameState.vaultItems.splice(slotIdx, 1);
+            gameState.inventory.unshift(it);
+            ui.addLog(`📤 已將「${it.name}」從保險箱取出至背包！`, 'loot');
+            refreshStatsAndUI();
+            persistAll();
+          },
+          onToggleVaultRule: (ruleKey) => {
+            if (!gameState.vaultRules) gameState.vaultRules = {};
+            gameState.vaultRules[ruleKey] = !gameState.vaultRules[ruleKey];
+            persistAll();
+          },
+          onUpgradeSanctum: (auraId) => {
+            if (!gameState.sanctumLevels) gameState.sanctumLevels = {};
+            const lv = gameState.sanctumLevels[auraId] || 0;
+            const baseMap = { atk_aura: 2, loot_aura: 2, boss_aura: 3 };
+            const cost = (baseMap[auraId] || 2) + lv * 2;
+            if (lv >= 10 || (gameState.soulCrystals || 0) < cost) return;
+            gameState.soulCrystals -= cost;
+            gameState.sanctumLevels[auraId] = lv + 1;
+            ui.addLog(`🔮 聖殿光環升級成功！消耗 ${cost} 顆靈魂水晶！`, 'victory');
+            refreshStatsAndUI();
+            persistAll(true);
+          },
           onClaimWeaverGift: () => {
             if (gameState.ch10WeaverGiftClaimed) return;
             gameState.ch10WeaverGiftClaimed = true;
@@ -1148,6 +1218,7 @@ function enterTown(chapterIdx = 0, instant = false) {
     btn.textContent = '⚔️ 出城戰鬥 (G)';
     btn.classList.add('in-town');
   }
+  document.getElementById('btn-town-waypoint')?.classList.remove('hidden');
     const townNames = ["曙光哨站堡壘", "地下菌菇黑市", "守夜人聖骨禮拜堂", "黑曜石熔爐要塞", "緋紅魔獄王庭", "極光冰晶堡", "翠玉樹冠水寨", "蒼穹電弧浮空城", "聖血薔薇修道院", "永恆星辰聖域"];
     const townTitle = `第 ${chapterIdx + 1} 章主城「${townNames[chapterIdx] || townNames[0]}」`;
     ui.addLog(`🏰 已傳送至${townTitle}（安全區）`, 'system');
@@ -1160,19 +1231,29 @@ function enterTown(chapterIdx = 0, instant = false) {
   }
 }
 
-function exitTownToBattle() {
+function exitTownToBattle(forceRespawn = false) {
   if (!phaserGame || !isInTown) return;
   isInTown = false;
   ui.hideTownSplash();
-  phaserGame.scene.sleep('TownScene');
-  phaserGame.scene.wake('BattleScene');
+  if (phaserGame.scene.isActive('TownScene')) phaserGame.scene.sleep('TownScene');
+  if (phaserGame.scene.isSleeping('BattleScene')) {
+    phaserGame.scene.wake('BattleScene');
+  } else if (!phaserGame.scene.isActive('BattleScene')) {
+    phaserGame.scene.start('BattleScene');
+  }
+  phaserGame.scene.bringToTop('BattleScene');
+  battleScene = phaserGame.scene.getScene('BattleScene');
   battleScene?.cameras?.main?.fadeIn?.(350, 0, 0, 0);
   battleScene?.setPaused(false);
+  if (forceRespawn && battleScene?.sys?.isActive()) {
+    battleScene.spawnWaveSquad?.();
+  }
   const btn = document.getElementById('btn-town-toggle');
   if (btn) {
     btn.textContent = '🏰 返回主城 (G)';
     btn.classList.remove('in-town');
   }
+  document.getElementById('btn-town-waypoint')?.classList.add('hidden');
   ui.addLog('⚔️ 已離開主城重返前線戰鬥！', 'system');
 }
 
@@ -1180,6 +1261,33 @@ document.getElementById('btn-town-toggle')?.addEventListener('click', () => {
   if (isInTown) exitTownToBattle();
   else enterTown(Math.min(9, getChapterIdx(gameState.stage)));
 });
+
+function openTownWaypointUI() {
+  if (!isInTown) return;
+  const chIdx = townScene?.townData?.chapterIdx ?? Math.min(9, getChapterIdx(gameState.stage));
+  ui.openTownFacilityModal('modal_waypoint', { chapterIdx: chIdx }, {
+    getWaypoints: () => townScene?.getWaypointList?.() || [],
+    onTeleportWaypoint: (wx, wy, label) => {
+      townScene?.teleportHeroTo?.(wx, wy);
+      ui.addLog(`🧭 已傳送至「${label}」！`, 'system');
+    },
+    onExitTown: () => exitTownToBattle(),
+    onTeleportToStage: (stg) => {
+      gameState.stage = stg;
+      gameState.wave = 1;
+      exitTownToBattle(true);
+      refreshStatsAndUI();
+      ui.addLog(`🚀 已從星門出城傳送至第 ${getStageLabel(stg)} 關！`, 'victory');
+      persistAll(true);
+    },
+    onTeleportTown: (targetChIdx) => {
+      isInTown = false;
+      enterTown(targetChIdx, true);
+      ui.addLog(`🌀 星門傳送完成！已抵達第 ${targetChIdx + 1} 章主城！`, 'victory');
+    },
+  });
+}
+document.getElementById('btn-town-waypoint')?.addEventListener('click', openTownWaypointUI);
 
 // --- 全螢幕暗黑歡迎頁 ---
 const welcomeScreen = document.getElementById('welcome-screen');
@@ -1327,6 +1435,8 @@ window.addEventListener('keydown', (e) => {
     cm?.classList.contains('hidden') ? ui.openClassModal(gameState) : cm.classList.add('hidden');
   } else if (e.code === 'KeyG') {
     if (isInTown) exitTownToBattle(); else enterTown(Math.min(9, getChapterIdx(gameState.stage)));
+  } else if (e.code === 'KeyY') {
+    if (isInTown) openTownWaypointUI();
   } else if (e.code === 'KeyL') {
     ui.activeDrawer === 'log' ? ui.closeDrawer() : ui.openDrawer('log');
   } else if (e.code === 'KeyQ') {

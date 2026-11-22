@@ -569,6 +569,48 @@ export class TownScene extends Phaser.Scene {
     });
   }
 
+  getWaypointList() {
+    const td = this.townData;
+    const list = [];
+    for (const lm of td?.landmarks || []) {
+      list.push({ label: `🔥 ${lm.name}`, x: lm.x, y: lm.y + 56 });
+    }
+    for (const f of td?.facilities || []) {
+      if (f.npc) {
+        const icon = this.getActionIcon(f.action);
+        list.push({ label: `${icon} ${f.name || f.npc.title}`, x: f.npc.x, y: f.npc.y + 44 });
+      }
+    }
+    for (const npc of td?.extraNpcs || []) {
+      list.push({ label: `🎁 ${npc.title || npc.name}`, x: npc.x, y: npc.y + 44 });
+    }
+    for (const b of td?.neighborhood || []) {
+      if (b.action === 'modal_tavern' || b.action === 'modal_tower') {
+        list.push({ label: `${b.action === 'modal_tavern' ? '🍺' : '🔭'} ${b.name}`, x: b.x, y: b.y + 62 });
+      }
+    }
+    if (td?.trainingDummy) {
+      list.push({ label: `🎯 ${td.trainingDummy.name}`, x: td.trainingDummy.x, y: td.trainingDummy.y + 50 });
+    }
+    return list;
+  }
+
+  teleportHeroTo(tx, ty) {
+    if (!this.hero) return;
+    const ring = this.add.image(this.hero.x, this.hero.y, 'fx_glow')
+      .setTint(0x38bdf8).setScale(1.6).setAlpha(0.85).setDepth(4800);
+    this.tweens.add({ targets: ring, scale: 0.2, alpha: 0, duration: 240, onComplete: () => ring.destroy() });
+
+    this.hero.setPosition(tx, ty);
+    this.moveTarget = null;
+    this.hero.setDepth(ty);
+    if (this.heroShadow) this.heroShadow.setPosition(tx, ty + 42);
+
+    const destRing = this.add.image(tx, ty, 'fx_glow')
+      .setTint(0x38bdf8).setScale(0.3).setAlpha(0.95).setDepth(4800);
+    this.tweens.add({ targets: destRing, scale: 2.0, alpha: 0, duration: 360, onComplete: () => destRing.destroy() });
+  }
+
   syncHeroAppearance() {
     if (!this.hero) return;
     const cid = this.callbacks?.getState?.()?.classId || 'warrior';

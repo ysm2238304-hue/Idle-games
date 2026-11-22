@@ -2511,3 +2511,70 @@ button { font-family: inherit; }
   border-color: #38bdf8;
   background: rgba(56, 189, 248, 0.12);
 }
+
+/* === v58 Waypoint, Vault & Sanctum Styles === */
+.btn-town-waypoint {
+  margin-top: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(56, 189, 248, 0.55);
+  background: linear-gradient(135deg, rgba(14, 116, 144, 0.88), rgba(30, 58, 138, 0.88));
+  color: #e0f2fe;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
+  transition: transform 0.15s, filter 0.15s;
+}
+.btn-town-waypoint:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.15);
+}
+.btn-town-waypoint.hidden {
+  display: none !important;
+}
+.waypoint-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.waypoint-btn {
+  padding: 8px 6px;
+  border-radius: 8px;
+  border: 1px solid rgba(56, 189, 248, 0.35);
+  background: rgba(15, 23, 42, 0.86);
+  color: #e0f2fe;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.15s;
+}
+.waypoint-btn:hover {
+  border-color: #38bdf8;
+  background: rgba(56, 189, 248, 0.18);
+}
+.vault-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.vault-slot-card {
+  background: rgba(12, 16, 26, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 6px;
+  min-height: 76px;
+}
+.sanctum-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}

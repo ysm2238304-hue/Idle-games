@@ -1622,6 +1622,132 @@ export class DashboardUI {
       bodyEl.querySelectorAll('button[data-tp-ch]').forEach((btn) => {
         btn.onclick = () => { modal.classList.add('hidden'); ctx.onTeleportTown?.(Number(btn.dataset.tpCh)); };
       });
+    } else if (action === 'modal_waypoint') {
+      titleEl.textContent = '🧭 主城快速傳送陣';
+      const wps = ctx.getWaypoints?.() || [];
+      const curCh = data?.chapterIdx ?? getChapterIdx(st.stage || 1);
+      const maxCh = Math.min(9, getChapterIdx(st.maxStageReached || st.maxStage || st.stage || 1));
+      const townNames = [
+        '第1章・曙光哨站', '第2章・菌菇黑市', '第3章・聖骨教堂', '第4章・黑曜熔爐', '第5章・緋紅王庭',
+        '第6章・極光冰堡', '第7章・翠玉水寨', '第8章・蒼穹浮空城', '第9章・聖血修道院', '第10章・星辰聖域',
+      ];
+      const wpHtml = wps.map((w, idx) => `<button class="waypoint-btn" data-wp-idx="${idx}">${w.label}</button>`).join('');
+      const chHtml = townNames.map((nm, idx) => {
+        const unlocked = idx <= maxCh;
+        const isCur = idx === curCh;
+        return `<button class="waypoint-btn" data-wp-ch="${idx}" ${!unlocked || isCur ? 'disabled' : ''}>${isCur ? '📍 ' : '🌀 '}${nm}</button>`;
+      }).join('');
+      const maxStg = st.maxStageReached || st.stage || 1;
+      const quickStages = [curCh * 10 + 1, curCh * 10 + 5, curCh * 10 + 10].filter((s) => s <= maxStg);
+
+      bodyEl.innerHTML = `
+        <div class="town-section-title"><span>⚡ 城內設施一鍵瞬移</span><span style="color:#94a3b8;font-size:11px;">點擊即刻抵達 NPC 身旁</span></div>
+        <div class="waypoint-grid">${wpHtml}</div>
+        <div class="town-section-title"><span>⚔️ 快速出城至本章關卡</span></div>
+        <div class="waypoint-grid">
+          <button class="waypoint-btn" id="btn-wp-exit-cur">⚔️ 繼續當前關卡 (${getStageLabel(st.stage || 1)})</button>
+          ${quickStages.map((s) => `<button class="waypoint-btn" data-wp-stg="${s}">🚀 出城打第 ${getStageLabel(s)} 關</button>`).join('')}
+        </div>
+        <div class="town-section-title"><span>🌌 跨章節主城星門切換</span></div>
+        <div class="waypoint-grid">${chHtml}</div>
+      `;
+      bodyEl.querySelectorAll('button[data-wp-idx]').forEach((b) => {
+        b.onclick = () => {
+          const wp = wps[Number(b.dataset.wpIdx)];
+          if (wp) ctx.onTeleportWaypoint?.(wp.x, wp.y, wp.label);
+          modal.classList.add('hidden');
+        };
+      });
+      bodyEl.querySelector('#btn-wp-exit-cur')?.addEventListener('click', () => {
+        modal.classList.add('hidden');
+        ctx.onExitTown?.();
+      });
+      bodyEl.querySelectorAll('button[data-wp-stg]').forEach((b) => {
+        b.onclick = () => {
+          modal.classList.add('hidden');
+          ctx.onTeleportToStage?.(Number(b.dataset.wpStg));
+        };
+      });
+      bodyEl.querySelectorAll('button[data-wp-ch]').forEach((b) => {
+        b.onclick = () => {
+          modal.classList.add('hidden');
+          ctx.onTeleportTown?.(Number(b.dataset.wpCh));
+        };
+      });
+    } else if (action === 'modal_vault') {
+      titleEl.textContent = '📦 冒險者珍藏保險箱・防誤拆鎖定庫';
+      const vault = st.vaultItems || [];
+      const rules = st.vaultRules || { keepClassReq: false, keepDoubleCrit: false };
+      const bagCandidates = (st.inventory || []).filter((it) => it && (it.rarity === 'legendary' || it.rarity === 'rare')).slice(0, 8);
+      const vaultSlotsHtml = [0, 1, 2, 3, 4, 5].map((i) => {
+        const it = vault[i];
+        if (!it) return `<div class="vault-slot-card"><span style="color:#64748b;">空保險格 #${i + 1}</span><span style="font-size:11px;color:#475569;">安全存放・防誤拆</span></div>`;
+        const rColor = RARITIES[it.rarity]?.color || '#e2e8f0';
+        return `<div class="vault-slot-card">
+          <div><b style="color:${rColor}">${it.icon || '⚔️'} ${it.name}</b><br><span style="color:#94a3b8;font-size:11px;">戰力 ${it.powerScore || 0}</span></div>
+          <button data-vault-out="${i}" style="font-size:11px;">取出至背包</button>
+        </div>`;
+      }).join('');
+      const bagHtml = bagCandidates.map((it) => {
+        const rColor = RARITIES[it.rarity]?.color || '#e2e8f0';
+        return `<button class="town-item-chip rarity-${it.rarity}" data-vault-in="${it.uid}" ${vault.length >= 6 ? 'disabled' : ''}>存入 ${it.icon || ''}${it.name} (${it.powerScore})</button>`;
+      }).join('');
+
+      bodyEl.innerHTML = banner + `
+        <div class="town-section-title">
+          <span>🔒 永久保險箱 (${vault.length} / 6 格)</span>
+          <button id="btn-vault-bag" class="town-item-chip">🎒 開啟完整背包 (B)</button>
+        </div>
+        <div class="vault-grid">${vaultSlotsHtml}</div>
+        <div class="town-section-title"><span>📥 從背包存入稀有 / 傳說裝備</span></div>
+        <div class="town-item-selector">${bagHtml || '<span style="color:#64748b;font-size:12px;">背包內暫無稀有以上裝備可存入。</span>'}</div>
+        <div class="town-section-title"><span>🛡️ 自動保護規則</span></div>
+        <div class="town-option-grid">
+          <div class="town-option-card">
+            <div><h4>⚔️ 自動鎖定本職業專屬詞綴裝</h4><p>一鍵分解時略過含有當前職業專屬技能/詞綴的裝備。</p></div>
+            <button id="btn-rule-cls">${rules.keepClassReq ? '✅ 已啟用保護' : '⚪ 點擊啟用'}</button>
+          </div>
+          <div class="town-option-card">
+            <div><h4>💥 自動鎖定雙爆詞綴裝備</h4><p>同時擁有暴擊率與暴擊傷害詞綴時自動跳過分解。</p></div>
+            <button id="btn-rule-crit">${rules.keepDoubleCrit ? '✅ 已啟用保護' : '⚪ 點擊啟用'}</button>
+          </div>
+        </div>`;
+      bodyEl.querySelector('#btn-vault-bag')?.addEventListener('click', () => { modal.classList.add('hidden'); ctx.onOpenDrawer?.('bag'); });
+      bodyEl.querySelectorAll('button[data-vault-out]').forEach((b) => {
+        b.onclick = () => { ctx.onVaultWithdraw?.(Number(b.dataset.vaultOut)); this.openTownFacilityModal(action, data, ctx); };
+      });
+      bodyEl.querySelectorAll('button[data-vault-in]').forEach((b) => {
+        b.onclick = () => { ctx.onVaultDeposit?.(b.dataset.vaultIn); this.openTownFacilityModal(action, data, ctx); };
+      });
+      bodyEl.querySelector('#btn-rule-cls')?.addEventListener('click', () => { ctx.onToggleVaultRule?.('keepClassReq'); this.openTownFacilityModal(action, data, ctx); });
+      bodyEl.querySelector('#btn-rule-crit')?.addEventListener('click', () => { ctx.onToggleVaultRule?.('keepDoubleCrit'); this.openTownFacilityModal(action, data, ctx); });
+    } else if (action === 'modal_sanctum') {
+      titleEl.textContent = '🔮 靈魂水晶聖殿・永久光環祝福';
+      const crystals = st.soulCrystals || 0;
+      const sanctum = st.sanctumLevels || {};
+      const auras = [
+        { id: 'atk_aura', name: '⚔️ 水晶武魄光環', desc: '永久提升全攻擊力 +6% 與最大生命 +6% / 級', baseCost: 2 },
+        { id: 'loot_aura', name: '💎 秘寶指引光環', desc: '永久提升掉寶率 +12% 與金幣掉落 +12% / 級', baseCost: 2 },
+        { id: 'boss_aura', name: '👑 弒神威壓光環', desc: '永久提升暴擊傷害 +15% 與全減傷 +2% / 級', baseCost: 3 },
+      ];
+      bodyEl.innerHTML = banner + `
+        <div class="town-section-title">
+          <span>💎 目前持有靈魂水晶：<b style="color:#c084fc;font-size:14px;">${crystals}</b> 顆</span>
+          <button id="btn-sanctum-rebirth" class="town-item-chip">🌀 開啟輪迴轉生面板 (V)</button>
+        </div>
+        <div class="sanctum-grid">${auras.map((a) => {
+          const lv = sanctum[a.id] || 0;
+          const cost = a.baseCost + lv * 2;
+          const maxed = lv >= 10;
+          return `<div class="town-option-card">
+            <div><h4>${a.name} (Lv.${lv}/10)</h4><p>${a.desc}</p></div>
+            <button data-sanctum="${a.id}" ${maxed || crystals < cost ? 'disabled' : ''}>${maxed ? '已達聖殿滿級' : `注魔升級 (${cost} 💎)`}</button>
+          </div>`;
+        }).join('')}</div>`;
+      bodyEl.querySelector('#btn-sanctum-rebirth')?.addEventListener('click', () => { modal.classList.add('hidden'); ctx.onOpenDrawer?.('rebirth'); });
+      bodyEl.querySelectorAll('button[data-sanctum]').forEach((b) => {
+        b.onclick = () => { ctx.onUpgradeSanctum?.(b.dataset.sanctum); this.openTownFacilityModal(action, data, ctx); };
+      });
     }
     modal.classList.remove('hidden');
   }
