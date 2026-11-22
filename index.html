@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./style.css?v=41" />
+  <link rel="stylesheet" href="./style.css?v=42" />
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
 </head>
 <body>
@@ -88,6 +88,7 @@
           </div>
         </div>
         <div id="hud-potion-buffs" class="hud-potion-buffs"></div>
+        <button id="btn-town-toggle" class="btn-town-toggle" title="返回主城 / 出城戰鬥 [G]">🏰 返回主城 (G)</button>
       </div>
 
       <!-- 中上方：當前鎖定目標／首領血條 (Target Frame) -->
@@ -345,6 +346,16 @@
     </div>
   </div>
 
+  <div id="modal-town-facility" class="modal-overlay hidden">
+    <div class="modal-card town-modal-card">
+      <div class="modal-header">
+        <h2 id="town-modal-title">🏰 主城設施</h2>
+        <button id="btn-close-town-modal" class="btn-ghost">關閉</button>
+      </div>
+      <div id="town-modal-body"></div>
+    </div>
+  </div>
+
   <div id="modal-offline" class="modal-overlay hidden">
     <div class="modal-card">
       <h2>🌙 歡迎回來！離線掛機收益</h2>
@@ -353,6 +364,6 @@
     </div>
   </div>
 
-  <script type="module" src="./src/main.js?v=41"></script>
+  <script type="module" src="./src/main.js?v=42"></script>
 </body>
 </html>

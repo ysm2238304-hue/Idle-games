@@ -174,6 +174,11 @@ export function recalcPlayerStats(state) {
     flat.magicFind += 40;
     flat.goldFind += 30;
   }
+  if ((buffs.beaconUntil || 0) > nowTs) {
+    flat.atkPct += 15;
+    flat.defPct += 15;
+    flat.magicFind += 15;
+  }
 
   const maxHp = Math.round(flat.hp * (1 + hpPct / 100) * crystalMult);
   const armorPre = Math.round(flat.armor * (1 + armorPct / 100));

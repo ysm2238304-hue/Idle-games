@@ -1743,3 +1743,88 @@ button { font-family: inherit; }
 }
 .potion-buff-pill.fury { border-color: #c084fc; color: #e9d5ff; }
 .potion-buff-pill.mf { border-color: #4ade80; color: #bbf7d0; }
+
+/* ========== v41 主城系統與設施互動視窗 ========== */
+.btn-town-toggle {
+  margin-top: 6px;
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #d97706;
+  background: linear-gradient(135deg, rgba(120, 53, 15, 0.92), rgba(30, 41, 59, 0.95));
+  color: #fef08a;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
+  transition: transform 0.12s, filter 0.12s;
+  width: fit-content;
+}
+.btn-town-toggle:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.15);
+}
+.btn-town-toggle.in-town {
+  border-color: #ef4444;
+  background: linear-gradient(135deg, rgba(127, 29, 29, 0.92), rgba(30, 41, 59, 0.95));
+  color: #fecaca;
+}
+.potion-buff-pill.beacon {
+  border-color: #f97316;
+  color: #ffedd5;
+  background: rgba(154, 52, 18, 0.85);
+}
+.town-modal-card {
+  width: 620px;
+  max-width: 94vw;
+}
+.town-npc-banner {
+  background: rgba(15, 23, 42, 0.85);
+  border: 1px solid #334155;
+  border-left: 3px solid #f59e0b;
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: #e2e8f0;
+  line-height: 1.5;
+}
+.town-option-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 10px;
+}
+.town-option-card {
+  background: rgba(15, 23, 42, 0.92);
+  border: 1px solid #475569;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+}
+.town-option-card h4 {
+  margin: 0;
+  font-size: 14px;
+  color: #fde68a;
+}
+.town-option-card p {
+  margin: 0;
+  font-size: 12px;
+  color: #cbd5e1;
+  line-height: 1.45;
+}
+.town-option-card button {
+  padding: 7px 10px;
+  border-radius: 5px;
+  border: 1px solid #c89b3c;
+  background: linear-gradient(180deg, #92400e, #451a03);
+  color: #fef3c7;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+}
+.town-option-card button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

@@ -20,12 +20,15 @@ import {
   saveCloudData,
 } from './auth/firebase.js';
 import { BattleScene } from './scenes/BattleScene.js';
+import { TownScene } from './scenes/TownScene.js';
 import { DashboardUI } from './ui/DashboardUI.js';
 
 let gameState = loadGame() || createInitialState('warrior');
 let computedStats = recalcPlayerStats(gameState);
 let phaserGame = null;
 let battleScene = null;
+let townScene = null;
+let isInTown = false;
 let selectedLobbyClass = gameState.classId || 'warrior';
 let gameStarted = false;
 
@@ -393,7 +396,7 @@ function initPhaserGame() {
       mode: Phaser.Scale.RESIZE,
       autoCenter: Phaser.Scale.CENTER_BOTH,
     },
-    scene: [BattleScene],
+    scene: [BattleScene, TownScene],
   };
 
   window.__IDLE_ARPG_BRIDGE__ = {
@@ -411,6 +414,10 @@ function initPhaserGame() {
         const goldGain = Math.round(mob.gold * (1 + computedStats.goldFind / 100));
         gameState.gold += goldGain;
         gameState.kills += 1;
+        if (mob.isBoss) {
+          if (!gameState.bountyProgress) gameState.bountyProgress = { bossKills: 0, claimed: {} };
+          gameState.bountyProgress.bossKills = (gameState.bountyProgress.bossKills || 0) + 1;
+        }
         grantExp(mob.exp);
 
         const dropped = generateLoot(mob.stage, mob.isBoss, computedStats.magicFind, false, gameState.classId);
@@ -529,10 +536,146 @@ function initPhaserGame() {
 
   phaserGame.events.once('ready', () => {
     battleScene = phaserGame.scene.getScene('BattleScene');
+    townScene = phaserGame.scene.getScene('TownScene');
     battleScene?.setPaused(false);
     requestAnimationFrame(() => phaserGame?.scale?.refresh());
   });
 }
+
+
+function enterTown(chapterIdx = 0) {
+  if (!phaserGame) return;
+  isInTown = true;
+  battleScene?.setPaused(true);
+  phaserGame.scene.sleep('BattleScene');
+  const townCallbacks = {
+    getState: () => gameState,
+    getComputedStats: () => computedStats,
+    onHudUpdate: (data) => ui.renderMinimap(data.minimap),
+    onTownAction: (action, data) => {
+      if (action === 'drawer_upgrade') ui.openDrawer('upgrade');
+      else if (action === 'drawer_bag') ui.openDrawer('bag');
+      else if (action === 'drawer_skills') ui.openDrawer('skills');
+      else if (action === 'drawer_rebirth') ui.openDrawer('rebirth');
+      else if (action === 'gimmick_beacon') {
+        if (!gameState.potionBuffs) gameState.potionBuffs = {};
+        gameState.potionBuffs.beaconUntil = Date.now() + 300000;
+        ui.addLog('🔥 點燃曙光烽火台！獲得 5 分鐘「曙光祝福」（攻擊/防禦/掉寶 +15%）！', 'victory');
+        refreshStatsAndUI();
+        persistAll();
+      } else {
+        ui.openTownFacilityModal(action, data, {
+          onBrewPotion: (brewId) => {
+            const prices = { hp_refill: 150, exp_pot: 300, fury_pot: 400, mf_pot: 450 };
+            const cost = prices[brewId] || 300;
+            if ((gameState.gold || 0) < cost) return;
+            gameState.gold -= cost;
+            if (!gameState.potionBuffs) gameState.potionBuffs = {};
+            const nowTs = Date.now();
+            if (brewId === 'hp_refill') {
+              battleScene?.healHero?.(computedStats.maxHp);
+              battleScene?.addPotionCharge?.(3);
+              ui.addLog('🔴 煉金工坊：已補滿戰鬥生命藥水！', 'loot');
+            } else if (brewId === 'exp_pot') {
+              gameState.potionBuffs.expUntil = Math.max(nowTs, gameState.potionBuffs.expUntil || 0) + 60000;
+              ui.addLog('🟡 煉金工坊：獲得 60 秒經驗 +50% 藥水效果！', 'loot');
+            } else if (brewId === 'fury_pot') {
+              gameState.potionBuffs.furyUntil = Math.max(nowTs, gameState.potionBuffs.furyUntil || 0) + 45000;
+              ui.addLog('🟣 煉金工坊：獲得 45 秒狂暴藥水效果！', 'loot');
+            } else if (brewId === 'mf_pot') {
+              gameState.potionBuffs.mfUntil = Math.max(nowTs, gameState.potionBuffs.mfUntil || 0) + 60000;
+              ui.addLog('🟢 煉金工坊：獲得 60 秒尋寶藥水效果！', 'loot');
+            }
+            refreshStatsAndUI();
+            persistAll();
+          },
+          onClaimBounty: (qid) => {
+            if (!gameState.bountyProgress) gameState.bountyProgress = { bossKills: 0, claimed: {} };
+            if (gameState.bountyProgress.claimed[qid]) return;
+            gameState.bountyProgress.claimed[qid] = true;
+            if (qid === 'ch1_q1') {
+              gameState.gold += 600;
+              handleLootDrop(generateLoot(Math.max(1, gameState.maxStageReached || 1), true, 120, false, gameState.classId));
+              ui.addLog('📜 完成懸賞「清剿腐朽野狼群」：獲得 600 金幣與稀有裝備！', 'victory');
+            } else if (qid === 'ch1_q2') {
+              gameState.gold += 1200;
+              gameState.skillPoints = (gameState.skillPoints || 0) + 1;
+              ui.addLog('📜 完成懸賞「討伐邊境首領」：獲得 1,200 金幣與 +1 技能點！', 'victory');
+            } else if (qid === 'ch1_q3') {
+              gameState.gold += 2500;
+              handleLootDrop(generateLoot(Math.max(5, gameState.maxStageReached || 5), true, 300, false, gameState.classId));
+              ui.addLog('📜 完成懸賞「百戰哨兵試煉」：獲得 2,500 金幣與高階傳說箱！', 'victory');
+            }
+            refreshStatsAndUI();
+            persistAll(true);
+          },
+          onGambleGear: (cost, highTier) => {
+            if ((gameState.gold || 0) < cost) return;
+            gameState.gold -= cost;
+            const stg = Math.max(1, gameState.maxStageReached || gameState.stage || 1);
+            const item = generateLoot(stg, highTier, highTier ? 280 : 60, false, gameState.classId);
+            handleLootDrop(item);
+            refreshStatsAndUI();
+            persistAll();
+          },
+          onClaimScoutGift: () => {
+            if (gameState.ch1ScoutGiftClaimed) return;
+            gameState.ch1ScoutGiftClaimed = true;
+            gameState.gold += 500;
+            if (!gameState.potionBuffs) gameState.potionBuffs = {};
+            gameState.potionBuffs.expUntil = Math.max(Date.now(), gameState.potionBuffs.expUntil || 0) + 60000;
+            ui.addLog('🏹 領取邊境斥候長補給：獲得 500 金幣與 60 秒經驗藥水！', 'victory');
+            refreshStatsAndUI();
+            persistAll(true);
+          },
+          onExitTown: () => exitTownToBattle(),
+          onOpenWorldMap: () => {
+            exitTownToBattle();
+            ui.openWorldMapModal(gameState, (st) => {
+              gameState.stage = st;
+              gameState.wave = 1;
+              refreshStatsAndUI();
+              battleScene?.spawnWaveSquad();
+              persistAll(true);
+            });
+          },
+        });
+      }
+    },
+  };
+
+  if (phaserGame.scene.isSleeping('TownScene') || phaserGame.scene.isActive('TownScene')) {
+    phaserGame.scene.wake('TownScene', { chapterIdx, callbacks: townCallbacks });
+    townScene?.syncHeroAppearance?.();
+  } else {
+    phaserGame.scene.launch('TownScene', { chapterIdx, callbacks: townCallbacks });
+  }
+  const btn = document.getElementById('btn-town-toggle');
+  if (btn) {
+    btn.textContent = '⚔️ 出城戰鬥 (G)';
+    btn.classList.add('in-town');
+  }
+  ui.addLog('🏰 已傳送至第 1 章主城「曙光哨站堡壘」（安全區）', 'system');
+}
+
+function exitTownToBattle() {
+  if (!phaserGame || !isInTown) return;
+  isInTown = false;
+  phaserGame.scene.sleep('TownScene');
+  phaserGame.scene.wake('BattleScene');
+  battleScene?.setPaused(false);
+  const btn = document.getElementById('btn-town-toggle');
+  if (btn) {
+    btn.textContent = '🏰 返回主城 (G)';
+    btn.classList.remove('in-town');
+  }
+  ui.addLog('⚔️ 已離開主城重返前線戰鬥！', 'system');
+}
+
+document.getElementById('btn-town-toggle')?.addEventListener('click', () => {
+  if (isInTown) exitTownToBattle();
+  else enterTown(0);
+});
 
 // --- 全螢幕暗黑歡迎頁 ---
 const welcomeScreen = document.getElementById('welcome-screen');
@@ -678,6 +821,8 @@ window.addEventListener('keydown', (e) => {
   } else if (e.code === 'KeyC') {
     const cm = document.getElementById('modal-class');
     cm?.classList.contains('hidden') ? ui.openClassModal(gameState) : cm.classList.add('hidden');
+  } else if (e.code === 'KeyG') {
+    if (isInTown) exitTownToBattle(); else enterTown(0);
   } else if (e.code === 'KeyL') {
     ui.activeDrawer === 'log' ? ui.closeDrawer() : ui.openDrawer('log');
   } else if (e.code === 'KeyQ') {

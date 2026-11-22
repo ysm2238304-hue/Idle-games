@@ -365,6 +365,7 @@ export class DashboardUI {
       if ((b.expUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill">🟡 經驗+50% ${Math.ceil((b.expUntil - nowTs)/1000)}s</span>`);
       if ((b.furyUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill fury">🟣 狂暴 ${Math.ceil((b.furyUntil - nowTs)/1000)}s</span>`);
       if ((b.mfUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill mf">🟢 尋寶 ${Math.ceil((b.mfUntil - nowTs)/1000)}s</span>`);
+      if ((b.beaconUntil || 0) > nowTs) pills.push(`<span class="potion-buff-pill beacon">🔥 曙光祝福 ${Math.ceil((b.beaconUntil - nowTs)/1000)}s</span>`);
       buffWrap.innerHTML = pills.join('');
     }
     const hpPct = Math.max(0, Math.min(100, (hp / Math.max(1, maxHp)) * 100));
@@ -1104,4 +1105,105 @@ export class DashboardUI {
       fl.scrollTop = fl.scrollHeight;
     }
   }
+
+  openTownFacilityModal(action, data, ctx) {
+    const modal = document.getElementById('modal-town-facility');
+    const titleEl = document.getElementById('town-modal-title');
+    const bodyEl = document.getElementById('town-modal-body');
+    const closeBtn = document.getElementById('btn-close-town-modal');
+    if (!modal || !titleEl || !bodyEl) return;
+    closeBtn.onclick = () => modal.classList.add('hidden');
+
+    const st = this.getState();
+    const npc = data?.npc || data || {};
+    const banner = npc.greeting
+      ? `<div class="town-npc-banner"><b>${npc.title || ''} ${npc.name || ''}：</b>「${npc.greeting}」<br><span style="color:#fde047;font-size:12px;">目前持有金幣：${Math.floor(st.gold || 0).toLocaleString()} G</span></div>`
+      : '';
+
+    if (action === 'modal_alchemy') {
+      titleEl.textContent = '⚗️ 祕法煉金工坊';
+      const brews = [
+        { id: 'hp_refill', name: '🔴 補滿生命藥水', desc: '立即補滿戰鬥藥水次數並回復 100% 生命。', cost: 150 },
+        { id: 'exp_pot', name: '🟡 濃稠經驗藥水 (60秒)', desc: '擊殺經驗值 +50%，可疊加持續時間。', cost: 300 },
+        { id: 'fury_pot', name: '🟣 狂戰士藥水 (45秒)', desc: '攻速 +25%、暴擊率 +10%。', cost: 400 },
+        { id: 'mf_pot', name: '🟢 黃金尋寶藥水 (60秒)', desc: '掉寶率 +40%、金幣獲取 +30%。', cost: 450 },
+      ];
+      bodyEl.innerHTML = banner + `<div class="town-option-grid">${brews.map((b) => `
+        <div class="town-option-card">
+          <div><h4>${b.name}</h4><p>${b.desc}</p></div>
+          <button data-brew="${b.id}" ${(st.gold || 0) < b.cost ? 'disabled' : ''}>煉製購買（${b.cost} G）</button>
+        </div>`).join('')}</div>`;
+      bodyEl.querySelectorAll('button[data-brew]').forEach((btn) => {
+        btn.onclick = () => {
+          ctx.onBrewPotion(btn.dataset.brew);
+          this.openTownFacilityModal(action, data, ctx);
+        };
+      });
+    } else if (action === 'modal_bounty') {
+      titleEl.textContent = '📜 第 1 章・曙光哨站懸賞告示板';
+      const bp = st.bountyProgress || { kills: st.kills || 0, bossKills: 0, claimed: {} };
+      const quests = [
+        { id: 'ch1_q1', name: '🐺 清剿腐朽野狼群', cur: st.kills || 0, goal: 30, reward: '600 金幣 ＋ 稀有裝備箱' },
+        { id: 'ch1_q2', name: '💀 討伐邊境首領（5/10 關）', cur: bp.bossKills || 0, goal: 2, reward: '1,200 金幣 ＋ +1 技能點' },
+        { id: 'ch1_q3', name: '⚔️ 百戰哨兵試煉', cur: st.kills || 0, goal: 120, reward: '2,500 金幣 ＋ 傳說保底箱' },
+      ];
+      bodyEl.innerHTML = banner + `<div class="town-option-grid">${quests.map((q) => {
+        const done = !!bp.claimed?.[q.id];
+        const ready = !done && q.cur >= q.goal;
+        return `<div class="town-option-card">
+          <div><h4>${q.name}</h4><p>進度：${Math.min(q.cur, q.goal)} / ${q.goal}<br>獎勵：${q.reward}</p></div>
+          <button data-bounty="${q.id}" ${ready ? '' : 'disabled'}>${done ? '已領取' : (ready ? '領取懸賞獎勵' : '進行中')}</button>
+        </div>`;
+      }).join('')}</div>`;
+      bodyEl.querySelectorAll('button[data-bounty]').forEach((btn) => {
+        btn.onclick = () => {
+          ctx.onClaimBounty(btn.dataset.bounty);
+          this.openTownFacilityModal(action, data, ctx);
+        };
+      });
+    } else if (action === 'modal_market') {
+      titleEl.textContent = '🎪 深淵黑市帳篷・神秘賭裝';
+      const stageCost = Math.max(350, (st.stage || 1) * 180);
+      const highCost = stageCost * 3;
+      bodyEl.innerHTML = banner + `<div class="town-option-grid">
+        <div class="town-option-card">
+          <div><h4>🎲 神秘黑市裝備盲盒</h4><p>依照當前最高關卡隨機鑑定一件 精良～傳說 裝備。</p></div>
+          <button id="btn-gamble-std" ${(st.gold || 0) < stageCost ? 'disabled' : ''}>購買鑑定（${stageCost.toLocaleString()} G）</button>
+        </div>
+        <div class="town-option-card">
+          <div><h4>💎 走私者高階秘寶箱</h4><p>保證 稀有 以上品質，大幅提高 傳說／神話 出現機率！</p></div>
+          <button id="btn-gamble-high" ${(st.gold || 0) < highCost ? 'disabled' : ''}>購買高階盲盒（${highCost.toLocaleString()} G）</button>
+        </div>
+      </div>`;
+      const b1 = bodyEl.querySelector('#btn-gamble-std');
+      const b2 = bodyEl.querySelector('#btn-gamble-high');
+      if (b1) b1.onclick = () => { ctx.onGambleGear(stageCost, false); this.openTownFacilityModal(action, data, ctx); };
+      if (b2) b2.onclick = () => { ctx.onGambleGear(highCost, true); this.openTownFacilityModal(action, data, ctx); };
+    } else if (action === 'modal_scout') {
+      titleEl.textContent = '🏹 邊境斥候長・莉娜的哨站補給';
+      const claimed = !!st.ch1ScoutGiftClaimed;
+      bodyEl.innerHTML = banner + `<div class="town-option-card">
+        <div><h4>🎁 曙光哨站新人補給包</h4><p>內含：500 金幣 ＋ 經驗藥水（60 秒 +50% 經驗）！<br>提示：點擊城中央「曙光烽火台」可獲得 5 分鐘全屬性祝福。</p></div>
+        <button id="btn-claim-scout" ${claimed ? 'disabled' : ''}>${claimed ? '已領取哨站補給' : '領取斥候補給'}</button>
+      </div>`;
+      const bs = bodyEl.querySelector('#btn-claim-scout');
+      if (bs) bs.onclick = () => { ctx.onClaimScoutGift(); this.openTownFacilityModal(action, data, ctx); };
+    } else if (action === 'modal_portal') {
+      titleEl.textContent = '🐎 邊境馬車傳送驛站';
+      bodyEl.innerHTML = banner + `<div class="town-option-grid">
+        <div class="town-option-card">
+          <div><h4>⚔️ 立即出城戰鬥</h4><p>返回當前關卡前線，繼續自動巡邏刷怪掉寶。</p></div>
+          <button id="btn-portal-battle">出城進入戰鬥</button>
+        </div>
+        <div class="town-option-card">
+          <div><h4>🗺️ 開啟世界大地圖</h4><p>選擇要傳送挑戰的章節與第 1–10 小關卡。</p></div>
+          <button id="btn-portal-map">開啟大地圖選關</button>
+        </div>
+      </div>`;
+      bodyEl.querySelector('#btn-portal-battle').onclick = () => { modal.classList.add('hidden'); ctx.onExitTown(); };
+      bodyEl.querySelector('#btn-portal-map').onclick = () => { modal.classList.add('hidden'); ctx.onOpenWorldMap(); };
+    }
+    modal.classList.remove('hidden');
+  }
+
 }
