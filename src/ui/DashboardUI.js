@@ -1027,9 +1027,15 @@ export class DashboardUI {
     }
   }
 
-  renderMinimap({ heroX, heroY, mapW, mapH, obstacles, monsters }) {
+  renderMinimap(data) {
+    if (!data) return;
+    const { mode = 'battle', zoneName, heroX = 0, heroY = 0, heroDir = 'down', heroFlipX = false, mapW = 2800, mapH = 1800, walkableZones, obstacles, facilities, patrols, monsters } = data;
+    const nameEl = document.getElementById('minimap-zone-name');
+    if (nameEl && zoneName) nameEl.textContent = zoneName;
     const coordsEl = document.getElementById('minimap-coords');
     if (coordsEl) coordsEl.textContent = `${Math.round(heroX)}, ${Math.round(heroY)}`;
+    const statusEl = document.getElementById('minimap-status-line');
+
     const canvas = document.getElementById('hud-minimap-canvas');
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
@@ -1037,46 +1043,152 @@ export class DashboardUI {
     const w = canvas.width;
     const h = canvas.height;
     ctx.clearRect(0, 0, w, h);
-    ctx.fillStyle = '#090c14';
+    ctx.fillStyle = mode === 'town' ? '#070b14' : '#090c14';
     ctx.fillRect(0, 0, w, h);
 
-    // 網格線
-    ctx.strokeStyle = 'rgba(200, 155, 60, 0.12)';
+    // 網格底線
+    ctx.strokeStyle = 'rgba(200, 155, 60, 0.10)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(w / 2, 0); ctx.lineTo(w / 2, h);
     ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2);
     ctx.stroke();
 
-    // 障礙物
-    ctx.fillStyle = 'rgba(100, 116, 139, 0.72)';
-    for (const ob of obstacles || []) {
-      const ox = (ob.x / mapW) * w;
-      const oy = (ob.y / mapH) * h;
-      ctx.fillRect(ox - 1.5, oy - 1.5, 3, 3);
+    if (mode === 'town') {
+      // 1. 繪製真實可行走地形輪廓
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.14)';
+      ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
+      for (const z of walkableZones || []) {
+        const zx = (z.x1 / mapW) * w;
+        const zy = (z.y1 / mapH) * h;
+        const zw = ((z.x2 - z.x1) / mapW) * w;
+        const zh = ((z.y2 - z.y1) / mapH) * h;
+        ctx.fillRect(zx, zy, zw, zh);
+        ctx.strokeRect(zx, zy, zw, zh);
+      }
+
+      // 2. 建築底座方塊
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.45)';
+      for (const ob of obstacles || []) {
+        const ox = (ob.x / mapW) * w;
+        const oy = (ob.y / mapH) * h;
+        const or = Math.max(2, (ob.radius / mapW) * w);
+        ctx.fillRect(ox - or, oy - or * 0.7, or * 2, or * 1.4);
+      }
+
+      // 3. 設施與 NPC 分類色點
+      let facCount = 0;
+      for (const f of facilities || []) {
+        if (f.action === 'modal_patrol_guard' || f.action === 'modal_patrol_villager') continue;
+        facCount++;
+        const fx = (f.x / mapW) * w;
+        const fy = (f.y / mapH) * h;
+        let color = '#7dd3fc';
+        let r = 2.6;
+        if (f.action === 'open_waypoint') { color = '#38bdf8'; r = 3.8; }
+        else if (f.action === 'modal_portal') { color = '#c084fc'; r = 3.5; }
+        else if (f.action?.startsWith('gimmick_')) { color = '#f97316'; r = 3.5; }
+        else if (f.action === 'drawer_upgrade' || f.action === 'modal_blacksmith') color = '#fbbf24';
+        else if (f.action === 'modal_alchemy') color = '#4ade80';
+        else if (f.action === 'modal_market') color = '#f472b6';
+        else if (f.action === 'drawer_skills' || f.action === 'modal_trainer') color = '#f87171';
+
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(fx, fy, r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // 4. 動態巡邏衛兵與平民
+      ctx.fillStyle = '#e0f2fe';
+      for (const p of patrols || []) {
+        const px = (p.x / mapW) * w;
+        const py = (p.y / mapH) * h;
+        ctx.fillRect(px - 1.5, py - 1.5, 3, 3);
+      }
+
+      if (statusEl) {
+        statusEl.textContent = `🏠 設施 ${facCount} 處｜🛡️ 巡邏 ${(patrols || []).length} 人｜🟦 可走區`;
+      }
+    } else {
+      // 戰鬥模式：障礙物 + 怪群（普通/精英/首領）
+      ctx.fillStyle = 'rgba(100, 116, 139, 0.65)';
+      for (const ob of obstacles || []) {
+        const ox = (ob.x / mapW) * w;
+        const oy = (ob.y / mapH) * h;
+        ctx.fillRect(ox - 2, oy - 2, 4, 4);
+      }
+
+      let mobCnt = 0;
+      let bossCnt = 0;
+      let eliteCnt = 0;
+      for (const m of monsters || []) {
+        if (m.hp <= 0) continue;
+        mobCnt++;
+        const mx = (m.x / mapW) * w;
+        const my = (m.y / mapH) * h;
+        if (m.isBoss) {
+          bossCnt++;
+          ctx.strokeStyle = 'rgba(249, 115, 22, 0.85)';
+          ctx.lineWidth = 1.5;
+          ctx.beginPath();
+          ctx.arc(mx, my, 6.2, 0, Math.PI * 2);
+          ctx.stroke();
+          ctx.fillStyle = '#fb923c';
+          ctx.beginPath();
+          ctx.arc(mx, my, 3.8, 0, Math.PI * 2);
+          ctx.fill();
+        } else if (m.isElite) {
+          eliteCnt++;
+          ctx.fillStyle = '#c084fc';
+          ctx.beginPath();
+          ctx.moveTo(mx, my - 3.5);
+          ctx.lineTo(mx + 3.5, my);
+          ctx.lineTo(mx, my + 3.5);
+          ctx.lineTo(mx - 3.5, my);
+          ctx.closePath();
+          ctx.fill();
+        } else {
+          ctx.fillStyle = '#ef4444';
+          ctx.beginPath();
+          ctx.arc(mx, my, 2.2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      if (statusEl) {
+        statusEl.textContent = bossCnt > 0
+          ? `👑 首領現身！｜👾 敵人 ${mobCnt} 隻`
+          : `👾 剩餘敵人 ${mobCnt} 隻${eliteCnt > 0 ? `（精英 ${eliteCnt}）` : ''}`;
+      }
     }
 
-    // 怪物與首領
-    for (const m of monsters || []) {
-      if (m.hp <= 0) continue;
-      const mx = (m.x / mapW) * w;
-      const my = (m.y / mapH) * h;
-      ctx.fillStyle = m.isBoss ? '#f97316' : '#ef4444';
-      ctx.beginPath();
-      ctx.arc(mx, my, m.isBoss ? 4.2 : 2.3, 0, Math.PI * 2);
-      ctx.fill();
-    }
-
-    // 玩家中心光點
+    // 主角綠點 + 視野光環 + 朝向箭頭
     const hx = (heroX / mapW) * w;
     const hy = (heroY / mapH) * h;
+    ctx.strokeStyle = 'rgba(74, 222, 128, 0.45)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.arc(hx, hy, 6.5, 0, Math.PI * 2);
+    ctx.stroke();
+
+    let ang = Math.PI / 2;
+    if (heroDir === 'up') ang = -Math.PI / 2;
+    else if (heroDir === 'right') ang = heroFlipX ? Math.PI : 0;
+    else if (heroDir === 'left') ang = Math.PI;
+
+    ctx.save();
+    ctx.translate(hx, hy);
+    ctx.rotate(ang);
     ctx.fillStyle = '#4ade80';
     ctx.beginPath();
-    ctx.arc(hx, hy, 3.6, 0, Math.PI * 2);
+    ctx.moveTo(5.2, 0);
+    ctx.lineTo(-3.2, -3.2);
+    ctx.lineTo(-1.8, 0);
+    ctx.lineTo(-3.2, 3.2);
+    ctx.closePath();
     ctx.fill();
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1;
-    ctx.stroke();
+    ctx.restore();
   }
 
   applyFloatingLogFilter() {

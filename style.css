@@ -1660,7 +1660,7 @@ button { font-family: inherit; }
   max-width: calc((50vw - 420px) / 1.35);
 }
 #diablo-hud.floating-altar {
-  transform: translateX(-50%) scale(1.35);
+  transform: translateX(-50%) scale(1.02);
   transform-origin: bottom center;
 }
 
@@ -1669,7 +1669,7 @@ button { font-family: inherit; }
   #hud-top-center { transform: translateX(-50%) scale(1.18); }
   #hud-top-right { transform: scale(1.36); }
   #hud-bottom-left { transform: scale(1.18); max-width: calc((50vw - 360px) / 1.18); }
-  #diablo-hud.floating-altar { transform: translateX(-50%) scale(1.18); }
+  #diablo-hud.floating-altar { transform: translateX(-50%) scale(0.90); }
 }
 
 @media (max-width: 1120px) {
@@ -1677,7 +1677,7 @@ button { font-family: inherit; }
   #hud-top-center { transform: translateX(-50%) scale(1); }
   #hud-top-right { transform: scale(1.15); }
   #hud-bottom-left { transform: scale(1); max-width: calc(50vw - 260px); }
-  #diablo-hud.floating-altar { transform: translateX(-50%) scale(1); }
+  #diablo-hud.floating-altar { transform: translateX(-50%) scale(0.80); }
 }
 
 /* ========== v40 右上角中文快捷鍵標籤・整體再放大・藥水增益列 ========== */
@@ -2590,4 +2590,16 @@ button { font-family: inherit; }
 .mmo-micro-btn.mmo-waypoint-btn.in-town {
   box-shadow: 0 0 10px rgba(56, 189, 248, 0.55);
   border-color: #38bdf8;
+}
+
+/* === v64 Detailed Minimap Status Line === */
+.minimap-status-line {
+  margin-top: 4px;
+  font-size: 10.5px;
+  color: #cbd5e1;
+  text-align: center;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }

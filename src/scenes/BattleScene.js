@@ -955,12 +955,22 @@ export class BattleScene extends Phaser.Scene {
             bossTimeLeft: this.bossTimeLeft || 0,
           },
           minimap: {
+            mode: 'battle',
+            zoneName: document.getElementById('hud-stage-title')?.textContent || '前線戰場',
             heroX: this.hero.x,
             heroY: this.hero.y,
+            heroDir: this.heroDir,
+            heroFlipX: !!this.heroFlipX,
             mapW: MAP_W,
             mapH: MAP_H,
             obstacles: this.obstacles,
-            monsters: remMobs.map((m) => ({ x: m.sprite.x, y: m.sprite.y, hp: m.hp, isBoss: !!m.isBoss })),
+            monsters: remMobs.map((m) => ({
+              x: m.sprite.x,
+              y: m.sprite.y,
+              hp: m.hp,
+              isBoss: !!m.isBoss,
+              isElite: !!m.isElite,
+            })),
           },
         });
       }

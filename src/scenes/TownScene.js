@@ -467,7 +467,26 @@ export class TownScene extends Phaser.Scene {
     return '🎁';
   }
 
+  resolveSafeNpcPos(nx, ny) {
+    let x = nx;
+    let y = ny;
+    for (const ob of this.obstacles) {
+      const dx = x - ob.x;
+      const dy = y - ob.y;
+      const d = Math.hypot(dx, dy);
+      const minD = ob.radius + 26;
+      if (d < minD) {
+        const ang = d > 1 ? Math.atan2(dy, dx) : Math.PI / 2;
+        x = ob.x + Math.cos(ang) * minD;
+        y = ob.y + Math.sin(ang) * minD;
+      }
+    }
+    return { x, y };
+  }
+
   placeNpc(atlasKey, npc, facilityName, action, actionLabel, parentObj) {
+    const safePos = this.resolveSafeNpcPos(npc.x, npc.y);
+    npc = { ...npc, x: safePos.x, y: safePos.y };
     const sh = this.add.image(npc.x, npc.y + 2, 'fx_glow')
       .setTint(0x000000).setScale(0.95, 0.36).setAlpha(0.48).setDepth(2);
     const nAtlas = this.npcAtlasKey || atlasKey.replace('town_atlas_', 'town_npc_atlas_');
@@ -744,21 +763,27 @@ export class TownScene extends Phaser.Scene {
       this.executeInteraction(this.nearestTarget);
     }
 
-    // 回報小地圖位置
+    // 回報詳細主城小地圖資訊
     if (this.callbacks?.onHudUpdate) {
-      const ratioX = this.hero.x / td.mapWidth;
-      const ratioY = this.hero.y / td.mapHeight;
       this.callbacks.onHudUpdate({
         minimap: {
-          zoneName: td.name,
-          coords: `${Math.round(this.hero.x)}, ${Math.round(this.hero.y)}`,
-          heroX: ratioX,
-          heroY: ratioY,
-          monsters: this.interactables.map((it) => ({
-            x: it.x / td.mapWidth,
-            y: it.y / td.mapHeight,
-            isBoss: it.id === 'beacon_fire' || it.action === 'modal_portal',
+          mode: 'town',
+          zoneName: `🏰 ${td.name}`,
+          heroX: this.hero.x,
+          heroY: this.hero.y,
+          heroDir: this.heroDir,
+          heroFlipX: !!this.heroFlipX,
+          mapW: td.mapWidth,
+          mapH: td.mapHeight,
+          walkableZones: td.walkableZones || [],
+          obstacles: this.obstacles,
+          facilities: this.interactables.map((it) => ({
+            x: it.x,
+            y: it.y,
+            action: it.action,
+            title: it.title,
           })),
+          patrols: this.patrolActors.map((p) => ({ x: p.spr.x, y: p.spr.y })),
         },
       });
     }
@@ -956,7 +981,6 @@ export class TownScene extends Phaser.Scene {
       const d = Math.hypot(dx, dy);
       const minD = ob.radius + 20;
       if (d > 0 && d < minD) {
-        hitWall = true;
         const push = minD - d;
         x += (dx / d) * push;
         y += (dy / d) * push;
@@ -983,7 +1007,7 @@ export class TownScene extends Phaser.Scene {
           const res = this.clampNpcToTerrain(p.spr.x + (dx / dist) * p.speed * dt, p.spr.y + (dy / dist) * p.speed * dt);
           p.spr.x = res.x;
           p.spr.y = res.y;
-          if (res.hitWall) p.wpIdx = (p.wpIdx + 1) % p.waypoints.length;
+          if (res.hitWall && Math.hypot(dx, dy) < 90) p.wpIdx = (p.wpIdx + 1) % p.waypoints.length;
           if (Math.abs(dx) > 4) p.spr.setFlipX(dx < 0);
           if (time >= (p.dustAt || 0)) {
             p.dustAt = time + 260;
