@@ -2578,3 +2578,16 @@ button { font-family: inherit; }
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
 }
+
+/* === v59 Topbar Waypoint Icon === */
+.mmo-micro-btn.mmo-waypoint-btn {
+  border-color: rgba(56, 189, 248, 0.55);
+}
+.mmo-micro-btn.mmo-waypoint-btn.is-disabled {
+  opacity: 0.45;
+  filter: grayscale(0.5);
+}
+.mmo-micro-btn.mmo-waypoint-btn.in-town {
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.55);
+  border-color: #38bdf8;
+}

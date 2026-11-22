@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./style.css?v=59" />
+  <link rel="stylesheet" href="./style.css?v=60" />
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
 </head>
 <body>
@@ -89,7 +89,6 @@
         </div>
         <div id="hud-potion-buffs" class="hud-potion-buffs"></div>
         <button id="btn-town-toggle" class="btn-town-toggle" title="返回主城 / 出城戰鬥 [G]">🏰 返回主城 (G)</button>
-        <button id="btn-town-waypoint" class="btn-town-waypoint hidden" title="主城快速傳送陣 [Y]">🧭 城內傳送陣 (Y)</button>
       </div>
 
       <!-- 中上方：當前鎖定目標／首領血條 (Target Frame) -->
@@ -128,6 +127,7 @@
           <button class="mmo-micro-btn" data-drawer="rebirth" data-tip="深淵輪迴轉生 [V]"><img class="mmo-ui-img" src="./assets/ui/ui_rebirth.png" alt="輪迴" /><span class="mmo-lbl">輪迴(V)</span></button>
           <button id="btn-switch-class" class="mmo-micro-btn" data-tip="切換冒險職業 [C]"><img class="mmo-ui-img" src="./assets/ui/ui_class.png" alt="職業" /><span class="mmo-lbl">職業(C)</span></button>
           <button class="mmo-micro-btn" data-drawer="log" data-tip="完整戰鬥日誌 [L]"><img class="mmo-ui-img" src="./assets/ui/ui_log.png" alt="日誌" /><span class="mmo-lbl">日誌(L)</span></button>
+          <button id="btn-top-waypoint" class="mmo-micro-btn mmo-waypoint-btn" data-tip="主城快速傳送陣 [Y]"><img class="mmo-ui-img" src="./assets/ui/ui_map.png" alt="傳送" /><span class="mmo-lbl">傳送(Y)</span></button>
         </div>
 
         <div class="mmo-minimap-card">
@@ -385,6 +385,6 @@
     </div>
   </div>
 
-  <script type="module" src="./src/main.js?v=59"></script>
+  <script type="module" src="./src/main.js?v=60"></script>
 </body>
 </html>

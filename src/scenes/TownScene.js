@@ -203,14 +203,15 @@ export class TownScene extends Phaser.Scene {
     for (const pt of td.patrols || []) {
       const start = pt.waypoints[0];
       const isGuard = pt.frame.includes('guard');
-      const sh = this.add.image(start.x, start.y + 34, 'fx_glow')
-        .setTint(0x000000).setScale(0.95, 0.34).setAlpha(0.45).setDepth(2);
+      const sh = this.add.image(start.x, start.y + 2, 'fx_glow')
+        .setTint(0x000000).setScale(0.95, 0.34).setAlpha(0.48).setDepth(2);
       const hasNpcAnim = this.anims.exists(`${pt.frame}_idle`);
-      const spr = hasNpcAnim
-        ? this.add.sprite(start.x, start.y, npcAtlasKey, `${pt.frame}_idle_0`).setScale(pt.scale).setDepth(start.y)
-        : this.add.image(start.x, start.y, td.atlasKey, pt.frame).setScale(pt.scale).setDepth(start.y);
+      const spr = (hasNpcAnim
+        ? this.add.sprite(start.x, start.y, npcAtlasKey, `${pt.frame}_idle_0`)
+        : this.add.image(start.x, start.y, td.atlasKey, pt.frame))
+        .setOrigin(0.5, 0.92).setScale(pt.scale).setDepth(start.y);
       if (hasNpcAnim) spr.play(`${pt.frame}_idle`);
-      const plate = this.addNameplate(start.x, start.y - 68, `${isGuard ? '🛡️' : '💬'} ${pt.name}`, isGuard ? '#93c5fd' : '#bbf7d0');
+      const plate = this.addNameplate(start.x, start.y - 108, `${isGuard ? '🛡️' : '💬'} ${pt.name}`, isGuard ? '#93c5fd' : '#bbf7d0');
       const interactObj = {
         id: `patrol_${pt.name}_${Math.random().toString(36).slice(2, 6)}`,
         x: start.x,
@@ -249,6 +250,37 @@ export class TownScene extends Phaser.Scene {
       .setDepth(td.spawn.y);
 
     this.cameras.main.startFollow(this.hero, true, 0.14, 0.14);
+
+    // 9.2 主城實體「星門快速傳送陣」魔法陣地標
+    const wpX = td.spawn.x + 165;
+    const wpY = td.spawn.y - 24;
+    const wpOuter = this.add.image(wpX, wpY, 'fx_glow')
+      .setTint(0x38bdf8).setScale(1.75, 0.72).setAlpha(0.45).setDepth(4);
+    const wpInner = this.add.image(wpX, wpY, 'fx_glow')
+      .setTint(0xe0f2fe).setScale(0.95, 0.42).setAlpha(0.65).setDepth(4);
+    this.tweens.add({ targets: wpOuter, scaleX: 1.95, scaleY: 0.82, alpha: 0.72, duration: 1200, yoyo: true, repeat: -1 });
+    this.tweens.add({ targets: wpInner, angle: 360, duration: 4800, repeat: -1 });
+    this.time.addEvent({
+      delay: 520,
+      loop: true,
+      callback: () => {
+        if (!this.scene.isActive('TownScene')) return;
+        const p = this.add.image(wpX + Phaser.Math.Between(-28, 28), wpY + Phaser.Math.Between(-10, 10), 'fx_glow')
+          .setTint(0x7dd3fc).setScale(0.14).setAlpha(0.8).setDepth(wpY + 2);
+        this.tweens.add({ targets: p, y: p.y - 44, alpha: 0, scale: 0.04, duration: 850, onComplete: () => p.destroy() });
+      },
+    });
+    this.addNameplate(wpX, wpY - 38, '🧭 主城傳送陣', '#38bdf8');
+    this.interactables.push({
+      id: 'town_waypoint_pad',
+      x: wpX,
+      y: wpY,
+      radius: 115,
+      title: '🧭 主城星門傳送陣',
+      sub: '點擊或按 [F] 開啟城內瞬移／跨章傳送',
+      action: 'open_waypoint',
+      data: { chapterIdx: td.chapterIdx },
+    });
 
     // 9.5 地面選取光環與 NPC 隨機閒聊氣泡
     this.hoverRing = this.add.image(0, 0, 'fx_glow')
@@ -436,13 +468,14 @@ export class TownScene extends Phaser.Scene {
   }
 
   placeNpc(atlasKey, npc, facilityName, action, actionLabel, parentObj) {
-    const sh = this.add.image(npc.x, npc.y + 36, 'fx_glow')
-      .setTint(0x000000).setScale(0.95, 0.36).setAlpha(0.45).setDepth(2);
+    const sh = this.add.image(npc.x, npc.y + 2, 'fx_glow')
+      .setTint(0x000000).setScale(0.95, 0.36).setAlpha(0.48).setDepth(2);
     const nAtlas = this.npcAtlasKey || atlasKey.replace('atlas_town_', 'atlas_town_npc_');
     const hasAnim = this.anims.exists(`${npc.frame}_idle`);
-    const spr = hasAnim
-      ? this.add.sprite(npc.x, npc.y, nAtlas, `${npc.frame}_idle_0`).setScale(npc.scale || 0.62).setDepth(npc.y)
-      : this.add.image(npc.x, npc.y, atlasKey, npc.frame).setScale(npc.scale || 0.62).setDepth(npc.y);
+    const spr = (hasAnim
+      ? this.add.sprite(npc.x, npc.y, nAtlas, `${npc.frame}_idle_0`)
+      : this.add.image(npc.x, npc.y, atlasKey, npc.frame))
+      .setOrigin(0.5, 0.92).setScale(npc.scale || 0.62).setDepth(npc.y);
     if (hasAnim) {
       spr.play({ key: `${npc.frame}_idle`, startFrame: Math.floor(Math.random() * 4) });
     } else {
@@ -456,14 +489,14 @@ export class TownScene extends Phaser.Scene {
       });
     }
     this.attachNpcFacilityFx(npc.x, npc.y, action, spr);
-    const plate = this.addNameplate(npc.x, npc.y - 72, `${npc.title}・${npc.name}`, '#7dd3fc');
+    const plate = this.addNameplate(npc.x, npc.y - 112, `${npc.title}・${npc.name}`, '#7dd3fc');
     const iconStr = this.getActionIcon(action);
-    const icon = this.add.text(npc.x, npc.y - 98, iconStr, {
+    const icon = this.add.text(npc.x, npc.y - 138, iconStr, {
       fontSize: '18px',
     }).setOrigin(0.5, 1).setDepth(4550);
     this.tweens.add({
       targets: icon,
-      y: npc.y - 106,
+      y: npc.y - 146,
       duration: 900 + Math.random() * 300,
       yoyo: true,
       repeat: -1,
@@ -803,7 +836,7 @@ export class TownScene extends Phaser.Scene {
         this.anims.create({
           key: `${base}_walk`,
           frames: [0, 1, 2, 3].map((i) => ({ key: npcAtlasKey, frame: `${base}_walk_${i}` })),
-          frameRate: 9,
+          frameRate: 11,
           repeat: -1,
         });
       }
@@ -895,6 +928,41 @@ export class TownScene extends Phaser.Scene {
     }
   }
 
+  clampNpcToTerrain(nx, ny) {
+    const td = this.townData;
+    let x = Phaser.Math.Clamp(nx, 180, td.mapWidth - 180);
+    let y = Phaser.Math.Clamp(ny, 220, td.mapHeight - 160);
+    let hitWall = false;
+    if (td.walkableZones && td.walkableZones.length > 0) {
+      const inside = td.walkableZones.some((z) => x >= z.x1 && x <= z.x2 && y >= z.y1 && y <= z.y2);
+      if (!inside) {
+        hitWall = true;
+        let bx = x, by = y, bd = Infinity;
+        for (const z of td.walkableZones) {
+          const cx = Phaser.Math.Clamp(x, z.x1, z.x2);
+          const cy = Phaser.Math.Clamp(y, z.y1, z.y2);
+          const d = Math.hypot(x - cx, y - cy);
+          if (d < bd) { bd = d; bx = cx; by = cy; }
+        }
+        x = bx;
+        y = by;
+      }
+    }
+    for (const ob of this.obstacles) {
+      const dx = x - ob.x;
+      const dy = y - ob.y;
+      const d = Math.hypot(dx, dy);
+      const minD = ob.radius + 20;
+      if (d > 0 && d < minD) {
+        hitWall = true;
+        const push = minD - d;
+        x += (dx / d) * push;
+        y += (dy / d) * push;
+      }
+    }
+    return { x, y, hitWall };
+  }
+
   updatePatrols(dt, time = 0) {
     for (const p of this.patrolActors) {
       const distHero = this.hero ? Phaser.Math.Distance.Between(this.hero.x, this.hero.y, p.spr.x, p.spr.y) : 999;
@@ -906,16 +974,18 @@ export class TownScene extends Phaser.Scene {
         const dx = target.x - p.spr.x;
         const dy = target.y - p.spr.y;
         const dist = Math.hypot(dx, dy);
-        if (dist < 10) {
+        if (dist < 12) {
           p.wpIdx = (p.wpIdx + 1) % p.waypoints.length;
         } else {
           isMoving = true;
-          p.spr.x += (dx / dist) * p.speed * dt;
-          p.spr.y += (dy / dist) * p.speed * dt;
+          const res = this.clampNpcToTerrain(p.spr.x + (dx / dist) * p.speed * dt, p.spr.y + (dy / dist) * p.speed * dt);
+          p.spr.x = res.x;
+          p.spr.y = res.y;
+          if (res.hitWall) p.wpIdx = (p.wpIdx + 1) % p.waypoints.length;
           if (Math.abs(dx) > 4) p.spr.setFlipX(dx < 0);
           if (time >= (p.dustAt || 0)) {
-            p.dustAt = time + 270;
-            this.spawnFootstepDust(p.spr.x, p.spr.y);
+            p.dustAt = time + 260;
+            this.spawnFootstepDust(p.spr.x, p.spr.y - 30);
           }
         }
       }
@@ -923,16 +993,18 @@ export class TownScene extends Phaser.Scene {
         const targetAnim = `${p.frame}_${isMoving ? 'walk' : 'idle'}`;
         if (p.spr.anims.currentAnim?.key !== targetAnim) p.spr.play(targetAnim, true);
       }
+      p.spr.setRotation(isMoving ? Math.sin(time * 0.014) * 0.045 : 0);
       p.spr.setDepth(p.spr.y);
-      p.shadow.setPosition(p.spr.x, p.spr.y + 34);
-      if (p.plate) p.plate.setPosition(p.spr.x, p.spr.y - 68);
+      p.shadow.setPosition(p.spr.x, p.spr.y + 2);
+      p.shadow.setScale(isMoving ? 0.95 + Math.sin(time * 0.014) * 0.08 : 0.95, 0.34);
+      if (p.plate) p.plate.setPosition(p.spr.x, p.spr.y - 108);
       if (p.interactObj) {
         p.interactObj.x = p.spr.x;
         p.interactObj.y = p.spr.y;
       }
     }
 
-    // 設施 NPC 小範圍踱步與靠近時自動面向玩家
+    // 設施 NPC 小範圍踱步（貼合地形與障礙物，靠近自動面向玩家）
     for (const r of this.roamNpcs) {
       const distHero = this.hero ? Phaser.Math.Distance.Between(this.hero.x, this.hero.y, r.spr.x, r.spr.y) : 999;
       let isMoving = false;
@@ -944,17 +1016,23 @@ export class TownScene extends Phaser.Scene {
         const dist = Math.hypot(dx, dy);
         if (dist < 6) {
           r.waitUntil = time + 2200 + Math.random() * 2400;
-          r.targetX = r.homeX + Phaser.Math.Between(-30, 30);
+          r.targetX = r.homeX + Phaser.Math.Between(-28, 28);
           r.targetY = r.homeY + Phaser.Math.Between(-14, 14);
         } else {
           isMoving = true;
-          const spd = 28;
-          r.spr.x += (dx / dist) * spd * dt;
-          r.spr.y += (dy / dist) * spd * dt;
+          const spd = 30;
+          const res = this.clampNpcToTerrain(r.spr.x + (dx / dist) * spd * dt, r.spr.y + (dy / dist) * spd * dt);
+          r.spr.x = res.x;
+          r.spr.y = res.y;
+          if (res.hitWall) {
+            r.waitUntil = time + 1200;
+            r.targetX = r.homeX;
+            r.targetY = r.homeY;
+          }
           if (Math.abs(dx) > 2) r.spr.setFlipX(dx < 0);
           if (time >= (r.dustAt || 0)) {
-            r.dustAt = time + 340;
-            this.spawnFootstepDust(r.spr.x, r.spr.y);
+            r.dustAt = time + 320;
+            this.spawnFootstepDust(r.spr.x, r.spr.y - 30);
           }
         }
       }
@@ -962,12 +1040,15 @@ export class TownScene extends Phaser.Scene {
         const targetAnim = `${r.frame}_${isMoving ? 'walk' : 'idle'}`;
         if (r.spr.anims.currentAnim?.key !== targetAnim) r.spr.play(targetAnim, true);
       }
+      r.spr.setRotation(isMoving ? Math.sin(time * 0.013) * 0.04 : 0);
       r.spr.setDepth(r.spr.y);
-      r.shadow.setPosition(r.spr.x, r.spr.y + 36);
-      r.plate.setPosition(r.spr.x, r.spr.y - 72);
-      r.icon.setX(r.spr.x);
-      r.interactObj.x = r.spr.x;
-      r.interactObj.y = r.spr.y;
+      r.shadow.setPosition(r.spr.x, r.spr.y + 2);
+      if (r.plate) r.plate.setPosition(r.spr.x, r.spr.y - 112);
+      if (r.icon) r.icon.x = r.spr.x;
+      if (r.interactObj) {
+        r.interactObj.x = r.spr.x;
+        r.interactObj.y = r.spr.y;
+      }
     }
   }
 

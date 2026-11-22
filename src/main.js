@@ -595,7 +595,7 @@ function enterTown(chapterIdx = 0, instant = false) {
     },
     onHudUpdate: (data) => ui.renderMinimap(data.minimap),
     onTownAction: (action, data) => {
-      if (false) {}
+      if (action === 'open_waypoint') openTownWaypointUI();
       else if (action === 'gimmick_beacon') {
         if (!gameState.potionBuffs) gameState.potionBuffs = {};
         gameState.potionBuffs.beaconUntil = Date.now() + 300000;
@@ -1218,7 +1218,8 @@ function enterTown(chapterIdx = 0, instant = false) {
     btn.textContent = '⚔️ 出城戰鬥 (G)';
     btn.classList.add('in-town');
   }
-  document.getElementById('btn-town-waypoint')?.classList.remove('hidden');
+  const wpBtn = document.getElementById('btn-top-waypoint');
+    if (wpBtn) { wpBtn.classList.add('in-town'); wpBtn.classList.remove('is-disabled'); }
     const townNames = ["曙光哨站堡壘", "地下菌菇黑市", "守夜人聖骨禮拜堂", "黑曜石熔爐要塞", "緋紅魔獄王庭", "極光冰晶堡", "翠玉樹冠水寨", "蒼穹電弧浮空城", "聖血薔薇修道院", "永恆星辰聖域"];
     const townTitle = `第 ${chapterIdx + 1} 章主城「${townNames[chapterIdx] || townNames[0]}」`;
     ui.addLog(`🏰 已傳送至${townTitle}（安全區）`, 'system');
@@ -1253,7 +1254,8 @@ function exitTownToBattle(forceRespawn = false) {
     btn.textContent = '🏰 返回主城 (G)';
     btn.classList.remove('in-town');
   }
-  document.getElementById('btn-town-waypoint')?.classList.add('hidden');
+  const wpBtn = document.getElementById('btn-top-waypoint');
+  if (wpBtn) { wpBtn.classList.remove('in-town'); wpBtn.classList.add('is-disabled'); }
   ui.addLog('⚔️ 已離開主城重返前線戰鬥！', 'system');
 }
 
@@ -1263,7 +1265,10 @@ document.getElementById('btn-town-toggle')?.addEventListener('click', () => {
 });
 
 function openTownWaypointUI() {
-  if (!isInTown) return;
+  if (!isInTown) {
+    ui.addLog('🧭 快速傳送陣僅限於主城內使用，請先按 [G] 返回主城！', 'system');
+    return;
+  }
   const chIdx = townScene?.townData?.chapterIdx ?? Math.min(9, getChapterIdx(gameState.stage));
   ui.openTownFacilityModal('modal_waypoint', { chapterIdx: chIdx }, {
     getWaypoints: () => townScene?.getWaypointList?.() || [],
@@ -1287,7 +1292,7 @@ function openTownWaypointUI() {
     },
   });
 }
-document.getElementById('btn-town-waypoint')?.addEventListener('click', openTownWaypointUI);
+document.getElementById('btn-top-waypoint')?.addEventListener('click', openTownWaypointUI);
 
 // --- 全螢幕暗黑歡迎頁 ---
 const welcomeScreen = document.getElementById('welcome-screen');
