@@ -1,5 +1,5 @@
 import { CLASSES } from './data/classes.js';
-import { getStageLabel, getSubStage } from './data/monsters.js';
+import { getStageLabel, getSubStage, getChapterIdx } from './data/monsters.js';
 import { WARRIOR_SKILLS } from './data/warriorSkills.js';
 import { RANGER_SKILLS } from './data/rangerSkills.js';
 import { MAGE_SKILLS } from './data/mageSkills.js';
