@@ -562,7 +562,7 @@ function enterTown(chapterIdx = 0, instant = false) {
     const ovEl = document.getElementById('town-splash-overlay');
     if (ovEl) ovEl.onclick = () => ui.hideTownSplash();
 
-    phaserGame.scene.sleep('BattleScene');
+    if (phaserGame.scene.isActive('BattleScene')) phaserGame.scene.sleep('BattleScene');
   const townCallbacks = {
     getState: () => gameState,
     getComputedStats: () => computedStats,

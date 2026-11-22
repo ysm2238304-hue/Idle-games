@@ -62,6 +62,7 @@ function resolveItemIcon(item) {
 export class DashboardUI {
   constructor(handlers) {
     this.handlers = handlers;
+    this.getState = () => this.handlers?.getState?.() || {};
     this.activeDrawer = null;
     this.selectedItemUid = null;
     this.activeSkillTreeTab = null;

@@ -69,6 +69,12 @@ export class TownScene extends Phaser.Scene {
     if (!this.textures.exists(td.atlasKey)) {
       this.load.atlas(td.atlasKey, td.atlasPng, td.atlasJson);
     }
+    const npcAtlasKey = td.atlasKey.replace('atlas_town_', 'atlas_town_npc_');
+    const npcPng = td.atlasPng.replace('atlas_town_', 'atlas_town_npc_');
+    const npcJson = td.atlasJson.replace('atlas_town_', 'atlas_town_npc_');
+    if (!this.textures.exists(npcAtlasKey)) {
+      this.load.atlas(npcAtlasKey, npcPng, npcJson);
+    }
     this.load.off('progress');
     this.load.on('progress', (val) => {
       this.callbacks?.onTownLoadProgress?.(val);
@@ -84,6 +90,9 @@ export class TownScene extends Phaser.Scene {
     this.moveTarget = null;
     this.nearestTarget = null;
 
+    const npcAtlasKey = td.atlasKey.replace('atlas_town_', 'atlas_town_npc_');
+    this.npcAtlasKey = npcAtlasKey;
+    this.registerNpcAnims(npcAtlasKey);
     this.physics?.world?.setBounds(0, 0, td.mapWidth, td.mapHeight);
     this.cameras.main.setBounds(0, 0, td.mapWidth, td.mapHeight);
 
@@ -195,9 +204,11 @@ export class TownScene extends Phaser.Scene {
       const isGuard = pt.frame.includes('guard');
       const sh = this.add.image(start.x, start.y + 34, 'fx_glow')
         .setTint(0x000000).setScale(0.95, 0.34).setAlpha(0.45).setDepth(2);
-      const spr = this.add.image(start.x, start.y, td.atlasKey, pt.frame)
-        .setScale(pt.scale)
-        .setDepth(start.y);
+      const hasNpcAnim = this.anims.exists(`${pt.frame}_idle`);
+      const spr = hasNpcAnim
+        ? this.add.sprite(start.x, start.y, npcAtlasKey, `${pt.frame}_idle_0`).setScale(pt.scale).setDepth(start.y)
+        : this.add.image(start.x, start.y, td.atlasKey, pt.frame).setScale(pt.scale).setDepth(start.y);
+      if (hasNpcAnim) spr.play(`${pt.frame}_idle`);
       const plate = this.addNameplate(start.x, start.y - 68, `${isGuard ? '🛡️' : '💬'} ${pt.name}`, isGuard ? '#93c5fd' : '#bbf7d0');
       const interactObj = {
         id: `patrol_${pt.name}_${Math.random().toString(36).slice(2, 6)}`,
@@ -212,6 +223,9 @@ export class TownScene extends Phaser.Scene {
       this.interactables.push(interactObj);
       this.patrolActors.push({
         spr,
+        frame: pt.frame,
+        hasAnim: hasNpcAnim,
+        dustAt: 0,
         shadow: sh,
         plate,
         interactObj,
@@ -423,17 +437,24 @@ export class TownScene extends Phaser.Scene {
   placeNpc(atlasKey, npc, facilityName, action, actionLabel, parentObj) {
     const sh = this.add.image(npc.x, npc.y + 36, 'fx_glow')
       .setTint(0x000000).setScale(0.95, 0.36).setAlpha(0.45).setDepth(2);
-    const spr = this.add.image(npc.x, npc.y, atlasKey, npc.frame)
-      .setScale(npc.scale || 0.62)
-      .setDepth(npc.y);
-    this.tweens.add({
-      targets: spr,
-      scaleY: (npc.scale || 0.62) * 1.03,
-      duration: 1300 + Math.random() * 400,
-      yoyo: true,
-      repeat: -1,
-      ease: 'Sine.easeInOut',
-    });
+    const nAtlas = this.npcAtlasKey || atlasKey.replace('atlas_town_', 'atlas_town_npc_');
+    const hasAnim = this.anims.exists(`${npc.frame}_idle`);
+    const spr = hasAnim
+      ? this.add.sprite(npc.x, npc.y, nAtlas, `${npc.frame}_idle_0`).setScale(npc.scale || 0.62).setDepth(npc.y)
+      : this.add.image(npc.x, npc.y, atlasKey, npc.frame).setScale(npc.scale || 0.62).setDepth(npc.y);
+    if (hasAnim) {
+      spr.play({ key: `${npc.frame}_idle`, startFrame: Math.floor(Math.random() * 4) });
+    } else {
+      this.tweens.add({
+        targets: spr,
+        scaleY: (npc.scale || 0.62) * 1.03,
+        duration: 1300 + Math.random() * 400,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
+    }
+    this.attachNpcFacilityFx(npc.x, npc.y, action, spr);
     const plate = this.addNameplate(npc.x, npc.y - 72, `${npc.title}・${npc.name}`, '#7dd3fc');
     const iconStr = this.getActionIcon(action);
     const icon = this.add.text(npc.x, npc.y - 98, iconStr, {
@@ -462,6 +483,9 @@ export class TownScene extends Phaser.Scene {
     if (!action.startsWith('gimmick_')) {
       this.roamNpcs.push({
         spr,
+        frame: npc.frame,
+        hasAnim,
+        dustAt: 0,
         shadow: sh,
         plate,
         icon,
@@ -669,9 +693,120 @@ export class TownScene extends Phaser.Scene {
     }
   }
 
+  registerNpcAnims(npcAtlasKey) {
+    if (!this.textures.exists(npcAtlasKey)) return;
+    const frames = this.textures.get(npcAtlasKey).getFrameNames();
+    for (const fn of frames) {
+      if (!fn.endsWith('_idle_0')) continue;
+      const base = fn.slice(0, -'_idle_0'.length);
+      if (!this.anims.exists(`${base}_idle`)) {
+        this.anims.create({
+          key: `${base}_idle`,
+          frames: [0, 1, 2, 3].map((i) => ({ key: npcAtlasKey, frame: `${base}_idle_${i}` })),
+          frameRate: 5,
+          repeat: -1,
+        });
+      }
+      if (!this.anims.exists(`${base}_walk`)) {
+        this.anims.create({
+          key: `${base}_walk`,
+          frames: [0, 1, 2, 3].map((i) => ({ key: npcAtlasKey, frame: `${base}_walk_${i}` })),
+          frameRate: 9,
+          repeat: -1,
+        });
+      }
+    }
+  }
+
+  spawnFootstepDust(x, y) {
+    const dust = this.add.image(x + Phaser.Math.Between(-6, 6), y + 32, 'fx_glow')
+      .setTint(0xd6d3d1).setScale(0.22, 0.12).setAlpha(0.32).setDepth(3);
+    this.tweens.add({
+      targets: dust,
+      y: y + 24,
+      scaleX: 0.42,
+      scaleY: 0.22,
+      alpha: 0,
+      duration: 380,
+      onComplete: () => dust.destroy(),
+    });
+  }
+
+  attachNpcFacilityFx(x, y, action, spr) {
+    if (action === 'drawer_upgrade' || action === 'modal_blacksmith') {
+      this.time.addEvent({
+        delay: 780,
+        loop: true,
+        callback: () => {
+          if (!this.scene.isActive('TownScene')) return;
+          for (let i = 0; i < 3; i++) {
+            const spk = this.add.image(spr.x + Phaser.Math.Between(-12, 12), spr.y - 6, 'fx_glow')
+              .setTint(i % 2 === 0 ? 0xfb923c : 0xfef08a).setScale(0.14).setAlpha(0.85).setDepth(spr.y + 4);
+            this.tweens.add({
+              targets: spk,
+              x: spk.x + Phaser.Math.Between(-24, 24),
+              y: spk.y - Phaser.Math.Between(18, 38),
+              alpha: 0,
+              scale: 0.04,
+              duration: 520,
+              onComplete: () => spk.destroy(),
+            });
+          }
+        },
+      });
+    } else if (action === 'modal_alchemy') {
+      this.time.addEvent({
+        delay: 620,
+        loop: true,
+        callback: () => {
+          if (!this.scene.isActive('TownScene')) return;
+          const bub = this.add.image(spr.x + Phaser.Math.Between(-14, 14), spr.y - 10, 'fx_glow')
+            .setTint(Math.random() < 0.5 ? 0xc084fc : 0x4ade80).setScale(0.16).setAlpha(0.7).setDepth(spr.y + 4);
+          this.tweens.add({
+            targets: bub,
+            y: bub.y - 36,
+            scale: 0.06,
+            alpha: 0,
+            duration: 900,
+            onComplete: () => bub.destroy(),
+          });
+        },
+      });
+    } else if (action === 'drawer_skills' || action === 'modal_trainer') {
+      this.time.addEvent({
+        delay: 2400,
+        loop: true,
+        callback: () => {
+          if (!this.scene.isActive('TownScene')) return;
+          const arc = this.add.image(spr.x + (spr.flipX ? -18 : 18), spr.y - 8, 'fx_glow')
+            .setTint(0xfacc15).setScale(0.55, 0.14).setAlpha(0.75).setDepth(spr.y + 5);
+          this.tweens.add({
+            targets: arc,
+            scaleX: 0.85,
+            alpha: 0,
+            duration: 280,
+            onComplete: () => arc.destroy(),
+          });
+        },
+      });
+    } else if (action === 'modal_portal' || action === 'drawer_rebirth' || action.startsWith('modal_')) {
+      const aura = this.add.image(x, y + 26, 'fx_glow')
+        .setTint(action === 'modal_portal' ? 0x38bdf8 : 0xe879f9).setScale(0.95, 0.36).setAlpha(0.24).setDepth(2);
+      this.tweens.add({
+        targets: aura,
+        alpha: 0.42,
+        scaleX: 1.12,
+        duration: 1400,
+        yoyo: true,
+        repeat: -1,
+      });
+    }
+  }
+
   updatePatrols(dt, time = 0) {
     for (const p of this.patrolActors) {
       const distHero = this.hero ? Phaser.Math.Distance.Between(this.hero.x, this.hero.y, p.spr.x, p.spr.y) : 999;
+      let isMoving = false;
       if (distHero < 145 && this.hero) {
         p.spr.setFlipX(this.hero.x < p.spr.x);
       } else {
@@ -682,10 +817,19 @@ export class TownScene extends Phaser.Scene {
         if (dist < 10) {
           p.wpIdx = (p.wpIdx + 1) % p.waypoints.length;
         } else {
+          isMoving = true;
           p.spr.x += (dx / dist) * p.speed * dt;
           p.spr.y += (dy / dist) * p.speed * dt;
           if (Math.abs(dx) > 4) p.spr.setFlipX(dx < 0);
+          if (time >= (p.dustAt || 0)) {
+            p.dustAt = time + 270;
+            this.spawnFootstepDust(p.spr.x, p.spr.y);
+          }
         }
+      }
+      if (p.hasAnim && p.spr.anims) {
+        const targetAnim = `${p.frame}_${isMoving ? 'walk' : 'idle'}`;
+        if (p.spr.anims.currentAnim?.key !== targetAnim) p.spr.play(targetAnim, true);
       }
       p.spr.setDepth(p.spr.y);
       p.shadow.setPosition(p.spr.x, p.spr.y + 34);
@@ -699,6 +843,7 @@ export class TownScene extends Phaser.Scene {
     // 設施 NPC 小範圍踱步與靠近時自動面向玩家
     for (const r of this.roamNpcs) {
       const distHero = this.hero ? Phaser.Math.Distance.Between(this.hero.x, this.hero.y, r.spr.x, r.spr.y) : 999;
+      let isMoving = false;
       if (distHero < 195 && this.hero) {
         r.spr.setFlipX(this.hero.x < r.spr.x);
       } else if (time >= r.waitUntil) {
@@ -710,11 +855,20 @@ export class TownScene extends Phaser.Scene {
           r.targetX = r.homeX + Phaser.Math.Between(-30, 30);
           r.targetY = r.homeY + Phaser.Math.Between(-14, 14);
         } else {
+          isMoving = true;
           const spd = 28;
           r.spr.x += (dx / dist) * spd * dt;
           r.spr.y += (dy / dist) * spd * dt;
           if (Math.abs(dx) > 2) r.spr.setFlipX(dx < 0);
+          if (time >= (r.dustAt || 0)) {
+            r.dustAt = time + 340;
+            this.spawnFootstepDust(r.spr.x, r.spr.y);
+          }
         }
+      }
+      if (r.hasAnim && r.spr.anims) {
+        const targetAnim = `${r.frame}_${isMoving ? 'walk' : 'idle'}`;
+        if (r.spr.anims.currentAnim?.key !== targetAnim) r.spr.play(targetAnim, true);
       }
       r.spr.setDepth(r.spr.y);
       r.shadow.setPosition(r.spr.x, r.spr.y + 36);
