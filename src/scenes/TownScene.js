@@ -93,6 +93,7 @@ export class TownScene extends Phaser.Scene {
     const npcAtlasKey = td.atlasKey.replace('atlas_town_', 'atlas_town_npc_');
     this.npcAtlasKey = npcAtlasKey;
     this.registerNpcAnims(npcAtlasKey);
+    this.registerHeroAnims(this.callbacks?.getState?.()?.classId || 'warrior');
     this.physics?.world?.setBounds(0, 0, td.mapWidth, td.mapHeight);
     this.cameras.main.setBounds(0, 0, td.mapWidth, td.mapHeight);
 
@@ -528,13 +529,55 @@ export class TownScene extends Phaser.Scene {
       : 'mf';
   }
 
+  registerHeroAnims(cid) {
+    const map = {
+      warrior: { prefix: 'w', tex: 'wf', walkFps: 15, atkFps: 15 },
+      ranger:  { prefix: 'r', tex: 'rf', walkFps: 16, atkFps: 16 },
+      mage:    { prefix: 'm', tex: 'mf', walkFps: 14, atkFps: 15 },
+      paladin: { prefix: 'p', tex: 'pf', walkFps: 14, atkFps: 15 },
+      necro:   { prefix: 'n', tex: 'nf', walkFps: 14, atkFps: 15 },
+      assassin:{ prefix: 'a', tex: 'af', walkFps: 17, atkFps: 18 },
+    };
+    const def = map[cid];
+    const atlasKey = `atlas_${cid}`;
+    if (!def || !this.textures.exists(atlasKey)) return;
+    ['down', 'up', 'right'].forEach((d) => {
+      if (!this.anims.exists(`${def.prefix}_${d}_walk`)) {
+        this.anims.create({
+          key: `${def.prefix}_${d}_walk`,
+          frames: [0, 1, 2, 3, 4, 5, 6, 7].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_walk_${i}` })),
+          frameRate: def.walkFps,
+          repeat: -1,
+        });
+      }
+      if (!this.anims.exists(`${def.prefix}_${d}_idle`)) {
+        this.anims.create({
+          key: `${def.prefix}_${d}_idle`,
+          frames: [0, 1, 2, 3].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_idle_${i}` })),
+          frameRate: 5,
+          repeat: -1,
+        });
+      }
+      if (!this.anims.exists(`${def.prefix}_${d}_atk`)) {
+        this.anims.create({
+          key: `${def.prefix}_${d}_atk`,
+          frames: [0, 1, 2, 3].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_atk_${i}` })),
+          frameRate: def.atkFps,
+          repeat: 0,
+        });
+      }
+    });
+  }
+
   syncHeroAppearance() {
     if (!this.hero) return;
     const cid = this.callbacks?.getState?.()?.classId || 'warrior';
     const atlasKey = `atlas_${cid}`;
     const fp = this.getHeroFramePrefix(cid);
+    this.registerHeroAnims(cid);
+    const dir = this.heroDir === 'left' ? 'right' : (this.heroDir || 'down');
     if (this.hero.texture.key !== atlasKey && this.textures.exists(atlasKey)) {
-      this.hero.setTexture(atlasKey, `${fp}_${this.heroDir}_walk_0`);
+      this.hero.setTexture(atlasKey, `${fp}_${dir}_idle_0`);
     }
   }
 
@@ -646,6 +689,7 @@ export class TownScene extends Phaser.Scene {
 
   updateHeroAnim(vx, vy, time) {
     const cid = this.callbacks?.getState?.()?.classId || 'warrior';
+    this.registerHeroAnims(cid);
     const prefix = this.getHeroPrefix(cid);
     const spd = Math.hypot(vx, vy);
 
@@ -653,43 +697,49 @@ export class TownScene extends Phaser.Scene {
       this.heroIsMoving = true;
       this.heroStopAt = time + 120;
       if (Math.abs(vx) > Math.abs(vy) * 1.1) {
-        this.heroDir = vx < 0 ? 'left' : 'right';
+        this.heroDir = 'right';
+        this.heroFlipX = vx < 0;
       } else {
         this.heroDir = vy < 0 ? 'up' : 'down';
+        this.heroFlipX = false;
       }
     } else if (spd < 6 && time >= (this.heroStopAt || 0)) {
       this.heroIsMoving = false;
     }
 
+    const dir = this.heroDir === 'left' ? 'right' : (this.heroDir || 'down');
+    this.hero.setFlipX(!!this.heroFlipX);
+
     if (time < this.heroAttackAnimUntil) {
-      const atkKey = `${prefix}_${this.heroDir}_atk`;
+      const atkKey = `${prefix}_${dir}_atk`;
       if (this.anims.exists(atkKey) && this.hero.anims.currentAnim?.key !== atkKey) {
         this.hero.play(atkKey, true);
       }
       return;
     }
 
-    const walkKey = `${prefix}_${this.heroDir}_walk`;
+    const walkKey = `${prefix}_${dir}_walk`;
+    const idleKey = `${prefix}_${dir}_idle`;
     if (this.heroIsMoving) {
       if (this.anims.exists(walkKey)) {
         if (this.hero.anims.currentAnim?.key !== walkKey) this.hero.play(walkKey, true);
         else if (this.hero.anims.isPaused) this.hero.anims.resume();
+        this.hero.anims.timeScale = Phaser.Math.Clamp(spd / 160, 0.9, 1.35);
       }
-      const bob = Math.sin(time * 0.02) * 0.028;
-      this.hero.setScale(0.56 * (1 - bob * 0.5), 0.56 * (1 + bob));
+      this.hero.setScale(0.56, 0.56);
       if (time >= (this.heroStepDustAt || 0)) {
-        this.heroStepDustAt = time + 280;
+        this.heroStepDustAt = time + 260;
         const d = this.add.image(this.hero.x, this.hero.y + 38, 'fx_glow')
           .setTint(0x94a3b8).setScale(0.22).setAlpha(0.32).setDepth(4);
         this.tweens.add({ targets: d, y: d.y - 8, scale: 0.05, alpha: 0, duration: 280, onComplete: () => d.destroy() });
       }
     } else {
-      if (this.anims.exists(walkKey)) {
-        if (this.hero.anims.currentAnim?.key !== walkKey) this.hero.play(walkKey, true);
-        this.hero.anims.pause();
+      if (this.anims.exists(idleKey)) {
+        if (this.hero.anims.currentAnim?.key !== idleKey) this.hero.play(idleKey, true);
+        else if (this.hero.anims.isPaused) this.hero.anims.resume();
+        this.hero.anims.timeScale = 1;
       }
-      const breath = Math.sin(time * 0.004) * 0.014;
-      this.hero.setScale(0.56, 0.56 * (1 + breath));
+      this.hero.setScale(0.56, 0.56);
     }
   }
 

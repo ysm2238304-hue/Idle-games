@@ -290,8 +290,16 @@ export class BattleScene extends Phaser.Scene {
       if (!this.anims.exists(`${def.prefix}_${d}_walk`)) {
         this.anims.create({
           key: `${def.prefix}_${d}_walk`,
-          frames: [0, 1, 2, 3, 2, 1].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_walk_${i}` })),
-          frameRate: Math.max(12, def.walkFps + 2),
+          frames: [0, 1, 2, 3, 4, 5, 6, 7].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_walk_${i}` })),
+          frameRate: Math.max(14, def.walkFps + 4),
+          repeat: -1,
+        });
+      }
+      if (!this.anims.exists(`${def.prefix}_${d}_idle`)) {
+        this.anims.create({
+          key: `${def.prefix}_${d}_idle`,
+          frames: [0, 1, 2, 3].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_idle_${i}` })),
+          frameRate: 5,
           repeat: -1,
         });
       }
@@ -1211,7 +1219,7 @@ export class BattleScene extends Phaser.Scene {
       if (nextDir !== this.heroDir || nextFlip !== this.heroFlipX) {
         this.heroDir = nextDir;
         this.heroFlipX = nextFlip;
-        this.heroDirLockUntil = time + 260;
+        this.heroDirLockUntil = time + 90;
       }
     }
     this.hero.setFlipX(this.heroFlipX);
@@ -1233,19 +1241,18 @@ export class BattleScene extends Phaser.Scene {
 
     if (cid === 'warrior' || cid === 'ranger' || cid === 'mage' || cid === 'paladin' || cid === 'necro' || cid === 'assassin') {
       const prefix = cid === 'warrior' ? 'w' : (cid === 'ranger' ? 'r' : (cid === 'paladin' ? 'p' : (cid === 'necro' ? 'n' : (cid === 'assassin' ? 'a' : 'm'))));
-      const animKey = `${prefix}_${this.heroDir}_${isAttacking ? 'atk' : 'walk'}`;
+      const animKey = `${prefix}_${this.heroDir}_${isAttacking ? 'atk' : (isMoving ? 'walk' : 'idle')}`;
       if (isAttacking) {
         if (this.hero.anims.currentAnim?.key !== animKey) {
           this.hero.play(animKey, false);
         }
       } else {
-        if (this.hero.anims.currentAnim?.key !== animKey) {
-          this.hero.play(animKey, true);
-        }
-        if (!isMoving && this.hero.anims.isPlaying) {
-          this.hero.anims.pause(this.hero.anims.currentAnim.frames[0]);
-        } else if (isMoving && this.hero.anims.isPaused) {
-          this.hero.anims.resume();
+        if (this.anims.exists(animKey)) {
+          if (this.hero.anims.currentAnim?.key !== animKey) {
+            this.hero.play(animKey, true);
+          } else if (this.hero.anims.isPaused) {
+            this.hero.anims.resume();
+          }
         }
       }
     } else {
