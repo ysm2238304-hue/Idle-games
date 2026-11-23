@@ -787,9 +787,15 @@ export class TownScene extends Phaser.Scene {
       this.executeInteraction(this.nearestTarget);
     }
 
-    // 回報詳細主城小地圖資訊
+    // 回報詳細主城小地圖與鎖定 NPC 資訊
     if (this.callbacks?.onHudUpdate) {
       this.callbacks.onHudUpdate({
+        townTarget: this.nearestTarget ? {
+          title: this.nearestTarget.title,
+          sub: this.nearestTarget.sub,
+          townName: td.name,
+          chapterIdx: td.chapterIdx ?? 0,
+        } : null,
         minimap: {
           mode: 'town',
           chapterIdx: td.chapterIdx ?? 0,

@@ -23,6 +23,7 @@ import { BattleScene } from './scenes/BattleScene.js';
 import { TownScene } from './scenes/TownScene.js';
 import { TOWN_SPLASHES } from './data/towns/splashes.js';
 import { DashboardUI } from './ui/DashboardUI.js';
+import { TownBgmEngine } from './audio/TownBgmEngine.js';
 
 let gameState = loadGame() || createInitialState('warrior');
 let computedStats = recalcPlayerStats(gameState);
@@ -49,6 +50,7 @@ function refreshStatsAndUI() {
   if (battleScene) battleScene.syncMaxHp();
 }
 
+const townBgm = new TownBgmEngine();
 const ui = new DashboardUI({
   onSelectClass: (classId) => {
     gameState.classId = classId;
@@ -593,7 +595,10 @@ function enterTown(chapterIdx = 0, instant = false) {
       const waitMs = Math.max(420, 1250 - elapsed);
       setTimeout(() => ui.hideTownSplash(), waitMs);
     },
-    onHudUpdate: (data) => ui.renderMinimap(data.minimap),
+    onHudUpdate: (data) => {
+      ui.renderMinimap(data.minimap);
+      ui.updateTargetFrameTown?.(data.townTarget || null);
+    },
     onTownAction: (action, data) => {
       if (action === 'open_waypoint') openTownWaypointUI();
       else if (action === 'exit_battle') exitTownToBattle();
@@ -1224,6 +1229,7 @@ function enterTown(chapterIdx = 0, instant = false) {
     const townNames = ["曙光哨站堡壘", "地下菌菇黑市", "守夜人聖骨禮拜堂", "黑曜石熔爐要塞", "緋紅魔獄王庭", "極光冰晶堡", "翠玉樹冠水寨", "蒼穹電弧浮空城", "聖血薔薇修道院", "永恆星辰聖域"];
     const townTitle = `第 ${chapterIdx + 1} 章主城「${townNames[chapterIdx] || townNames[0]}」`;
     ui.addLog(`🏰 已傳送至${townTitle}（安全區）`, 'system');
+    townBgm.playChapter(chapterIdx);
   };
 
   if (!instant && battleScene?.playRecallAnimation) {
@@ -1257,6 +1263,8 @@ function exitTownToBattle(forceRespawn = false) {
   }
   const wpBtn = document.getElementById('btn-top-waypoint');
   if (wpBtn) { wpBtn.classList.remove('in-town'); wpBtn.classList.add('is-disabled'); }
+  townBgm.stop();
+  ui.updateTargetFrameTown?.(null);
   ui.addLog('⚔️ 已離開主城重返前線戰鬥！', 'system');
 }
 
@@ -1294,6 +1302,11 @@ function openTownWaypointUI() {
   });
 }
 document.getElementById('btn-top-waypoint')?.addEventListener('click', openTownWaypointUI);
+document.getElementById('btn-town-bgm')?.addEventListener('click', (e) => {
+  const muted = townBgm.toggleMute();
+  const lbl = e.currentTarget.querySelector('.mmo-lbl');
+  if (lbl) lbl.textContent = muted ? '靜音' : '音樂';
+});
 
 // --- 全螢幕暗黑歡迎頁 ---
 const welcomeScreen = document.getElementById('welcome-screen');

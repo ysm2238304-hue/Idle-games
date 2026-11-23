@@ -3180,3 +3180,24 @@ button { font-family: inherit; }
   cursor: pointer;
 }
 .btn-dice:hover { border-color: #fbbf24; }
+
+/* === v71 Abyss Logo & Town Target Frame === */
+.welcome-abyss-logo {
+  width: 112px;
+  height: 112px;
+  object-fit: contain;
+  margin-bottom: 6px;
+  filter: drop-shadow(0 0 18px rgba(139, 92, 246, 0.55)) drop-shadow(0 6px 14px rgba(0, 0, 0, 0.9));
+  animation: pulseLogo 3.2s ease-in-out infinite;
+}
+@keyframes pulseLogo {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+.target-frame.is-town-npc {
+  border-color: rgba(56, 189, 248, 0.65);
+  box-shadow: 0 4px 16px rgba(14, 116, 144, 0.45);
+}
+.target-frame.is-town-npc .target-hp-fill {
+  background: linear-gradient(90deg, #0284c7, #38bdf8);
+}

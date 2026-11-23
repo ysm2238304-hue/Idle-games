@@ -1003,7 +1003,29 @@ export class DashboardUI {
     });
   }
 
+  updateTargetFrameTown(info) {
+    const tf = document.getElementById('target-frame');
+    const nameEl = document.getElementById('target-name');
+    const stageEl = document.getElementById('target-stage');
+    const hpFill = document.getElementById('target-hp-fill');
+    const hpText = document.getElementById('target-hp-text');
+    if (!tf) return;
+    if (!info) {
+      tf.classList.add('hidden');
+      tf.classList.remove('is-town-npc');
+      return;
+    }
+    tf.classList.remove('hidden', 'is-boss');
+    tf.classList.add('is-town-npc');
+    if (nameEl) nameEl.textContent = info.title || '主城 NPC';
+    if (stageEl) stageEl.textContent = `第 ${(info.chapterIdx ?? 0) + 1} 章・${info.townName || '主城'}`;
+    if (hpFill) hpFill.style.width = '100%';
+    if (hpText) hpText.textContent = (info.sub || '點擊或按 [F] 互動').replace('[F] ', '');
+  }
+
   updateTargetFrame(target) {
+    const tf0 = document.getElementById('target-frame');
+    if (tf0) tf0.classList.remove('is-town-npc');
     const frame = document.getElementById('target-frame');
     if (!frame) return;
     if (!target || target.hp <= 0) {
