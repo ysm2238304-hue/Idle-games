@@ -1486,9 +1486,9 @@ function enterWelcomeClassStep(userLabel) {
   }
   if (nicknameInput) {
     nicknameInput.value = gameState.nickname || '';
-    nicknameInput.disabled = !!(gameState.characterCreated && gameState.nickname);
+    nicknameInput.disabled = false;
   }
-  if (randomNickBtn) randomNickBtn.style.display = (gameState.characterCreated && gameState.nickname) ? 'none' : 'inline-block';
+  if (randomNickBtn) randomNickBtn.style.display = 'inline-block';
   renderWelcomeClasses();
   updateStartButtonState();
 }
@@ -1502,7 +1502,7 @@ randomNickBtn?.addEventListener('click', () => {
 });
 resetCharBtn?.addEventListener('click', () => {
   if (!confirm('確定要刪除目前角色並重新選擇職業與暱稱嗎？（將重置關卡與裝備進度）')) return;
-  const fresh = createDefaultState();
+  const fresh = createInitialState('warrior');
   Object.keys(gameState).forEach((k) => delete gameState[k]);
   Object.assign(gameState, fresh);
   persistAll(true);
@@ -1756,6 +1756,9 @@ initCloudAuth(async (user) => {
           ...base.equippedSkillsByClass,
           ...(cloudData.equippedSkillsByClass || {}),
         },
+        nickname: cloudData.nickname || gameState.nickname || '',
+        characterCreated: !!(cloudData.characterCreated || gameState.characterCreated),
+        classProgress: cloudData.classProgress || gameState.classProgress || null,
         inventory: Array.isArray(cloudData.inventory) ? cloudData.inventory : [],
       };
       refreshStatsAndUI();

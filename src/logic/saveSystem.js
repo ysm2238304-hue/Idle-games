@@ -6,6 +6,9 @@ const SAVE_KEY = 'desk_diablo_idle_save_v1';
 export function createInitialState(classId = 'warrior') {
   return {
     classId,
+    nickname: '',
+    characterCreated: false,
+    classProgress: null,
     level: 1,
     exp: 0,
     skillPoints: 1,
@@ -76,6 +79,9 @@ export function loadGame() {
         ...base.equippedSkillsByClass,
         ...(parsed.equippedSkillsByClass || {}),
       },
+      nickname: typeof parsed.nickname === 'string' ? parsed.nickname : '',
+      characterCreated: !!parsed.characterCreated,
+      classProgress: (parsed.classProgress && typeof parsed.classProgress === 'object') ? parsed.classProgress : null,
       inventory: Array.isArray(parsed.inventory) ? parsed.inventory : [],
     };
     if (!merged.equippedSkillsByClass.mage || merged.equippedSkillsByClass.mage.every((s) => !s)) {
