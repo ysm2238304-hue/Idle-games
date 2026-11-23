@@ -1367,8 +1367,77 @@ document.getElementById('btn-guest-play')?.addEventListener('click', () => {
   enterWelcomeClassStep('本機離線試玩');
 });
 
+let isIntroPlaying = false;
+function playCinematicIntro(onDone) {
+  const ov = document.getElementById('cinematic-intro-overlay');
+  const vid = document.getElementById('cinematic-intro-video');
+  const cap = document.getElementById('cinematic-caption');
+  const muteBtn = document.getElementById('btn-intro-mute');
+  const skipBtn = document.getElementById('btn-intro-skip');
+  if (!ov || !vid) { onDone?.(); return; }
+
+  isIntroPlaying = true;
+  ov.classList.remove('hidden', 'fading-out');
+  vid.currentTime = 0;
+  vid.muted = false;
+  if (muteBtn) muteBtn.textContent = '🔊 音效開啟';
+
+  let finished = false;
+  const finishIntro = () => {
+    if (finished) return;
+    finished = true;
+    isIntroPlaying = false;
+    window.removeEventListener('keydown', onKey);
+    vid.pause();
+    ov.classList.add('fading-out');
+    setTimeout(() => {
+      ov.classList.add('hidden');
+      ov.classList.remove('fading-out');
+      onDone?.();
+    }, 380);
+  };
+
+  const onKey = (e) => {
+    if (e.code === 'Space' || e.code === 'Escape' || e.code === 'Enter') {
+      e.preventDefault();
+      finishIntro();
+    }
+  };
+  window.addEventListener('keydown', onKey);
+  if (skipBtn) skipBtn.onclick = finishIntro;
+  if (muteBtn) {
+    muteBtn.onclick = () => {
+      vid.muted = !vid.muted;
+      muteBtn.textContent = vid.muted ? '🔇 已靜音' : '🔊 音效開啟';
+    };
+  }
+
+  vid.ontimeupdate = () => {
+    if (!cap) return;
+    const t = vid.currentTime || 0;
+    if (t < 3.6) cap.textContent = '深淵裂隙開啟，六大英雄整裝集結⋯';
+    else if (t < 6.4) cap.textContent = '各職奧義齊發，向暗黑軍團發動總攻！';
+    else if (t < 10.2) cap.textContent = '無盡魔軍壓境，毀滅之戰一觸即發——';
+    else cap.textContent = '《暗黑聖域》—— 終局之戰，即刻啟程！';
+  };
+  vid.onended = finishIntro;
+  vid.onerror = finishIntro;
+
+  const p = vid.play();
+  if (p && p.catch) {
+    p.catch(() => {
+      vid.muted = true;
+      if (muteBtn) muteBtn.textContent = '🔇 點擊開啟音效';
+      vid.play().catch(finishIntro);
+    });
+  }
+}
+
 document.getElementById('btn-start-game')?.addEventListener('click', () => {
-  startAdventure();
+  playCinematicIntro(() => startAdventure());
+});
+document.getElementById('btn-watch-intro')?.addEventListener('click', () => {
+  playCinematicIntro();
 });
 
 document.getElementById('btn-cloud-logout')?.addEventListener('click', async () => {

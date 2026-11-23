@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./style.css?v=68" />
+  <link rel="stylesheet" href="./style.css?v=69" />
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
 </head>
 <body>
@@ -33,11 +33,25 @@
         <div class="welcome-class-header">
           <div id="welcome-save-summary" class="save-summary-pill"></div>
           <button id="btn-start-game" class="btn-gold-lg">⚔️ 踏入深淵（開始遊戲）</button>
+          <button id="btn-watch-intro" class="btn-ghost-lg" style="padding:8px 14px;font-size:13px;" title="單獨預覽電影開場動畫">🎬 預覽開場CG</button>
         </div>
         <div id="welcome-class-grid"></div>
       </div>
     </div>
   </section>
+
+  <!-- ========== 電影級開場動畫劇院覆蓋層 (v68) ========== -->
+  <div id="cinematic-intro-overlay" class="cinematic-intro-overlay hidden">
+    <div class="cinematic-letterbox top"></div>
+    <video id="cinematic-intro-video" playsinline preload="auto" src="./assets/video/intro.mp4?v=69"></video>
+    <div class="cinematic-vignette"></div>
+    <div id="cinematic-caption" class="cinematic-caption"></div>
+    <div class="cinematic-controls">
+      <button id="btn-intro-mute" class="cinematic-btn">🔊 音效開啟</button>
+      <button id="btn-intro-skip" class="cinematic-btn primary">⏭️ 跳過動畫 (Space)</button>
+    </div>
+    <div class="cinematic-letterbox bottom"></div>
+  </div>
 
   <!-- v26 100% 滿版畫布 ＋ 四角浮動 MMORPG HUD ＋ 底部懸浮雙球祭壇 -->
   <section id="game-screen" class="hidden">
@@ -127,7 +141,7 @@
           <button class="mmo-micro-btn" data-drawer="rebirth" data-tip="深淵輪迴轉生 [V]"><img class="mmo-ui-img" src="./assets/ui/ui_rebirth.png" alt="輪迴" /><span class="mmo-lbl">輪迴(V)</span></button>
           <button id="btn-switch-class" class="mmo-micro-btn" data-tip="切換冒險職業 [C]"><img class="mmo-ui-img" src="./assets/ui/ui_class.png" alt="職業" /><span class="mmo-lbl">職業(C)</span></button>
           <button class="mmo-micro-btn" data-drawer="log" data-tip="完整戰鬥日誌 [L]"><img class="mmo-ui-img" src="./assets/ui/ui_log.png" alt="日誌" /><span class="mmo-lbl">日誌(L)</span></button>
-          <button id="btn-top-waypoint" class="mmo-micro-btn mmo-waypoint-btn" data-tip="主城快速傳送陣 [Y]"><img class="mmo-ui-img" src="./assets/ui/ui_waypoint.png?v=68" alt="傳送" /><span class="mmo-lbl">傳送(Y)</span></button>
+          <button id="btn-top-waypoint" class="mmo-micro-btn mmo-waypoint-btn" data-tip="主城快速傳送陣 [Y]"><img class="mmo-ui-img" src="./assets/ui/ui_waypoint.png?v=69" alt="傳送" /><span class="mmo-lbl">傳送(Y)</span></button>
           <button id="btn-collapse-topmenu" class="mmo-micro-btn mmo-collapse-btn" data-tip="收合 / 展開上方快捷列"><span class="mmo-lbl" style="font-size:15px;">◀</span></button>
         </div>
 
@@ -397,6 +411,6 @@
     </div>
   </div>
 
-  <script type="module" src="./src/main.js?v=68"></script>
+  <script type="module" src="./src/main.js?v=69"></script>
 </body>
 </html>

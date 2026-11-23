@@ -2706,3 +2706,89 @@ button { font-family: inherit; }
   color: #e2e8f0;
   font-weight: 700;
 }
+
+/* === v68 Cinematic Intro Theater Overlay === */
+.cinematic-intro-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  transition: opacity 0.45s ease;
+}
+.cinematic-intro-overlay.hidden {
+  display: none !important;
+}
+.cinematic-intro-overlay.fading-out {
+  opacity: 0;
+  pointer-events: none;
+}
+#cinematic-intro-video {
+  width: 100vw;
+  height: 100vh;
+  object-fit: cover;
+  filter: contrast(1.06) saturate(1.05);
+}
+.cinematic-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at center, transparent 52%, rgba(0, 0, 0, 0.72) 100%);
+}
+.cinematic-letterbox {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 9vh;
+  background: #000000;
+  z-index: 2;
+  pointer-events: none;
+}
+.cinematic-letterbox.top { top: 0; border-bottom: 1px solid rgba(200, 155, 60, 0.25); }
+.cinematic-letterbox.bottom { bottom: 0; border-top: 1px solid rgba(200, 155, 60, 0.25); }
+.cinematic-caption {
+  position: absolute;
+  bottom: 12.5vh;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  color: #fef3c7;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.95), 0 0 18px rgba(245, 158, 11, 0.45);
+  text-align: center;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+.cinematic-controls {
+  position: absolute;
+  bottom: 2.4vh;
+  right: 28px;
+  z-index: 4;
+  display: flex;
+  gap: 10px;
+}
+.cinematic-btn {
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  background: rgba(15, 23, 42, 0.82);
+  color: #e2e8f0;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.cinematic-btn:hover {
+  border-color: #fbbf24;
+  color: #fde047;
+}
+.cinematic-btn.primary {
+  border-color: rgba(251, 191, 36, 0.65);
+  background: linear-gradient(135deg, rgba(180, 83, 9, 0.85), rgba(120, 53, 15, 0.9));
+  color: #fef3c7;
+}
