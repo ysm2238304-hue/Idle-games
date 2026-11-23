@@ -1433,8 +1433,20 @@ function playCinematicIntro(onDone) {
   }
 }
 
+const bgVid = document.getElementById('welcome-bg-video');
+const bgmBtn = document.getElementById('btn-welcome-bgm');
+if (bgmBtn && bgVid) {
+  bgmBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    bgVid.muted = !bgVid.muted;
+    if (!bgVid.muted) bgVid.play().catch(() => {});
+    bgmBtn.textContent = bgVid.muted ? '🔇 點擊開啟背景音樂' : '🔊 背景音樂播放中';
+  });
+}
+
 document.getElementById('btn-start-game')?.addEventListener('click', () => {
-  playCinematicIntro(() => startAdventure());
+  if (bgVid) { bgVid.pause(); bgVid.muted = true; }
+  startAdventure();
 });
 document.getElementById('btn-watch-intro')?.addEventListener('click', () => {
   playCinematicIntro();

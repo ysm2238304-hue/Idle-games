@@ -73,10 +73,12 @@ export class DashboardUI {
     this._minimapZoom = 1.0;
     this._minimapBgCache = new Map();
     document.getElementById('btn-mm-zoom-in')?.addEventListener('click', () => {
-      this._minimapZoom = Math.min(2.2, (this._minimapZoom || 1.0) + 0.4);
+      this._minimapZoom = Math.min(2.2, Number(((this._minimapZoom || 1.0) + 0.4).toFixed(1)));
+      if (this._lastMinimapData) this.renderMinimap(this._lastMinimapData);
     });
     document.getElementById('btn-mm-zoom-out')?.addEventListener('click', () => {
-      this._minimapZoom = Math.max(1.0, (this._minimapZoom || 1.0) - 0.4);
+      this._minimapZoom = Math.max(1.0, Number(((this._minimapZoom || 1.0) - 0.4).toFixed(1)));
+      if (this._lastMinimapData) this.renderMinimap(this._lastMinimapData);
     });
     document.getElementById('btn-mm-world')?.addEventListener('click', () => {
       document.getElementById('btn-world-map')?.click();
@@ -1061,6 +1063,7 @@ export class DashboardUI {
 
   renderMinimap(data) {
     if (!data) return;
+    this._lastMinimapData = data;
     const { mode = 'battle', chapterIdx = 0, bgUrl, zoneName, heroX = 0, heroY = 0, heroDir = 'down', heroFlipX = false, mapW = 2800, mapH = 1800, walkableZones, obstacles, facilities, patrols, monsters } = data;
     const nameEl = document.getElementById('minimap-zone-name');
     if (nameEl && zoneName) nameEl.textContent = zoneName;
@@ -1152,7 +1155,7 @@ export class DashboardUI {
       }
 
       if (statusEl) {
-        statusEl.textContent = `🏠 設施 ${facCount} 處｜🛡️ 巡邏 ${(patrols || []).length} 人`;
+        statusEl.textContent = `🏠 設施 ${facCount} 處｜🛡️ 巡邏 ${(patrols || []).length} 人｜${zoom.toFixed(1)}x`;
       }
     } else {
       // 戰鬥模式：障礙物 + 怪群（普通/精英/首領）
@@ -1201,9 +1204,9 @@ export class DashboardUI {
       }
 
       if (statusEl) {
-        statusEl.textContent = bossCnt > 0
+        statusEl.textContent = (bossCnt > 0
           ? `👑 首領現身！｜👾 敵人 ${mobCnt} 隻`
-          : `👾 剩餘敵人 ${mobCnt} 隻${eliteCnt > 0 ? `（精英 ${eliteCnt}）` : ''}`;
+          : `👾 剩餘敵人 ${mobCnt} 隻${eliteCnt > 0 ? `（精英 ${eliteCnt}）` : ''}`) + `｜${zoom.toFixed(1)}x`;
       }
     }
 

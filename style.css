@@ -2792,3 +2792,50 @@ button { font-family: inherit; }
   background: linear-gradient(135deg, rgba(180, 83, 9, 0.85), rgba(120, 53, 15, 0.9));
   color: #fef3c7;
 }
+
+/* === v69 Welcome Background Video & 16:9 Rectangular Minimap === */
+.welcome-bg-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 0;
+  pointer-events: none;
+  filter: brightness(0.75) contrast(1.06);
+}
+.welcome-bgm-btn {
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  z-index: 60;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(251, 191, 36, 0.55);
+  background: rgba(12, 16, 26, 0.84);
+  color: #fde68a;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+}
+.welcome-bgm-btn:hover {
+  background: rgba(180, 83, 9, 0.45);
+}
+.mmo-minimap-card.compass-style {
+  width: 248px;
+}
+.minimap-rect-frame {
+  width: 208px;
+  height: 117px;
+  border-radius: 10px;
+  border: 2.5px solid #b68c4a;
+  box-shadow: 0 0 0 2px #1a140d, 0 6px 16px rgba(0, 0, 0, 0.78);
+  overflow: hidden;
+  background: #090d16;
+}
+.minimap-rect-frame canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
