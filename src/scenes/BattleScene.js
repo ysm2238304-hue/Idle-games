@@ -6,6 +6,7 @@ import { PALADIN_SKILLS } from '../data/paladinSkills.js';
 import { NECRO_SKILLS } from '../data/necroSkills.js';
 import { ASSASSIN_SKILLS } from '../data/assassinSkills.js';
 import { RARITIES } from '../data/items.js';
+import { getPetDef, PET_SCHOOLS } from '../data/pets.js';
 import { createStageEncounters, spawnSingleMonster, getChapterIdx, getStageLabel, ZONE_OBSTACLES } from '../data/monsters.js';
 import { formatNum } from '../logic/statCalc.js';
 
@@ -42,6 +43,8 @@ export class BattleScene extends Phaser.Scene {
     this.heroGroundShadow = null;
     this.monsters = [];
     this.projectiles = [];
+    this.groundLoot = [];
+    this.lootClickTarget = null;
     this.playerHp = 240;
     this.playerMaxHp = 240;
     this.playerMp = 100;
@@ -828,6 +831,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   spawnWaveSquad() {
+    this.collectAllGroundLoot?.();
     const zoneIdx = this.getZoneIdx();
     this.ensureChapterLoaded(zoneIdx, () => {
       this._applySpawnWaveSquad();
@@ -1069,9 +1073,28 @@ export class BattleScene extends Phaser.Scene {
     } else {
       if (this.manualOverrideTimer > 0) this.manualOverrideTimer = Math.max(0, this.manualOverrideTimer - delta);
 
-      if (this.autoMoveEnabled && this.manualOverrideTimer <= 0) {
+      this.updateGroundLoot(time);
+      if (this.lootClickTarget && this.manualOverrideTimer <= 0) {
+        const ldx = this.lootClickTarget.x - this.hero.x;
+        const ldy = this.lootClickTarget.y - this.hero.y;
+        const ld = Math.hypot(ldx, ldy);
+        if (ld <= 46 || !this.groundLoot?.includes(this.lootClickTarget)) {
+          this.lootClickTarget = null;
+        } else {
+          vx = (ldx / ld) * stats.moveSpeed * 1.15;
+          vy = (ldy / ld) * stats.moveSpeed * 1.15;
+        }
+      } else if (this.autoMoveEnabled && this.manualOverrideTimer <= 0) {
+        const nearestLoot = this.findNearestGroundLoot?.(this.hero.x, this.hero.y);
         const nearest = this.findNearestMonster(this.hero.x, this.hero.y);
-        if (nearest) {
+        const nearDist = nearest ? Math.hypot(nearest.sprite.x - this.hero.x, nearest.sprite.y - this.hero.y) : Infinity;
+        if (nearestLoot && (!nearest || nearDist > 260)) {
+          const ldx = nearestLoot.x - this.hero.x;
+          const ldy = nearestLoot.y - this.hero.y;
+          const ld = Math.hypot(ldx, ldy) || 1;
+          vx = (ldx / ld) * stats.moveSpeed * 1.08;
+          vy = (ldy / ld) * stats.moveSpeed * 1.08;
+        } else if (nearest) {
           const isRanged = classId === 'ranger' || classId === 'mage' || classId === 'necro';
           if (isRanged) {
             // 遠攻智慧風箏：計算近身怪物合斥力 + 邊界安全避讓
@@ -1185,6 +1208,7 @@ export class BattleScene extends Phaser.Scene {
     this.heroHpFill.setPosition(this.hero.x - 54, this.hero.y - 86);
     this.heroHpText.setPosition(this.hero.x, this.hero.y - 101);
     if (this.heroAfkText) this.heroAfkText.setPosition(this.hero.x, this.hero.y - 117);
+    this.updatePetCompanion?.(time);
   }
 
   triggerHeroAttackAnim(durationMs = 340) {
@@ -3206,6 +3230,9 @@ export class BattleScene extends Phaser.Scene {
     if (dropResult && dropResult.item) {
       this.spawnLootBeam(mx, my + 24, dropResult.item);
     }
+    if (dropResult && dropResult.pet) {
+      this.spawnLootBeam(mx + 22, my + 18, { ...dropResult.pet, isPet: true });
+    }
     if (dropResult && dropResult.potion) {
       const p = dropResult.potion;
       const orb = this.add.image(mx, my, 'fx_glow').setTint(p.color).setScale(0.42).setDepth(3600);
@@ -3282,41 +3309,184 @@ export class BattleScene extends Phaser.Scene {
     });
   }
 
+  updatePetCompanion(time) {
+    if (!this.petBuddy || !this.hero) return;
+    const pet = getPetDef(this.getState()?.equippedPetId);
+    if (!pet) {
+      this.petBuddy.setVisible(false);
+      this.petAura?.setVisible(false);
+      this.petLabel?.setVisible(false);
+      return;
+    }
+    const sch = PET_SCHOOLS[pet.school] || PET_SCHOOLS.fire;
+    const tx = this.hero.x + (this.heroFlipX ? 46 : -46);
+    const ty = this.hero.y - 24 + Math.sin(time * 0.005) * 6;
+    const nx = Phaser.Math.Linear(this.petBuddy.x, tx, 0.12);
+    const ny = Phaser.Math.Linear(this.petBuddy.y, ty, 0.12);
+    this.petBuddy.setVisible(true).setText(pet.emoji).setPosition(nx, ny).setDepth(ny + 2);
+    this.petAura?.setVisible(true).setFillStyle(pet.tint, 0.3).setPosition(nx, ny).setDepth(ny + 1);
+    this.petLabel?.setVisible(true).setText(pet.name).setColor(sch.color).setPosition(nx, ny - 18).setDepth(ny + 3);
+  }
+
+  triggerPetSkillDerivative(aimX, aimY) {
+    const pet = getPetDef(this.getState()?.equippedPetId);
+    if (!pet || !this.hero || !this.monsters) return;
+    const now = this.time?.now || 0;
+    if (now < (this._lastPetProcAt || 0)) return;
+    this._lastPetProcAt = now + 420;
+
+    const stats = this.getStats();
+    const sch = PET_SCHOOLS[pet.school] || PET_SCHOOLS.fire;
+    const dmg = Math.max(1, Math.round(stats.atk * (pet.dmgMult || 0.45) * (stats.skillDmgMult || 1)));
+    const alive = this.monsters.filter((m) => m.hp > 0);
+    if (!alive.length) return;
+
+    // 寵物閃光提示
+    if (this.petAura) {
+      this.tweens.add({ targets: this.petAura, scale: 1.8, alpha: 0.75, duration: 160, yoyo: true });
+    }
+
+    const targets = alive
+      .map((m) => ({ m, d: Math.hypot(m.sprite.x - this.hero.x, m.sprite.y - this.hero.y) }))
+      .sort((a, b) => a.d - b.d)
+      .slice(0, pet.bonusHits || 2)
+      .map((x) => x.m);
+
+    for (const tm of targets) {
+      const mx = tm.sprite.x, my = tm.sprite.y;
+      if (sch.derivative === 'fire_wave') {
+        this.playFxSprite('mfx_meteor_flame', mx, my - 12, 0.95, 0, 380);
+        this.damageMonster(tm, dmg, true, false, sch.color, '🔥');
+      } else if (sch.derivative === 'chain_arc') {
+        this.playFxSprite('nfx_lightning', (this.hero.x + mx) / 2, (this.hero.y + my) / 2, 0.9, Math.atan2(my - this.hero.y, mx - this.hero.x), 300);
+        this.damageMonster(tm, dmg, true, false, sch.color, '⚡');
+      } else if (sch.derivative === 'frost_nova') {
+        this.playFxSprite('mfx_frost_burst', mx, my, 1.0, 0, 380);
+        tm.chilledUntil = Math.max(tm.chilledUntil || 0, now + 2200);
+        this.damageMonster(tm, dmg, true, false, sch.color, '❄️');
+      } else if (sch.derivative === 'shadow_bolt') {
+        this.playFxSprite('nfx_p_wraith', mx, my - 8, 0.95, 0, 360);
+        this.damageMonster(tm, dmg, true, false, sch.color, '🦇');
+      } else if (sch.derivative === 'holy_pillar') {
+        this.playFxSprite('pfx_heaven', mx, my - 28, 1.0, 0, 400);
+        this.damageMonster(tm, dmg, true, false, sch.color, '✨');
+      } else if (sch.derivative === 'void_pull') {
+        this.playFxSprite('nfx_blackhole', mx, my, 0.95, 0, 440);
+        tm.sprite.x = Phaser.Math.Linear(tm.sprite.x, targets[0].sprite.x, 0.32);
+        tm.sprite.y = Phaser.Math.Linear(tm.sprite.y, targets[0].sprite.y, 0.32);
+        this.damageMonster(tm, dmg, true, false, sch.color, '🌌');
+      }
+    }
+    if (sch.derivative === 'holy_pillar' && pet.bonusHits >= 2) {
+      this.healHero?.(Math.max(1, Math.round(stats.maxHp * (pet.bonusHits * 0.01))));
+    }
+  }
+
+  findNearestGroundLoot(x, y) {
+    if (!this.groundLoot || !this.groundLoot.length) return null;
+    let best = null, bd = Infinity;
+    for (const l of this.groundLoot) {
+      const d = Math.hypot(l.x - x, l.y - y);
+      if (d < bd) { bd = d; best = l; }
+    }
+    return best;
+  }
+
   spawnLootBeam(x, y, item) {
+    if (!item) return;
+    if (!this.groundLoot) this.groundLoot = [];
     const r = RARITIES[item.rarity] || RARITIES.common;
-    const isHigh = item.rarity === 'legendary' || item.rarity === 'rare';
-    const beamH = isHigh ? 240 : 170;
-    const beamW = isHigh ? 22 : 14;
-    const beam = this.add.rectangle(x, y - beamH / 2, beamW, beamH, r.beam, isHigh ? 0.78 : 0.55)
+    const isHigh = item.rarity === 'legendary' || item.rarity === 'rare' || item.rarity === 'set';
+    const lx = Phaser.Math.Clamp(x + Phaser.Math.Between(-28, 28), 220, MAP_W - 220);
+    const ly = Phaser.Math.Clamp(y + Phaser.Math.Between(-16, 22), 240, MAP_H - 220);
+
+    const beamH = isHigh ? 210 : 135;
+    const beamW = isHigh ? 20 : 12;
+    const beam = this.add.rectangle(lx, ly - beamH / 2, beamW, beamH, r.beam, isHigh ? 0.62 : 0.38)
       .setBlendMode(Phaser.BlendModes.ADD).setDepth(4400);
-    const orb = this.add.circle(x, y - 4, isHigh ? 10 : 7, r.beam, 1)
+    const orb = this.add.circle(lx, ly - 4, isHigh ? 9 : 6, r.beam, 1)
       .setStrokeStyle(2, 0xffffff).setDepth(4401);
 
-    const labelStr = `[${r.label}] ${item.name}`;
-    const tag = this.add.text(x, y - 44, labelStr, {
-      fontSize: '12px', color: r.color, fontFamily: 'sans-serif', fontStyle: 'bold',
+    const labelStr = item.isPet ? `${item.emoji || '🐾'} [寵物・${r.label}] ${item.name}` : `[${r.label}] ${item.name}`;
+    const tag = this.add.text(lx, ly - 36, labelStr, {
+      fontSize: '12px', color: r.color, fontFamily: 'Noto Sans TC, sans-serif', fontStyle: 'bold',
       stroke: '#000000', strokeThickness: 3,
     }).setOrigin(0.5).setDepth(4403);
-    const padW = Math.max(88, tag.width + 18);
-    const plate = this.add.rectangle(x, y - 44, padW, 22, 0x090b12, 0.88)
-      .setStrokeStyle(1.5, r.beam).setDepth(4402);
+    const padW = Math.max(92, tag.width + 18);
+    const plate = this.add.rectangle(lx, ly - 36, padW, 22, 0x090b12, 0.9)
+      .setStrokeStyle(1.5, r.beam).setDepth(4402)
+      .setInteractive({ useHandCursor: true });
 
-    this.tweens.add({
-      targets: [beam, orb],
-      alpha: 0,
-      scaleX: 0.35,
-      duration: 1600,
-      delay: 650,
-      onComplete: () => { beam.destroy(); orb.destroy(); },
+    const lootObj = {
+      item, x: lx, y: ly, beam, orb, plate, tag,
+      spawnAt: this.time?.now || 0,
+      picked: false,
+    };
+
+    plate.on('pointerdown', (pointer) => {
+      pointer.event?.stopPropagation?.();
+      this.lootClickTarget = lootObj;
+      this.manualOverrideTimer = 0;
     });
-    this.tweens.add({
-      targets: [plate, tag],
-      y: '-=36',
-      alpha: 0,
-      duration: 1700,
-      delay: 700,
-      onComplete: () => { plate.destroy(); tag.destroy(); },
-    });
+
+    // 小幅彈跳落地效果
+    orb.y = ly - 26;
+    this.tweens.add({ targets: orb, y: ly - 4, duration: 280, ease: 'Bounce.easeOut' });
+    this.tweens.add({ targets: orb, y: '-=4', duration: 900, yoyo: true, repeat: -1, delay: 300 });
+    if (isHigh) {
+      this.tweens.add({ targets: beam, alpha: 0.35, duration: 850, yoyo: true, repeat: -1 });
+    }
+
+    this.groundLoot.push(lootObj);
+  }
+
+  pickupGroundLoot(loot, instant = false) {
+    if (!loot || loot.picked) return;
+    loot.picked = true;
+    const idx = this.groundLoot ? this.groundLoot.indexOf(loot) : -1;
+    if (idx >= 0) this.groundLoot.splice(idx, 1);
+    if (this.lootClickTarget === loot) this.lootClickTarget = null;
+
+    const r = RARITIES[loot.item.rarity] || RARITIES.common;
+    loot.beam?.destroy();
+    loot.plate?.destroy();
+    loot.tag?.destroy();
+
+    if (instant || !this.hero) {
+      loot.orb?.destroy();
+    } else {
+      this.spawnFloatingText(loot.x, loot.y - 24, `+ ${loot.item.name}`, r.color, 13);
+      this.tweens.add({
+        targets: loot.orb,
+        x: this.hero.x,
+        y: this.hero.y - 12,
+        scale: 0.25,
+        alpha: 0,
+        duration: 240,
+        ease: 'Cubic.easeIn',
+        onComplete: () => loot.orb?.destroy(),
+      });
+    }
+    this.callbacks?.onLootPickedUp?.(loot.item);
+  }
+
+  updateGroundLoot(time) {
+    if (!this.groundLoot || !this.groundLoot.length || !this.hero) return;
+    for (let i = this.groundLoot.length - 1; i >= 0; i--) {
+      const l = this.groundLoot[i];
+      if (!l || l.picked) continue;
+      const d = Math.hypot(this.hero.x - l.x, this.hero.y - l.y);
+      if (d <= 58 || (time - l.spawnAt) > 60000) {
+        this.pickupGroundLoot(l, false);
+      }
+    }
+  }
+
+  collectAllGroundLoot() {
+    if (!this.groundLoot || !this.groundLoot.length) return;
+    const list = [...this.groundLoot];
+    for (const l of list) this.pickupGroundLoot(l, true);
+    this.groundLoot = [];
   }
 
   spawnFloatingText(x, y, msg, color, fontSize = 16) {

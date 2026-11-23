@@ -1,4 +1,5 @@
 import { CLASSES } from '../data/classes.js';
+import { SET_DEFINITIONS } from '../data/items.js';
 
 export function formatNum(num) {
   const n = Math.floor(num);
@@ -126,6 +127,44 @@ export function recalcPlayerStats(state) {
     if (item.legendaryEffect) activeEffects.add(item.legendaryEffect.id);
   }
 
+  // 統計綠色套裝 (set) 2 件套／4 件套專屬詞條加成
+  const setCounts = {};
+  for (const item of Object.values(state.equipment || {})) {
+    if (item && item.rarity === 'set' && item.setId) {
+      setCounts[item.setId] = (setCounts[item.setId] || 0) + 1;
+    }
+  }
+  const activeSets = [];
+  let setSkillDmgPct = 0;
+  let setDmgReducePct = 0;
+  let setExpPct = 0;
+  for (const [sid, cnt] of Object.entries(setCounts)) {
+    const def = SET_DEFINITIONS[sid];
+    if (!def) continue;
+    const applyBonusObj = (b) => {
+      if (!b) return;
+      if (b.atkPct) atkPct += b.atkPct;
+      if (b.hpPct) hpPct += b.hpPct;
+      if (b.armorPct) armorPct += b.armorPct;
+      if (b.critRate) flat.critRate += b.critRate;
+      if (b.critDmg) flat.critDmg += b.critDmg;
+      if (b.atkSpeedPct) flat.atkSpeedPct += b.atkSpeedPct;
+      if (b.lifesteal) flat.lifesteal += b.lifesteal;
+      if (b.dodge) flat.dodge += b.dodge;
+      if (b.cdrPct) cdrPct += b.cdrPct;
+      if (b.summonDmgPct) summonDmgPct += b.summonDmgPct;
+      if (b.poisonDmgPct) poisonDmgPct += b.poisonDmgPct;
+      if (b.magicFind) flat.magicFind += b.magicFind;
+      if (b.goldFind) flat.goldFind += b.goldFind;
+      if (b.skillDmgPct) setSkillDmgPct += b.skillDmgPct;
+      if (b.dmgReducePct) setDmgReducePct += b.dmgReducePct;
+      if (b.expMultPct) setExpPct += b.expMultPct;
+    };
+    if (cnt >= 2) applyBonusObj(def.bonus2);
+    if (cnt >= 4) applyBonusObj(def.bonus4);
+    activeSets.push({ id: sid, name: def.name, count: cnt, def });
+  }
+
   atkPct += (tree.fury_atk || 0) * 6 + (tree.w_p_might || 0) * 4 + (tree.r_p_focus || 0) * 3 + (tree.m_p_arcane || 0) * 4.5 + (tree.p_p_faith || 0) * 4 + (tree.n_p_essence || 0) * 4 + (tree.a_p_venom || 0) * 4;
   flat.critRate += (tree.fury_crit || 0) * 2.5 + (tree.w_p_savage || 0) * 2 + (tree.r_p_toxic || 0) * 2.5 + (tree.m_p_sage || 0) * 2 + (tree.p_p_zeal || 0) * 2 + (tree.n_p_essence || 0) * 2 + (tree.a_p_weakpoint || 0) * 2.5 + (activeEffects.has('night_veil') ? 8 : 0) + (state.classId === 'assassin' ? (tree.a_cdr || 0) * 8 : 0);
   flat.critDmg += (tree.fury_crit || 0) * 10 + (tree.w_p_savage || 0) * 8 + (tree.r_p_focus || 0) * 12 + (tree.a_p_weakpoint || 0) * 12 + comboCritDmgPct;
@@ -138,7 +177,7 @@ export function recalcPlayerStats(state) {
   summonDmgPct += (tree.n_p_summon || 0) * 8 + (state.classId === 'necro' && (tree.n_key_overlord || 0) > 0 ? 50 : 0);
   boneDmgPct += (tree.n_p_bone || 0) * 6;
   killEssence += (tree.n_p_essence || 0) * 3;
-  const skillDmgMult = 1 + (innate.skillDmgPct || 0) / 100 + (tree.fury_aoe || 0) * 0.15 + (keyW_Earth ? 0.35 : 0) + (keyM_Astral ? 0.30 : 0) + (keyP_Judg ? 0.35 : 0) + (state.classId === 'paladin' ? holyDmgPct / 100 : 0) + (activeEffects.has('lava_core') ? 0.22 : 0);
+  const skillDmgMult = 1 + (innate.skillDmgPct || 0) / 100 + setSkillDmgPct / 100 + (tree.fury_aoe || 0) * 0.15 + (keyW_Earth ? 0.35 : 0) + (keyM_Astral ? 0.30 : 0) + (keyP_Judg ? 0.35 : 0) + (state.classId === 'paladin' ? holyDmgPct / 100 : 0) + (activeEffects.has('lava_core') ? 0.22 : 0);
   const skillRadiusMult = 1 + (tree.fury_aoe || 0) * 0.16 + (keyW_Earth ? 0.20 : 0) + skillRadiusPct / 100;
   const treeBoltChance = [0, 35, 70, 100][tree.fury_bolt || 0] || 0;
   const cdrLvl = state.classId === 'ranger'
@@ -323,7 +362,8 @@ export function recalcPlayerStats(state) {
     poisonDmgPct: poisonDmgPct + (tree.a_p_venom || 0) * 8 + (activeEffects.has('venom_core') ? 45 : 0),
     comboCritDmgPct,
     dodgeShadow,
-    dmgReducePct: (innate.dmgReducePct || 0) + (flat.dmgReducePct || 0),
+    dmgReducePct: (innate.dmgReducePct || 0) + (flat.dmgReducePct || 0) + setDmgReducePct,
+    activeSets,
     dps,
     activeEffects,
   };

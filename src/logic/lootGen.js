@@ -1,4 +1,4 @@
-import { EQUIP_SLOTS, RARITIES, BASE_ITEMS, AFFIX_POOL, LEGENDARY_EFFECTS } from '../data/items.js';
+import { EQUIP_SLOTS, RARITIES, BASE_ITEMS, AFFIX_POOL, LEGENDARY_EFFECTS, SET_DEFINITIONS } from '../data/items.js';
 
 let itemUidCounter = Date.now();
 
@@ -26,10 +26,12 @@ export function rollRarity(isBoss, magicFindPct = 0, stage = 1) {
   const rareChance = rareBase * (isChapterBoss ? 2.0 : (isBoss ? 1.65 : 1.0)) * mfMult;
   const magicChance = isChapterBoss ? Math.max(0, 100 - legChance - rareChance) : magicBase;
 
+  const setChance = Math.min(6.0, (isChapterBoss ? 5.0 : (isBoss ? 2.6 : 0.75)) * mfMult);
   const roll = Math.random() * 100;
-  if (roll < legChance) return 'legendary';
-  if (roll < legChance + rareChance) return 'rare';
-  if (roll < legChance + rareChance + magicChance) return 'magic';
+  if (roll < setChance) return 'set';
+  if (roll < setChance + legChance) return 'legendary';
+  if (roll < setChance + legChance + rareChance) return 'rare';
+  if (roll < setChance + legChance + rareChance + magicChance) return 'magic';
   return 'common';
 }
 
@@ -79,7 +81,13 @@ export function generateLoot(stage, isBoss = false, magicFindPct = 0, guaranteed
     legendaryEffect = pickRandom(legPool.length > 0 ? legPool : LEGENDARY_EFFECTS);
   }
 
-  const prefixLabel = rarityId === 'legendary' ? '遠古・' : (rarityId === 'rare' ? '精良・' : '');
+  let setId = null, setName = null;
+  if (rarityId === 'set') {
+    const setKey = (itemCls && itemCls !== 'all' && SET_DEFINITIONS[`set_${itemCls}`]) ? `set_${itemCls}` : 'set_abyss';
+    setId = setKey;
+    setName = SET_DEFINITIONS[setKey].name;
+  }
+  const prefixLabel = rarityId === 'set' ? '套裝・' : (rarityId === 'legendary' ? '遠古・' : (rarityId === 'rare' ? '精良・' : ''));
   const item = {
     uid: `item_${++itemUidCounter}_${Math.random().toString(36).slice(2, 6)}`,
     name: `${prefixLabel}${baseTpl.name}`,
@@ -96,6 +104,8 @@ export function generateLoot(stage, isBoss = false, magicFindPct = 0, guaranteed
     },
     affixes,
     legendaryEffect,
+    setId,
+    setName,
   };
 
   item.powerScore = calcItemPower(item);
@@ -140,7 +150,8 @@ export function calcItemPower(item) {
 }
 
 export function getSalvageReward(item) {
-  const rarityMult = { common: 1, magic: 2.2, rare: 5, legendary: 14 }[item.rarity] || 1;
+  const rarityMult = { common: 1, magic: 2.2, rare: 5, legendary: 14, set: 18 }[item.rarity] || 1;
+  if (item.setId) score += 120;
   const gold = Math.round((5 + item.level * 3) * rarityMult);
   const dust = Math.max(1, Math.round((1 + item.level * 0.5) * rarityMult));
   return { gold, dust };
@@ -206,7 +217,13 @@ export function generateBlackMarketItem(stage, playerClassId = 'warrior', forceR
     const legPool = LEGENDARY_EFFECTS.filter((le) => le.classReq === 'all' || itemCls === 'all' || le.classReq === itemCls);
     legendaryEffect = pickRandom(legPool.length > 0 ? legPool : LEGENDARY_EFFECTS);
   }
-  const prefixLabel = rarityId === 'legendary' ? '黑市・遠古' : (rarityId === 'rare' ? '黑市・精良' : '黑市・');
+  let setId = null, setName = null;
+  if (rarityId === 'set') {
+    const setKey = (itemCls && itemCls !== 'all' && SET_DEFINITIONS[`set_${itemCls}`]) ? `set_${itemCls}` : 'set_abyss';
+    setId = setKey;
+    setName = SET_DEFINITIONS[setKey].name;
+  }
+  const prefixLabel = rarityId === 'set' ? '黑市・套裝' : (rarityId === 'legendary' ? '黑市・遠古' : (rarityId === 'rare' ? '黑市・精良' : '黑市・'));
   const item = {
     uid: `item_${++itemUidCounter}_${Math.random().toString(36).slice(2, 6)}`,
     name: `${prefixLabel}${baseTpl.name}`,
@@ -220,6 +237,8 @@ export function generateBlackMarketItem(stage, playerClassId = 'warrior', forceR
     baseStat: { key: baseTpl.baseStat, value: baseValue },
     affixes,
     legendaryEffect,
+    setId,
+    setName,
   };
   item.powerScore = calcItemPower(item);
   return item;

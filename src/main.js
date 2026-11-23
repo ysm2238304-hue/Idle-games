@@ -7,6 +7,7 @@ import { PALADIN_SKILLS } from './data/paladinSkills.js';
 import { NECRO_SKILLS } from './data/necroSkills.js';
 import { ASSASSIN_SKILLS } from './data/assassinSkills.js';
 import { RARITIES } from './data/items.js';
+import { PET_CATALOG, rollPetDrop } from './data/pets.js';
 import { SKILL_TREE_NODES, isNodeUnlocked } from './data/skillTree.js';
 import { generateLoot, calcItemPower, getSalvageReward, rerollItemAffixes, generateBlackMarketItem } from './logic/lootGen.js';
 import { recalcPlayerStats, getExpToNext, getUpgradeCost, calcRebirthCrystals, formatNum } from './logic/statCalc.js';
@@ -470,6 +471,21 @@ function initPhaserGame() {
         ui.updateStageTracker(data.tracker);
         ui.renderMinimap(data.minimap);
       },
+      onLootPickedUp: (item) => {
+        if (!item) return;
+        if (item.isPet) {
+          if (!gameState.pets) gameState.pets = [];
+          gameState.pets.push(item);
+          if (!gameState.equippedPetId) gameState.equippedPetId = item.petId;
+          ui.addLog(`🐾 拾取寵物 [${RARITIES[item.rarity]?.label || '普通'}] ${item.name}！`, 'loot');
+          refreshStatsAndUI();
+          persistAll(true);
+          return;
+        }
+        handleLootDrop(item);
+        refreshStatsAndUI();
+        persistAll();
+      },
       onMonsterKilled: (mob, waveCleared) => {
         const goldGain = Math.round(mob.gold * (1 + computedStats.goldFind / 100));
         gameState.gold += goldGain;
@@ -481,7 +497,7 @@ function initPhaserGame() {
         grantExp(mob.exp);
 
         const dropped = generateLoot(mob.stage, mob.isBoss, computedStats.magicFind, false, gameState.classId);
-        const keptItem = handleLootDrop(dropped);
+        const droppedPet = rollPetDrop(mob.stage, mob.isBoss, computedStats.magicFind);
 
         if (waveCleared) {
           const clearedLabel = getStageLabel(gameState.stage);
@@ -1266,12 +1282,15 @@ function enterTown(chapterIdx = 0, instant = false) {
   if (phaserGame.scene.isSleeping('TownScene') || phaserGame.scene.isActive('TownScene')) {
     if (townScene && townScene.townData?.chapterIdx !== chapterIdx) {
       phaserGame.scene.stop('TownScene');
-      phaserGame.scene.start('TownScene', { chapterIdx, callbacks: townCallbacks });
+      battleScene?.collectAllGroundLoot?.();
+      battleScene?.collectAllGroundLoot?.();
+    phaserGame.scene.start('TownScene', { chapterIdx, callbacks: townCallbacks });
     } else {
       phaserGame.scene.wake('TownScene', { chapterIdx, callbacks: townCallbacks });
       townScene?.syncHeroAppearance?.();
     }
   } else {
+    battleScene?.collectAllGroundLoot?.();
     phaserGame.scene.start('TownScene', { chapterIdx, callbacks: townCallbacks });
   }
   const btn = document.getElementById('btn-town-toggle');
@@ -1779,7 +1798,8 @@ window.addEventListener('keydown', (e) => {
     cm?.classList.contains('hidden') ? ui.openClassModal(gameState) : cm.classList.add('hidden');
   } else if (e.code === 'KeyG') {
     if (isInTown) exitTownToBattle(); else enterTown(Math.min(9, getChapterIdx(gameState.stage)));
-  } else if (e.code === 'KeyO') { e.preventDefault(); hudSettings.toggleModal(); return; }
+  } else if (e.code === 'KeyP') { e.preventDefault(); ui.openDrawer('pets'); return; }
+  if (e.code === 'KeyO') { e.preventDefault(); hudSettings.toggleModal(); return; }
   if (e.code === 'KeyY') {
     if (isInTown) openTownWaypointUI();
   } else if (e.code === 'KeyL') {

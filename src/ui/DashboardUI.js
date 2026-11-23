@@ -489,7 +489,7 @@ export class DashboardUI {
       <div class="tt-meta">${item.subType || EQUIP_SLOTS[item.slot].label} • ${item.level} 級 • 戰力 ${pwr} <span style="color:${canWear ? reqInfo.color : '#ef4444'};font-weight:700;">[${reqInfo.label}]</span></div>
       <div class="tt-affix" style="color:#fde68a;">基礎：${STAT_LABELS[item.baseStat.key] || item.baseStat.key} +${item.baseStat.value}</div>
       ${affixesHtml}
-      ${item.legendaryEffect ? `<div style="color:#fb923c;margin-top:4px;font-size:11px;">★ ${item.legendaryEffect.name}：${item.legendaryEffect.desc}</div>` : ''}
+      ${item.legendaryEffect ? `<div style="color:#fb923c;margin-top:4px;font-size:11px;">★ ${item.legendaryEffect.name}：${item.legendaryEffect.desc}</div>` : ''}${(item.rarity === 'set' && item.setId && SET_DEFINITIONS[item.setId]) ? `<div style="color:#4ade80;margin-top:4px;font-size:11px;">❖ 套裝【${SET_DEFINITIONS[item.setId].name}】專屬詞條 (2/4件啟動)</div>` : ''}
       ${diffHtml}
     `;
     tt.style.borderColor = r.border;
@@ -752,6 +752,16 @@ export class DashboardUI {
     const legHtml = item.legendaryEffect
       ? `<div class="leg-effect">★ 傳奇特效【${item.legendaryEffect.name}】：${item.legendaryEffect.desc}</div>`
       : '';
+    let setHtml = '';
+    if (item.rarity === 'set' && item.setId && SET_DEFINITIONS[item.setId]) {
+      const sd = SET_DEFINITIONS[item.setId];
+      const eqCnt = Object.values(st?.equipment || {}).filter((e) => e && e.rarity === 'set' && e.setId === item.setId).length;
+      setHtml = `<div style="margin-top:6px;padding:6px 8px;border-radius:6px;background:rgba(22,163,74,0.14);border:1px solid rgba(34,197,94,0.45);font-size:11.5px;">
+        <div style="color:#4ade80;font-weight:700;">❖ 套裝【${sd.name}】（已裝備 ${eqCnt}/4 件）</div>
+        <div style="color:${eqCnt >= 2 ? '#86efac' : '#64748b'};">(2件套) ${sd.bonus2Desc}</div>
+        <div style="color:${eqCnt >= 4 ? '#86efac' : '#64748b'};">(4件套) ${sd.bonus4Desc}</div>
+      </div>`;
+    }
 
     box.innerHTML = `
       <div class="insp-top">
@@ -766,7 +776,7 @@ export class DashboardUI {
         </div>
       </div>
       <ul class="insp-affixes">${affixesHtml || '<li style="color:#64748b">無額外詞條</li>'}</ul>
-      ${legHtml}
+      ${legHtml}${setHtml}
       <div class="insp-actions">
         ${isEquipped ? '' : `<button id="insp-equip" class="btn-primary" ${!canWear ? 'disabled' : ''}>${canWear ? '穿戴裝備' : '職業不符'}</button>`}
         <button id="insp-upgrade" class="btn-secondary">強化 (+1) 💎${upgCost}</button>

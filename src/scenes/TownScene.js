@@ -883,6 +883,17 @@ export class TownScene extends Phaser.Scene {
     }
 
     this.updateHeroAnim(vx, vy, time);
+    if (this.petBuddy && this.hero) {
+      const pet = getPetDef(this.getState?.()?.equippedPetId);
+      if (pet) {
+        const tx = this.hero.x + (this.heroFlipX ? 44 : -44);
+        const ty = this.hero.y - 22 + Math.sin(time * 0.005) * 5;
+        this.petBuddy.setVisible(true).setText(pet.emoji).setPosition(Phaser.Math.Linear(this.petBuddy.x, tx, 0.12), Phaser.Math.Linear(this.petBuddy.y, ty, 0.12)).setDepth(ty + 2);
+        this.petAura?.setVisible(true).setFillStyle(pet.tint, 0.28).setPosition(this.petBuddy.x, this.petBuddy.y).setDepth(ty + 1);
+      } else {
+        this.petBuddy.setVisible(false); this.petAura?.setVisible(false);
+      }
+    }
     this.updatePatrols(dt, time);
     this.updateNearestPrompt();
 
