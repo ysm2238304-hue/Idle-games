@@ -115,7 +115,8 @@ export class HeroSkillShowcase {
   }
 
   triggerSkill(idx) {
-    const skills = CLASS_SKILLS_MAP[this.classId] || WARRIOR_SKILLS;
+    const rawMap = CLASS_SKILLS_MAP[this.classId] || WARRIOR_SKILLS;
+    const skills = Array.isArray(rawMap) ? rawMap : Object.values(rawMap);
     this.skillIdx = ((idx % skills.length) + skills.length) % skills.length;
     const sk = skills[this.skillIdx];
     const now = performance.now();

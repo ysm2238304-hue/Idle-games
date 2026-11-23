@@ -1429,7 +1429,8 @@ function renderWelcomeClasses() {
   const lv = cp[cls.id]?.level || 1;
   const ext = CLASS_META_EXT[cls.id] || { role: cls.title, bars: [80, 80, 80, 80] };
   const barNames = ['攻擊破壞', '生存護甲', '攻速機動', '奧義爆發'];
-  const clsSkills = CLASS_SKILLS_MAP[cls.id] || [];
+  const rawSk = CLASS_SKILLS_MAP[cls.id] || {};
+  const clsSkills = Array.isArray(rawSk) ? rawSk : Object.values(rawSk);
   welcomeClassStage.innerHTML = `
     <div class="showcase-canvas-wrap">
       <canvas id="preview-skill-canvas" width="360" height="196"></canvas>
