@@ -2892,6 +2892,7 @@ export class BattleScene extends Phaser.Scene {
     const cid = this.getState().classId;
     const lowBlood = cid === 'warrior' && (tree.w_key_blood || 0) > 0 && this.playerHp < this.playerMaxHp * 0.55;
     let totalLS = stats.lifesteal + (this.time.now < this.warcryUntil ? 12 : 0);
+    if (stats.activeEffects.has('berserk_soul') && this.playerHp < this.playerMaxHp * 0.5) totalLS *= 1.3;
     if (lowBlood) {
       totalLS *= 2;
       mob.bleedUntil = this.time.now + 3000;
@@ -3088,7 +3089,8 @@ export class BattleScene extends Phaser.Scene {
       return;
     }
 
-    const mitigation = stats.armor / (stats.armor + 45 + m.stage * 14);
+    const effArmor = (stats.activeEffects.has('berserk_soul') && this.playerHp < this.playerMaxHp * 0.5) ? Math.round(stats.armor * 1.3) : stats.armor;
+    const mitigation = effArmor / (effArmor + 45 + m.stage * 14);
     const guardBonus = (this.getState().classId === 'warrior' && this.time.now < (this.warriorGuardUntil || 0))
       ? Math.min(0.20, this.warriorGuardStacks * 0.04) : 0;
     const curseDr = (m && this.time.now < (m.cursedUntil || 0)) ? 0.25 : 0;
@@ -3116,6 +3118,9 @@ export class BattleScene extends Phaser.Scene {
       this.damageMonster(m, tDmg, isThornsCrit, false, '#fde047', '⚡反傷 ');
     }
     if ((stats.dmgReducePct || 0) > 0) dmg = Math.max(1, Math.round(dmg * (1 - stats.dmgReducePct / 100)));
+    if ((stats.blockHealPct || 0) > 0 && Math.random() < 0.28) {
+      this.healHero(Math.max(1, Math.round(this.playerMaxHp * (stats.blockHealPct / 100))));
+    }
     this.playerHp = Math.max(0, this.playerHp - dmg);
 
     this.hero.setTintFill(0xff4444);
@@ -3161,7 +3166,13 @@ export class BattleScene extends Phaser.Scene {
     const label = `${prefix}${isCrit ? '💥' : ''}-${formatNum(dmg)}${isCrit ? '!' : ''}`;
     this.spawnFloatingText(m.sprite.x + Phaser.Math.Between(-18, 18), m.sprite.y - 54, label, color, size);
 
-    if (isCrit) if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(70, 0.003);
+    if (isCrit) {
+      if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(70, 0.003);
+      if (st.activeEffects.has('toxic_arrow') && m.hp > 0) {
+        m.poisonedUntil = Math.max(m.poisonedUntil || 0, nowT + 3000);
+        m.poisonDmg = Math.max(m.poisonDmg || 0, Math.round(st.atk * 0.35));
+      }
+    }
 
     if (m.hp <= 0) {
       this.handleSingleMonsterKilled(m, this.getStats());
@@ -3337,7 +3348,11 @@ export class BattleScene extends Phaser.Scene {
 
     const stats = this.getStats();
     const sch = PET_SCHOOLS[pet.school] || PET_SCHOOLS.fire;
-    const dmg = Math.max(1, Math.round(stats.atk * (pet.dmgMult || 0.45) * (stats.skillDmgMult || 1)));
+    const petRec = (this.getState()?.pets || []).find((x) => x.petId === pet.id);
+    const petUpg = petRec?.upgradeLevel || 0;
+    const petUpgMult = 1 + petUpg * 0.18;
+    const extraHits = petUpg >= 10 ? 3 : (petUpg >= 8 ? 2 : (petUpg >= 6 ? 1 : 0));
+    const dmg = Math.max(1, Math.round(stats.atk * (pet.dmgMult || 0.45) * petUpgMult * (stats.skillDmgMult || 1)));
     const alive = this.monsters.filter((m) => m.hp > 0);
     if (!alive.length) return;
 
@@ -3349,7 +3364,7 @@ export class BattleScene extends Phaser.Scene {
     const targets = alive
       .map((m) => ({ m, d: Math.hypot(m.sprite.x - this.hero.x, m.sprite.y - this.hero.y) }))
       .sort((a, b) => a.d - b.d)
-      .slice(0, pet.bonusHits || 2)
+      .slice(0, (pet.bonusHits || 2) + extraHits)
       .map((x) => x.m);
 
     for (const tm of targets) {

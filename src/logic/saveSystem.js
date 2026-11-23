@@ -47,6 +47,7 @@ export function createInitialState(classId = 'warrior') {
     equippedPetId: 'pet_c1',
     pets: [{ uid: 'starter_pet_1', petId: 'pet_c1', name: '火精靈幼雛', rarity: 'common', school: 'fire', emoji: '🔥', obtainedAt: Date.now() }],
     petEssence: 0,
+    protectStones: 0,
     autoSalvage: {
       common: false,
       magic: false,
@@ -91,6 +92,7 @@ export function loadGame() {
       equippedPetId: parsed.equippedPetId !== undefined ? parsed.equippedPetId : 'pet_c1',
       pets: Array.isArray(parsed.pets) && parsed.pets.length ? parsed.pets : [{ uid: 'starter_pet_1', petId: 'pet_c1', name: '火精靈幼雛', rarity: 'common', school: 'fire', emoji: '🔥', obtainedAt: Date.now() }],
       petEssence: parsed.petEssence || 0,
+      protectStones: parsed.protectStones || 0,
     };
     if (!merged.equippedSkillsByClass.mage || merged.equippedSkillsByClass.mage.every((s) => !s)) {
       merged.equippedSkillsByClass.mage = ['meteor', null, null];

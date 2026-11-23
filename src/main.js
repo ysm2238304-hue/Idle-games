@@ -26,6 +26,8 @@ import { TOWN_SPLASHES } from './data/towns/splashes.js';
 import { DashboardUI } from './ui/DashboardUI.js';
 import { TownBgmEngine } from './audio/TownBgmEngine.js';
 import { HudSettingsManager } from './ui/HudSettingsManager.js';
+import { ShopModal } from './ui/ShopModal.js';
+import { rollEnhance, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEVEL } from './logic/enhanceSystem.js';
 import { HeroSkillShowcase, CLASS_SKILLS_MAP } from './ui/HeroSkillShowcase.js';
 
 let gameState = loadGame() || createInitialState('warrior');
@@ -56,6 +58,19 @@ function refreshStatsAndUI() {
 const townBgm = new TownBgmEngine();
 const hudSettings = new HudSettingsManager({ townBgm });
 hudSettings.init();
+const shopModal = new ShopModal({
+  getState: () => gameState,
+  onPurchaseComplete: (id, msg) => {
+    if (id === 'pot_heal') {
+      battleScene?.healHero?.(computedStats.maxHp);
+      battleScene?.addPotionCharge?.(3);
+    }
+    if (msg) ui.addLog(`🛒 ${msg}`, 'loot');
+    refreshStatsAndUI();
+    persistAll(true);
+  },
+});
+shopModal.init();
 document.getElementById('btn-lobby-settings')?.addEventListener('click', () => hudSettings.openModal());
 const heroShowcase = new HeroSkillShowcase();
 const ui = new DashboardUI({
@@ -106,19 +121,25 @@ const ui = new DashboardUI({
     persistAll(true);
   },
 
-  onUpgradeItem: (uid, isEquipped, cost) => {
-    if (gameState.dust < cost) {
-      ui.addLog(`強化粉塵不足（需要 ${cost}）！請分解多餘裝備取得。`, 'warn');
-      return;
-    }
+  onUpgradeItem: (uid, isEquipped) => {
     const item = isEquipped
       ? Object.values(gameState.equipment).find((i) => i && i.uid === uid)
       : gameState.inventory.find((i) => i.uid === uid);
-    if (!item) return;
-
-    gameState.dust -= cost;
-    item.upgradeLevel = (item.upgradeLevel || 0) + 1;
-    ui.addLog(`強化成功！${item.name} 升至 +${item.upgradeLevel}`, 'victory');
+    if (!item || (item.upgradeLevel || 0) >= MAX_ENHANCE_LEVEL) return;
+    const { gold, dust } = getEquipEnhanceCost(item);
+    if ((gameState.gold || 0) < gold || (gameState.dust || 0) < dust) {
+      ui.addLog(`強化資源不足（需 ${gold} 金幣${dust ? ` + ${dust} 粉塵` : ''}）！`, 'warn');
+      return;
+    }
+    gameState.gold -= gold;
+    gameState.dust -= dust;
+    const res = rollEnhance(item, (gameState.protectStones || 0) > 0, gameState);
+    item.powerScore = calcItemScore(item);
+    if (res.ok) {
+      ui.addLog(`⚒️ 強化成功！「${item.name}」升至 +${res.newLv}（成功率 ${res.rate}%）！`, 'victory');
+    } else {
+      ui.addLog(`💨 強化失敗（${res.rate}%），「${item.name}」${res.demoted ? `降為 +${res.newLv}` : `維持 +${res.newLv}`}${res.protectedUsed ? '（保護石已生效）' : ''}！`, 'system');
+    }
     refreshStatsAndUI();
     ui.renderItemInspector(item, isEquipped, gameState);
     persistAll(true);
@@ -1028,21 +1049,17 @@ function enterTown(chapterIdx = 0, instant = false) {
             const item = isEq
               ? Object.values(gameState.equipment || {}).find((i) => i && i.uid === uid)
               : (gameState.inventory || []).find((i) => i && i.uid === uid);
-            if (!item || (item.upgradeLevel || 0) >= 10) return;
-            const lv = item.upgradeLevel || 0;
-            const cost = Math.max(300, (item.level || 1) * 160 * (lv + 1));
-            if ((gameState.gold || 0) < cost) return;
-            gameState.gold -= cost;
-            const baseRate = lv < 3 ? 100 : (lv < 6 ? 80 : 60);
-            const succRate = Math.min(100, baseRate + (item.refineBless || 0));
-            if (Math.random() * 100 < succRate) {
-              item.upgradeLevel = lv + 1;
-              item.refineBless = 0;
-              item.powerScore = calcItemPower(item);
-              ui.addLog(`⚒️ 精煉成功！「${item.name}」強化至 +${item.upgradeLevel}（戰力 ${item.powerScore}）！`, 'victory');
+            if (!item || (item.upgradeLevel || 0) >= MAX_ENHANCE_LEVEL) return;
+            const { gold, dust } = getEquipEnhanceCost(item);
+            if ((gameState.gold || 0) < gold || (gameState.dust || 0) < dust) return;
+            gameState.gold -= gold;
+            gameState.dust -= dust;
+            const res = rollEnhance(item, !!useProtect, gameState);
+            item.powerScore = calcItemScore(item);
+            if (res.ok) {
+              ui.addLog(`⚒️ 強化成功！「${item.name}」升至 +${res.newLv}（成功率 ${res.rate}%）！`, 'victory');
             } else {
-              item.refineBless = Math.min(40, (item.refineBless || 0) + 15);
-              ui.addLog(`💨 精煉失敗，「${item.name}」維持 +${lv}（已累積祝福 +${item.refineBless}%）！`, 'system');
+              ui.addLog(`💨 強化失敗（${res.rate}%），「${item.name}」${res.demoted ? `降為 +${res.newLv}` : `維持 +${res.newLv}`}${res.protectedUsed ? '（保護石已生效）' : ''}！`, 'system');
             }
             refreshStatsAndUI();
             persistAll();
@@ -1751,7 +1768,8 @@ window.addEventListener('keydown', (e) => {
     cm?.classList.contains('hidden') ? ui.openClassModal(gameState) : cm.classList.add('hidden');
   } else if (e.code === 'KeyG') {
     if (isInTown) exitTownToBattle(); else enterTown(Math.min(9, getChapterIdx(gameState.stage)));
-  } else if (e.code === 'KeyP') { e.preventDefault(); ui.openDrawer('pets'); return; }
+  } else if (e.code === 'KeyS') { e.preventDefault(); shopModal.toggle(); return; }
+  if (e.code === 'KeyP') { e.preventDefault(); ui.openDrawer('pets'); return; }
   if (e.code === 'KeyO') { e.preventDefault(); hudSettings.toggleModal(); return; }
   if (e.code === 'KeyY') {
     if (isInTown) openTownWaypointUI();

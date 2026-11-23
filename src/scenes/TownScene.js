@@ -97,6 +97,17 @@ export class TownScene extends Phaser.Scene {
     this.physics?.world?.setBounds(0, 0, td.mapWidth, td.mapHeight);
     this.cameras.main.setBounds(0, 0, td.mapWidth, td.mapHeight);
 
+        if (!this.textures.exists('fx_glow')) {
+      const tex = this.textures.createCanvas('fx_glow', 64, 64);
+      const ctx = tex.getContext();
+      const g = ctx.createRadialGradient(32, 32, 2, 32, 32, 32);
+      g.addColorStop(0, 'rgba(255,255,255,1)');
+      g.addColorStop(0.35, 'rgba(255,255,255,0.6)');
+      g.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, 64, 64);
+      tex.refresh();
+    }
     // 1. 廣場大底圖
     this.add.image(td.mapWidth / 2, td.mapHeight / 2, td.bgKey)
       .setDisplaySize(td.mapWidth, td.mapHeight)

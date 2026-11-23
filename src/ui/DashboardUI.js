@@ -603,6 +603,7 @@ export class DashboardUI {
     this.renderUpgrades(state);
     this.renderSkillTree(state);
     this.renderSkillSelectPanel(state);
+    this.renderPets(state);
     this.renderRebirthPanel(state);
   }
 
@@ -928,6 +929,77 @@ export class DashboardUI {
     });
     document.getElementById('btn-reset-tree')?.addEventListener('click', () => {
       this.handlers.onResetSkillTree();
+    });
+  }
+
+  renderPets(state) {
+    const box = document.getElementById('pets-container');
+    if (!box) return;
+    const pets = state.pets || [];
+    const eqId = state.equippedPetId;
+    const eqPet = eqId ? getPetDef(eqId) : null;
+    const eqRec = pets.find((x) => x.petId === eqId);
+    const eqSch = eqPet ? PET_SCHOOLS[eqPet.school] : null;
+    const eqRar = eqPet ? getPetRarityMeta(eqPet.rarity) : null;
+
+    box.innerHTML = `
+      <div style="padding:10px;border-radius:8px;background:rgba(18,14,18,0.92);border:1px solid ${eqRar ? eqRar.border : '#64748b'};margin-bottom:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:6px;flex-wrap:wrap;">
+          <b style="color:#fde68a;">🐾 目前出戰寵物</b>
+          <span style="font-size:11.5px;color:#38bdf8;">✨ 精華：<b>${state.petEssence || 0}</b> ｜ 🛡️ 保護石：<b>${state.protectStones || 0}</b></span>
+        </div>
+        ${eqPet ? `
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div style="font-size:28px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:${eqRar.bg};border:1.5px solid ${eqRar.border};">${eqPet.emoji}</div>
+            <div style="flex:1;">
+              <div><b style="color:${eqRar.color};">[${eqRar.label}] ${eqPet.name}${(eqRec?.upgradeLevel || 0) > 0 ? ` +${eqRec.upgradeLevel}` : ''}</b> <span style="font-size:11px;color:${eqSch.color};">・${eqSch.label}</span></div>
+              <div style="font-size:11.5px;color:#cbd5e1;margin-top:2px;">${eqPet.desc}</div>
+            </div>
+            <button type="button" id="btn-unequip-pet" class="btn-ghost-sm">卸下</button>
+          </div>
+        ` : '<div style="font-size:12px;color:#94a3b8;">尚未出戰寵物（寵物會改變技能特效與衍生機制）</div>'}
+        <label style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11.5px;color:#86efac;"><input type="checkbox" id="chk-pet-protect" ${(state.protectStones || 0) > 0 ? 'checked' : 'disabled'} /> +6 以上強化使用保護石防降階（+6:40% +7:30% +8:20% +9:10% +10:1%）</label>
+        <div style="margin-top:8px;display:flex;gap:8px;align-items:center;">
+          <button type="button" id="btn-summon-pet" class="btn-gold-sm" style="flex:1;" ${(state.petEssence || 0) < 30 ? 'disabled' : ''}>✨ 召喚新寵物 (消耗 30 精華)</button>
+          <span style="font-size:11px;color:#94a3b8;">圖鑑 ${new Set(pets.map((p) => p.petId)).size} / ${PET_CATALOG.length}</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;">
+        ${pets.map((p) => {
+          const def = getPetDef(p.petId) || PET_CATALOG[0];
+          const rar = getPetRarityMeta(def.rarity);
+          const sch = PET_SCHOOLS[def.school];
+          const isEq = eqId === def.id;
+          const lv = p.upgradeLevel || 0;
+          const rate = getEnhanceRate(lv);
+          const { gold, essence } = getPetEnhanceCost(p);
+          const canEnh = lv < MAX_ENHANCE_LEVEL && (state.gold || 0) >= gold && (state.petEssence || 0) >= essence;
+          return `
+            <div style="display:flex;align-items:center;gap:7px;padding:7px 9px;border-radius:7px;background:${isEq ? 'rgba(120,53,15,0.28)' : 'rgba(14,11,15,0.85)'};border:1px solid ${isEq ? '#f59e0b' : rar.border};">
+              <div style="font-size:22px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:${rar.bg};flex-shrink:0;">${def.emoji}</div>
+              <div style="flex:1;min-width:0;">
+                <div style="font-size:12.5px;"><b style="color:${rar.color};">[${rar.label}] ${def.name}${lv > 0 ? ` +${lv}` : ''}</b> <span style="font-size:10.5px;color:${sch.color};">${sch.label}</span></div>
+                <div style="font-size:11px;color:#94a3b8;">${def.desc}</div>
+              </div>
+              <button type="button" class="btn-gold-sm" data-enh-pet="${p.uid}" ${canEnh ? '' : 'disabled'} title="消耗 ${gold} 金幣 + ${essence} 精華">${lv >= 10 ? '+10滿' : `⚒️+${lv + 1}(${rate}%)`}</button>
+              <button type="button" class="btn-gold-sm" data-equip-pet="${def.id}">${isEq ? '出戰中' : '出戰'}</button>
+              <button type="button" class="btn-ghost-sm" data-salvage-pet="${p.uid}">分解</button>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+
+    box.querySelector('#btn-unequip-pet')?.addEventListener('click', () => this.callbacks.onEquipPet?.(null));
+    box.querySelector('#btn-summon-pet')?.addEventListener('click', () => this.callbacks.onSummonPet?.());
+    box.querySelectorAll('[data-enh-pet]').forEach((b) => {
+      b.onclick = () => this.callbacks.onEnhancePet?.(b.dataset.enhPet, !!box.querySelector('#chk-pet-protect')?.checked);
+    });
+    box.querySelectorAll('[data-equip-pet]').forEach((b) => {
+      b.onclick = () => this.callbacks.onEquipPet?.(b.dataset.equipPet);
+    });
+    box.querySelectorAll('[data-salvage-pet]').forEach((b) => {
+      b.onclick = () => this.callbacks.onSalvagePet?.(b.dataset.salvagePet);
     });
   }
 
@@ -1721,8 +1793,8 @@ export class DashboardUI {
               <button id="btn-bs-reroll" ${(st.gold || 0) < rerollCost || (it.affixes || []).length === 0 ? 'disabled' : ''}>洗鍊詞綴 (${rerollCost.toLocaleString()} G)</button>
             </div>
             <div class="town-option-card">
-              <div><h4>⚒️ 裝備精煉昇華 (+${lv} → +${Math.min(10, lv + 1)})</h4><p>每級提升該裝備全屬性 +12%（本次成功率 ${succRate}%${bless > 0 ? ` 含祝福+${bless}%` : ''}，失敗+15%祝福不降級）。</p></div>
-              <button id="btn-bs-refine" ${lv >= 10 || (st.gold || 0) < refineCost ? 'disabled' : ''}>${lv >= 10 ? '已達精煉上限 (+10)' : `進行精煉 (${refineCost.toLocaleString()} G)`}</button>
+              <div><h4>⚒️ 裝備強化 (+${lv} → +${Math.min(10, lv + 1)})</h4><p>每級提升基礎屬性 +12%（本次成功率 <b style="color:#fde047;">${succRate}%</b>｜+6以上失敗可能降1階，保護石剩餘 ${st.protectStones || 0} 顆）。</p>${lv >= 5 ? `<label style="font-size:11.5px;color:#86efac;display:flex;align-items:center;gap:6px;margin-top:4px;"><input type="checkbox" id="chk-bs-protect" ${(st.protectStones || 0) > 0 ? 'checked' : 'disabled'} /> 使用保護石防降階</label>` : ''}</div>
+              <button id="btn-bs-refine" ${lv >= 10 || (st.gold || 0) < refineCost || (st.dust || 0) < refineDust ? 'disabled' : ''}>${lv >= 10 ? '已達精煉上限 (+10)' : `進行強化 (${refineCost.toLocaleString()} G${refineDust ? ` + ${refineDust}粉` : ''})`}</button>
             </div>
           </div>`;
       }
