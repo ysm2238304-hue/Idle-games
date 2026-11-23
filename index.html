@@ -7,63 +7,76 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./style.css?v=78" />
+  <link rel="stylesheet" href="./style.css?v=79" />
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
 </head>
 <body>
   <section id="welcome-screen">
-    <video id="welcome-bg-video" class="welcome-bg-video" autoplay loop muted playsinline src="./assets/video/intro.mp4?v=78"></video>
-    <div class="welcome-backdrop" style="opacity:0.42;"></div>
-    <button id="btn-welcome-bgm" class="welcome-bgm-btn" title="開啟 / 靜音登入背景音樂">🔇 點擊開啟背景音樂</button>
+    <video id="welcome-bg-video" class="welcome-bg-video" autoplay loop muted playsinline src="./assets/video/intro.mp4?v=79"></video>
+    <div class="welcome-backdrop"></div>
     <div class="welcome-vignette"></div>
-    <div class="welcome-content v70-lobby">
-      <div class="welcome-crest v70-crest">
-        <img class="welcome-abyss-logo" src="./assets/ui/logo_abyss.png?v=78" alt="無限深淵" />
-        <h1 class="crest-title">無限深淵</h1>
-      </div>
 
-      <!-- 步驟 1：毛玻璃登入卡片 -->
-      <div id="welcome-step-auth" class="welcome-glass-card">
-        <div class="auth-actions v70-auth-actions">
-          <button id="btn-google-login" class="btn-epic-gold">🔐 Google 帳號登入（雲端同步存檔）</button>
-          <button id="btn-guest-play" class="btn-epic-ghost">⚔️ 本機離線冒險（免登入試玩）</button>
+    <!-- 步驟 1：全螢幕三層景深史詩扉頁 -->
+    <div id="welcome-step-auth" class="welcome-title-gate">
+      <header class="gate-top-strip">
+        <div class="gate-era-pill">⚔️ 無限深淵・深淵紀元 <b>v79</b></div>
+        <div class="gate-top-right">
+          <div id="welcome-auth-status" class="auth-status-pill">正在檢查 Google 登入狀態...</div>
+          <button id="btn-welcome-bgm" class="welcome-bgm-btn" title="開啟 / 靜音登入背景音樂">🔇 開啟背景音樂</button>
         </div>
-        <div id="welcome-auth-status" class="auth-status-text">正在檢查 Google 登入狀態...</div>
-      </div>
+      </header>
 
-      <!-- 步驟 2：雙欄史詩創角大廳 / 老玩家回歸面板 -->
-      <div id="welcome-step-class" class="welcome-creation-shell hidden">
-        <div class="creation-topbar">
-          <div id="welcome-save-summary" class="save-summary-pill"></div>
-          <div style="display:flex;gap:8px;align-items:center;">
-            <button id="btn-reset-character" class="btn-epic-danger hidden" title="刪除目前角色並重新選擇職業">🗑️ 重建新角色</button>
-            <button id="btn-watch-intro" class="btn-epic-ghost-sm" title="單獨預覽電影開場動畫">🎬 預覽開場</button>
-          </div>
+      <div class="gate-center-axis">
+        <div class="gate-crest">
+          <img class="welcome-abyss-logo" src="./assets/ui/logo_abyss.png?v=79" alt="無限深淵" />
+          <h1 class="crest-title">無限深淵</h1>
+          <p class="crest-subtitle">DARK FANTASY IDLE ACTION RPG・暗黑深淵遠征</p>
         </div>
-
-        <!-- 雙欄創角舞台（首次創角） -->
-        <div id="creation-two-col" class="creation-two-col">
-          <div id="welcome-class-list" class="creation-left-list"></div>
-          <div id="welcome-class-stage" class="creation-right-stage"></div>
-        </div>
-
-        <!-- 底部契約與暱稱輸入列 -->
-        <div class="creation-footer">
-          <div id="nickname-input-wrap" class="nickname-input-wrap">
-            <label for="input-hero-nickname">冒險者暱稱：</label>
-            <input id="input-hero-nickname" type="text" maxlength="12" placeholder="請輸入 2~12 字暱稱..." autocomplete="off" />
-            <button id="btn-random-nickname" type="button" class="btn-dice" title="隨機產生暗黑風格暱稱">🎲 隨機</button>
-          </div>
-          <button id="btn-start-game" class="btn-epic-gold start-btn">⚔️ 締結契約・踏入深淵</button>
+        <div class="gate-login-pedestal">
+          <button id="btn-google-login" class="btn-epic-gold gate-btn-main">🔐 Google 帳號登入（雲端同步存檔）</button>
+          <button id="btn-guest-play" class="btn-epic-ghost gate-btn-sub">⚔️ 本機離線冒險（免登入試玩）</button>
         </div>
       </div>
+
+      <footer class="gate-bottom-bar">
+        <div class="gate-feature-pill"><span>⚔️</span> 六大職業・四十八招實戰演武</div>
+        <div class="gate-feature-pill"><span>🏰</span> 十大章節・主城探索與自動狩獵</div>
+        <div class="gate-feature-pill"><span>💎</span> 詞條鍛造・深淵輪迴永恆成長</div>
+      </footer>
+    </div>
+
+    <!-- 步驟 2：全螢幕 100vw x 100vh 四區精密選角殿堂 -->
+    <div id="welcome-step-class" class="welcome-creation-fullscreen hidden">
+      <header class="creation-topbar">
+        <div id="welcome-save-summary" class="save-summary-pill"></div>
+        <div class="creation-hall-title">✦ 暗黑英雄殿堂・契約締結 ✦</div>
+        <div class="creation-top-actions">
+          <button id="btn-reset-character" class="btn-epic-danger hidden" title="刪除目前角色並重新選擇職業">🗑️ 重建新角色</button>
+          <button id="btn-watch-intro" class="btn-epic-ghost-sm" title="單獨預覽電影開場動畫">🎬 預覽開場</button>
+          <button id="btn-lobby-settings" class="btn-epic-ghost-sm" title="系統設定 [O]">⚙️ 設定(O)</button>
+        </div>
+      </header>
+
+      <div id="creation-two-col" class="creation-fullscreen-body">
+        <aside id="welcome-class-list" class="creation-left-roster"></aside>
+        <section id="welcome-class-stage" class="creation-center-right-grid"></section>
+      </div>
+
+      <footer class="creation-footer">
+        <div id="nickname-input-wrap" class="nickname-input-wrap">
+          <label for="input-hero-nickname">冒險者銘牌：</label>
+          <input id="input-hero-nickname" type="text" maxlength="12" placeholder="請輸入 2~12 字暱稱..." autocomplete="off" />
+          <button id="btn-random-nickname" type="button" class="btn-dice" title="隨機產生暗黑風格暱稱">🎲 隨機</button>
+        </div>
+        <button id="btn-start-game" class="btn-epic-gold start-btn">⚔️ 締結合約・踏入深淵</button>
+      </footer>
     </div>
   </section>
 
   <!-- ========== 電影級開場動畫劇院覆蓋層 (v68) ========== -->
   <div id="cinematic-intro-overlay" class="cinematic-intro-overlay hidden">
     <div class="cinematic-letterbox top"></div>
-    <video id="cinematic-intro-video" playsinline preload="auto" src="./assets/video/intro.mp4?v=78"></video>
+    <video id="cinematic-intro-video" playsinline preload="auto" src="./assets/video/intro.mp4?v=79"></video>
     <div class="cinematic-vignette"></div>
     <div id="cinematic-caption" class="cinematic-caption"></div>
     <div class="cinematic-controls">
@@ -161,7 +174,7 @@
           <button class="mmo-micro-btn" data-drawer="rebirth" data-tip="深淵輪迴轉生 [V]"><img class="mmo-ui-img" src="./assets/ui/ui_rebirth.png" alt="輪迴" /><span class="mmo-lbl">輪迴(V)</span></button>
           <button id="btn-switch-class" class="mmo-micro-btn" data-tip="切換冒險職業 [C]"><img class="mmo-ui-img" src="./assets/ui/ui_class.png" alt="職業" /><span class="mmo-lbl">職業(C)</span></button>
           <button class="mmo-micro-btn" data-drawer="log" data-tip="完整戰鬥日誌 [L]"><img class="mmo-ui-img" src="./assets/ui/ui_log.png" alt="日誌" /><span class="mmo-lbl">日誌(L)</span></button>
-          <button id="btn-top-waypoint" class="mmo-micro-btn mmo-waypoint-btn" data-tip="主城快速傳送陣 [Y]"><img class="mmo-ui-img" src="./assets/ui/ui_waypoint.png?v=78" alt="傳送" /><span class="mmo-lbl">傳送(Y)</span></button>
+          <button id="btn-top-waypoint" class="mmo-micro-btn mmo-waypoint-btn" data-tip="主城快速傳送陣 [Y]"><img class="mmo-ui-img" src="./assets/ui/ui_waypoint.png?v=79" alt="傳送" /><span class="mmo-lbl">傳送(Y)</span></button>
           <button id="btn-town-bgm" class="mmo-micro-btn" data-tip="開啟 / 靜音主城 BGM"><span style="font-size:18px;line-height:24px;">🎵</span><span class="mmo-lbl">音樂</span></button>
           <button id="btn-open-settings" class="mmo-micro-btn" data-tip="系統設定 (UI/聲音/畫質/遊戲) [O]"><span style="font-size:18px;line-height:24px;">⚙️</span><span class="mmo-lbl">設定(O)</span></button>
           <button id="btn-collapse-topmenu" class="mmo-micro-btn mmo-collapse-btn" data-tip="收合 / 展開上方快捷列"><span class="mmo-lbl" style="font-size:15px;">◀</span></button>
@@ -456,6 +469,6 @@
     </div>
   </div>
 
-  <script type="module" src="./src/main.js?v=78"></script>
+  <script type="module" src="./src/main.js?v=79"></script>
 </body>
 </html>

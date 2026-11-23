@@ -3700,3 +3700,426 @@ body.hud-edit-active #target-frame.hidden {
   display: inline;
   color: #fde047;
 }
+
+/* === v79: 第一批｜歡迎頁三層景深扉頁 ＋ 全螢幕 100vw x 100vh 四區選角殿堂 === */
+#welcome-screen {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+}
+
+/* 1. 歡迎頁全螢幕扉頁 */
+.welcome-title-gate {
+  position: relative;
+  z-index: 5;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px 34px 24px;
+  background: radial-gradient(circle at 50% 42%, rgba(0, 0, 0, 0.12), rgba(5, 4, 8, 0.78) 82%);
+}
+.gate-top-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.gate-era-pill {
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(14, 11, 16, 0.78);
+  border: 1px solid rgba(196, 148, 72, 0.5);
+  color: #e2d5be;
+  font-size: 12px;
+  backdrop-filter: blur(8px);
+}
+.gate-era-pill b { color: #fbbf24; margin-left: 4px; }
+.gate-top-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.auth-status-pill {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(14, 11, 16, 0.72);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  color: #cbd5e1;
+  font-size: 12px;
+}
+.welcome-bgm-btn {
+  position: static !important;
+  padding: 6px 14px !important;
+  border-radius: 999px !important;
+  background: rgba(18, 14, 18, 0.85) !important;
+  border: 1px solid rgba(196, 148, 72, 0.55) !important;
+  color: #fde68a !important;
+  font-size: 12px !important;
+  cursor: pointer;
+}
+.gate-center-axis {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  margin: auto 0;
+}
+.gate-crest {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.crest-subtitle {
+  margin: 6px 0 0;
+  font-size: 12px;
+  letter-spacing: 0.28em;
+  color: rgba(226, 213, 190, 0.72);
+}
+.gate-login-pedestal {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px;
+  padding: 16px 24px;
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(20, 15, 18, 0.72), rgba(8, 6, 10, 0.85));
+  border: 1px solid rgba(180, 134, 62, 0.55);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.82), inset 0 1px 0 rgba(250, 204, 21, 0.16);
+  backdrop-filter: blur(10px);
+}
+.gate-btn-main, .gate-btn-sub {
+  min-width: 260px;
+  padding: 13px 22px !important;
+  font-size: 14.5px !important;
+}
+.gate-bottom-bar {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.gate-feature-pill {
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: rgba(14, 11, 15, 0.76);
+  border: 1px solid rgba(154, 114, 54, 0.35);
+  color: #d6cbb8;
+  font-size: 12px;
+}
+.gate-feature-pill span { margin-right: 6px; }
+
+/* 2. 全螢幕 100vw x 100vh 四區選角殿堂 */
+.welcome-creation-fullscreen {
+  position: relative;
+  z-index: 6;
+  width: 100vw;
+  height: 100vh;
+  display: grid;
+  grid-template-rows: 58px 1fr 72px;
+  background: radial-gradient(circle at 52% 45%, rgba(45, 22, 24, 0.36), rgba(6, 5, 9, 0.92) 72%);
+  backdrop-filter: blur(6px);
+}
+.creation-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  background: linear-gradient(180deg, rgba(16, 12, 15, 0.96), rgba(10, 8, 11, 0.88));
+  border-bottom: 1.5px solid rgba(168, 124, 58, 0.55);
+}
+.creation-hall-title {
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 0.18em;
+  color: #fde68a;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.9);
+}
+.creation-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.creation-fullscreen-body {
+  display: grid;
+  grid-template-columns: 290px 1fr;
+  gap: 18px;
+  padding: 16px 24px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* 左欄：雙層職業軍團名錄 */
+.creation-left-roster {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.cls-roster-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(22, 18, 22, 0.9), rgba(11, 9, 13, 0.94));
+  border: 1px solid rgba(138, 102, 50, 0.38);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.16s ease;
+}
+.cls-roster-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 10%;
+  bottom: 10%;
+  width: 3px;
+  border-radius: 2px;
+  background: var(--cls-accent, #f59e0b);
+  opacity: 0.35;
+}
+.cls-roster-card:hover {
+  border-color: rgba(245, 158, 11, 0.65);
+  transform: translateX(3px);
+}
+.cls-roster-card.active {
+  border-color: var(--cls-accent, #f59e0b);
+  background: linear-gradient(90deg, rgba(120, 53, 15, 0.35), rgba(18, 14, 18, 0.96));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.75), inset 0 0 18px rgba(245, 158, 11, 0.14);
+  transform: translateX(5px);
+}
+.cls-roster-card.active::before { opacity: 1; }
+.cls-roster-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 9px;
+  background: rgba(8, 6, 10, 0.85);
+  border: 1.5px solid rgba(180, 134, 62, 0.55);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.cls-roster-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.cls-roster-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.cls-roster-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.cls-roster-name { font-size: 15px; font-weight: 900; }
+.cls-roster-role { font-size: 11.5px; color: #cbd5e1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cls-roster-tag { font-size: 10.5px; color: #fbbf24; opacity: 0.85; }
+
+/* 中央＋右側雙區結構 */
+.creation-center-right-grid {
+  display: grid;
+  grid-template-columns: 1fr 360px;
+  gap: 20px;
+  min-height: 0;
+  overflow: hidden;
+}
+.arena-center-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+}
+.arena-nameplate {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 4px;
+}
+.arena-title-left {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.arena-title-left h2 {
+  margin: 0;
+  font-size: 30px;
+  font-weight: 900;
+  white-space: nowrap;
+  text-shadow: 0 3px 14px rgba(0, 0, 0, 0.9);
+}
+.arena-sub-title { font-size: 14px; color: #e2d5be; font-weight: 700; }
+.arena-elem-tag {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(120, 53, 15, 0.35);
+  border: 1px solid rgba(251, 191, 36, 0.45);
+  color: #fde68a;
+  font-size: 11.5px;
+}
+.showcase-active-pill {
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: rgba(16, 12, 16, 0.88);
+  border: 1px solid rgba(251, 191, 36, 0.5);
+  color: #fde047;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.arena-canvas-frame {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: radial-gradient(circle, rgba(16, 14, 20, 0.75), rgba(6, 5, 9, 0.95));
+  border: 1.5px solid rgba(180, 134, 62, 0.65);
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.85), inset 0 0 28px rgba(0, 0, 0, 0.7);
+  overflow: hidden;
+}
+#preview-skill-canvas {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 100%;
+  object-fit: contain;
+  border: none !important;
+  box-shadow: none !important;
+}
+.arena-skill-deck {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.deck-group {
+  background: rgba(14, 11, 15, 0.85);
+  border: 1px solid rgba(138, 102, 50, 0.45);
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+.deck-group-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #fbbf24;
+  margin-bottom: 6px;
+}
+.deck-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+.showcase-sk-btn .sk-num {
+  font-size: 10px;
+  color: #94a3b8;
+  font-weight: 700;
+  min-width: 12px;
+}
+
+/* 右欄：雙頁籤檢視器 */
+.inspector-right-col {
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, rgba(20, 15, 19, 0.92), rgba(10, 8, 12, 0.96));
+  border: 1.5px solid rgba(168, 124, 58, 0.55);
+  border-radius: 12px;
+  padding: 14px;
+  overflow-y: auto;
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.8);
+}
+.inspector-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.insp-tab-btn {
+  padding: 8px 10px;
+  border-radius: 7px;
+  border: 1px solid rgba(138, 102, 50, 0.45);
+  background: rgba(24, 18, 22, 0.88);
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.insp-tab-btn.active {
+  border-color: #f59e0b;
+  background: linear-gradient(180deg, rgba(120, 53, 15, 0.65), rgba(45, 20, 12, 0.95));
+  color: #fef08a;
+}
+.insp-desc {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #cbd5e1;
+  line-height: 1.6;
+}
+.innate-plaque {
+  margin: 12px 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(120, 53, 15, 0.18);
+  border: 1px solid rgba(250, 204, 21, 0.35);
+  font-size: 12.5px;
+  color: #f1e6cf;
+  line-height: 1.5;
+}
+.skill-lore-scroll {
+  padding: 12px;
+  border-radius: 10px;
+  background: rgba(12, 10, 14, 0.92);
+  border: 1px solid rgba(168, 124, 58, 0.5);
+}
+.lore-sk-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.lore-sk-ico {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  border: 1.5px solid #f59e0b;
+  flex-shrink: 0;
+}
+.lore-sk-cd { font-size: 11.5px; color: #94a3b8; margin-top: 2px; }
+.lore-sk-desc { margin: 0; font-size: 13px; color: #e2e8f0; line-height: 1.6; }
+.build-card { display: flex; flex-direction: column; gap: 10px; }
+.build-row {
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(14, 11, 15, 0.85);
+  border: 1px solid rgba(138, 102, 50, 0.35);
+}
+.build-row small { display: block; font-size: 11px; color: #94a3b8; margin-bottom: 3px; }
+.build-row b { font-size: 13px; color: #fde68a; }
+.build-tip {
+  padding: 12px;
+  border-radius: 8px;
+  background: rgba(120, 53, 15, 0.2);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  font-size: 12.5px;
+  color: #e2e8f0;
+  line-height: 1.6;
+}
+.build-tip p { margin: 6px 0 0; }
+
+/* 底部契約台 */
+.creation-footer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: 0 24px;
+  background: linear-gradient(180deg, rgba(16, 12, 15, 0.92), rgba(8, 6, 9, 0.98));
+  border-top: 1.5px solid rgba(168, 124, 58, 0.55);
+}

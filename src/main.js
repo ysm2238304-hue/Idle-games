@@ -55,6 +55,7 @@ function refreshStatsAndUI() {
 const townBgm = new TownBgmEngine();
 const hudSettings = new HudSettingsManager({ townBgm });
 hudSettings.init();
+document.getElementById('btn-lobby-settings')?.addEventListener('click', () => hudSettings.openModal());
 const heroShowcase = new HeroSkillShowcase();
 const ui = new DashboardUI({
   onSelectClass: (classId) => {
@@ -1377,12 +1378,12 @@ const resetCharBtn = document.getElementById('btn-reset-character');
 const startGameBtn = document.getElementById('btn-start-game');
 
 const CLASS_META_EXT = {
-  warrior:  { role: '前排重裝坦克・吸血破陣', bars: [85, 95, 55, 78] },
-  ranger:   { role: '遠程風箏射手・高頻暴擊', bars: [88, 55, 95, 86] },
-  mage:     { role: '奧術毀滅法師・全場清怪', bars: [96, 48, 65, 98] },
-  paladin:  { role: '神聖守護騎士・反傷光環', bars: [76, 98, 60, 74] },
-  necro:    { role: '亡靈召喚主宰・骨海軍團', bars: [86, 72, 58, 84] },
-  assassin: { role: '暗影極速刺客・瞬殺連擊', bars: [94, 52, 98, 95] },
+  warrior:  { role: '前排重裝坦克・吸血破陣', tag: '近戰・物理烈焰', archetype: '不朽狂戰士 / 浴血重裝流', priority: '力量 ＞ 生命 ＞ 暴擊 ＞ 吸血', gear: '重型板甲・雙手巨劍', tip: '利用旋風重斬與血怒衝鋒切入怪群，靠高額吸血站樁輸出。', bars: [85, 95, 55, 78] },
+  ranger:   { role: '遠程風箏射手・高頻暴擊', tag: '遠程・穿刺劇毒', archetype: '幻影神射手 / 箭雨暴擊流', priority: '攻速 ＞ 暴擊 ＞ 敏捷 ＞ 爆傷', gear: '輕型皮甲・長弓雙弩', tip: '透過風行疾步保持距離，搭配翡翠箭雨與死神標記清場。', bars: [88, 55, 95, 86] },
+  mage:     { role: '奧術毀滅法師・全場清怪', tag: '法術・冰火虛空', archetype: '星界大法師 / 隕石毀滅流', priority: '智力 ＞ 技能傷 ＞ 冷卻 ＞ 魔力', gear: '奧術法袍・星界法杖', tip: '施放魔力超載後接續深淵隕石與黑洞奇點，瞬間蒸發全場。', bars: [96, 48, 65, 98] },
+  paladin:  { role: '神聖守護騎士・反傷光環', tag: '聖光・護盾反傷', archetype: '聖殿裁決官 / 祝福聖鎚流', priority: '護甲 ＞ 生命 ＞ 格擋 ＞ 聖傷', gear: '聖殿重甲・戰鎚塔盾', tip: '開啟聖光神盾與奉獻聖地，用環繞祝福之鎚穩定輾壓首領。', bars: [76, 98, 60, 74] },
+  necro:    { role: '亡靈召喚主宰・骨海軍團', tag: '亡靈・召喚骨矛', archetype: '骨海死靈師 / 軍團爆破流', priority: '召喚傷 ＞ 智力 ＞ 生命 ＞ 魂能', gear: '冥骨法衣・死靈鐮杖', tip: '先召出骷髏戰士與鮮血魔像前排抗傷，再以屍體爆破收割。', bars: [86, 72, 58, 84] },
+  assassin: { role: '暗影極速刺客・瞬殺連擊', tag: '暗影・瞬殺劇毒', archetype: '虛空影殺者 / 劇毒連斬流', priority: '暴擊 ＞ 爆傷 ＞ 攻速 ＞ 閃避', gear: '暗影緊身衣・淬毒雙刃', tip: '用瞬影閃襲與影分身疊滿劇毒層數，再以暗影絕殺陣斬殺。', bars: [94, 52, 98, 95] },
 };
 
 const RANDOM_NAMES = ['燼影行者', '蒼穹劍魂', '冥界守望者', '黎明裁決', '緋紅星靈', '極夜獵手', '聖血騎士', '虛空破曉', '霜狼領主', '星界旅人'];
@@ -1400,25 +1401,31 @@ function updateStartButtonState() {
     : '請輸入 2~12 字冒險者暱稱';
 }
 
+let lobbyInspectorTab = 'overview';
+
 function renderWelcomeClasses() {
   if (!welcomeClassList || !welcomeClassStage) return;
   const cp = ensureClassProgress(gameState);
   welcomeClassList.innerHTML = '';
 
   Object.values(CLASSES).forEach((cls) => {
-    const ext = CLASS_META_EXT[cls.id] || { role: cls.title, bars: [80, 80, 80, 80] };
+    const ext = CLASS_META_EXT[cls.id] || { role: cls.title, tag: '暗黑職業', bars: [80, 80, 80, 80] };
     const lv = cp[cls.id]?.level || 1;
     const isSel = selectedLobbyClass === cls.id;
     const item = document.createElement('button');
     item.type = 'button';
-    item.className = `cls-tab-item ${isSel ? 'active' : ''}`;
+    item.className = `cls-roster-card ${isSel ? 'active' : ''}`;
+    item.style.setProperty('--cls-accent', cls.color || '#f59e0b');
     item.innerHTML = `
-      <img src="${cls.spritePath}" alt="${cls.name}" />
-      <div class="cls-tab-meta">
-        <span class="cls-tab-name" style="color:${cls.color}">${cls.name}</span>
-        <span class="cls-tab-role">${ext.role}</span>
+      <div class="cls-roster-avatar"><img src="${cls.spritePath}" alt="${cls.name}" /></div>
+      <div class="cls-roster-meta">
+        <div class="cls-roster-top">
+          <span class="cls-roster-name" style="color:${cls.color}">${cls.name}</span>
+          <span class="cls-lv-badge ${lv <= 1 ? 'is-lv1' : ''}">Lv.${lv}</span>
+        </div>
+        <span class="cls-roster-role">${ext.role}</span>
+        <span class="cls-roster-tag">${ext.tag}</span>
       </div>
-      <span class="cls-lv-badge ${lv <= 1 ? 'is-lv1' : ''}">Lv.${lv}</span>
     `;
     item.onclick = () => {
       selectedLobbyClass = cls.id;
@@ -1430,47 +1437,109 @@ function renderWelcomeClasses() {
 
   const cls = CLASSES[selectedLobbyClass] || CLASSES.warrior;
   const lv = cp[cls.id]?.level || 1;
-  const ext = CLASS_META_EXT[cls.id] || { role: cls.title, bars: [80, 80, 80, 80] };
+  const ext = CLASS_META_EXT[cls.id] || { role: cls.title, tag: '暗黑職業', archetype: cls.title, priority: '-', gear: '-', tip: '', bars: [80, 80, 80, 80] };
   const barNames = ['攻擊破壞', '生存護甲', '攻速機動', '奧義爆發'];
   const rawSk = CLASS_SKILLS_MAP[cls.id] || {};
   const clsSkills = Array.isArray(rawSk) ? rawSk : Object.values(rawSk);
+  const coreSkills = clsSkills.slice(0, 4);
+  const tacSkills = clsSkills.slice(4, 8);
+
   welcomeClassStage.innerHTML = `
-    <div class="showcase-canvas-wrap">
-      <canvas id="preview-skill-canvas" width="560" height="308"></canvas>
-      <div class="showcase-skill-bar">
-        ${clsSkills.map((sk, idx) => `<button type="button" class="showcase-sk-btn ${idx === 0 ? 'active' : ''}" data-sk-idx="${idx}">${sk.icon ? `<img class="sk-btn-ico" src="${sk.icon}" alt="" />` : ''}<span>${sk.name}</span></button>`).join('')}
+    <div class="arena-center-col">
+      <div class="arena-nameplate">
+        <div class="arena-title-left">
+          <h2 style="color:${cls.color}">${cls.name}</h2>
+          <span class="arena-sub-title">${cls.title}・Lv.${lv}</span>
+          <span class="arena-elem-tag">${ext.tag}</span>
+        </div>
+        <div id="showcase-active-pill" class="showcase-active-pill">⚔️ 實戰演武中</div>
+      </div>
+
+      <div class="arena-canvas-frame">
+        <canvas id="preview-skill-canvas" width="640" height="352"></canvas>
+      </div>
+
+      <div class="arena-skill-deck">
+        <div class="deck-group">
+          <div class="deck-group-label">核心奧義 (1–4)</div>
+          <div class="deck-row">
+            ${coreSkills.map((sk, idx) => `<button type="button" class="showcase-sk-btn ${idx === 0 ? 'active' : ''}" data-sk-idx="${idx}"><span class="sk-num">${idx + 1}</span>${sk.icon ? `<img class="sk-btn-ico" src="${sk.icon}" alt="" />` : ''}<span>${sk.name}</span></button>`).join('')}
+          </div>
+        </div>
+        <div class="deck-group">
+          <div class="deck-group-label">戰術輔助 (5–8)</div>
+          <div class="deck-row">
+            ${tacSkills.map((sk, idx) => `<button type="button" class="showcase-sk-btn" data-sk-idx="${idx + 4}"><span class="sk-num">${idx + 5}</span>${sk.icon ? `<img class="sk-btn-ico" src="${sk.icon}" alt="" />` : ''}<span>${sk.name}</span></button>`).join('')}
+          </div>
+        </div>
       </div>
     </div>
-    <div class="stage-info-col">
-      <div class="stage-hero-title">
-        <h2 style="color:${cls.color}">${cls.name}</h2>
-        <span>${cls.title}・Lv.${lv}</span>
+
+    <aside class="inspector-right-col">
+      <div class="inspector-tabs">
+        <button type="button" class="insp-tab-btn ${lobbyInspectorTab === 'overview' ? 'active' : ''}" data-itab="overview">📊 戰力與技能詳情</button>
+        <button type="button" class="insp-tab-btn ${lobbyInspectorTab === 'build' ? 'active' : ''}" data-itab="build">🧭 流派與屬性傾向</button>
       </div>
-      <p style="margin:0;font-size:13px;color:#cbd5e1;line-height:1.55;">${cls.desc}</p>
-      <div class="stage-stat-bars">
-        ${barNames.map((bn, i) => `
-          <div class="stat-bar-row">
-            <div style="display:flex;justify-content:space-between;"><span>${bn}</span><b>${ext.bars[i]}</b></div>
-            <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${ext.bars[i]}%;background:${cls.color};"></div></div>
-          </div>`).join('')}
+
+      <div class="insp-pane ${lobbyInspectorTab === 'overview' ? '' : 'hidden'}" data-ipane="overview">
+        <p class="insp-desc">${cls.desc}</p>
+        <div class="stage-stat-bars">
+          ${barNames.map((bn, i) => `
+            <div class="stat-bar-row">
+              <div style="display:flex;justify-content:space-between;"><span>${bn}</span><b>${ext.bars[i]}</b></div>
+              <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${ext.bars[i]}%;background:${cls.color};"></div></div>
+            </div>`).join('')}
+        </div>
+        <div class="innate-plaque">
+          <b style="color:#fde047;">🌟 天生被動</b>
+          <div>${cls.innateBonus?.label || ''}</div>
+        </div>
+        <div id="stage-skill-dynamic" class="skill-lore-scroll"></div>
       </div>
-      <div class="stage-skill-card">
-        <div><b style="color:#fde047;">🌟 天生被動：</b>${cls.innateBonus?.label || ''}</div>
-        <div id="stage-skill-dynamic" style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.1);display:flex;align-items:flex-start;gap:8px;"></div>
+
+      <div class="insp-pane ${lobbyInspectorTab === 'build' ? '' : 'hidden'}" data-ipane="build">
+        <div class="build-card">
+          <div class="build-row"><small>核心流派</small><b>${ext.archetype}</b></div>
+          <div class="build-row"><small>推薦屬性優先級</small><b>${ext.priority}</b></div>
+          <div class="build-row"><small>武器／防具傾向</small><b>${ext.gear}</b></div>
+          <div class="build-tip"><b style="color:#fbbf24;">⚔️ 實戰連攜建議</b><p>${ext.tip}</p></div>
+        </div>
       </div>
-    </div>
+    </aside>
   `;
+
+  welcomeClassStage.querySelectorAll('.insp-tab-btn').forEach((btn) => {
+    btn.onclick = () => {
+      lobbyInspectorTab = btn.dataset.itab;
+      welcomeClassStage.querySelectorAll('.insp-tab-btn').forEach((b) => b.classList.toggle('active', b.dataset.itab === lobbyInspectorTab));
+      welcomeClassStage.querySelectorAll('.insp-pane').forEach((p) => p.classList.toggle('hidden', p.dataset.ipane !== lobbyInspectorTab));
+    };
+  });
+
   const scCanvas = document.getElementById('preview-skill-canvas');
   const scDyn = document.getElementById('stage-skill-dynamic');
+  const scPill = document.getElementById('showcase-active-pill');
   const scBtns = welcomeClassStage.querySelectorAll('.showcase-sk-btn');
-  try { heroShowcase.attach(scCanvas, cls.id, (idx, sk) => {
-    scBtns.forEach((b, bi) => b.classList.toggle('active', bi === idx));
-    if (scDyn && sk) {
-      const cdSec = sk.cooldownMs ? (sk.cooldownMs / 1000).toFixed(1) + 's' : '-';
-      const ico = sk.icon ? `<img src="${sk.icon}" style="width:36px;height:36px;border-radius:6px;border:1px solid ${cls.color};flex-shrink:0;" alt="" />` : '';
-      scDyn.innerHTML = `${ico}<div><b style="color:${cls.color};">⚔️ 【${sk.name}】</b> <span style="color:#94a3b8;font-size:11px;">(CD ${cdSec})</span><br><span style="color:#e2e8f0;">${sk.desc || ''}</span></div>`;
-    }
-  }); } catch (err) { console.warn('Showcase err:', err); }
+  try {
+    heroShowcase.attach(scCanvas, cls.id, (idx, sk) => {
+      scBtns.forEach((b) => b.classList.toggle('active', Number(b.dataset.skIdx) === idx));
+      if (scPill && sk) scPill.textContent = `⚔️ 正在演武：【${sk.name}】`;
+      if (scDyn && sk) {
+        const cdSec = sk.cooldownMs ? (sk.cooldownMs / 1000).toFixed(1) + 's' : '-';
+        const ico = sk.icon ? `<img src="${sk.icon}" class="lore-sk-ico" style="border-color:${cls.color};" alt="" />` : '';
+        scDyn.innerHTML = `
+          <div class="lore-sk-head">
+            ${ico}
+            <div>
+              <b style="color:${cls.color};font-size:15px;">【${sk.name}】</b>
+              <div class="lore-sk-cd">冷卻時間：${cdSec}</div>
+            </div>
+          </div>
+          <p class="lore-sk-desc">${sk.desc || ''}</p>
+        `;
+      }
+    });
+  } catch (err) { console.warn('Showcase err:', err); }
   scBtns.forEach((b) => {
     b.onclick = () => heroShowcase.triggerSkill(Number(b.dataset.skIdx));
   });
