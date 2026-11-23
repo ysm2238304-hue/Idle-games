@@ -9,7 +9,7 @@ import { TOWN_CH8 } from '../data/towns/ch8.js';
 import { TOWN_CH9 } from '../data/towns/ch9.js';
 import { TOWN_CH10 } from '../data/towns/ch10.js';
 import { formatNum } from '../logic/statCalc.js';
-import { PET_CATALOG, getPetDef, PET_SCHOOLS } from '../data/pets.js';
+import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta } from '../data/pets.js';
 
 const TOWN_REGISTRY = {
   0: TOWN_CH1,
@@ -256,6 +256,12 @@ export class TownScene extends Phaser.Scene {
     const atlasKey = `atlas_${cid}`;
     const initFrame = `${framePrefix}_down_walk_0`;
 
+    this.petShadow = this.add.image(td.spawn.x - 52, td.spawn.y + 28, 'fx_glow').setTint(0x000000).setScale(0.65, 0.26).setAlpha(0.42).setDepth(2);
+    this.petAura = this.add.image(td.spawn.x - 52, td.spawn.y - 14, 'fx_glow').setTint(0xf97316).setScale(0.95).setAlpha(0.32).setBlendMode(Phaser.BlendModes.ADD).setDepth(td.spawn.y - 1);
+    this.petBuddy = this.add.image(td.spawn.x - 52, td.spawn.y - 18, this.textures.exists('pet_pet_c1') ? 'pet_pet_c1' : 'fx_glow').setScale(0.46).setOrigin(0.5).setDepth(td.spawn.y);
+    this.petLabel = this.add.text(td.spawn.x - 52, td.spawn.y - 46, '', { fontSize: '11px', color: '#fde68a', fontFamily: 'Noto Sans TC, sans-serif', fontStyle: 'bold', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(td.spawn.y + 3);
+    this._lastTownPetId = null;
+    this._petTrailAt = 0;
     this.heroShadow = this.add.image(td.spawn.x, td.spawn.y + 42, 'fx_glow')
       .setTint(0x000000).setScale(1.15, 0.42).setAlpha(0.55).setDepth(3);
     this.hero = this.add.sprite(td.spawn.x, td.spawn.y, atlasKey, initFrame)
@@ -897,15 +903,50 @@ export class TownScene extends Phaser.Scene {
 
     this.updateHeroAnim(vx, vy, time);
     if (this.petBuddy && this.hero) {
-      const pet = getPetDef(this.getState?.()?.equippedPetId);
+      const st = this.callbacks?.getState?.();
+      const pet = getPetDef(st?.equippedPetId);
       if (pet) {
-        const tx = this.hero.x + (this.heroFlipX ? 44 : -44);
-        const ty = this.hero.y - 22 + Math.sin(time * 0.005) * 5;
-        const ptk = `pet_${pet.id}`; if (this.textures.exists(ptk) && this.petBuddy.texture?.key !== ptk) this.petBuddy.setTexture(ptk);
-        this.petBuddy.setVisible(true).setScale(0.44).setFlipX(this.heroFlipX).setPosition(Phaser.Math.Linear(this.petBuddy.x, tx, 0.12), Phaser.Math.Linear(this.petBuddy.y, ty, 0.12)).setDepth(ty + 2);
-        this.petAura?.setVisible(true).setFillStyle(pet.tint, 0.28).setPosition(this.petBuddy.x, this.petBuddy.y).setDepth(ty + 1);
+        const rec = (st?.pets || []).find((x) => x.petId === pet.id);
+        const upg = rec?.upgradeLevel || 0;
+        const rar = getPetRarityMeta(pet.rarity);
+        const ptk = `pet_${pet.id}`;
+        if (this.textures.exists(ptk) && this.petBuddy.texture?.key !== ptk) this.petBuddy.setTexture(ptk);
+
+        if (this._lastTownPetId && this._lastTownPetId !== pet.id) {
+          const burst = this.add.image(this.petBuddy.x, this.petBuddy.y, 'fx_glow').setTint(pet.tint).setScale(0.4).setAlpha(0.9).setBlendMode(Phaser.BlendModes.ADD).setDepth(this.petBuddy.y + 5);
+          this.tweens.add({ targets: burst, scale: 2.2, alpha: 0, duration: 420, onComplete: () => burst.destroy() });
+        }
+        this._lastTownPetId = pet.id;
+
+        const tx = this.hero.x + (this.heroFlipX ? 54 : -54);
+        const ty = this.hero.y - 16;
+        const nx = Phaser.Math.Linear(this.petBuddy.x, tx, 0.11);
+        const ny = Phaser.Math.Linear(this.petBuddy.y, ty, 0.11);
+        const stepX = nx - this.petBuddy.x;
+        const moveSpd = Math.hypot(stepX, ny - this.petBuddy.y);
+        const moving = moveSpd > 0.45;
+        const bob = moving ? Math.abs(Math.sin(time * 0.016)) * 10 : Math.sin(time * 0.005) * 5;
+        const sxScale = moving ? 0.46 * (1.06 - Math.abs(Math.sin(time * 0.016)) * 0.1) : 0.46 * (1 + Math.sin(time * 0.005) * 0.04);
+        const syScale = moving ? 0.46 * (0.94 + Math.abs(Math.sin(time * 0.016)) * 0.12) : 0.46 * (1 - Math.sin(time * 0.005) * 0.04);
+        const flip = Math.abs(stepX) > 0.35 ? (stepX < 0) : this.heroFlipX;
+        const tilt = moving ? Phaser.Math.Clamp(stepX * 0.04, -0.22, 0.22) : Math.sin(time * 0.003) * 0.04;
+
+        this.petBuddy.setVisible(true).setScale(sxScale, syScale).setFlipX(flip).setRotation(tilt).setPosition(nx, ny - bob).setDepth(ny + 2);
+        this.petShadow?.setVisible(true).setPosition(nx, ny + 28).setScale(0.62 - bob * 0.012, 0.24).setDepth(2);
+        this.petAura?.setVisible(true).setTint(pet.tint).setPosition(nx, ny - bob + 4).setScale(0.88 + Math.sin(time * 0.008) * 0.14).setAlpha(moving ? 0.42 : 0.26).setDepth(ny + 1);
+        this.petLabel?.setVisible(true).setText(`${pet.name}${upg > 0 ? ` +${upg}` : ''}`).setColor(rar.color).setPosition(nx, ny - bob - 32).setDepth(ny + 4);
+
+        if (moving && time >= (this._petTrailAt || 0)) {
+          this._petTrailAt = time + 95;
+          const pt = this.add.image(nx, ny - bob + 6, 'fx_glow').setTint(pet.tint).setScale(0.28).setAlpha(0.65).setBlendMode(Phaser.BlendModes.ADD).setDepth(ny);
+          this.tweens.add({ targets: pt, y: pt.y - 12, scale: 0.05, alpha: 0, duration: 360, onComplete: () => pt.destroy() });
+        }
       } else {
-        this.petBuddy.setVisible(false); this.petAura?.setVisible(false);
+        this.petBuddy.setVisible(false);
+        this.petAura?.setVisible(false);
+        this.petShadow?.setVisible(false);
+        this.petLabel?.setVisible(false);
+        this._lastTownPetId = null;
       }
     }
     this.updatePatrols(dt, time);

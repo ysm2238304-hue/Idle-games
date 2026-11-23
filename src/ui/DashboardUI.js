@@ -7,7 +7,7 @@ import { PALADIN_SKILLS } from '../data/paladinSkills.js';
 import { NECRO_SKILLS } from '../data/necroSkills.js';
 import { ASSASSIN_SKILLS } from '../data/assassinSkills.js';
 import { EQUIP_SLOTS, CLASS_REQ_LABELS, RARITIES, BASE_ITEMS, SET_DEFINITIONS } from '../data/items.js';
-import { PET_CATALOG, PET_SCHOOLS, getPetDef, getPetRarityMeta } from '../data/pets.js';
+import { PET_CATALOG, PET_SCHOOLS, getPetDef, getPetRarityMeta, getPetPickupRadius, getPetCodexInfo } from '../data/pets.js';
 import { getEnhanceRate, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEVEL } from '../logic/enhanceSystem.js';
 import { MONSTER_TEMPLATES, STAGE_ZONES, ZONE_POOLS, getZoneName, getStageLabel, getSubStage, getChapterIdx } from '../data/monsters.js';
 import { CLASS_BUILD_INFO, SKILL_TREE_NODES, getTreeSpentPoints, isNodeBlockedByMutex, isNodeUnlocked } from '../data/skillTree.js';
@@ -988,61 +988,104 @@ export class DashboardUI {
     const eqId = state.equippedPetId;
     const eqPet = eqId ? getPetDef(eqId) : null;
     const eqRec = pets.find((x) => x.petId === eqId);
+    const eqUpg = eqRec?.upgradeLevel || 0;
     const eqSch = eqPet ? PET_SCHOOLS[eqPet.school] : null;
     const eqRar = eqPet ? getPetRarityMeta(eqPet.rarity) : null;
+    const codex = getPetCodexInfo(pets, state.petCodex);
+    const pickR = getPetPickupRadius(eqPet, eqUpg);
+    const activeSub = this._petPanelTab || 'owned';
 
     box.innerHTML = `
-      <div style="padding:10px;border-radius:8px;background:rgba(18,14,18,0.92);border:1px solid ${eqRar ? eqRar.border : '#64748b'};margin-bottom:10px;">
+      <div style="padding:10px;border-radius:8px;background:rgba(18,14,18,0.92);border:1px solid ${eqRar ? eqRar.border : '#64748b'};margin-bottom:8px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:6px;flex-wrap:wrap;">
           <b style="color:#fde68a;">🐾 目前出戰寵物</b>
           <span style="font-size:11.5px;color:#38bdf8;">✨ 精華：<b>${state.petEssence || 0}</b> ｜ 🛡️ 保護石：<b>${state.protectStones || 0}</b></span>
         </div>
         ${eqPet ? `
           <div style="display:flex;align-items:center;gap:10px;">
-            <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:${eqRar.bg};border:1.5px solid ${eqRar.border};overflow:hidden;flex-shrink:0;"><img src="${eqPet.icon}" alt="${eqPet.name}" style="width:44px;height:44px;object-fit:contain;" /></div>
-            <div style="flex:1;">
-              <div><b style="color:${eqRar.color};">[${eqRar.label}] ${eqPet.name}${(eqRec?.upgradeLevel || 0) > 0 ? ` +${eqRec.upgradeLevel}` : ''}</b> <span style="font-size:11px;color:${eqSch.color};">・${eqSch.label}</span></div>
-              <div style="font-size:11.5px;color:#cbd5e1;margin-top:2px;">${eqPet.desc}</div>
+            <div style="width:52px;height:52px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:${eqRar.bg};border:1.5px solid ${eqRar.border};overflow:hidden;flex-shrink:0;"><img src="${eqPet.icon}" alt="${eqPet.name}" style="width:46px;height:46px;object-fit:contain;" /></div>
+            <div style="flex:1;min-width:0;">
+              <div><b style="color:${eqRar.color};">[${eqRar.label}] ${eqPet.name}${eqUpg > 0 ? ` +${eqUpg}` : ''}</b> <span style="font-size:11px;color:${eqSch.color};">・${eqSch.label}</span></div>
+              <div style="font-size:11px;color:#cbd5e1;margin-top:2px;">${eqPet.desc}</div>
+              <div style="font-size:10.5px;color:#86efac;margin-top:3px;">⚡ 衍生威力 ×${(1 + eqUpg * 0.18).toFixed(2)} ｜ 🧲 協同拾取 ${pickR}px ｜ 📖 圖鑑增傷 +${codex.bonusPct}%</div>
             </div>
-            <button type="button" id="btn-unequip-pet" class="btn-ghost-sm">卸下</button>
+            <button type="button" class="btn-ghost-sm btn-unequip-pet">卸下</button>
           </div>
-        ` : '<div style="font-size:12px;color:#94a3b8;">尚未出戰寵物（寵物會改變技能特效與衍生機制）</div>'}
-        <label style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11.5px;color:#86efac;"><input type="checkbox" id="chk-pet-protect" ${(state.protectStones || 0) > 0 ? 'checked' : 'disabled'} /> +6 以上強化使用保護石防降階（+6:40% +7:30% +8:20% +9:10% +10:1%）</label>
-        <div style="margin-top:8px;display:flex;gap:8px;align-items:center;">
-          <button type="button" id="btn-summon-pet" class="btn-gold-sm" style="flex:1;" ${(state.petEssence || 0) < 30 ? 'disabled' : ''}>✨ 召喚新寵物 (消耗 30 精華)</button>
-          <span style="font-size:11px;color:#94a3b8;">圖鑑 ${new Set(pets.map((p) => p.petId)).size} / ${PET_CATALOG.length}</span>
+        ` : '<div style="font-size:12px;color:#94a3b8;">尚未出戰寵物（出戰後會跟隨於英雄身旁並觸發技能衍生特效與擴大拾取）</div>'}
+        <label style="display:flex;align-items:center;gap:6px;margin-top:7px;font-size:11px;color:#86efac;"><input type="checkbox" class="chk-pet-protect" ${(state.protectStones || 0) > 0 ? 'checked' : 'disabled'} /> +6 以上強化使用保護石防降階（+6:40% +7:30% +8:20% +9:10% +10:1%）</label>
+        <div style="margin-top:8px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+          <button type="button" class="btn-gold-sm btn-summon-pet" style="flex:1;" ${(state.petEssence || 0) < 30 ? 'disabled' : ''}>✨ 召喚寵物 (30精華)</button>
+          <button type="button" class="btn-ghost-sm btn-salvage-dup-pets" title="保留每種最高階的 1 隻，分解多餘重複寵物">🧹 一鍵分解重複</button>
         </div>
       </div>
-      <div style="display:flex;flex-direction:column;gap:6px;">
-        ${pets.map((p) => {
-          const def = getPetDef(p.petId) || PET_CATALOG[0];
-          const rar = getPetRarityMeta(def.rarity);
-          const sch = PET_SCHOOLS[def.school];
-          const isEq = eqId === def.id;
-          const lv = p.upgradeLevel || 0;
-          const rate = getEnhanceRate(lv);
-          const { gold, essence } = getPetEnhanceCost(p);
-          const canEnh = lv < MAX_ENHANCE_LEVEL && (state.gold || 0) >= gold && (state.petEssence || 0) >= essence;
-          return `
-            <div style="display:flex;align-items:center;gap:7px;padding:7px 9px;border-radius:7px;background:${isEq ? 'rgba(120,53,15,0.28)' : 'rgba(14,11,15,0.85)'};border:1px solid ${isEq ? '#f59e0b' : rar.border};">
-              <div style="width:38px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:${rar.bg};border:1px solid ${rar.border};overflow:hidden;flex-shrink:0;"><img src="${def.icon}" alt="${def.name}" style="width:34px;height:34px;object-fit:contain;" /></div>
-              <div style="flex:1;min-width:0;">
-                <div style="font-size:12.5px;"><b style="color:${rar.color};">[${rar.label}] ${def.name}${lv > 0 ? ` +${lv}` : ''}</b> <span style="font-size:10.5px;color:${sch.color};">${sch.label}</span></div>
-                <div style="font-size:11px;color:#94a3b8;">${def.desc}</div>
-              </div>
-              <button type="button" class="btn-gold-sm" data-enh-pet="${p.uid}" ${canEnh ? '' : 'disabled'} title="消耗 ${gold} 金幣 + ${essence} 精華">${lv >= 10 ? '+10滿' : `⚒️+${lv + 1}(${rate}%)`}</button>
-              <button type="button" class="btn-gold-sm" data-equip-pet="${def.id}">${isEq ? '出戰中' : '出戰'}</button>
-              <button type="button" class="btn-ghost-sm" data-salvage-pet="${p.uid}">分解</button>
-            </div>
-          `;
-        }).join('')}
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px;">
+        <button type="button" class="${activeSub === 'owned' ? 'btn-gold-sm' : 'btn-ghost-sm'} pet-sub-btn" data-petsub="owned">🐾 持有寵物 (${pets.length})</button>
+        <button type="button" class="${activeSub === 'codex' ? 'btn-gold-sm' : 'btn-ghost-sm'} pet-sub-btn" data-petsub="codex">📖 完整圖鑑 (${codex.count}/${codex.total})</button>
       </div>
+
+      ${activeSub === 'owned' ? `
+        <div style="display:flex;flex-direction:column;gap:6px;">
+          ${pets.map((p) => {
+            const def = getPetDef(p.petId) || PET_CATALOG[0];
+            const rar = getPetRarityMeta(def.rarity);
+            const sch = PET_SCHOOLS[def.school];
+            const isEq = eqId === def.id;
+            const lv = p.upgradeLevel || 0;
+            const rate = getEnhanceRate(lv);
+            const { gold, essence } = getPetEnhanceCost(p);
+            const canEnh = lv < MAX_ENHANCE_LEVEL && (state.gold || 0) >= gold && (state.petEssence || 0) >= essence;
+            return `
+              <div style="display:flex;align-items:center;gap:7px;padding:7px 9px;border-radius:7px;background:${isEq ? 'rgba(120,53,15,0.28)' : 'rgba(14,11,15,0.85)'};border:1px solid ${isEq ? '#f59e0b' : rar.border};">
+                <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:${rar.bg};border:1px solid ${rar.border};overflow:hidden;flex-shrink:0;"><img src="${def.icon}" alt="${def.name}" style="width:36px;height:36px;object-fit:contain;" /></div>
+                <div style="flex:1;min-width:0;">
+                  <div style="font-size:12.5px;"><b style="color:${rar.color};">[${rar.label}] ${def.name}${lv > 0 ? ` +${lv}` : ''}</b> <span style="font-size:10.5px;color:${sch.color};">${sch.label}</span></div>
+                  <div style="font-size:10.5px;color:#94a3b8;">${def.desc}</div>
+                </div>
+                <button type="button" class="btn-gold-sm" data-enh-pet="${p.uid}" ${canEnh ? '' : 'disabled'} title="消耗 ${gold} 金幣 + ${essence} 精華">${lv >= 10 ? '+10滿' : `⚒️+${lv + 1}(${rate}%)`}</button>
+                <button type="button" class="btn-gold-sm" data-equip-pet="${def.id}">${isEq ? '出戰中' : '出戰'}</button>
+                <button type="button" class="btn-ghost-sm" data-salvage-pet="${p.uid}">分解</button>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      ` : `
+        <div style="padding:7px 9px;margin-bottom:8px;border-radius:7px;background:rgba(14,11,16,0.9);border:1px solid rgba(251,191,36,0.35);font-size:11px;color:#e2d5be;">
+          🏆 收集里程碑（全寵物衍生傷害）：
+          <span style="color:${codex.count >= 5 ? '#4ade80' : '#64748b'};">5隻(+10%)</span>・
+          <span style="color:${codex.count >= 10 ? '#4ade80' : '#64748b'};">10隻(+25%)</span>・
+          <span style="color:${codex.count >= 20 ? '#4ade80' : '#64748b'};">20隻(+50%)</span>・
+          <span style="color:${codex.count >= 30 ? '#4ade80' : '#64748b'};">30隻(+100%)</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          ${PET_CATALOG.map((def) => {
+            const has = codex.unlockedSet.has(def.id);
+            const rar = getPetRarityMeta(def.rarity);
+            const sch = PET_SCHOOLS[def.school];
+            return `
+              <div style="display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:7px;background:rgba(14,11,15,0.88);border:1px solid ${has ? rar.border : 'rgba(100,116,139,0.28)'};opacity:${has ? 1 : 0.62};">
+                <div style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:${rar.bg};flex-shrink:0;overflow:hidden;">
+                  <img src="${def.icon}" alt="${def.name}" style="width:32px;height:32px;object-fit:contain;${has ? '' : 'filter:brightness(0) invert(0.25);'}" />
+                </div>
+                <div style="min-width:0;flex:1;">
+                  <div style="font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><b style="color:${rar.color};">${has ? def.name : '???'}</b></div>
+                  <div style="font-size:10px;color:${sch.color};">[${rar.label}] ${sch.label}</div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      `}
     `;
 
-    box.querySelector('#btn-unequip-pet')?.addEventListener('click', () => this.handlers.onEquipPet?.(null));
-    box.querySelector('#btn-summon-pet')?.addEventListener('click', () => this.handlers.onSummonPet?.());
+    box.querySelector('.btn-unequip-pet')?.addEventListener('click', () => this.handlers.onEquipPet?.(null));
+    box.querySelector('.btn-summon-pet')?.addEventListener('click', () => this.handlers.onSummonPet?.());
+    box.querySelector('.btn-salvage-dup-pets')?.addEventListener('click', () => this.handlers.onSalvageDupPets?.());
+    box.querySelectorAll('.pet-sub-btn').forEach((b) => {
+      b.onclick = () => { this._petPanelTab = b.dataset.petsub; this.renderPets(state); };
+    });
     box.querySelectorAll('[data-enh-pet]').forEach((b) => {
-      b.onclick = () => this.handlers.onEnhancePet?.(b.dataset.enhPet, !!box.querySelector('#chk-pet-protect')?.checked);
+      b.onclick = () => this.handlers.onEnhancePet?.(b.dataset.enhPet, !!box.querySelector('.chk-pet-protect')?.checked);
     });
     box.querySelectorAll('[data-equip-pet]').forEach((b) => {
       b.onclick = () => this.handlers.onEquipPet?.(b.dataset.equipPet);

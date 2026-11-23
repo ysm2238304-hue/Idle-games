@@ -6,12 +6,12 @@ import { MAGE_SKILLS } from './data/mageSkills.js';
 import { PALADIN_SKILLS } from './data/paladinSkills.js';
 import { NECRO_SKILLS } from './data/necroSkills.js';
 import { ASSASSIN_SKILLS } from './data/assassinSkills.js';
-import { RARITIES } from './data/items.js?v=91';
-import { PET_CATALOG, rollPetDrop } from './data/pets.js?v=91';
+import { RARITIES } from './data/items.js?v=92';
+import { PET_CATALOG, rollPetDrop } from './data/pets.js?v=92';
 import { SKILL_TREE_NODES, isNodeUnlocked } from './data/skillTree.js';
-import { generateLoot, calcItemPower, getSalvageReward, rerollItemAffixes, generateBlackMarketItem } from './logic/lootGen.js?v=91';
-import { recalcPlayerStats, getExpToNext, getUpgradeCost, calcRebirthCrystals, formatNum } from './logic/statCalc.js?v=91';
-import { createInitialState, loadGame, saveGame, calcOfflineProgress } from './logic/saveSystem.js?v=91';
+import { generateLoot, calcItemPower, getSalvageReward, rerollItemAffixes, generateBlackMarketItem } from './logic/lootGen.js?v=92';
+import { recalcPlayerStats, getExpToNext, getUpgradeCost, calcRebirthCrystals, formatNum } from './logic/statCalc.js?v=92';
+import { createInitialState, loadGame, saveGame, calcOfflineProgress } from './logic/saveSystem.js?v=92';
 import {
   initCloudAuth,
   signInWithGoogle,
@@ -20,15 +20,15 @@ import {
   loadCloudSave,
   saveCloudData,
 } from './auth/firebase.js';
-import { BattleScene } from './scenes/BattleScene.js?v=91';
-import { TownScene } from './scenes/TownScene.js?v=91';
+import { BattleScene } from './scenes/BattleScene.js?v=92';
+import { TownScene } from './scenes/TownScene.js?v=92';
 import { TOWN_SPLASHES } from './data/towns/splashes.js';
-import { DashboardUI } from './ui/DashboardUI.js?v=91';
+import { DashboardUI } from './ui/DashboardUI.js?v=92';
 import { TownBgmEngine } from './audio/TownBgmEngine.js';
-import { HudSettingsManager } from './ui/HudSettingsManager.js?v=91';
-import { ShopModal } from './ui/ShopModal.js?v=91';
-import { rollEnhance, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEVEL } from './logic/enhanceSystem.js?v=91';
-import { HeroSkillShowcase, CLASS_SKILLS_MAP } from './ui/HeroSkillShowcase.js?v=91';
+import { HudSettingsManager } from './ui/HudSettingsManager.js?v=92';
+import { ShopModal } from './ui/ShopModal.js?v=92';
+import { rollEnhance, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEVEL } from './logic/enhanceSystem.js?v=92';
+import { HeroSkillShowcase, CLASS_SKILLS_MAP } from './ui/HeroSkillShowcase.js?v=92';
 
 let gameState = loadGame() || createInitialState('warrior');
 let computedStats = recalcPlayerStats(gameState);

@@ -6,7 +6,7 @@ import { PALADIN_SKILLS } from '../data/paladinSkills.js';
 import { NECRO_SKILLS } from '../data/necroSkills.js';
 import { ASSASSIN_SKILLS } from '../data/assassinSkills.js';
 import { RARITIES } from '../data/items.js';
-import { PET_CATALOG, getPetDef, PET_SCHOOLS } from '../data/pets.js';
+import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta, getPetPickupRadius, getPetCodexInfo } from '../data/pets.js';
 import { createStageEncounters, spawnSingleMonster, getChapterIdx, getStageLabel, ZONE_OBSTACLES } from '../data/monsters.js';
 import { formatNum } from '../logic/statCalc.js';
 
@@ -430,6 +430,13 @@ export class BattleScene extends Phaser.Scene {
       fontSize: '12px', color: '#f8fafc', fontFamily: 'sans-serif', fontStyle: 'bold',
       stroke: '#000000', strokeThickness: 3,
     }).setOrigin(0.5).setDepth(4002);
+    this.petShadow = this.add.image(cx - 54, cy + 28, 'fx_glow').setTint(0x000000).setScale(0.65, 0.26).setAlpha(0.42).setDepth(2);
+    this.petAura = this.add.image(cx - 54, cy - 14, 'fx_glow').setTint(0xf97316).setScale(0.95).setAlpha(0.32).setBlendMode(Phaser.BlendModes.ADD).setDepth(cy - 1);
+    this.petBuddy = this.add.image(cx - 54, cy - 18, this.textures.exists('pet_pet_c1') ? 'pet_pet_c1' : 'fx_glow').setScale(0.46).setOrigin(0.5).setDepth(cy);
+    this.petLabel = this.add.text(cx - 54, cy - 46, '', { fontSize: '11px', color: '#fde68a', fontFamily: 'Noto Sans TC, sans-serif', fontStyle: 'bold', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(cy + 3);
+    this._lastBattlePetId = null;
+    this._petTrailAt = 0;
+    this._petAutoAtkAt = 0;
     this.heroAfkText = this.add.text(cx, cy - 117, this.autoMoveEnabled ? '★ 自動狩獵' : '手動', {
       fontSize: '11px', color: this.autoMoveEnabled ? '#fde047' : '#cbd5e1',
       fontFamily: 'sans-serif', fontStyle: 'bold',
@@ -3323,29 +3330,91 @@ export class BattleScene extends Phaser.Scene {
 
   updatePetCompanion(time) {
     if (!this.petBuddy || !this.hero) return;
-    const pet = getPetDef(this.getState()?.equippedPetId);
+    const st = this.getState?.();
+    const pet = getPetDef(st?.equippedPetId);
     if (!pet) {
       this.petBuddy.setVisible(false);
       this.petAura?.setVisible(false);
+      this.petShadow?.setVisible(false);
       this.petLabel?.setVisible(false);
+      this._lastBattlePetId = null;
       return;
     }
+    const rec = (st?.pets || []).find((x) => x.petId === pet.id);
+    const upg = rec?.upgradeLevel || 0;
+    const rar = getPetRarityMeta(pet.rarity);
     const sch = PET_SCHOOLS[pet.school] || PET_SCHOOLS.fire;
-    const tx = this.hero.x + (this.heroFlipX ? 46 : -46);
-    const ty = this.hero.y - 24 + Math.sin(time * 0.005) * 6;
-    const nx = Phaser.Math.Linear(this.petBuddy.x, tx, 0.12);
-    const ny = Phaser.Math.Linear(this.petBuddy.y, ty, 0.12);
     const texKey = `pet_${pet.id}`;
     if (this.textures.exists(texKey) && this.petBuddy.texture?.key !== texKey) {
       this.petBuddy.setTexture(texKey);
     }
-    this.petBuddy.setVisible(true).setScale(0.44).setFlipX(this.heroFlipX).setPosition(nx, ny).setDepth(ny + 2);
-    this.petAura?.setVisible(true).setFillStyle(pet.tint, 0.28).setPosition(nx, ny + 4).setDepth(ny + 1);
-    this.petLabel?.setVisible(true).setText(pet.name).setColor(sch.color).setPosition(nx, ny - 28).setDepth(ny + 3);
+
+    if (this._lastBattlePetId && this._lastBattlePetId !== pet.id) {
+      const burst = this.add.image(this.petBuddy.x, this.petBuddy.y, 'fx_glow').setTint(pet.tint).setScale(0.4).setAlpha(0.95).setBlendMode(Phaser.BlendModes.ADD).setDepth(this.petBuddy.y + 6);
+      this.tweens.add({ targets: burst, scale: 2.4, alpha: 0, duration: 420, onComplete: () => burst.destroy() });
+    }
+    this._lastBattlePetId = pet.id;
+
+    const pickR = getPetPickupRadius(pet, upg);
+    let tx = this.hero.x + (this.heroFlipX ? 54 : -54);
+    let ty = this.hero.y - 18;
+    const nearLoot = this.findNearestGroundLoot?.(this.hero.x, this.hero.y);
+    if (nearLoot && Math.hypot(nearLoot.x - this.hero.x, nearLoot.y - this.hero.y) <= pickR + 30) {
+      tx = nearLoot.x;
+      ty = nearLoot.y - 10;
+    }
+
+    const nx = Phaser.Math.Linear(this.petBuddy.x, tx, 0.13);
+    const ny = Phaser.Math.Linear(this.petBuddy.y, ty, 0.13);
+    const stepX = nx - this.petBuddy.x;
+    const moveSpd = Math.hypot(stepX, ny - this.petBuddy.y);
+    const moving = moveSpd > 0.5;
+    const bob = moving ? Math.abs(Math.sin(time * 0.017)) * 10 : Math.sin(time * 0.0055) * 5;
+    const sxScale = moving ? 0.46 * (1.07 - Math.abs(Math.sin(time * 0.017)) * 0.1) : 0.46 * (1 + Math.sin(time * 0.0055) * 0.04);
+    const syScale = moving ? 0.46 * (0.93 + Math.abs(Math.sin(time * 0.017)) * 0.12) : 0.46 * (1 - Math.sin(time * 0.0055) * 0.04);
+    const flip = Math.abs(stepX) > 0.4 ? (stepX < 0) : this.heroFlipX;
+    const tilt = moving ? Phaser.Math.Clamp(stepX * 0.045, -0.24, 0.24) : Math.sin(time * 0.003) * 0.04;
+
+    this.petBuddy.setVisible(true).setScale(sxScale, syScale).setFlipX(flip).setRotation(tilt).setPosition(nx, ny - bob).setDepth(ny + 2);
+    this.petShadow?.setVisible(true).setPosition(nx, ny + 28).setScale(0.62 - bob * 0.012, 0.24).setDepth(2);
+    this.petAura?.setVisible(true).setTint(pet.tint).setPosition(nx, ny - bob + 4).setScale(0.9 + Math.sin(time * 0.009) * 0.15).setAlpha(moving ? 0.45 : 0.28).setDepth(ny + 1);
+    this.petLabel?.setVisible(true).setText(`${pet.name}${upg > 0 ? ` +${upg}` : ''}`).setColor(rar.color).setPosition(nx, ny - bob - 32).setDepth(ny + 4);
+
+    if (moving && time >= (this._petTrailAt || 0)) {
+      this._petTrailAt = time + 90;
+      const pt = this.add.image(nx, ny - bob + 6, 'fx_glow').setTint(pet.tint).setScale(0.28).setAlpha(0.68).setBlendMode(Phaser.BlendModes.ADD).setDepth(ny);
+      this.tweens.add({ targets: pt, y: pt.y - 12, scale: 0.05, alpha: 0, duration: 360, onComplete: () => pt.destroy() });
+    }
+
+    if (time >= (this._petAutoAtkAt || 0) && this.monsters?.length) {
+      const target = this.findNearestMonster?.(this.petBuddy.x, this.petBuddy.y);
+      if (target && target.hp > 0 && Math.hypot(target.sprite.x - this.petBuddy.x, target.sprite.y - this.petBuddy.y) <= 460) {
+        this._petAutoAtkAt = time + 2400;
+        const stats = this.getStats();
+        const codex = getPetCodexInfo(st?.pets, st?.petCodex);
+        const dmg = Math.max(1, Math.round(stats.atk * (0.35 + upg * 0.08) * (1 + codex.bonusPct / 100)));
+        const px = this.petBuddy.x, py = this.petBuddy.y;
+        const bolt = this.add.image(px, py, 'fx_glow').setTint(pet.tint).setScale(0.45).setBlendMode(Phaser.BlendModes.ADD).setDepth(4510);
+        this.tweens.add({
+          targets: bolt,
+          x: target.sprite.x,
+          y: target.sprite.y - 10,
+          duration: 240,
+          onComplete: () => {
+            bolt.destroy();
+            if (target.hp > 0) {
+              this.playFxSprite(sch.fxKey, target.sprite.x, target.sprite.y - 10, 0.58, 0, 260);
+              this.damageMonster(target, dmg, false, false, sch.color, '🐾');
+            }
+          },
+        });
+      }
+    }
   }
 
   triggerPetSkillDerivative(aimX, aimY) {
-    const pet = getPetDef(this.getState()?.equippedPetId);
+    const st = this.getState?.();
+    const pet = getPetDef(st?.equippedPetId);
     if (!pet || !this.hero || !this.monsters) return;
     const now = this.time?.now || 0;
     if (now < (this._lastPetProcAt || 0)) return;
@@ -3353,18 +3422,20 @@ export class BattleScene extends Phaser.Scene {
 
     const stats = this.getStats();
     const sch = PET_SCHOOLS[pet.school] || PET_SCHOOLS.fire;
-    const petRec = (this.getState()?.pets || []).find((x) => x.petId === pet.id);
+    const petRec = (st?.pets || []).find((x) => x.petId === pet.id);
     const petUpg = petRec?.upgradeLevel || 0;
     const petUpgMult = 1 + petUpg * 0.18;
+    const codex = getPetCodexInfo(st?.pets, st?.petCodex);
     const extraHits = petUpg >= 10 ? 3 : (petUpg >= 8 ? 2 : (petUpg >= 6 ? 1 : 0));
-    const dmg = Math.max(1, Math.round(stats.atk * (pet.dmgMult || 0.45) * petUpgMult * (stats.skillDmgMult || 1)));
+    const dmg = Math.max(1, Math.round(stats.atk * (pet.dmgMult || 0.45) * petUpgMult * (1 + codex.bonusPct / 100) * (stats.skillDmgMult || 1)));
     const alive = this.monsters.filter((m) => m.hp > 0);
     if (!alive.length) return;
 
-    // 寵物閃光提示
     if (this.petAura) {
-      this.tweens.add({ targets: this.petAura, scale: 1.8, alpha: 0.75, duration: 160, yoyo: true });
+      this.tweens.add({ targets: this.petAura, scale: 1.85, alpha: 0.85, duration: 180, yoyo: true });
     }
+    const px = this.petBuddy?.x ?? this.hero.x;
+    const py = this.petBuddy?.y ?? this.hero.y;
 
     const targets = alive
       .map((m) => ({ m, d: Math.hypot(m.sprite.x - this.hero.x, m.sprite.y - this.hero.y) }))
@@ -3374,11 +3445,14 @@ export class BattleScene extends Phaser.Scene {
 
     for (const tm of targets) {
       const mx = tm.sprite.x, my = tm.sprite.y;
+      const trail = this.add.image(px, py, 'fx_glow').setTint(pet.tint).setScale(0.5).setBlendMode(Phaser.BlendModes.ADD).setDepth(4512);
+      this.tweens.add({ targets: trail, x: mx, y: my - 10, scale: 0.15, alpha: 0, duration: 220, onComplete: () => trail.destroy() });
+
       if (sch.derivative === 'fire_wave') {
         this.playFxSprite('mfx_meteor_flame', mx, my - 12, 0.95, 0, 380);
         this.damageMonster(tm, dmg, true, false, sch.color, '🔥');
       } else if (sch.derivative === 'chain_arc') {
-        this.playFxSprite('nfx_lightning', (this.hero.x + mx) / 2, (this.hero.y + my) / 2, 0.9, Math.atan2(my - this.hero.y, mx - this.hero.x), 300);
+        this.playFxSprite('nfx_lightning', (px + mx) / 2, (py + my) / 2, 0.9, Math.atan2(my - py, mx - px), 300);
         this.damageMonster(tm, dmg, true, false, sch.color, '⚡');
       } else if (sch.derivative === 'frost_nova') {
         this.playFxSprite('mfx_frost_burst', mx, my, 1.0, 0, 380);
@@ -3495,8 +3569,13 @@ export class BattleScene extends Phaser.Scene {
     for (let i = this.groundLoot.length - 1; i >= 0; i--) {
       const l = this.groundLoot[i];
       if (!l || l.picked) continue;
+      const stG = this.getState?.();
+      const eqPetG = getPetDef(stG?.equippedPetId);
+      const eqRecG = (stG?.pets || []).find((x) => x.petId === eqPetG?.id);
+      const pickDist = getPetPickupRadius(eqPetG, eqRecG?.upgradeLevel || 0);
       const d = Math.hypot(this.hero.x - l.x, this.hero.y - l.y);
-      if (d <= 58 || (time - l.spawnAt) > 60000) {
+      const dp = this.petBuddy?.visible ? Math.hypot(this.petBuddy.x - l.x, this.petBuddy.y - l.y) : Infinity;
+      if (d <= pickDist || dp <= 64 || (time - l.spawnAt) > 60000) {
         this.pickupGroundLoot(l, false);
       }
     }

@@ -85,3 +85,21 @@ export function rollPetDrop(stage = 1, isBoss = false, magicFindPct = 0) {
 export function getPetRarityMeta(rarity) {
   return RARITIES[rarity] || RARITIES.common;
 }
+
+export function getPetPickupRadius(petDef, upgLv = 0) {
+  if (!petDef) return 58;
+  const rarBase = { common: 110, magic: 130, rare: 150, legendary: 175, set: 195 }[petDef.rarity] || 110;
+  return Math.min(240, rarBase + (upgLv || 0) * 5);
+}
+
+export function getPetCodexInfo(pets = [], unlockedIds = []) {
+  const s = new Set(unlockedIds || []);
+  for (const p of pets || []) if (p?.petId) s.add(p.petId);
+  const count = s.size;
+  let bonusPct = 0;
+  if (count >= 30) bonusPct = 100;
+  else if (count >= 20) bonusPct = 50;
+  else if (count >= 10) bonusPct = 25;
+  else if (count >= 5) bonusPct = 10;
+  return { unlockedSet: s, count, total: PET_CATALOG.length, bonusPct };
+}
