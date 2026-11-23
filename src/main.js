@@ -1437,7 +1437,6 @@ function renderWelcomeClasses() {
       <div class="showcase-skill-bar">
         ${clsSkills.map((sk, idx) => `<button type="button" class="showcase-sk-btn ${idx === 0 ? 'active' : ''}" data-sk-idx="${idx}">${sk.name}</button>`).join('')}
       </div>
-      <div id="showcase-sk-desc" class="showcase-sk-desc"></div>
     </div>
     <div class="stage-info-col">
       <div class="stage-hero-title">
@@ -1454,16 +1453,20 @@ function renderWelcomeClasses() {
       </div>
       <div class="stage-skill-card">
         <div><b style="color:#fde047;">🌟 天生被動：</b>${cls.innateBonus?.label || ''}</div>
-        <div style="margin-top:4px;"><b style="color:${cls.color};">⚔️ 核心奧義【${cls.skill.name}】：</b>${cls.skill.desc}</div>
+        <div id="stage-skill-dynamic" style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.1);display:flex;align-items:flex-start;gap:8px;"></div>
       </div>
     </div>
   `;
   const scCanvas = document.getElementById('preview-skill-canvas');
-  const scDesc = document.getElementById('showcase-sk-desc');
+  const scDyn = document.getElementById('stage-skill-dynamic');
   const scBtns = welcomeClassStage.querySelectorAll('.showcase-sk-btn');
   try { heroShowcase.attach(scCanvas, cls.id, (idx, sk) => {
     scBtns.forEach((b, bi) => b.classList.toggle('active', bi === idx));
-    if (scDesc && sk) scDesc.innerHTML = `<b style="color:${cls.color};">【${sk.name}】</b> ${sk.desc || ''}`;
+    if (scDyn && sk) {
+      const cdSec = sk.cooldownMs ? (sk.cooldownMs / 1000).toFixed(1) + 's' : '-';
+      const ico = sk.icon ? `<img src="${sk.icon}" style="width:36px;height:36px;border-radius:6px;border:1px solid ${cls.color};flex-shrink:0;" alt="" />` : '';
+      scDyn.innerHTML = `${ico}<div><b style="color:${cls.color};">⚔️ 【${sk.name}】</b> <span style="color:#94a3b8;font-size:11px;">(CD ${cdSec})</span><br><span style="color:#e2e8f0;">${sk.desc || ''}</span></div>`;
+    }
   }); } catch (err) { console.warn('Showcase err:', err); }
   scBtns.forEach((b) => {
     b.onclick = () => heroShowcase.triggerSkill(Number(b.dataset.skIdx));
