@@ -546,7 +546,7 @@ function initPhaserGame() {
         }
 
         refreshStatsAndUI();
-        return { item: keptItem || dropped, potion: droppedPotion };
+        return { item: dropped, pet: droppedPet, potion: droppedPotion };
       },
       onStageClearedDisabled: (clearedStage) => {
         const modal = document.getElementById('modal-stage-clear');
@@ -1428,22 +1428,17 @@ function renderWelcomeClasses() {
   welcomeClassList.innerHTML = '';
 
   Object.values(CLASSES).forEach((cls) => {
-    const ext = CLASS_META_EXT[cls.id] || { role: cls.title, tag: '暗黑職業', bars: [80, 80, 80, 80] };
     const lv = cp[cls.id]?.level || 1;
     const isSel = selectedLobbyClass === cls.id;
     const item = document.createElement('button');
     item.type = 'button';
-    item.className = `cls-roster-card ${isSel ? 'active' : ''}`;
+    item.className = `theater-class-card ${isSel ? 'active' : ''}`;
     item.style.setProperty('--cls-accent', cls.color || '#f59e0b');
     item.innerHTML = `
-      <div class="cls-roster-avatar"><img src="${cls.spritePath}" alt="${cls.name}" /></div>
-      <div class="cls-roster-meta">
-        <div class="cls-roster-top">
-          <span class="cls-roster-name" style="color:${cls.color}">${cls.name}</span>
-          <span class="cls-lv-badge ${lv <= 1 ? 'is-lv1' : ''}">Lv.${lv}</span>
-        </div>
-        <span class="cls-roster-role">${ext.role}</span>
-        <span class="cls-roster-tag">${ext.tag}</span>
+      <img src="${cls.spritePath}" alt="${cls.name}" />
+      <div class="tcard-meta">
+        <span class="tcard-name" style="color:${cls.color}">${cls.name}</span>
+        <span class="tcard-lv ${lv <= 1 ? 'is-lv1' : ''}">Lv.${lv}</span>
       </div>
     `;
     item.onclick = () => {
@@ -1456,84 +1451,42 @@ function renderWelcomeClasses() {
 
   const cls = CLASSES[selectedLobbyClass] || CLASSES.warrior;
   const lv = cp[cls.id]?.level || 1;
-  const ext = CLASS_META_EXT[cls.id] || { role: cls.title, tag: '暗黑職業', archetype: cls.title, priority: '-', gear: '-', tip: '', bars: [80, 80, 80, 80] };
+  const ext = CLASS_META_EXT[cls.id] || { role: cls.title, tag: '暗黑職業', bars: [80, 80, 80, 80] };
   const barNames = ['攻擊破壞', '生存護甲', '攻速機動', '奧義爆發'];
   const rawSk = CLASS_SKILLS_MAP[cls.id] || {};
   const clsSkills = Array.isArray(rawSk) ? rawSk : Object.values(rawSk);
-  const coreSkills = clsSkills.slice(0, 4);
-  const tacSkills = clsSkills.slice(4, 8);
 
   welcomeClassStage.innerHTML = `
-    <div class="arena-center-col">
-      <div class="arena-nameplate">
-        <div class="arena-title-left">
-          <h2 style="color:${cls.color}">${cls.name}</h2>
-          <span class="arena-sub-title">${cls.title}・Lv.${lv}</span>
-          <span class="arena-elem-tag">${ext.tag}</span>
-        </div>
-        <div id="showcase-active-pill" class="showcase-active-pill">⚔️ 實戰演武中</div>
+    <div class="theater-arena-col">
+      <div class="theater-canvas-wrap">
+        <canvas id="preview-skill-canvas" width="520" height="292"></canvas>
+        <div id="showcase-active-pill" class="theater-cast-pill">⚔️ 演武中</div>
       </div>
-
-      <div class="arena-canvas-frame">
-        <canvas id="preview-skill-canvas" width="640" height="352"></canvas>
-      </div>
-
-      <div class="arena-skill-deck">
-        <div class="deck-group">
-          <div class="deck-group-label">核心奧義 (1–4)</div>
-          <div class="deck-row">
-            ${coreSkills.map((sk, idx) => `<button type="button" class="showcase-sk-btn ${idx === 0 ? 'active' : ''}" data-sk-idx="${idx}"><span class="sk-num">${idx + 1}</span>${sk.icon ? `<img class="sk-btn-ico" src="${sk.icon}" alt="" />` : ''}<span>${sk.name}</span></button>`).join('')}
-          </div>
-        </div>
-        <div class="deck-group">
-          <div class="deck-group-label">戰術輔助 (5–8)</div>
-          <div class="deck-row">
-            ${tacSkills.map((sk, idx) => `<button type="button" class="showcase-sk-btn" data-sk-idx="${idx + 4}"><span class="sk-num">${idx + 5}</span>${sk.icon ? `<img class="sk-btn-ico" src="${sk.icon}" alt="" />` : ''}<span>${sk.name}</span></button>`).join('')}
-          </div>
-        </div>
+      <div class="theater-skill-grid">
+        ${clsSkills.map((sk, idx) => `<button type="button" class="showcase-sk-btn ${idx === 0 ? 'active' : ''}" data-sk-idx="${idx}">${sk.icon ? `<img class="sk-btn-ico" src="${sk.icon}" alt="" />` : ''}<span>${sk.name}</span></button>`).join('')}
       </div>
     </div>
 
-    <aside class="inspector-right-col">
-      <div class="inspector-tabs">
-        <button type="button" class="insp-tab-btn ${lobbyInspectorTab === 'overview' ? 'active' : ''}" data-itab="overview">📊 戰力與技能詳情</button>
-        <button type="button" class="insp-tab-btn ${lobbyInspectorTab === 'build' ? 'active' : ''}" data-itab="build">🧭 流派與屬性傾向</button>
+    <div class="theater-info-col">
+      <div class="theater-hero-head">
+        <h2 style="color:${cls.color}">${cls.name}</h2>
+        <span>${cls.title}・Lv.${lv}</span>
+        <small>${ext.tag}</small>
       </div>
-
-      <div class="insp-pane ${lobbyInspectorTab === 'overview' ? '' : 'hidden'}" data-ipane="overview">
-        <p class="insp-desc">${cls.desc}</p>
-        <div class="stage-stat-bars">
-          ${barNames.map((bn, i) => `
-            <div class="stat-bar-row">
-              <div style="display:flex;justify-content:space-between;"><span>${bn}</span><b>${ext.bars[i]}</b></div>
-              <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${ext.bars[i]}%;background:${cls.color};"></div></div>
-            </div>`).join('')}
-        </div>
-        <div class="innate-plaque">
-          <b style="color:#fde047;">🌟 天生被動</b>
-          <div>${cls.innateBonus?.label || ''}</div>
-        </div>
-        <div id="stage-skill-dynamic" class="skill-lore-scroll"></div>
+      <p class="theater-hero-desc">${cls.desc}</p>
+      <div class="stage-stat-bars">
+        ${barNames.map((bn, i) => `
+          <div class="stat-bar-row">
+            <div style="display:flex;justify-content:space-between;"><span>${bn}</span><b>${ext.bars[i]}</b></div>
+            <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${ext.bars[i]}%;background:${cls.color};"></div></div>
+          </div>`).join('')}
       </div>
-
-      <div class="insp-pane ${lobbyInspectorTab === 'build' ? '' : 'hidden'}" data-ipane="build">
-        <div class="build-card">
-          <div class="build-row"><small>核心流派</small><b>${ext.archetype}</b></div>
-          <div class="build-row"><small>推薦屬性優先級</small><b>${ext.priority}</b></div>
-          <div class="build-row"><small>武器／防具傾向</small><b>${ext.gear}</b></div>
-          <div class="build-tip"><b style="color:#fbbf24;">⚔️ 實戰連攜建議</b><p>${ext.tip}</p></div>
-        </div>
+      <div class="innate-plaque" style="margin:8px 0;">
+        <b style="color:#fde047;">🌟 天生被動：</b><span>${cls.innateBonus?.label || ''}</span>
       </div>
-    </aside>
+      <div id="stage-skill-dynamic" class="skill-lore-scroll"></div>
+    </div>
   `;
-
-  welcomeClassStage.querySelectorAll('.insp-tab-btn').forEach((btn) => {
-    btn.onclick = () => {
-      lobbyInspectorTab = btn.dataset.itab;
-      welcomeClassStage.querySelectorAll('.insp-tab-btn').forEach((b) => b.classList.toggle('active', b.dataset.itab === lobbyInspectorTab));
-      welcomeClassStage.querySelectorAll('.insp-pane').forEach((p) => p.classList.toggle('hidden', p.dataset.ipane !== lobbyInspectorTab));
-    };
-  });
 
   const scCanvas = document.getElementById('preview-skill-canvas');
   const scDyn = document.getElementById('stage-skill-dynamic');
@@ -1550,11 +1503,11 @@ function renderWelcomeClasses() {
           <div class="lore-sk-head">
             ${ico}
             <div>
-              <b style="color:${cls.color};font-size:15px;">【${sk.name}】</b>
+              <b style="color:${cls.color};font-size:14px;">【${sk.name}】</b>
               <div class="lore-sk-cd">冷卻時間：${cdSec}</div>
             </div>
           </div>
-          <p class="lore-sk-desc">${sk.desc || ''}</p>
+          <p class="lore-sk-desc" style="font-size:12.5px;">${sk.desc || ''}</p>
         `;
       }
     });

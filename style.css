@@ -4281,3 +4281,172 @@ body.hud-edit-active #target-frame.hidden {
   justify-content: space-between;
   gap: 8px;
 }
+
+/* === v84: 方向 A｜精緻置中劇院版 (1120 x 680 黃金比例，無黑邊無捲軸) === */
+#welcome-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.welcome-creation-theater {
+  position: relative;
+  z-index: 6;
+  width: min(1120px, 94vw);
+  height: min(680px, 90vh);
+  display: grid;
+  grid-template-rows: 48px auto 1fr 62px;
+  gap: 10px;
+  padding: 12px 18px;
+  border-radius: 14px;
+  background: radial-gradient(circle at 50% 0%, rgba(127, 29, 29, 0.2), rgba(11, 9, 14, 0.94) 60%);
+  border: 1.5px solid rgba(180, 134, 62, 0.72);
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.92), inset 0 0 0 1px rgba(250, 204, 21, 0.14);
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+.theater-topbar {
+  padding: 0 4px !important;
+  background: transparent !important;
+  border-bottom: 1px solid rgba(168, 124, 58, 0.35) !important;
+}
+.theater-class-strip {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+.theater-class-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 9px;
+  background: linear-gradient(180deg, rgba(24, 19, 24, 0.92), rgba(12, 10, 14, 0.96));
+  border: 1px solid rgba(138, 102, 50, 0.42);
+  cursor: pointer;
+  transition: all 0.15s ease;
+  text-align: left;
+}
+.theater-class-card img {
+  width: 36px;
+  height: 36px;
+  border-radius: 7px;
+  border: 1px solid rgba(180, 134, 62, 0.5);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.theater-class-card.active {
+  border-color: var(--cls-accent, #f59e0b);
+  background: linear-gradient(180deg, rgba(120, 53, 15, 0.45), rgba(22, 14, 12, 0.96));
+  box-shadow: 0 0 16px rgba(245, 158, 11, 0.25);
+}
+.tcard-meta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.tcard-name {
+  font-size: 13px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.tcard-lv {
+  font-size: 10.5px;
+  color: #fde047;
+  font-weight: 700;
+}
+.tcard-lv.is-lv1 { color: #94a3b8; }
+
+.theater-main-grid {
+  display: grid;
+  grid-template-columns: 540px 1fr;
+  gap: 16px;
+  min-height: 0;
+  align-items: stretch;
+}
+.theater-arena-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+}
+.theater-canvas-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 520 / 292;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1.5px solid rgba(196, 148, 72, 0.7);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.85);
+  background: #08070b;
+}
+.theater-canvas-wrap #preview-skill-canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+.theater-cast-pill {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(10, 8, 12, 0.82);
+  border: 1px solid rgba(251, 191, 36, 0.5);
+  color: #fde047;
+  font-size: 11px;
+  font-weight: 700;
+}
+.theater-skill-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.theater-info-col {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(18, 15, 20, 0.9), rgba(10, 8, 12, 0.95));
+  border: 1px solid rgba(154, 114, 54, 0.45);
+  min-height: 0;
+  overflow-y: auto;
+}
+.theater-hero-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.theater-hero-head h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+.theater-hero-head span {
+  font-size: 13px;
+  color: #e2d5be;
+  font-weight: 700;
+}
+.theater-hero-head small {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(120, 53, 15, 0.35);
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  color: #fde68a;
+  font-size: 10.5px;
+}
+.theater-hero-desc {
+  margin: 6px 0 8px;
+  font-size: 12.5px;
+  color: #cbd5e1;
+  line-height: 1.5;
+}
+.theater-footer {
+  justify-content: center !important;
+  gap: 16px !important;
+  background: transparent !important;
+  border-top: 1px solid rgba(168, 124, 58, 0.35) !important;
+  padding: 4px 0 0 !important;
+}
