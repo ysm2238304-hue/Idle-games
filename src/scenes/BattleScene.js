@@ -1455,7 +1455,7 @@ export class BattleScene extends Phaser.Scene {
         if (!m || m.hp <= 0 || this.isTransitioning) return;
         this.playFxSprite('mfx_meteor_blast', tx, ty - 16, 1.25, 0, 440);
         this.playFxSprite('wfx_lava_ring', tx, ty, 1.15, 0, 420);
-        this.cameras.main.shake(190, 0.01);
+        if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(190, 0.01);
         if (Phaser.Math.Distance.Between(tx, ty, this.hero.x, this.hero.y) <= radius) {
           this.performMonsterAttack(m, stats, 1.45, true);
         }
@@ -1673,7 +1673,7 @@ export class BattleScene extends Phaser.Scene {
         },
       });
       this.tweens.add({ targets: outer, angle: -540, duration: 1050 });
-      this.cameras.main.shake(240, 0.008);
+      if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(240, 0.008);
     } else if (skillId === 'earthshatter') {
       const mx = this.hero.x;
       const my = this.hero.y + 10;
@@ -1707,7 +1707,7 @@ export class BattleScene extends Phaser.Scene {
         const reduceMs = Math.min(1600, bleedDetonated * 400);
         this.slotCdTimers = this.slotCdTimers.map((t) => t + reduceMs);
       }
-      this.cameras.main.shake(260, 0.014);
+      if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(260, 0.014);
     } else if (skillId === 'bloodcharge') {
       const ang = Math.atan2(aim.y - this.hero.y, aim.x - this.hero.x);
       const sx = this.hero.x;
@@ -1776,7 +1776,7 @@ export class BattleScene extends Phaser.Scene {
           m.sprite.y = Phaser.Math.Clamp(m.sprite.y + Math.sin(ang) * kb, 180, MAP_H - 180);
         }
       });
-      this.cameras.main.shake(150, 0.008);
+      if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(150, 0.008);
     } else if (skillId === 'execute_cleave') {
       const ang = Math.atan2(aim.y - this.hero.y, aim.x - this.hero.x);
       const cx = this.hero.x + Math.cos(ang) * 85;
@@ -1792,7 +1792,7 @@ export class BattleScene extends Phaser.Scene {
           this.damageMonster(m, dmg, isCrit, false, '#ef4444', '⚔️');
         }
       });
-      this.cameras.main.shake(190, 0.011);
+      if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(190, 0.011);
     } else if (skillId === 'volcano_totem') {
       const tx = aim.x;
       const ty = aim.y;
@@ -1832,7 +1832,7 @@ export class BattleScene extends Phaser.Scene {
           this.damageMonster(m, dmg, true, false, '#fbbf24', '💥');
         }
       });
-      this.cameras.main.shake(220, 0.012);
+      if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(220, 0.012);
     }
   }
 
@@ -1954,7 +1954,7 @@ export class BattleScene extends Phaser.Scene {
         hitIds: new Set(),
         stats,
       });
-      this.cameras.main.shake(180, 0.01);
+      if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(180, 0.01);
     } else if (skillId === 'windwalk') {
       this.windwalkUntil = this.time.now + 4500;
       this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 25);
@@ -2056,7 +2056,7 @@ export class BattleScene extends Phaser.Scene {
               this.damageMonster(m, dmg, true, false, isChill ? '#38bdf8' : '#e879f9', isChill ? '❄️' : '☄️');
             }
           });
-          this.cameras.main.shake(240, 0.013);
+          if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(240, 0.013);
         },
       });
     } else if (skillId === 'arcane_orb') {
@@ -2148,7 +2148,7 @@ export class BattleScene extends Phaser.Scene {
           this.applyHitEffects(m, beamDmg, true, stats);
         }
       });
-      this.cameras.main.shake(210, 0.011);
+      if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(210, 0.011);
     } else if (skillId === 'mana_overload') {
       this.overloadUntil = this.time.now + 4500;
       this.arcaneChargeStacks = 5;
@@ -2222,7 +2222,7 @@ export class BattleScene extends Phaser.Scene {
             this.damageMonster(m, dmg, true, false, '#c084fc', '🕳️');
           }
         });
-        this.cameras.main.shake(220, 0.012);
+        if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(220, 0.012);
       });
     }
   }
@@ -2296,7 +2296,7 @@ export class BattleScene extends Phaser.Scene {
 
     if (skillId === 'heaven_fist') {
       this.playFxSprite('pfx_heaven', aim.x, aim.y - 45, 1.35, 0, 420);
-      this.cameras.main.shake(120, 0.006);
+      if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(120, 0.006);
       const mult = 2.10 + skillLvl * 0.36;
       const hasMod = (tree.p_mod_bolts || 0) > 0;
       for (const m of alive) {
@@ -2321,7 +2321,7 @@ export class BattleScene extends Phaser.Scene {
 
     if (skillId === 'judgment') {
       this.playFxSprite('pfx_judgment', aim.x, aim.y - 12, 1.45, 0, 480);
-      this.cameras.main.shake(160, 0.008);
+      if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(160, 0.008);
       const mult = 2.35 + skillLvl * 0.42;
       let hits = 0;
       for (const m of alive) {
@@ -2639,7 +2639,7 @@ export class BattleScene extends Phaser.Scene {
     if (skillId === 'corpse_explosion') {
       const rad = 230 * (1 + (stats.corpseRadiusPct || 0) / 100);
       this.playFxSprite('nfx_p_corpse', aim.x, aim.y - 10, 1.4 * (rad / 230), 0, 460);
-      this.cameras.main.shake(140, 0.007);
+      if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(140, 0.007);
       const mult = (2.20 + skillLvl * 0.40) * dmgMult;
       for (const m of alive) {
         if (Phaser.Math.Distance.Between(aim.x, aim.y, m.sprite.x, m.sprite.y) <= rad) {
@@ -2772,7 +2772,7 @@ export class BattleScene extends Phaser.Scene {
 
     if (skillId === 'shadow_execute') {
       this.playFxSprite('afx_execute', aim.x, aim.y - 10, 1.5, 0, 520);
-      this.cameras.main.shake(170, 0.009);
+      if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(170, 0.009);
       const mult = (2.50 + skillLvl * 0.45) * dmgMult;
       for (const m of alive) {
         if (Phaser.Math.Distance.Between(aim.x, aim.y, m.sprite.x, m.sprite.y) <= 250) {
@@ -2824,7 +2824,7 @@ export class BattleScene extends Phaser.Scene {
 
     if (skillId === 'venom_burst') {
       this.playFxSprite('afx_venom', aim.x, aim.y - 10, 1.5, 0, 480);
-      this.cameras.main.shake(130, 0.007);
+      if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(130, 0.007);
       const mult = (2.10 + skillLvl * 0.38) * dmgMult * poisonMult;
       for (const m of alive) {
         if (Phaser.Math.Distance.Between(aim.x, aim.y, m.sprite.x, m.sprite.y) <= 240) {
@@ -3032,12 +3032,12 @@ export class BattleScene extends Phaser.Scene {
       } else if (m.atkStyle === 'smash') {
         this.playFxSprite('wfx_rubble', this.hero.x, this.hero.y, 1.15, 0, 340);
         this.playFxSprite('efx_claw', this.hero.x, this.hero.y - 8, 1.10, ang, 300);
-        this.cameras.main.shake(90, 0.004);
+        if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(90, 0.004);
       } else if (m.atkStyle === 'boss_cleave') {
         this.playFxSprite('efx_claw', this.hero.x, this.hero.y - 8, 1.65, ang, 360);
         this.playFxSprite('mfx_meteor_flame', this.hero.x, this.hero.y - 12, 1.25, 0, 380);
         this.playFxSprite('wfx_lava_ring', this.hero.x, this.hero.y + 8, 1.10, 0, 360);
-        this.cameras.main.shake(150, 0.008);
+        if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(150, 0.008);
       } else {
         this.playFxSprite('efx_claw', this.hero.x, this.hero.y - 8, 0.98, ang, 300);
       }
@@ -3137,7 +3137,7 @@ export class BattleScene extends Phaser.Scene {
     const label = `${prefix}${isCrit ? '💥' : ''}-${formatNum(dmg)}${isCrit ? '!' : ''}`;
     this.spawnFloatingText(m.sprite.x + Phaser.Math.Between(-18, 18), m.sprite.y - 54, label, color, size);
 
-    if (isCrit) this.cameras.main.shake(70, 0.003);
+    if (isCrit) if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(70, 0.003);
 
     if (m.hp <= 0) {
       this.handleSingleMonsterKilled(m, this.getStats());

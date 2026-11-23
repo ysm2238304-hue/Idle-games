@@ -520,6 +520,9 @@ export class HeroSkillShowcase {
       ctx.fillRect(0, 0, w, h);
     }
 
+    ctx.save();
+    ctx.scale(w / 360, h / 196);
+
     // 2. 英雄角色、殘影與暗影分身
     const heroAtlas = this.atlasCache.get(`./assets/heroes/atlas_${this.classId}.png?v=66`);
     const pf = HERO_PREFIX[this.classId] || 'wf';
@@ -682,5 +685,6 @@ export class HeroSkillShowcase {
       ctx.globalAlpha = 1;
       return true;
     });
+    ctx.restore();
   }
 }

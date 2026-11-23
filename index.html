@@ -7,18 +7,18 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./style.css?v=77" />
+  <link rel="stylesheet" href="./style.css?v=78" />
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
 </head>
 <body>
   <section id="welcome-screen">
-    <video id="welcome-bg-video" class="welcome-bg-video" autoplay loop muted playsinline src="./assets/video/intro.mp4?v=77"></video>
+    <video id="welcome-bg-video" class="welcome-bg-video" autoplay loop muted playsinline src="./assets/video/intro.mp4?v=78"></video>
     <div class="welcome-backdrop" style="opacity:0.42;"></div>
     <button id="btn-welcome-bgm" class="welcome-bgm-btn" title="開啟 / 靜音登入背景音樂">🔇 點擊開啟背景音樂</button>
     <div class="welcome-vignette"></div>
     <div class="welcome-content v70-lobby">
       <div class="welcome-crest v70-crest">
-        <img class="welcome-abyss-logo" src="./assets/ui/logo_abyss.png?v=77" alt="無限深淵" />
+        <img class="welcome-abyss-logo" src="./assets/ui/logo_abyss.png?v=78" alt="無限深淵" />
         <h1 class="crest-title">無限深淵</h1>
       </div>
 
@@ -63,7 +63,7 @@
   <!-- ========== 電影級開場動畫劇院覆蓋層 (v68) ========== -->
   <div id="cinematic-intro-overlay" class="cinematic-intro-overlay hidden">
     <div class="cinematic-letterbox top"></div>
-    <video id="cinematic-intro-video" playsinline preload="auto" src="./assets/video/intro.mp4?v=77"></video>
+    <video id="cinematic-intro-video" playsinline preload="auto" src="./assets/video/intro.mp4?v=78"></video>
     <div class="cinematic-vignette"></div>
     <div id="cinematic-caption" class="cinematic-caption"></div>
     <div class="cinematic-controls">
@@ -161,8 +161,9 @@
           <button class="mmo-micro-btn" data-drawer="rebirth" data-tip="深淵輪迴轉生 [V]"><img class="mmo-ui-img" src="./assets/ui/ui_rebirth.png" alt="輪迴" /><span class="mmo-lbl">輪迴(V)</span></button>
           <button id="btn-switch-class" class="mmo-micro-btn" data-tip="切換冒險職業 [C]"><img class="mmo-ui-img" src="./assets/ui/ui_class.png" alt="職業" /><span class="mmo-lbl">職業(C)</span></button>
           <button class="mmo-micro-btn" data-drawer="log" data-tip="完整戰鬥日誌 [L]"><img class="mmo-ui-img" src="./assets/ui/ui_log.png" alt="日誌" /><span class="mmo-lbl">日誌(L)</span></button>
-          <button id="btn-top-waypoint" class="mmo-micro-btn mmo-waypoint-btn" data-tip="主城快速傳送陣 [Y]"><img class="mmo-ui-img" src="./assets/ui/ui_waypoint.png?v=77" alt="傳送" /><span class="mmo-lbl">傳送(Y)</span></button>
+          <button id="btn-top-waypoint" class="mmo-micro-btn mmo-waypoint-btn" data-tip="主城快速傳送陣 [Y]"><img class="mmo-ui-img" src="./assets/ui/ui_waypoint.png?v=78" alt="傳送" /><span class="mmo-lbl">傳送(Y)</span></button>
           <button id="btn-town-bgm" class="mmo-micro-btn" data-tip="開啟 / 靜音主城 BGM"><span style="font-size:18px;line-height:24px;">🎵</span><span class="mmo-lbl">音樂</span></button>
+          <button id="btn-open-settings" class="mmo-micro-btn" data-tip="系統設定 (UI/聲音/畫質/遊戲) [O]"><span style="font-size:18px;line-height:24px;">⚙️</span><span class="mmo-lbl">設定(O)</span></button>
           <button id="btn-collapse-topmenu" class="mmo-micro-btn mmo-collapse-btn" data-tip="收合 / 展開上方快捷列"><span class="mmo-lbl" style="font-size:15px;">◀</span></button>
         </div>
 
@@ -351,6 +352,29 @@
     </main>
   </section>
 
+  
+  <div id="hud-edit-banner" class="hud-edit-banner hidden">
+    <span>✥ <b>自由排版模式</b>：拖曳各框架標題移動位置，點擊 ± 調整單框大小</span>
+    <button id="btn-reset-hud-edit" class="btn-ghost-sm">↺ 全部歸位</button>
+    <button id="btn-finish-hud-edit" class="btn-gold-sm">✓ 完成並鎖定</button>
+  </div>
+
+  <div id="modal-settings" class="modal-overlay hidden">
+    <div class="modal-card settings-modal-card diablo-ornate-card">
+      <div class="modal-header">
+        <h2>⚙️ 暗黑系統設定 <small style="color:#94a3b8;font-size:12px;font-weight:400;">[快捷鍵 O]</small></h2>
+        <button id="btn-close-settings" class="btn-ghost">關閉</button>
+      </div>
+      <div class="settings-tabs">
+        <button type="button" class="settings-tab-btn active" data-tab="ui">📐 介面調整</button>
+        <button type="button" class="settings-tab-btn" data-tab="audio">🔊 聲音大小</button>
+        <button type="button" class="settings-tab-btn" data-tab="graphics">✨ 畫質調整</button>
+        <button type="button" class="settings-tab-btn" data-tab="gameplay">⚔️ 遊戲調整</button>
+      </div>
+      <div id="settings-modal-body" class="settings-modal-body"></div>
+    </div>
+  </div>
+
   <div id="diablo-tooltip" class="diablo-tooltip hidden"></div>
 
   <div id="modal-world-map" class="modal-overlay hidden">
@@ -432,6 +456,6 @@
     </div>
   </div>
 
-  <script type="module" src="./src/main.js?v=77"></script>
+  <script type="module" src="./src/main.js?v=78"></script>
 </body>
 </html>

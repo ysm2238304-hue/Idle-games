@@ -24,6 +24,7 @@ import { TownScene } from './scenes/TownScene.js';
 import { TOWN_SPLASHES } from './data/towns/splashes.js';
 import { DashboardUI } from './ui/DashboardUI.js';
 import { TownBgmEngine } from './audio/TownBgmEngine.js';
+import { HudSettingsManager } from './ui/HudSettingsManager.js';
 import { HeroSkillShowcase, CLASS_SKILLS_MAP } from './ui/HeroSkillShowcase.js';
 
 let gameState = loadGame() || createInitialState('warrior');
@@ -52,6 +53,8 @@ function refreshStatsAndUI() {
 }
 
 const townBgm = new TownBgmEngine();
+const hudSettings = new HudSettingsManager({ townBgm });
+hudSettings.init();
 const heroShowcase = new HeroSkillShowcase();
 const ui = new DashboardUI({
   onSelectClass: (classId) => {
@@ -1433,9 +1436,9 @@ function renderWelcomeClasses() {
   const clsSkills = Array.isArray(rawSk) ? rawSk : Object.values(rawSk);
   welcomeClassStage.innerHTML = `
     <div class="showcase-canvas-wrap">
-      <canvas id="preview-skill-canvas" width="360" height="196"></canvas>
+      <canvas id="preview-skill-canvas" width="560" height="308"></canvas>
       <div class="showcase-skill-bar">
-        ${clsSkills.map((sk, idx) => `<button type="button" class="showcase-sk-btn ${idx === 0 ? 'active' : ''}" data-sk-idx="${idx}">${sk.name}</button>`).join('')}
+        ${clsSkills.map((sk, idx) => `<button type="button" class="showcase-sk-btn ${idx === 0 ? 'active' : ''}" data-sk-idx="${idx}">${sk.icon ? `<img class="sk-btn-ico" src="${sk.icon}" alt="" />` : ''}<span>${sk.name}</span></button>`).join('')}
       </div>
     </div>
     <div class="stage-info-col">
@@ -1707,7 +1710,8 @@ window.addEventListener('keydown', (e) => {
     cm?.classList.contains('hidden') ? ui.openClassModal(gameState) : cm.classList.add('hidden');
   } else if (e.code === 'KeyG') {
     if (isInTown) exitTownToBattle(); else enterTown(Math.min(9, getChapterIdx(gameState.stage)));
-  } else if (e.code === 'KeyY') {
+  } else if (e.code === 'KeyO') { e.preventDefault(); hudSettings.toggleModal(); return; }
+  if (e.code === 'KeyY') {
     if (isInTown) openTownWaypointUI();
   } else if (e.code === 'KeyL') {
     ui.activeDrawer === 'log' ? ui.closeDrawer() : ui.openDrawer('log');

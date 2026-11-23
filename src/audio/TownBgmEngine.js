@@ -1,4 +1,4 @@
-// 10 大主城專屬 Web Audio 奇幻音樂引擎 (v71)
+// 10 大主城專屬 Web Audio 奇幻音樂引擎 (v78 支援音量動態調節)
 const CHAPTER_THEMES = [
   { name: '曙光哨站・民謠魯特琴', tempoMs: 460, wave: 'triangle', filterHz: 1400, notes: [293.66, 369.99, 440.00, 587.33, 440.00, 369.99, 329.63, 440.00], bass: 146.83 },
   { name: '菌菇黑市・神秘水晶鐘琴', tempoMs: 520, wave: 'sine',     filterHz: 2200, notes: [369.99, 440.00, 554.37, 659.25, 554.37, 493.88, 440.00, 329.63], bass: 185.00 },
@@ -20,6 +20,7 @@ export class TownBgmEngine {
     this.step = 0;
     this.currentCh = -1;
     this.muted = false;
+    this.volume = 0.24;
   }
 
   _ensureCtx() {
@@ -28,9 +29,8 @@ export class TownBgmEngine {
     if (!AC) return false;
     this.ctx = new AC();
     this.master = this.ctx.createGain();
-    this.master.gain.value = this.muted ? 0 : 0.22;
+    this.master.gain.value = this.muted ? 0 : this.volume;
 
-    // Gentle stereo-like feedback delay for warm room reverb
     const delay = this.ctx.createDelay();
     delay.delayTime.value = 0.28;
     const fb = this.ctx.createGain();
@@ -45,6 +45,14 @@ export class TownBgmEngine {
     delay.connect(wet);
     wet.connect(this.ctx.destination);
     return true;
+  }
+
+  setVolume(norm01, muted = this.muted) {
+    this.volume = Math.max(0, Math.min(1, Number(norm01) || 0)) * 0.36;
+    this.muted = !!muted;
+    if (this.master && this.ctx) {
+      this.master.gain.setTargetAtTime(this.muted ? 0 : this.volume, this.ctx.currentTime, 0.06);
+    }
   }
 
   playChapter(chIdx = 0) {
@@ -106,7 +114,7 @@ export class TownBgmEngine {
     this.muted = !this.muted;
     if (this._ensureCtx()) {
       if (this.ctx.state === 'suspended') this.ctx.resume().catch(() => {});
-      this.master.gain.setTargetAtTime(this.muted ? 0 : 0.22, this.ctx.currentTime, 0.08);
+      this.master.gain.setTargetAtTime(this.muted ? 0 : this.volume, this.ctx.currentTime, 0.08);
     }
     return this.muted;
   }

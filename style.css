@@ -3314,3 +3314,389 @@ button { font-family: inherit; }
   border-color: rgba(148, 163, 184, 0.3);
   color: #94a3b8;
 }
+
+/* === v78: 暗黑破壞神鍛鐵黑金 HUD 重構、創角大廳放大、自由拖曳縮放與系統設定 === */
+
+/* 1. 創角大廳放大與暗黑殿堂化 */
+.welcome-creation-shell {
+  width: min(1380px, 95vw) !important;
+  min-height: 750px !important;
+  max-height: 92vh;
+  padding: 22px 26px !important;
+  background: radial-gradient(circle at 50% 0%, rgba(127, 29, 29, 0.22), rgba(12, 10, 14, 0.94) 55%) !important;
+  border: 1.5px solid rgba(180, 134, 62, 0.72) !important;
+  box-shadow: 0 30px 95px rgba(0, 0, 0, 0.94), inset 0 0 0 1px rgba(250, 204, 21, 0.16), inset 0 0 42px rgba(0, 0, 0, 0.75) !important;
+}
+.creation-body {
+  grid-template-columns: 270px 1fr !important;
+  gap: 22px !important;
+  align-items: stretch;
+}
+.creation-right-stage {
+  grid-template-columns: minmax(480px, 1.35fr) minmax(300px, 0.95fr) !important;
+  gap: 20px !important;
+  padding: 18px !important;
+  background: linear-gradient(180deg, rgba(18, 15, 20, 0.92), rgba(10, 8, 12, 0.96)) !important;
+  border: 1px solid rgba(168, 124, 58, 0.45) !important;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.7) !important;
+}
+.showcase-canvas-wrap {
+  gap: 10px !important;
+}
+#preview-skill-canvas {
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 560 / 308;
+  border-radius: 8px !important;
+  border: 1.5px solid rgba(196, 148, 72, 0.65) !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.85), inset 0 0 18px rgba(0, 0, 0, 0.65) !important;
+}
+.showcase-skill-bar {
+  grid-template-columns: repeat(4, 1fr) !important;
+  gap: 7px !important;
+}
+.showcase-sk-btn {
+  display: flex !important;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  padding: 6px 8px !important;
+  font-size: 11.5px !important;
+  background: linear-gradient(180deg, rgba(32, 26, 28, 0.95), rgba(16, 13, 16, 0.98)) !important;
+  border: 1px solid rgba(130, 98, 52, 0.55) !important;
+  border-radius: 6px !important;
+  color: #e2d5be !important;
+  transition: all 0.15s ease;
+}
+.showcase-sk-btn .sk-btn-ico {
+  width: 22px;
+  height: 22px;
+  border-radius: 4px;
+  border: 1px solid rgba(250, 204, 21, 0.35);
+  flex-shrink: 0;
+  object-fit: cover;
+}
+.showcase-sk-btn.active {
+  border-color: #f59e0b !important;
+  background: linear-gradient(180deg, rgba(120, 53, 15, 0.65), rgba(45, 20, 12, 0.95)) !important;
+  color: #fef08a !important;
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.35) !important;
+}
+.stage-hero-title {
+  flex-wrap: wrap;
+  gap: 6px 12px !important;
+}
+.stage-hero-title h2 {
+  white-space: nowrap !important;
+  font-size: 26px !important;
+  letter-spacing: 0.04em;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.85);
+}
+.stage-skill-card {
+  padding: 12px 14px !important;
+  background: linear-gradient(180deg, rgba(24, 19, 22, 0.92), rgba(12, 10, 13, 0.96)) !important;
+  border: 1px solid rgba(176, 130, 62, 0.45) !important;
+}
+
+/* 2. 主遊戲暗黑破壞神（Diablo）鍛鐵黑金 HUD 風格 */
+.hud-char-panel,
+.hud-stage-card,
+.mmo-top-menu,
+.mmo-minimap-card.compass-style,
+.hud-chat-box,
+.target-frame {
+  background: linear-gradient(180deg, rgba(22, 17, 19, 0.93), rgba(10, 8, 11, 0.96)) !important;
+  border: 1.5px solid #8a6632 !important;
+  box-shadow: 0 8px 26px rgba(0, 0, 0, 0.82), inset 0 0 0 1px rgba(250, 204, 21, 0.14), inset 0 0 18px rgba(80, 16, 16, 0.22) !important;
+}
+.hud-char-panel {
+  border-radius: 10px !important;
+  padding: 8px 12px !important;
+}
+.hud-avatar-wrap {
+  border: 2px solid #c99c52 !important;
+  box-shadow: 0 0 12px rgba(201, 156, 82, 0.4), inset 0 0 8px rgba(0, 0, 0, 0.8) !important;
+}
+.badge {
+  background: linear-gradient(180deg, #2a1f1d, #161012) !important;
+  border: 1px solid rgba(186, 140, 68, 0.55) !important;
+  color: #f6e3ba !important;
+}
+.badge.dps {
+  color: #fca5a5 !important;
+  border-color: rgba(220, 38, 38, 0.5) !important;
+}
+.mmo-micro-btn {
+  background: linear-gradient(180deg, rgba(34, 26, 28, 0.96), rgba(16, 12, 15, 0.98)) !important;
+  border: 1px solid rgba(154, 114, 54, 0.55) !important;
+  border-radius: 6px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 224, 150, 0.14) !important;
+}
+.mmo-micro-btn:hover {
+  border-color: #f59e0b !important;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.35) !important;
+}
+.compass-ribbon {
+  background: linear-gradient(90deg, rgba(69, 10, 10, 0.85), rgba(34, 22, 16, 0.92), rgba(69, 10, 10, 0.85)) !important;
+  border-bottom: 1px solid rgba(196, 148, 72, 0.55) !important;
+  color: #fde68a !important;
+}
+.minimap-rect-frame {
+  border: 1.5px solid #9a7438 !important;
+  box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.85) !important;
+}
+
+/* 底部暗黑雙球祭壇 (#diablo-hud) */
+#diablo-hud.floating-altar {
+  background: linear-gradient(180deg, rgba(24, 18, 20, 0.95), rgba(10, 8, 10, 0.98)) !important;
+  border: 1.5px solid #9a7438 !important;
+  border-bottom: 2px solid #5c421c !important;
+  box-shadow: 0 -6px 36px rgba(0, 0, 0, 0.9), 0 10px 30px rgba(0, 0, 0, 0.95), inset 0 1px 0 rgba(253, 224, 71, 0.25) !important;
+  border-radius: 14px !important;
+}
+.diablo-orb {
+  border: 3px solid #a87e3e !important;
+  box-shadow: 0 0 18px rgba(0, 0, 0, 0.95), inset 0 0 16px rgba(0, 0, 0, 0.85), 0 0 0 2px #261b12 !important;
+}
+.hp-orb::after,
+.mp-orb::after {
+  content: '';
+  position: absolute;
+  top: 8%;
+  left: 16%;
+  width: 34%;
+  height: 22%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.35), transparent 70%);
+  pointer-events: none;
+}
+.skill-slot {
+  background: linear-gradient(180deg, #1d171a, #0e0b0d) !important;
+  border: 1.5px solid #8a6632 !important;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.85) !important;
+}
+.diablo-exp-bar {
+  background: #0c090b !important;
+  border: 1px solid #7c5c2e !important;
+}
+.diablo-exp-fill {
+  background: linear-gradient(90deg, #92400e, #eab308, #fef08a) !important;
+}
+
+/* 3. 全框架自由拖曳 & 個別縮放編輯模式 */
+.hud-edit-bar {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 3px 8px;
+  margin-bottom: 4px;
+  background: linear-gradient(90deg, rgba(120, 53, 15, 0.95), rgba(69, 26, 3, 0.95));
+  border: 1px solid #fbbf24;
+  border-radius: 6px;
+  color: #fef3c7;
+  font-size: 11px;
+  cursor: grab;
+  user-select: none;
+  pointer-events: auto;
+  z-index: 50;
+}
+.hud-edit-bar:active { cursor: grabbing; }
+.hud-edit-btns {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.hud-ed-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 1px solid rgba(251, 191, 36, 0.6);
+  background: rgba(15, 12, 14, 0.85);
+  color: #fde68a;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1;
+}
+.hud-ed-scale {
+  min-width: 34px;
+  text-align: center;
+  font-weight: 700;
+  color: #fde047;
+}
+body.hud-edit-active .hud-edit-bar {
+  display: flex !important;
+}
+body.hud-edit-active [data-hud-panel] {
+  outline: 1.5px dashed rgba(251, 191, 36, 0.78);
+  outline-offset: 4px;
+  border-radius: 10px;
+  pointer-events: auto !important;
+}
+body.hud-edit-active #hud-top-center.hidden {
+  display: block !important;
+}
+body.hud-edit-active #target-frame.hidden {
+  display: flex !important;
+  opacity: 0.75;
+}
+[data-hud-panel].hud-dragging {
+  outline: 2px solid #fde047 !important;
+  box-shadow: 0 0 28px rgba(251, 191, 36, 0.45) !important;
+}
+.hud-panel-hidden,
+.setting-hide-target {
+  display: none !important;
+}
+.hud-edit-banner {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9500;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: linear-gradient(180deg, rgba(34, 24, 18, 0.96), rgba(16, 12, 10, 0.98));
+  border: 1.5px solid #f59e0b;
+  border-radius: 10px;
+  color: #fef3c7;
+  font-size: 13px;
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.9);
+}
+
+/* 4. 暗黑系統設定彈窗 */
+.diablo-ornate-card {
+  background: radial-gradient(circle at 50% 0%, rgba(127, 29, 29, 0.2), rgba(14, 11, 14, 0.97) 55%) !important;
+  border: 1.5px solid #9a7438 !important;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.95), inset 0 0 0 1px rgba(250, 204, 21, 0.16) !important;
+}
+.settings-modal-card {
+  width: min(640px, 92vw);
+  max-height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
+.settings-tabs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin: 12px 0;
+}
+.settings-tab-btn {
+  padding: 9px 8px;
+  border-radius: 7px;
+  border: 1px solid rgba(138, 102, 50, 0.5);
+  background: rgba(24, 19, 22, 0.9);
+  color: #cbd5e1;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.settings-tab-btn.active {
+  border-color: #f59e0b;
+  background: linear-gradient(180deg, rgba(120, 53, 15, 0.65), rgba(45, 20, 12, 0.95));
+  color: #fef08a;
+}
+.settings-modal-body {
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.set-section {
+  background: rgba(18, 14, 17, 0.85);
+  border: 1px solid rgba(138, 102, 50, 0.35);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+.set-sec-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #fbbf24;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.set-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.set-row:last-child { border-bottom: none; }
+.set-row.compact { padding: 5px 0; }
+.set-row b { display: block; font-size: 13px; color: #f1e6cf; }
+.set-row small { display: block; font-size: 11px; color: #94a3b8; margin-top: 2px; }
+.set-ctrl {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.set-ctrl input[type="range"] {
+  width: 130px;
+  accent-color: #f59e0b;
+}
+.set-val {
+  min-width: 40px;
+  text-align: right;
+  font-size: 12px;
+  font-weight: 700;
+  color: #fde047;
+}
+.set-select {
+  background: #141013;
+  color: #f1e6cf;
+  border: 1px solid #8a6632;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+.set-chk, .set-switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  color: #e2e8f0;
+  cursor: pointer;
+}
+.btn-gold-sm {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #fbbf24;
+  background: linear-gradient(180deg, #b45309, #78350f);
+  color: #fef3c7;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.btn-ghost-sm {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(30, 41, 59, 0.6);
+  color: #cbd5e1;
+  font-size: 12px;
+  cursor: pointer;
+}
+.set-keys-hint {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: flex-end;
+}
+.set-keys-hint span {
+  font-size: 11px;
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: rgba(30, 24, 26, 0.9);
+  border: 1px solid rgba(138, 102, 50, 0.45);
+  color: #e2d5be;
+}
+.set-keys-hint b {
+  display: inline;
+  color: #fde047;
+}
