@@ -9,6 +9,7 @@ import { TOWN_CH8 } from '../data/towns/ch8.js';
 import { TOWN_CH9 } from '../data/towns/ch9.js';
 import { TOWN_CH10 } from '../data/towns/ch10.js';
 import { formatNum } from '../logic/statCalc.js';
+import { PET_CATALOG, getPetDef, PET_SCHOOLS } from '../data/pets.js';
 
 const TOWN_REGISTRY = {
   0: TOWN_CH1,
