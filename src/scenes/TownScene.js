@@ -1032,9 +1032,21 @@ export class TownScene extends Phaser.Scene {
         } else {
           isMoving = true;
           const prevX = p.spr.x;
+          const prevY = p.spr.y;
           const res = this.clampNpcToTerrain(p.spr.x + (dx / dist) * p.speed * dt, p.spr.y + (dy / dist) * p.speed * dt);
+          const moved = Math.hypot(res.x - prevX, res.y - prevY);
           p.spr.x = res.x;
           p.spr.y = res.y;
+          if (moved < 0.4) {
+            p.stuckTime = (p.stuckTime || 0) + dt;
+            if (p.stuckTime > 0.35) {
+              isMoving = false;
+              p.stuckTime = 0;
+              p.wpIdx = (p.wpIdx + 1) % p.waypoints.length;
+            }
+          } else {
+            p.stuckTime = 0;
+          }
           if (res.hitWall && Math.hypot(dx, dy) < 90) p.wpIdx = (p.wpIdx + 1) % p.waypoints.length;
           const stepX = res.x - prevX;
           if (Math.abs(stepX) > 0.12) p.spr.setFlipX(stepX < 0);
@@ -1048,7 +1060,7 @@ export class TownScene extends Phaser.Scene {
         const targetAnim = `${p.frame}_${isMoving ? 'walk' : 'idle'}`;
         if (p.spr.anims.currentAnim?.key !== targetAnim) p.spr.play(targetAnim, true);
       }
-      p.spr.setRotation(isMoving ? Math.sin(time * 0.014) * 0.045 : 0);
+      p.spr.setRotation(0);
       p.spr.setDepth(p.spr.y);
       p.shadow.setPosition(p.spr.x, p.spr.y + 2);
       p.shadow.setScale(isMoving ? 0.95 + Math.sin(time * 0.014) * 0.08 : 0.95, 0.34);
@@ -1077,9 +1089,23 @@ export class TownScene extends Phaser.Scene {
           isMoving = true;
           const spd = 30;
           const prevX = r.spr.x;
+          const prevY = r.spr.y;
           const res = this.clampNpcToTerrain(r.spr.x + (dx / dist) * spd * dt, r.spr.y + (dy / dist) * spd * dt);
+          const moved = Math.hypot(res.x - prevX, res.y - prevY);
           r.spr.x = res.x;
           r.spr.y = res.y;
+          if (moved < 0.25) {
+            r.stuckTime = (r.stuckTime || 0) + dt;
+            if (r.stuckTime > 0.35) {
+              isMoving = false;
+              r.stuckTime = 0;
+              r.waitUntil = time + 1600;
+              r.targetX = r.homeX;
+              r.targetY = r.homeY;
+            }
+          } else {
+            r.stuckTime = 0;
+          }
           if (res.hitWall) {
             r.waitUntil = time + 1200;
             r.targetX = r.homeX;
@@ -1097,7 +1123,7 @@ export class TownScene extends Phaser.Scene {
         const targetAnim = `${r.frame}_${isMoving ? 'walk' : 'idle'}`;
         if (r.spr.anims.currentAnim?.key !== targetAnim) r.spr.play(targetAnim, true);
       }
-      r.spr.setRotation(isMoving ? Math.sin(time * 0.013) * 0.04 : 0);
+      r.spr.setRotation(0);
       r.spr.setDepth(r.spr.y);
       r.shadow.setPosition(r.spr.x, r.spr.y + 2);
       if (r.plate) r.plate.setPosition(r.spr.x, r.spr.y - 112);

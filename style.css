@@ -1651,7 +1651,7 @@ button { font-family: inherit; }
   transform-origin: top center;
 }
 #hud-top-right {
-  transform: scale(1.58);
+  transform: scale(1.08);
   transform-origin: top right;
 }
 #hud-bottom-left {
@@ -1667,7 +1667,7 @@ button { font-family: inherit; }
 @media (max-width: 1440px) {
   #hud-top-left { transform: scale(1.18); }
   #hud-top-center { transform: translateX(-50%) scale(1.18); }
-  #hud-top-right { transform: scale(1.36); }
+  #hud-top-right { transform: scale(0.96); }
   #hud-bottom-left { transform: scale(1.18); max-width: calc((50vw - 360px) / 1.18); }
   #diablo-hud.floating-altar { transform: translateX(-50%) scale(0.90); }
 }
@@ -1675,7 +1675,7 @@ button { font-family: inherit; }
 @media (max-width: 1120px) {
   #hud-top-left { transform: scale(1); }
   #hud-top-center { transform: translateX(-50%) scale(1); }
-  #hud-top-right { transform: scale(1.15); }
+  #hud-top-right { transform: scale(0.86); }
   #hud-bottom-left { transform: scale(1); max-width: calc(50vw - 260px); }
   #diablo-hud.floating-altar { transform: translateX(-50%) scale(0.80); }
 }
@@ -1686,7 +1686,7 @@ button { font-family: inherit; }
   padding: 6px 8px;
 }
 .mmo-top-menu .mmo-micro-btn {
-  width: 52px;
+  width: 44px;
   height: auto;
   padding: 3px 2px 4px;
   display: flex;

@@ -1082,11 +1082,13 @@ export class DashboardUI {
     ctx.fillStyle = '#090d16';
     ctx.fillRect(0, 0, w, h);
 
-    // Compute camera transform for compass zoom (1.0 = full map, >1.0 = hero-centered)
+    // Compute camera transform for compass zoom (clamped inside map bounds so no black bars appear)
     ctx.save();
     if (zoom > 1.01) {
-      const hxN = (heroX / mapW) * w;
-      const hyN = (heroY / mapH) * h;
+      const halfW = w / (2 * zoom);
+      const halfH = h / (2 * zoom);
+      const hxN = Math.max(halfW, Math.min(w - halfW, (heroX / mapW) * w));
+      const hyN = Math.max(halfH, Math.min(h - halfH, (heroY / mapH) * h));
       ctx.translate(w / 2, h / 2);
       ctx.scale(zoom, zoom);
       ctx.translate(-hxN, -hyN);
@@ -1107,17 +1109,7 @@ export class DashboardUI {
     }
 
     if (mode === 'town') {
-      // 1. 繪製真實可行走地形輪廓
-      ctx.fillStyle = 'rgba(56, 189, 248, 0.14)';
-      ctx.strokeStyle = 'rgba(56, 189, 248, 0.35)';
-      for (const z of walkableZones || []) {
-        const zx = (z.x1 / mapW) * w;
-        const zy = (z.y1 / mapH) * h;
-        const zw = ((z.x2 - z.x1) / mapW) * w;
-        const zh = ((z.y2 - z.y1) / mapH) * h;
-        ctx.fillRect(zx, zy, zw, zh);
-        ctx.strokeRect(zx, zy, zw, zh);
-      }
+      // (底圖已直接顯示實景地形，不繪製藍色方框)
 
       // 2. 建築底座方塊
       ctx.fillStyle = 'rgba(148, 163, 184, 0.45)';
@@ -1160,7 +1152,7 @@ export class DashboardUI {
       }
 
       if (statusEl) {
-        statusEl.textContent = `🏠 設施 ${facCount} 處｜🛡️ 巡邏 ${(patrols || []).length} 人｜🟦 可走區`;
+        statusEl.textContent = `🏠 設施 ${facCount} 處｜🛡️ 巡邏 ${(patrols || []).length} 人`;
       }
     } else {
       // 戰鬥模式：障礙物 + 怪群（普通/精英/首領）
