@@ -4123,3 +4123,161 @@ body.hud-edit-active #target-frame.hidden {
   background: linear-gradient(180deg, rgba(16, 12, 15, 0.92), rgba(8, 6, 9, 0.98));
   border-top: 1.5px solid rgba(168, 124, 58, 0.55);
 }
+
+/* === v80: 第二批｜遊戲內主介面 (In-Game HUD) 五區複合式精密架構 === */
+
+/* 1. 右上角：緊湊 2x6 機能矩陣 + 精密雷達儀表板 */
+#hud-top-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+.mmo-top-menu.v80-matrix-dock {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: stretch !important;
+  gap: 6px !important;
+  padding: 6px 8px !important;
+  border-radius: 10px !important;
+}
+.v80-matrix-dock .matrix-rows {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.v80-matrix-dock .matrix-row {
+  display: grid;
+  grid-template-columns: repeat(6, 36px);
+  gap: 5px;
+}
+.v80-matrix-dock.collapsed .matrix-rows {
+  display: none !important;
+}
+.v80-matrix-dock .mmo-micro-btn {
+  position: relative;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  padding: 3px !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+.v80-matrix-dock .mmo-ui-img {
+  width: 24px !important;
+  height: 24px !important;
+  object-fit: contain;
+}
+.v80-matrix-dock .mmo-emoji {
+  font-size: 17px;
+  line-height: 1;
+}
+.v80-matrix-dock .mmo-hk {
+  position: absolute;
+  right: 2px;
+  bottom: 1px;
+  font-size: 9px;
+  font-weight: 800;
+  color: #fde68a;
+  text-shadow: 0 1px 2px #000;
+  line-height: 1;
+}
+.v80-matrix-dock .mmo-collapse-btn {
+  width: 22px !important;
+  min-width: 22px !important;
+  height: auto !important;
+  padding: 0 !important;
+}
+.mmo-minimap-card.compass-style {
+  width: 256px !important;
+  padding: 0 0 6px !important;
+  border-radius: 10px !important;
+  overflow: hidden;
+}
+
+/* 2. 左上角：英雄核心狀態群（緊湊橫條 + 投影式關卡追蹤） */
+#hud-top-left {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  max-width: 330px;
+}
+.mmo-hero-card {
+  width: 100%;
+  padding: 8px 10px !important;
+  gap: 10px !important;
+  border-radius: 10px !important;
+}
+.hero-avatar-ring {
+  width: 52px !important;
+  height: 52px !important;
+  border-radius: 50% !important;
+  border: 2px solid #c99c52 !important;
+  box-shadow: 0 0 14px rgba(201, 156, 82, 0.42), inset 0 0 8px rgba(0, 0, 0, 0.85) !important;
+}
+.mmo-quest-tracker {
+  width: 100%;
+  background: linear-gradient(90deg, rgba(16, 12, 16, 0.84), rgba(10, 8, 12, 0.48)) !important;
+  border: 1px solid rgba(138, 102, 50, 0.48) !important;
+  border-left: 3px solid #f59e0b !important;
+  border-radius: 8px !important;
+  padding: 6px 10px !important;
+  backdrop-filter: blur(4px);
+}
+.btn-town-toggle {
+  padding: 6px 14px !important;
+  font-size: 12px !important;
+  border-radius: 999px !important;
+  background: linear-gradient(180deg, rgba(120, 53, 15, 0.9), rgba(69, 26, 3, 0.95)) !important;
+  border: 1px solid #d97706 !important;
+  color: #fef3c7 !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.65) !important;
+}
+
+/* 3. 左下角：低存在感半透明多頻道情報窗 */
+#hud-bottom-left {
+  max-width: 340px;
+}
+.floating-log-box {
+  width: 330px !important;
+  background: linear-gradient(180deg, rgba(14, 11, 14, 0.72), rgba(8, 6, 9, 0.86)) !important;
+  border: 1px solid rgba(138, 102, 50, 0.42) !important;
+  border-radius: 10px !important;
+  backdrop-filter: blur(4px);
+}
+.floating-log-entries {
+  max-height: 118px !important;
+  font-size: 11.5px !important;
+  line-height: 1.45 !important;
+}
+.floating-log-box.collapsed .floating-log-entries {
+  display: none !important;
+}
+
+/* 4. 底部中軸：重裝暗黑雙球技能祭壇 */
+#diablo-hud.floating-altar {
+  padding: 8px 14px 7px !important;
+  gap: 12px !important;
+}
+.floating-altar-core {
+  gap: 5px !important;
+}
+.mmo-hotbar {
+  gap: 7px !important;
+}
+.mmo-slot {
+  width: 48px !important;
+  height: 48px !important;
+  border-radius: 8px !important;
+  background: linear-gradient(180deg, #1d1619, #0c090b) !important;
+  border: 1.5px solid #8a6632 !important;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.9), 0 3px 10px rgba(0, 0, 0, 0.7) !important;
+}
+.mmo-status-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
