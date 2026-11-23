@@ -1315,9 +1315,14 @@ export class DashboardUI {
     const npc = data?.npc || data || {};
     const portraitUrl = ctx.getPortrait?.(data?.atlasKey, data?.frame || npc?.frame) || '';
     const portraitHtml = portraitUrl ? `<img class="town-npc-portrait" src="${portraitUrl}" alt="${npc.name || ''}" />` : '';
+    const resPills = `<div class="town-res-pills">
+      <span class="town-res-pill" style="color:#fde047;">🪙 ${Math.floor(st.gold || 0).toLocaleString()} G</span>
+      <span class="town-res-pill" style="color:#7dd3fc;">✨ ${Math.floor(st.dust || 0).toLocaleString()} 粉塵</span>
+      <span class="town-res-pill" style="color:#d8b4fe;">💎 ${st.soulCrystals || 0} 魂晶</span>
+    </div>`;
     const banner = npc.greeting
-      ? `<div class="town-npc-banner">${portraitHtml}<div><b>${npc.title || ''} ${npc.name || ''}：</b>「${npc.greeting}」<br><span style="color:#fde047;font-size:12px;">目前持有金幣：${Math.floor(st.gold || 0).toLocaleString()} G</span></div></div>`
-      : '';
+      ? `<div class="town-npc-banner">${portraitHtml}<div style="flex:1;"><b style="color:#fde68a;">${npc.title || ''} ${npc.name || ''}：</b>「${npc.greeting}」${resPills}</div></div>`
+      : `<div class="town-npc-banner"><div style="flex:1;">${resPills}</div></div>`;
 
     if (action === 'modal_alchemy') {
       titleEl.textContent = '⚗️ 祕法煉金工坊・高階秘藥';
@@ -1331,11 +1336,33 @@ export class DashboardUI {
         { id: 'iron_pot', name: '🛡️ 鋼鐵壁壘秘藥 (180秒)', desc: '高階秘藥：防禦力 +35%、減傷 +12%。', cost: Math.round(1400 * chMult) },
         { id: 'sage_pot', name: '🌟 秘法先知秘藥 (180秒)', desc: '高階秘藥：技能冷卻縮減 +18%、掉寶率 +50%。', cost: Math.round(1800 * chMult) },
       ];
-      bodyEl.innerHTML = banner + `<div class="town-option-grid">${brews.map((b) => `
-        <div class="town-option-card">
-          <div><h4>${b.name}</h4><p>${b.desc}</p></div>
-          <button data-brew="${b.id}" ${(st.gold || 0) < b.cost ? 'disabled' : ''}>煉製購買（${b.cost} G）</button>
-        </div>`).join('')}</div>`;
+      const nowTs = Date.now();
+      const pb = st.potionBuffs || {};
+      const remMap = {
+        exp_pot: Math.max(0, Math.ceil(((pb.expUntil || 0) - nowTs) / 1000)),
+        fury_pot: Math.max(0, Math.ceil(((pb.furyUntil || 0) - nowTs) / 1000)),
+        mf_pot: Math.max(0, Math.ceil(((pb.mfUntil || 0) - nowTs) / 1000)),
+        titan_pot: Math.max(0, Math.ceil(((pb.titanUntil || 0) - nowTs) / 1000)),
+        iron_pot: Math.max(0, Math.ceil(((pb.ironUntil || 0) - nowTs) / 1000)),
+        sage_pot: Math.max(0, Math.ceil(((pb.sageUntil || 0) - nowTs) / 1000)),
+      };
+      const bundleCost = Math.round(brews.slice(1).reduce((s, x) => s + x.cost, 0) * 0.9);
+      bodyEl.innerHTML = banner + `
+        <div class="town-section-title">
+          <span>🧪 藥水煉製（即時顯示剩餘持續時間）</span>
+          <button id="btn-brew-all" class="town-item-chip active" ${(st.gold || 0) < bundleCost ? 'disabled' : ''}>⚡ 9折一鍵打包飲用 (${bundleCost.toLocaleString()} G)</button>
+        </div>
+        <div class="town-option-grid">${brews.map((b) => {
+          const rem = remMap[b.id] || 0;
+          return `<div class="town-option-card">
+            <div><h4>${b.name} ${rem > 0 ? `<span style="color:#4ade80;font-size:11px;">(剩 ${rem}s)</span>` : ''}</h4><p>${b.desc}</p></div>
+            <button data-brew="${b.id}" ${(st.gold || 0) < b.cost ? 'disabled' : ''}>煉製購買（${b.cost.toLocaleString()} G）</button>
+          </div>`;
+        }).join('')}</div>`;
+      bodyEl.querySelector('#btn-brew-all')?.addEventListener('click', () => {
+        ctx.onBrewAllCombat?.(bundleCost);
+        this.openTownFacilityModal(action, data, ctx);
+      });
       bodyEl.querySelectorAll('button[data-brew]').forEach((btn) => {
         btn.onclick = () => {
           ctx.onBrewPotion(btn.dataset.brew);
@@ -1652,14 +1679,19 @@ export class DashboardUI {
         const lv = it.upgradeLevel || 0;
         const rerollCost = Math.max(200, (it.level || 1) * 120 * (it.rarity === 'legendary' ? 2 : 1));
         const refineCost = Math.max(300, (it.level || 1) * 160 * (lv + 1));
-        const succRate = lv < 3 ? 100 : (lv < 6 ? 80 : 60);
+        const bless = it.refineBless || 0;
+        const succRate = Math.min(100, (lv < 3 ? 100 : (lv < 6 ? 80 : 60)) + bless);
+        const rDelta = it._lastRerollDelta;
+        const deltaHtml = (typeof rDelta === 'number')
+          ? `<span style="margin-left:6px;font-weight:800;color:${rDelta >= 0 ? '#4ade80' : '#f87171'};">(${rDelta >= 0 ? '▲+' : '▼'}${rDelta})</span>`
+          : '';
         const rColor = RARITIES[it.rarity]?.color || '#e2e8f0';
         const statName = STAT_LABELS[it.baseStat?.key] || it.baseStat?.key || '基礎';
         detailHtml = `
           <div class="town-affix-box">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
               <b style="color:${rColor};font-size:14px;">${it.icon || '⚔️'} ${it.name} ${lv > 0 ? `<span style="color:#38bdf8;">+${lv}</span>` : ''}</b>
-              <span style="color:#fde047;">戰力評分：${it.powerScore || 0}</span>
+              <span style="color:#fde047;">戰力評分：${it.powerScore || 0}${deltaHtml}</span>
             </div>
             <div style="color:#cbd5e1;">主屬性：${statName} +${Math.round((it.baseStat?.value || 0) * (1 + lv * 0.12))}</div>
             <div style="color:#93c5fd;margin-top:4px;">隨機詞綴：${(it.affixes || []).length ? it.affixes.map((a) => `${a.label} +${a.value}${a.unit}`).join(' ｜ ') : '無隨機詞綴'}</div>
@@ -1671,7 +1703,7 @@ export class DashboardUI {
               <button id="btn-bs-reroll" ${(st.gold || 0) < rerollCost || (it.affixes || []).length === 0 ? 'disabled' : ''}>洗鍊詞綴 (${rerollCost.toLocaleString()} G)</button>
             </div>
             <div class="town-option-card">
-              <div><h4>⚒️ 裝備精煉昇華 (+${lv} → +${Math.min(10, lv + 1)})</h4><p>每級提升該裝備全屬性 +12%（本次成功率 ${succRate}%，失敗不降級）。</p></div>
+              <div><h4>⚒️ 裝備精煉昇華 (+${lv} → +${Math.min(10, lv + 1)})</h4><p>每級提升該裝備全屬性 +12%（本次成功率 ${succRate}%${bless > 0 ? ` 含祝福+${bless}%` : ''}，失敗+15%祝福不降級）。</p></div>
               <button id="btn-bs-refine" ${lv >= 10 || (st.gold || 0) < refineCost ? 'disabled' : ''}>${lv >= 10 ? '已達精煉上限 (+10)' : `進行精煉 (${refineCost.toLocaleString()} G)`}</button>
             </div>
           </div>`;
@@ -1761,6 +1793,8 @@ export class DashboardUI {
             if (ticks >= totalTicks) {
               clearInterval(this._dummyTimer);
               dummyBtn.disabled = false;
+              const grade = curDps >= (cs.dps || 100) * 1.15 ? '🏆 S級爆發' : (curDps >= (cs.dps || 100) * 0.9 ? '⚔️ A級穩定' : '🛡️ B級待強化');
+              if (valEl) valEl.textContent = `${curDps.toLocaleString()} DPS (${grade})`;
               dummyBtn.textContent = '🔁 再測一次 10 秒木樁';
               ctx.onRecordDummyDps?.(curDps, totalDmg, maxCrit);
             }

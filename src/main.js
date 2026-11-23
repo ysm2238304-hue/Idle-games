@@ -24,6 +24,7 @@ import { TownScene } from './scenes/TownScene.js';
 import { TOWN_SPLASHES } from './data/towns/splashes.js';
 import { DashboardUI } from './ui/DashboardUI.js';
 import { TownBgmEngine } from './audio/TownBgmEngine.js';
+import { HeroSkillShowcase, CLASS_SKILLS_MAP } from './ui/HeroSkillShowcase.js';
 
 let gameState = loadGame() || createInitialState('warrior');
 let computedStats = recalcPlayerStats(gameState);
@@ -51,6 +52,7 @@ function refreshStatsAndUI() {
 }
 
 const townBgm = new TownBgmEngine();
+const heroShowcase = new HeroSkillShowcase();
 const ui = new DashboardUI({
   onSelectClass: (classId) => {
     gameState.classId = classId;
@@ -710,6 +712,21 @@ function enterTown(chapterIdx = 0, instant = false) {
         const modalAction = action === 'drawer_upgrade' ? 'modal_blacksmith' : (action === 'drawer_skills' ? 'modal_trainer' : (action === 'drawer_bag' ? 'modal_vault' : (action === 'drawer_rebirth' ? 'modal_sanctum' : action)));
         const modalData = { ...(data || {}), chapterIdx };
         ui.openTownFacilityModal(modalAction, modalData, {
+          onBrewAllCombat: (totalCost) => {
+            if ((gameState.gold || 0) < totalCost) return;
+            gameState.gold -= totalCost;
+            if (!gameState.potionBuffs) gameState.potionBuffs = {};
+            const nowTs = Date.now();
+            gameState.potionBuffs.expUntil = Math.max(nowTs, gameState.potionBuffs.expUntil || 0) + 60000;
+            gameState.potionBuffs.furyUntil = Math.max(nowTs, gameState.potionBuffs.furyUntil || 0) + 45000;
+            gameState.potionBuffs.mfUntil = Math.max(nowTs, gameState.potionBuffs.mfUntil || 0) + 60000;
+            gameState.potionBuffs.titanUntil = Math.max(nowTs, gameState.potionBuffs.titanUntil || 0) + 180000;
+            gameState.potionBuffs.ironUntil = Math.max(nowTs, gameState.potionBuffs.ironUntil || 0) + 180000;
+            gameState.potionBuffs.sageUntil = Math.max(nowTs, gameState.potionBuffs.sageUntil || 0) + 180000;
+            ui.addLog('⚡ 煉金工坊：已一鍵飲用全套戰前秘藥！', 'victory');
+            refreshStatsAndUI();
+            persistAll();
+          },
           onBrewPotion: (brewId) => {
             const chMult = 1 + getChapterIdx(gameState.stage || 1) * 0.4;
             const prices = {
@@ -951,6 +968,7 @@ function enterTown(chapterIdx = 0, instant = false) {
             const res = rerollItemAffixes(item);
             if (res) {
               const delta = res.newPower - res.oldPower;
+              item._lastRerollDelta = delta;
               ui.addLog(`🎲 鐵匠洗鍊「${item.name}」：戰力 ${res.oldPower} → ${res.newPower} (${delta >= 0 ? '+' : ''}${delta})`, delta >= 0 ? 'victory' : 'loot');
             }
             refreshStatsAndUI();
@@ -965,13 +983,16 @@ function enterTown(chapterIdx = 0, instant = false) {
             const cost = Math.max(300, (item.level || 1) * 160 * (lv + 1));
             if ((gameState.gold || 0) < cost) return;
             gameState.gold -= cost;
-            const succRate = lv < 3 ? 100 : (lv < 6 ? 80 : 60);
+            const baseRate = lv < 3 ? 100 : (lv < 6 ? 80 : 60);
+            const succRate = Math.min(100, baseRate + (item.refineBless || 0));
             if (Math.random() * 100 < succRate) {
               item.upgradeLevel = lv + 1;
+              item.refineBless = 0;
               item.powerScore = calcItemPower(item);
               ui.addLog(`⚒️ 精煉成功！「${item.name}」強化至 +${item.upgradeLevel}（戰力 ${item.powerScore}）！`, 'victory');
             } else {
-              ui.addLog(`💨 精煉失敗，「${item.name}」維持 +${lv}（未降級）。`, 'system');
+              item.refineBless = Math.min(40, (item.refineBless || 0) + 15);
+              ui.addLog(`💨 精煉失敗，「${item.name}」維持 +${lv}（已累積祝福 +${item.refineBless}%）！`, 'system');
             }
             refreshStatsAndUI();
             persistAll();
@@ -1374,10 +1395,14 @@ function renderWelcomeClasses() {
   const cls = CLASSES[selectedLobbyClass] || CLASSES.warrior;
   const ext = CLASS_META_EXT[cls.id] || { role: cls.title, bars: [80, 80, 80, 80] };
   const barNames = ['攻擊破壞', '生存護甲', '攻速機動', '奧義爆發'];
+  const clsSkills = CLASS_SKILLS_MAP[cls.id] || [];
   welcomeClassStage.innerHTML = `
-    <div class="stage-portrait-box">
-      <div class="stage-aura-ring" style="background:${cls.color};"></div>
-      <img src="${cls.spritePath}" alt="${cls.name}" />
+    <div class="showcase-canvas-wrap">
+      <canvas id="preview-skill-canvas" width="360" height="196"></canvas>
+      <div class="showcase-skill-bar">
+        ${clsSkills.map((sk, idx) => `<button type="button" class="showcase-sk-btn ${idx === 0 ? 'active' : ''}" data-sk-idx="${idx}">${sk.name}</button>`).join('')}
+      </div>
+      <div id="showcase-sk-desc" class="showcase-sk-desc"></div>
     </div>
     <div class="stage-info-col">
       <div class="stage-hero-title">
@@ -1398,6 +1423,16 @@ function renderWelcomeClasses() {
       </div>
     </div>
   `;
+  const scCanvas = document.getElementById('preview-skill-canvas');
+  const scDesc = document.getElementById('showcase-sk-desc');
+  const scBtns = welcomeClassStage.querySelectorAll('.showcase-sk-btn');
+  heroShowcase.attach(scCanvas, cls.id, (idx, sk) => {
+    scBtns.forEach((b, bi) => b.classList.toggle('active', bi === idx));
+    if (scDesc && sk) scDesc.innerHTML = `<b style="color:${cls.color};">【${sk.name}】</b> ${sk.desc || ''}`;
+  });
+  scBtns.forEach((b) => {
+    b.onclick = () => heroShowcase.triggerSkill(Number(b.dataset.skIdx));
+  });
 }
 
 function enterWelcomeClassStep(userLabel) {
@@ -1437,6 +1472,7 @@ resetCharBtn?.addEventListener('click', () => {
 });
 
 function startAdventure() {
+  heroShowcase.stop();
   const nick = (nicknameInput?.value || gameState.nickname || '').trim();
   if (nick.length < 2) {
     updateStartButtonState();

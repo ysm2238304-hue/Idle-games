@@ -1028,6 +1028,8 @@ export class TownScene extends Phaser.Scene {
       let isMoving = false;
       if (distHero < 145 && this.hero) {
         p.spr.setFlipX(this.hero.x < p.spr.x);
+      } else if (time < (p.pauseUntil || 0)) {
+        isMoving = false;
       } else {
         const target = p.waypoints[p.wpIdx];
         const dx = target.x - p.spr.x;
@@ -1043,17 +1045,19 @@ export class TownScene extends Phaser.Scene {
           const moved = Math.hypot(res.x - prevX, res.y - prevY);
           p.spr.x = res.x;
           p.spr.y = res.y;
-          if (moved < 0.4) {
+          p.walkElapsed = (p.walkElapsed || 0) + dt;
+          if (res.hitWall || moved < 0.4) {
             p.stuckTime = (p.stuckTime || 0) + dt;
-            if (p.stuckTime > 0.35) {
-              isMoving = false;
-              p.stuckTime = 0;
-              p.wpIdx = (p.wpIdx + 1) % p.waypoints.length;
-            }
           } else {
             p.stuckTime = 0;
           }
-          if (res.hitWall && Math.hypot(dx, dy) < 90) p.wpIdx = (p.wpIdx + 1) % p.waypoints.length;
+          if (p.stuckTime > 0.42 || p.walkElapsed > 5.5) {
+            isMoving = false;
+            p.stuckTime = 0;
+            p.walkElapsed = 0;
+            p.pauseUntil = time + 1600 + Math.random() * 1400;
+            p.wpIdx = (p.wpIdx + 1) % p.waypoints.length;
+          }
           const stepX = res.x - prevX;
           if (Math.abs(stepX) > 0.12) p.spr.setFlipX(stepX < 0);
           if (time >= (p.dustAt || 0)) {
@@ -1100,22 +1104,19 @@ export class TownScene extends Phaser.Scene {
           const moved = Math.hypot(res.x - prevX, res.y - prevY);
           r.spr.x = res.x;
           r.spr.y = res.y;
-          if (moved < 0.25) {
+          r.walkElapsed = (r.walkElapsed || 0) + dt;
+          if (res.hitWall || moved < 0.25) {
             r.stuckTime = (r.stuckTime || 0) + dt;
-            if (r.stuckTime > 0.35) {
-              isMoving = false;
-              r.stuckTime = 0;
-              r.waitUntil = time + 1600;
-              r.targetX = r.homeX;
-              r.targetY = r.homeY;
-            }
           } else {
             r.stuckTime = 0;
           }
-          if (res.hitWall) {
-            r.waitUntil = time + 1200;
-            r.targetX = r.homeX;
-            r.targetY = r.homeY;
+          if (r.stuckTime > 0.40 || r.walkElapsed > 2.4) {
+            isMoving = false;
+            r.stuckTime = 0;
+            r.walkElapsed = 0;
+            r.waitUntil = time + 2200 + Math.random() * 2000;
+            r.targetX = r.homeX + Phaser.Math.Between(-24, 24);
+            r.targetY = r.homeY + Phaser.Math.Between(-12, 12);
           }
           const stepX = res.x - prevX;
           if (Math.abs(stepX) > 0.08) r.spr.setFlipX(stepX < 0);
