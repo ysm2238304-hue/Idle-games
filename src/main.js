@@ -134,7 +134,7 @@ const ui = new DashboardUI({
     gameState.gold -= gold;
     gameState.dust -= dust;
     const res = rollEnhance(item, (gameState.protectStones || 0) > 0, gameState);
-    item.powerScore = calcItemScore(item);
+    item.powerScore = calcItemPower(item);
     if (res.ok) {
       ui.addLog(`⚒️ 強化成功！「${item.name}」升至 +${res.newLv}（成功率 ${res.rate}%）！`, 'victory');
     } else {
@@ -1055,7 +1055,7 @@ function enterTown(chapterIdx = 0, instant = false) {
             gameState.gold -= gold;
             gameState.dust -= dust;
             const res = rollEnhance(item, !!useProtect, gameState);
-            item.powerScore = calcItemScore(item);
+            item.powerScore = calcItemPower(item);
             if (res.ok) {
               ui.addLog(`⚒️ 強化成功！「${item.name}」升至 +${res.newLv}（成功率 ${res.rate}%）！`, 'victory');
             } else {
