@@ -1301,39 +1301,139 @@ const gameScreen = document.getElementById('game-screen');
 const welcomeAuthStep = document.getElementById('welcome-step-auth');
 const welcomeClassStep = document.getElementById('welcome-step-class');
 const welcomeAuthStatus = document.getElementById('welcome-auth-status');
-const welcomeClassGrid = document.getElementById('welcome-class-grid');
+const welcomeClassList = document.getElementById('welcome-class-list');
+const welcomeClassStage = document.getElementById('welcome-class-stage');
 const welcomeSaveSummary = document.getElementById('welcome-save-summary');
+const nicknameInput = document.getElementById('input-hero-nickname');
+const randomNickBtn = document.getElementById('btn-random-nickname');
+const resetCharBtn = document.getElementById('btn-reset-character');
+const startGameBtn = document.getElementById('btn-start-game');
+
+const CLASS_META_EXT = {
+  warrior:  { role: '前排重裝坦克・吸血破陣', bars: [85, 95, 55, 78] },
+  ranger:   { role: '遠程風箏射手・高頻暴擊', bars: [88, 55, 95, 86] },
+  mage:     { role: '奧術毀滅法師・全場清怪', bars: [96, 48, 65, 98] },
+  paladin:  { role: '神聖守護騎士・反傷光環', bars: [76, 98, 60, 74] },
+  necro:    { role: '亡靈召喚主宰・骨海軍團', bars: [86, 72, 58, 84] },
+  assassin: { role: '暗影極速刺客・瞬殺連擊', bars: [94, 52, 98, 95] },
+};
+
+const RANDOM_NAMES = ['燼影行者', '蒼穹劍魂', '冥界守望者', '黎明裁決', '緋紅星靈', '極夜獵手', '聖血騎士', '虛空破曉', '霜狼領主', '星界旅人'];
+
+function updateStartButtonState() {
+  if (!startGameBtn || !nicknameInput) return;
+  const nick = (nicknameInput.value || '').trim();
+  const valid = nick.length >= 2 && nick.length <= 12;
+  startGameBtn.disabled = !valid;
+  if (gameState.characterCreated) {
+    startGameBtn.textContent = valid ? `⚔️ 以「${nick}」繼續冒險` : '請輸入 2~12 字冒險者暱稱';
+  } else {
+    startGameBtn.textContent = valid ? '⚔️ 締結契約・踏入深淵' : '請先輸入 2~12 字暱稱';
+  }
+}
 
 function renderWelcomeClasses() {
-  welcomeClassGrid.innerHTML = '';
+  if (!welcomeClassList || !welcomeClassStage) return;
+  const isLocked = !!gameState.characterCreated;
+  welcomeClassList.innerHTML = '';
+
   Object.values(CLASSES).forEach((cls) => {
-    const card = document.createElement('div');
-    card.className = `class-card ${selectedLobbyClass === cls.id ? 'selected' : ''}`;
-    card.innerHTML = `
+    const ext = CLASS_META_EXT[cls.id] || { role: cls.title, bars: [80, 80, 80, 80] };
+    const isSel = selectedLobbyClass === cls.id;
+    const item = document.createElement('button');
+    item.type = 'button';
+    item.className = `cls-tab-item ${isSel ? 'active' : ''} ${isLocked && !isSel ? 'locked' : ''}`;
+    item.innerHTML = `
       <img src="${cls.spritePath}" alt="${cls.name}" />
-      <div class="class-name" style="color:${cls.color}">${cls.name}</div>
-      <div class="class-title">${cls.title}</div>
-      <p class="class-desc">${cls.desc}</p>
-      <div class="class-skill"><strong>專屬技能：${cls.skill.name}</strong><br>${cls.skill.desc}</div>
+      <div class="cls-tab-meta">
+        <span class="cls-tab-name" style="color:${cls.color}">${cls.name} ${isLocked && isSel ? '🔒' : ''}</span>
+        <span class="cls-tab-role">${ext.role}</span>
+      </div>
     `;
-    card.onclick = () => {
+    item.onclick = () => {
+      if (isLocked && !isSel) return;
       selectedLobbyClass = cls.id;
       renderWelcomeClasses();
     };
-    welcomeClassGrid.appendChild(card);
+    welcomeClassList.appendChild(item);
   });
+
+  const cls = CLASSES[selectedLobbyClass] || CLASSES.warrior;
+  const ext = CLASS_META_EXT[cls.id] || { role: cls.title, bars: [80, 80, 80, 80] };
+  const barNames = ['攻擊破壞', '生存護甲', '攻速機動', '奧義爆發'];
+  welcomeClassStage.innerHTML = `
+    <div class="stage-portrait-box">
+      <div class="stage-aura-ring" style="background:${cls.color};"></div>
+      <img src="${cls.spritePath}" alt="${cls.name}" />
+    </div>
+    <div class="stage-info-col">
+      <div class="stage-hero-title">
+        <h2 style="color:${cls.color}">${cls.name}</h2>
+        <span>${cls.title} ${isLocked ? '（已締結單一職業契約）' : ''}</span>
+      </div>
+      <p style="margin:0;font-size:13px;color:#cbd5e1;line-height:1.55;">${cls.desc}</p>
+      <div class="stage-stat-bars">
+        ${barNames.map((bn, i) => `
+          <div class="stat-bar-row">
+            <div style="display:flex;justify-content:space-between;"><span>${bn}</span><b>${ext.bars[i]}</b></div>
+            <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${ext.bars[i]}%;background:${cls.color};"></div></div>
+          </div>`).join('')}
+      </div>
+      <div class="stage-skill-card">
+        <div><b style="color:#fde047;">🌟 天生被動：</b>${cls.innateBonus?.label || ''}</div>
+        <div style="margin-top:4px;"><b style="color:${cls.color};">⚔️ 核心奧義【${cls.skill.name}】：</b>${cls.skill.desc}</div>
+      </div>
+    </div>
+  `;
 }
 
 function enterWelcomeClassStep(userLabel) {
   welcomeAuthStep.classList.add('hidden');
   welcomeClassStep.classList.remove('hidden');
-  welcomeSaveSummary.textContent = `${userLabel} ｜ Lv.${gameState.level}・第 ${getStageLabel(gameState.stage)} 關・魂晶 ${gameState.soulCrystals || 0}`;
   selectedLobbyClass = gameState.classId || 'warrior';
+  if (gameState.characterCreated) {
+    welcomeSaveSummary.textContent = `${userLabel} ｜ 【${gameState.nickname || '無名英雄'}】Lv.${gameState.level}・第 ${getStageLabel(gameState.stage)} 關`;
+    if (resetCharBtn) resetCharBtn.classList.remove('hidden');
+  } else {
+    welcomeSaveSummary.textContent = `${userLabel} ｜ 🆕 首次創角（職業選定後將永久綁定）`;
+    if (resetCharBtn) resetCharBtn.classList.add('hidden');
+  }
+  if (nicknameInput) {
+    nicknameInput.value = gameState.nickname || '';
+    nicknameInput.disabled = !!(gameState.characterCreated && gameState.nickname);
+  }
+  if (randomNickBtn) randomNickBtn.style.display = (gameState.characterCreated && gameState.nickname) ? 'none' : 'inline-block';
   renderWelcomeClasses();
+  updateStartButtonState();
 }
 
+nicknameInput?.addEventListener('input', updateStartButtonState);
+randomNickBtn?.addEventListener('click', () => {
+  if (!nicknameInput) return;
+  const pick = RANDOM_NAMES[Math.floor(Math.random() * RANDOM_NAMES.length)];
+  nicknameInput.value = `${pick}${Math.floor(10 + Math.random() * 89)}`;
+  updateStartButtonState();
+});
+resetCharBtn?.addEventListener('click', () => {
+  if (!confirm('確定要刪除目前角色並重新選擇職業與暱稱嗎？（將重置關卡與裝備進度）')) return;
+  const fresh = createDefaultState();
+  Object.keys(gameState).forEach((k) => delete gameState[k]);
+  Object.assign(gameState, fresh);
+  persistAll(true);
+  enterWelcomeClassStep('重建角色');
+});
+
 function startAdventure() {
-  gameState.classId = selectedLobbyClass;
+  const nick = (nicknameInput?.value || gameState.nickname || '').trim();
+  if (nick.length < 2) {
+    updateStartButtonState();
+    return;
+  }
+  gameState.nickname = nick;
+  if (!gameState.characterCreated) {
+    gameState.classId = selectedLobbyClass;
+    gameState.characterCreated = true;
+  }
   gameStarted = true;
   welcomeScreen.classList.add('hidden');
   gameScreen.classList.remove('hidden');

@@ -273,23 +273,20 @@ export class DashboardUI {
     if (closeBtn) closeBtn.style.display = isSwitching ? 'inline-block' : 'none';
 
     grid.innerHTML = '';
-    Object.values(CLASSES).forEach((cls) => {
-      const card = document.createElement('div');
-      card.className = 'class-card';
-      card.innerHTML = `
-        <img src="${cls.spritePath}" alt="${cls.name}" />
-        <div class="class-name" style="color:${cls.color}">${cls.name}</div>
-        <div class="class-title">${cls.title}</div>
-        <p class="class-desc">${cls.desc}</p>
-        <div class="class-skill"><strong>專屬技能：${cls.skill.name}</strong><br>${cls.skill.desc}</div>
-        <button class="btn-primary">選擇此職業</button>
-      `;
-      card.querySelector('button').addEventListener('click', () => {
-        modal.classList.add('hidden');
-        this.handlers.onSelectClass(cls.id);
-      });
-      grid.appendChild(card);
-    });
+    const st = this.getState();
+    const cls = CLASSES[st.classId] || CLASSES.warrior;
+    const card = document.createElement('div');
+    card.className = 'class-card selected';
+    card.style.gridColumn = '1 / -1';
+    card.innerHTML = `
+      <img src="${cls.spritePath}" alt="${cls.name}" />
+      <div class="class-name" style="color:${cls.color}">${st.nickname || '無名冒險者'}・${cls.name} 🔒</div>
+      <div class="class-title">${cls.title}（已締結單一職業契約）</div>
+      <p class="class-desc">${cls.desc}</p>
+      <div class="class-skill"><strong>天生被動：</strong>${cls.innateBonus?.label || ''}<br><strong>專屬奧義【${cls.skill.name}】：</strong>${cls.skill.desc}</div>
+      <p style="font-size:11.5px;color:#94a3b8;margin-top:8px;">提示：每個存檔角色僅能綁定一種職業。若想體驗其他職業，請登出或重新整理後在角色大廳選擇「重建新角色」。</p>
+    `;
+    grid.appendChild(card);
 
     if (closeBtn) {
       closeBtn.onclick = () => modal.classList.add('hidden');
