@@ -61,7 +61,7 @@ export class TownScene extends Phaser.Scene {
     const cid = this.callbacks?.getState?.()?.classId || 'warrior';
     const heroAtlas = `atlas_${cid}`;
     if (!this.textures.exists(heroAtlas)) {
-      this.load.atlas(heroAtlas, `./assets/heroes/atlas_${cid}.png?v=61`, `./assets/heroes/atlas_${cid}.json?v=61`);
+      this.load.atlas(heroAtlas, `./assets/heroes/atlas_${cid}.png?v=66`, `./assets/heroes/atlas_${cid}.json?v=66`);
     }
     if (!this.textures.exists(td.bgKey)) {
       this.load.image(td.bgKey, td.bgUrl);
@@ -73,7 +73,7 @@ export class TownScene extends Phaser.Scene {
     const npcPng = td.atlasPng.replace('atlas_town_', 'atlas_town_npc_');
     const npcJson = td.atlasJson.replace('atlas_town_', 'atlas_town_npc_');
     if (!this.textures.exists(npcAtlasKey)) {
-      this.load.atlas(npcAtlasKey, `${npcPng}?v=61`, `${npcJson}?v=61`);
+      this.load.atlas(npcAtlasKey, `${npcPng}?v=66`, `${npcJson}?v=66`);
     }
     this.load.off('progress');
     this.load.on('progress', (val) => {
@@ -282,6 +282,27 @@ export class TownScene extends Phaser.Scene {
       data: { chapterIdx: td.chapterIdx },
     });
 
+    // 9.3 主城出口「紫藍螺旋戰鬥傳送陣 ＋ 實體指示路牌」（對標參考圖右下角）
+    const exX = td.spawn.x - 190;
+    const exY = td.spawn.y + 115;
+    const exOuter = this.add.image(exX, exY, 'fx_glow')
+      .setTint(0x7c3aed).setScale(2.1, 0.85).setAlpha(0.55).setDepth(4);
+    const exInner = this.add.image(exX, exY, 'fx_glow')
+      .setTint(0x38bdf8).setScale(1.15, 0.48).setAlpha(0.75).setDepth(4);
+    this.tweens.add({ targets: exOuter, scaleX: 2.35, scaleY: 0.96, alpha: 0.82, duration: 1100, yoyo: true, repeat: -1 });
+    this.tweens.add({ targets: exInner, angle: -360, duration: 3600, repeat: -1 });
+    this.addNameplate(exX + 54, exY - 46, `🪧 通往 第 ${(td.chapterIdx ?? 0) + 1} 章前線 →`, '#c4b5fd');
+    this.interactables.push({
+      id: 'town_exit_battle_pad',
+      x: exX,
+      y: exY,
+      radius: 120,
+      title: `🌀 出城戰鬥傳送陣（第 ${(td.chapterIdx ?? 0) + 1} 章前線）`,
+      sub: '點擊或按 [F] 立即傳送出城開打',
+      action: 'exit_battle',
+      data: {},
+    });
+
     // 9.5 地面選取光環與 NPC 隨機閒聊氣泡
     this.hoverRing = this.add.image(0, 0, 'fx_glow')
       .setTint(td.ambientColor || 0xfbbf24).setScale(1.15, 0.45).setAlpha(0.55).setDepth(3).setVisible(false);
@@ -488,7 +509,7 @@ export class TownScene extends Phaser.Scene {
     const safePos = this.resolveSafeNpcPos(npc.x, npc.y);
     npc = { ...npc, x: safePos.x, y: safePos.y };
     const sh = this.add.image(npc.x, npc.y + 2, 'fx_glow')
-      .setTint(0x000000).setScale(0.95, 0.36).setAlpha(0.48).setDepth(2);
+      .setTint(action.startsWith('gimmick_') ? 0xf59e0b : 0x8b5cf6).setScale(1.05, 0.38).setAlpha(0.36).setDepth(2);
     const nAtlas = this.npcAtlasKey || atlasKey.replace('town_atlas_', 'town_npc_atlas_');
     const hasAnim = this.anims.exists(`${npc.frame}_idle`);
     const spr = (hasAnim
@@ -552,14 +573,17 @@ export class TownScene extends Phaser.Scene {
     }
   }
 
-  addNameplate(x, y, label, color = '#fde68a') {
-    return this.add.text(x, y, label, {
+  addNameplate(x, y, label, color = '#f8fafc') {
+    const clean = label.includes('・') ? label.replace('・', '\n') : label;
+    return this.add.text(x, y, clean, {
       fontFamily: 'Noto Sans TC, sans-serif',
-      fontSize: '12px',
+      fontSize: '11.5px',
       fontStyle: 'bold',
+      align: 'center',
       color,
-      backgroundColor: 'rgba(10, 14, 23, 0.76)',
-      padding: { x: 7, y: 3 },
+      stroke: '#000000',
+      strokeThickness: 4,
+      shadow: { offsetX: 0, offsetY: 1, color: '#000000', blur: 3, fill: true },
     }).setOrigin(0.5, 1).setDepth(4500);
   }
 
@@ -768,7 +792,9 @@ export class TownScene extends Phaser.Scene {
       this.callbacks.onHudUpdate({
         minimap: {
           mode: 'town',
-          zoneName: `🏰 ${td.name}`,
+          chapterIdx: td.chapterIdx ?? 0,
+          bgUrl: td.bgUrl,
+          zoneName: td.name,
           heroX: this.hero.x,
           heroY: this.hero.y,
           heroDir: this.heroDir,
@@ -828,7 +854,8 @@ export class TownScene extends Phaser.Scene {
         else if (this.hero.anims.isPaused) this.hero.anims.resume();
         this.hero.anims.timeScale = Phaser.Math.Clamp(spd / 160, 0.9, 1.35);
       }
-      this.hero.setScale(0.56, 0.56);
+      const bounce = Math.abs(Math.sin(time * 0.015));
+      this.hero.setScale(0.56 * (1.02 - bounce * 0.04), 0.56 * (0.96 + bounce * 0.06));
       if (time >= (this.heroStepDustAt || 0)) {
         this.heroStepDustAt = time + 260;
         const d = this.add.image(this.hero.x, this.hero.y + 38, 'fx_glow')
@@ -1004,11 +1031,13 @@ export class TownScene extends Phaser.Scene {
           p.wpIdx = (p.wpIdx + 1) % p.waypoints.length;
         } else {
           isMoving = true;
+          const prevX = p.spr.x;
           const res = this.clampNpcToTerrain(p.spr.x + (dx / dist) * p.speed * dt, p.spr.y + (dy / dist) * p.speed * dt);
           p.spr.x = res.x;
           p.spr.y = res.y;
           if (res.hitWall && Math.hypot(dx, dy) < 90) p.wpIdx = (p.wpIdx + 1) % p.waypoints.length;
-          if (Math.abs(dx) > 4) p.spr.setFlipX(dx < 0);
+          const stepX = res.x - prevX;
+          if (Math.abs(stepX) > 0.12) p.spr.setFlipX(stepX < 0);
           if (time >= (p.dustAt || 0)) {
             p.dustAt = time + 260;
             this.spawnFootstepDust(p.spr.x, p.spr.y - 30);
@@ -1047,6 +1076,7 @@ export class TownScene extends Phaser.Scene {
         } else {
           isMoving = true;
           const spd = 30;
+          const prevX = r.spr.x;
           const res = this.clampNpcToTerrain(r.spr.x + (dx / dist) * spd * dt, r.spr.y + (dy / dist) * spd * dt);
           r.spr.x = res.x;
           r.spr.y = res.y;
@@ -1055,7 +1085,8 @@ export class TownScene extends Phaser.Scene {
             r.targetX = r.homeX;
             r.targetY = r.homeY;
           }
-          if (Math.abs(dx) > 2) r.spr.setFlipX(dx < 0);
+          const stepX = res.x - prevX;
+          if (Math.abs(stepX) > 0.08) r.spr.setFlipX(stepX < 0);
           if (time >= (r.dustAt || 0)) {
             r.dustAt = time + 320;
             this.spawnFootstepDust(r.spr.x, r.spr.y - 30);

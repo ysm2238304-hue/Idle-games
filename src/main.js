@@ -596,6 +596,7 @@ function enterTown(chapterIdx = 0, instant = false) {
     onHudUpdate: (data) => ui.renderMinimap(data.minimap),
     onTownAction: (action, data) => {
       if (action === 'open_waypoint') openTownWaypointUI();
+      else if (action === 'exit_battle') exitTownToBattle();
       else if (action === 'gimmick_beacon') {
         if (!gameState.potionBuffs) gameState.potionBuffs = {};
         gameState.potionBuffs.beaconUntil = Date.now() + 300000;

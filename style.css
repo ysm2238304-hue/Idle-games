@@ -2603,3 +2603,106 @@ button { font-family: inherit; }
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* === v66 Reference-Style Compass Minimap & Collapsible Top Menu === */
+.mmo-top-menu.is-collapsed .mmo-micro-btn:not(.mmo-collapse-btn) {
+  display: none !important;
+}
+.mmo-micro-btn.mmo-collapse-btn {
+  width: 28px !important;
+  min-width: 28px !important;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.85);
+}
+.mmo-minimap-card.compass-style {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 2px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 196px;
+}
+.compass-ribbon {
+  background: linear-gradient(180deg, #1b2824, #0f171a);
+  border: 1.5px solid #c89b3c;
+  border-radius: 999px;
+  padding: 2px 10px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.65);
+  z-index: 2;
+  margin-bottom: -6px;
+}
+.compass-ribbon #minimap-zone-name {
+  font-size: 11px;
+  font-weight: 700;
+  color: #fde68a;
+  max-width: 118px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.compass-ch {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #38bdf8;
+  background: rgba(56, 189, 248, 0.14);
+  padding: 1px 5px;
+  border-radius: 999px;
+}
+.compass-body {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.compass-ring {
+  width: 146px;
+  height: 146px;
+  border-radius: 50%;
+  border: 3px solid #b68c4a;
+  box-shadow: 0 0 0 2px #1a140d, 0 6px 16px rgba(0, 0, 0, 0.75);
+  overflow: hidden;
+  background: #090d16;
+}
+.compass-ring canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.compass-tools {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.compass-tool-btn {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid #b68c4a;
+  background: rgba(15, 23, 42, 0.9);
+  color: #fde68a;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+}
+.compass-tool-btn:hover {
+  background: rgba(182, 140, 74, 0.3);
+}
+.compass-coords-pill {
+  margin-top: -8px;
+  z-index: 2;
+  background: rgba(10, 14, 23, 0.92);
+  border: 1px solid #b68c4a;
+  border-radius: 999px;
+  padding: 1px 10px;
+  font-size: 10.5px;
+  color: #e2e8f0;
+  font-weight: 700;
+}

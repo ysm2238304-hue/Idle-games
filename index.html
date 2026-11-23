@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./style.css?v=65" />
+  <link rel="stylesheet" href="./style.css?v=67" />
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
 </head>
 <body>
@@ -127,15 +127,26 @@
           <button class="mmo-micro-btn" data-drawer="rebirth" data-tip="深淵輪迴轉生 [V]"><img class="mmo-ui-img" src="./assets/ui/ui_rebirth.png" alt="輪迴" /><span class="mmo-lbl">輪迴(V)</span></button>
           <button id="btn-switch-class" class="mmo-micro-btn" data-tip="切換冒險職業 [C]"><img class="mmo-ui-img" src="./assets/ui/ui_class.png" alt="職業" /><span class="mmo-lbl">職業(C)</span></button>
           <button class="mmo-micro-btn" data-drawer="log" data-tip="完整戰鬥日誌 [L]"><img class="mmo-ui-img" src="./assets/ui/ui_log.png" alt="日誌" /><span class="mmo-lbl">日誌(L)</span></button>
-          <button id="btn-top-waypoint" class="mmo-micro-btn mmo-waypoint-btn" data-tip="主城快速傳送陣 [Y]"><img class="mmo-ui-img" src="./assets/ui/ui_waypoint.png?v=65" alt="傳送" /><span class="mmo-lbl">傳送(Y)</span></button>
+          <button id="btn-top-waypoint" class="mmo-micro-btn mmo-waypoint-btn" data-tip="主城快速傳送陣 [Y]"><img class="mmo-ui-img" src="./assets/ui/ui_waypoint.png?v=67" alt="傳送" /><span class="mmo-lbl">傳送(Y)</span></button>
+          <button id="btn-collapse-topmenu" class="mmo-micro-btn mmo-collapse-btn" data-tip="收合 / 展開上方快捷列"><span class="mmo-lbl" style="font-size:15px;">◀</span></button>
         </div>
 
-        <div class="mmo-minimap-card">
-          <div class="minimap-head">
-            <span id="minimap-zone-name">腐朽邊境營地</span>
-            <span id="minimap-coords">2048, 1152</span>
+        <div class="mmo-minimap-card compass-style">
+          <div class="compass-ribbon">
+            <span id="minimap-zone-name">曙光哨站堡壘</span>
+            <span id="minimap-ch-badge" class="compass-ch">CH.1</span>
           </div>
-          <canvas id="hud-minimap-canvas" width="192" height="108"></canvas>
+          <div class="compass-body">
+            <div class="compass-ring">
+              <canvas id="hud-minimap-canvas" width="144" height="144"></canvas>
+            </div>
+            <div class="compass-tools">
+              <button id="btn-mm-zoom-in" class="compass-tool-btn" title="放大視野">+</button>
+              <button id="btn-mm-zoom-out" class="compass-tool-btn" title="縮小視野">−</button>
+              <button id="btn-mm-world" class="compass-tool-btn" title="世界大地圖 [M]">🗺️</button>
+            </div>
+          </div>
+          <div class="compass-coords-pill">📍 <span id="minimap-coords">1400, 1120</span></div>
           <div id="minimap-status-line" class="minimap-status-line">探索區域讀取中</div>
         </div>
       </div>
@@ -386,6 +397,6 @@
     </div>
   </div>
 
-  <script type="module" src="./src/main.js?v=65"></script>
+  <script type="module" src="./src/main.js?v=67"></script>
 </body>
 </html>

@@ -115,7 +115,7 @@ export class BattleScene extends Phaser.Scene {
     this.loadedChapters = new Set([initCh]);
     this.isLoadingAssets = false;
 
-    this.load.atlas(`atlas_${initCid}`, `./assets/heroes/atlas_${initCid}.png?v=61`, `./assets/heroes/atlas_${initCid}.json?v=61`);
+    this.load.atlas(`atlas_${initCid}`, `./assets/heroes/atlas_${initCid}.png?v=66`, `./assets/heroes/atlas_${initCid}.json?v=66`);
     if (initCid === 'necro') {
       this.loadedSummons = true;
       this.load.atlas('atlas_summons', './assets/heroes/atlas_summons.png', './assets/heroes/atlas_summons.json');
@@ -159,7 +159,7 @@ export class BattleScene extends Phaser.Scene {
     }
     this.isLoadingAssets = true;
     if (needClass) {
-      this.load.atlas(`atlas_${cid}`, `./assets/heroes/atlas_${cid}.png?v=61`, `./assets/heroes/atlas_${cid}.json?v=61`);
+      this.load.atlas(`atlas_${cid}`, `./assets/heroes/atlas_${cid}.png?v=66`, `./assets/heroes/atlas_${cid}.json?v=66`);
     }
     if (needSummons) {
       this.load.atlas('atlas_summons', './assets/heroes/atlas_summons.png', './assets/heroes/atlas_summons.json');
@@ -433,6 +433,7 @@ export class BattleScene extends Phaser.Scene {
     }).setOrigin(0.5).setDepth(4003);
 
     this.cameras.main.startFollow(this.hero, true, 0.14, 0.14);
+    this.cameras.main.setZoom(0.86);
   }
 
   createMinimap() {
@@ -956,6 +957,8 @@ export class BattleScene extends Phaser.Scene {
           },
           minimap: {
             mode: 'battle',
+            chapterIdx: this.getZoneIdx(),
+            bgUrl: `./assets/bg/map_${this.getZoneIdx()}.jpg`,
             zoneName: document.getElementById('hud-stage-title')?.textContent || '前線戰場',
             heroX: this.hero.x,
             heroY: this.hero.y,
@@ -1237,8 +1240,8 @@ export class BattleScene extends Phaser.Scene {
     this.hero.setFlipX(this.heroFlipX);
     if (!isAttacking) {
       if (isMoving) {
-        const bob = Math.sin(time * 0.020) * 0.032;
-        this.hero.setScale(0.56 * (1 - bob * 0.55), 0.56 * (1 + bob));
+        const bounce = Math.abs(Math.sin(time * 0.016));
+        this.hero.setScale(0.56 * (1.02 - bounce * 0.04), 0.56 * (0.95 + bounce * 0.07));
         this.hero.anims.timeScale = Phaser.Math.Clamp(spd / 135, 0.9, 1.5);
         if (time >= (this.heroStepDustAt || 0)) {
           this.heroStepDustAt = time + 260;

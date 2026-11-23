@@ -70,6 +70,24 @@ export class DashboardUI {
     this.bindDockAndDrawer();
     this.bindGlobalButtons();
     this.bindHotbarTooltips();
+    this._minimapZoom = 1.0;
+    this._minimapBgCache = new Map();
+    document.getElementById('btn-mm-zoom-in')?.addEventListener('click', () => {
+      this._minimapZoom = Math.min(2.2, (this._minimapZoom || 1.0) + 0.4);
+    });
+    document.getElementById('btn-mm-zoom-out')?.addEventListener('click', () => {
+      this._minimapZoom = Math.max(1.0, (this._minimapZoom || 1.0) - 0.4);
+    });
+    document.getElementById('btn-mm-world')?.addEventListener('click', () => {
+      document.getElementById('btn-world-map')?.click();
+    });
+    document.getElementById('btn-collapse-topmenu')?.addEventListener('click', (e) => {
+      const menu = e.currentTarget.closest('.mmo-top-menu');
+      if (!menu) return;
+      const col = menu.classList.toggle('is-collapsed');
+      const lbl = e.currentTarget.querySelector('.mmo-lbl');
+      if (lbl) lbl.textContent = col ? '▶' : '◀';
+    });
   }
 
   bindDockAndDrawer() {
@@ -1027,11 +1045,27 @@ export class DashboardUI {
     }
   }
 
+  _getMinimapBg(bgUrl) {
+    if (!bgUrl) return null;
+    if (!this._minimapBgCache) this._minimapBgCache = new Map();
+    let rec = this._minimapBgCache.get(bgUrl);
+    if (!rec) {
+      const img = new Image();
+      rec = { img, loaded: false };
+      img.onload = () => { rec.loaded = true; };
+      img.src = bgUrl;
+      this._minimapBgCache.set(bgUrl, rec);
+    }
+    return rec.loaded ? rec.img : null;
+  }
+
   renderMinimap(data) {
     if (!data) return;
-    const { mode = 'battle', zoneName, heroX = 0, heroY = 0, heroDir = 'down', heroFlipX = false, mapW = 2800, mapH = 1800, walkableZones, obstacles, facilities, patrols, monsters } = data;
+    const { mode = 'battle', chapterIdx = 0, bgUrl, zoneName, heroX = 0, heroY = 0, heroDir = 'down', heroFlipX = false, mapW = 2800, mapH = 1800, walkableZones, obstacles, facilities, patrols, monsters } = data;
     const nameEl = document.getElementById('minimap-zone-name');
     if (nameEl && zoneName) nameEl.textContent = zoneName;
+    const chEl = document.getElementById('minimap-ch-badge');
+    if (chEl) chEl.textContent = `CH.${chapterIdx + 1}`;
     const coordsEl = document.getElementById('minimap-coords');
     if (coordsEl) coordsEl.textContent = `${Math.round(heroX)}, ${Math.round(heroY)}`;
     const statusEl = document.getElementById('minimap-status-line');
@@ -1042,17 +1076,35 @@ export class DashboardUI {
     if (!ctx) return;
     const w = canvas.width;
     const h = canvas.height;
+    const zoom = this._minimapZoom || 1.0;
+
     ctx.clearRect(0, 0, w, h);
-    ctx.fillStyle = mode === 'town' ? '#070b14' : '#090c14';
+    ctx.fillStyle = '#090d16';
     ctx.fillRect(0, 0, w, h);
 
-    // 網格底線
-    ctx.strokeStyle = 'rgba(200, 155, 60, 0.10)';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(w / 2, 0); ctx.lineTo(w / 2, h);
-    ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2);
-    ctx.stroke();
+    // Compute camera transform for compass zoom (1.0 = full map, >1.0 = hero-centered)
+    ctx.save();
+    if (zoom > 1.01) {
+      const hxN = (heroX / mapW) * w;
+      const hyN = (heroY / mapH) * h;
+      ctx.translate(w / 2, h / 2);
+      ctx.scale(zoom, zoom);
+      ctx.translate(-hxN, -hyN);
+    }
+
+    // Draw real map background thumbnail
+    const bgImg = this._getMinimapBg(bgUrl);
+    if (bgImg) {
+      ctx.globalAlpha = 0.85;
+      ctx.drawImage(bgImg, 0, 0, w, h);
+      ctx.globalAlpha = 1.0;
+    } else {
+      ctx.strokeStyle = 'rgba(200, 155, 60, 0.14)';
+      ctx.beginPath();
+      ctx.moveTo(w / 2, 0); ctx.lineTo(w / 2, h);
+      ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2);
+      ctx.stroke();
+    }
 
     if (mode === 'town') {
       // 1. 繪製真實可行走地形輪廓
@@ -1188,6 +1240,7 @@ export class DashboardUI {
     ctx.lineTo(-3.2, 3.2);
     ctx.closePath();
     ctx.fill();
+    ctx.restore();
     ctx.restore();
   }
 
