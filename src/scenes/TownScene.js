@@ -369,12 +369,13 @@ export class TownScene extends Phaser.Scene {
           clickedObj = obj;
         }
       }
+      const dest = clickedObj ? { x: clickedObj.x, y: clickedObj.y + 38, clamped: false } : this._clampToWalkable(wx, wy, 20);
       this.moveTarget = clickedObj
-        ? { x: clickedObj.x, y: clickedObj.y + 38, triggerObj: clickedObj }
-        : { x: wx, y: wy, triggerObj: null };
+        ? { x: dest.x, y: dest.y, triggerObj: clickedObj }
+        : { x: dest.x, y: dest.y, triggerObj: null };
 
-      const ring = this.add.image(wx, wy, 'fx_glow')
-        .setTint(clickedObj ? 0xfacc15 : 0x38bdf8)
+      const ring = this.add.image(dest.x, dest.y, 'fx_glow')
+        .setTint(clickedObj ? 0xfacc15 : (dest.clamped ? 0xf97316 : 0x38bdf8))
         .setScale(0.38).setAlpha(0.75).setDepth(4);
       this.tweens.add({
         targets: ring,
@@ -701,6 +702,117 @@ export class TownScene extends Phaser.Scene {
     }
   }
 
+  _pointInZone(px, py, z) {
+    if (!z) return false;
+    if (!z.type || z.type === 'rect') {
+      return px >= z.x1 && px <= z.x2 && py >= z.y1 && py <= z.y2;
+    }
+    if (z.type === 'ellipse') {
+      const dx = (px - z.cx) / (z.rx || 1);
+      const dy = (py - z.cy) / (z.ry || 1);
+      return dx * dx + dy * dy <= 1;
+    }
+    if (z.type === 'capsule') {
+      const vx = z.x2 - z.x1;
+      const vy = z.y2 - z.y1;
+      const len2 = vx * vx + vy * vy || 1;
+      const t = Phaser.Math.Clamp(((px - z.x1) * vx + (py - z.y1) * vy) / len2, 0, 1);
+      const cx = z.x1 + t * vx;
+      const cy = z.y1 + t * vy;
+      return Math.hypot(px - cx, py - cy) <= (z.r || 100);
+    }
+    if (z.type === 'donut') {
+      const dOut = Math.pow((px - z.cx) / (z.rxOut || 1), 2) + Math.pow((py - z.cy) / (z.ryOut || 1), 2);
+      const dIn = Math.pow((px - z.cx) / (z.rxIn || 1), 2) + Math.pow((py - z.cy) / (z.ryIn || 1), 2);
+      return dOut <= 1 && dIn >= 1;
+    }
+    if (z.type === 'poly' && Array.isArray(z.pts)) {
+      let inside = false;
+      const pts = z.pts;
+      for (let i = 0, j = pts.length - 1; i < pts.length; j = i++) {
+        const xi = pts[i][0], yi = pts[i][1];
+        const xj = pts[j][0], yj = pts[j][1];
+        const intersect = ((yi > py) !== (yj > py)) && (px < ((xj - xi) * (py - yi)) / ((yj - yi) || 1e-6) + xi);
+        if (intersect) inside = !inside;
+      }
+      return inside;
+    }
+    return false;
+  }
+
+  _closestInZone(px, py, z) {
+    if (!z.type || z.type === 'rect') {
+      return { x: Phaser.Math.Clamp(px, z.x1, z.x2), y: Phaser.Math.Clamp(py, z.y1, z.y2) };
+    }
+    if (z.type === 'ellipse') {
+      const dx = (px - z.cx) / (z.rx || 1);
+      const dy = (py - z.cy) / (z.ry || 1);
+      const d = Math.hypot(dx, dy);
+      if (d <= 1) return { x: px, y: py };
+      return { x: z.cx + (dx / d) * z.rx, y: z.cy + (dy / d) * z.ry };
+    }
+    if (z.type === 'capsule') {
+      const vx = z.x2 - z.x1;
+      const vy = z.y2 - z.y1;
+      const len2 = vx * vx + vy * vy || 1;
+      const t = Phaser.Math.Clamp(((px - z.x1) * vx + (py - z.y1) * vy) / len2, 0, 1);
+      const cx = z.x1 + t * vx;
+      const cy = z.y1 + t * vy;
+      const dist = Math.hypot(px - cx, py - cy);
+      const r = z.r || 100;
+      if (dist <= r || dist === 0) return { x: px, y: py };
+      return { x: cx + ((px - cx) / dist) * r, y: cy + ((py - cy) / dist) * r };
+    }
+    if (z.type === 'donut') {
+      const dxOut = (px - z.cx) / (z.rxOut || 1);
+      const dyOut = (py - z.cy) / (z.ryOut || 1);
+      const dOut = Math.hypot(dxOut, dyOut);
+      if (dOut > 1) return { x: z.cx + (dxOut / dOut) * z.rxOut, y: z.cy + (dyOut / dOut) * z.ryOut };
+      const dxIn = (px - z.cx) / (z.rxIn || 1);
+      const dyIn = (py - z.cy) / (z.ryIn || 1);
+      const dIn = Math.hypot(dxIn, dyIn) || 0.001;
+      if (dIn < 1) return { x: z.cx + (dxIn / dIn) * z.rxIn, y: z.cy + (dyIn / dIn) * z.ryIn };
+      return { x: px, y: py };
+    }
+    if (z.type === 'poly' && Array.isArray(z.pts)) {
+      if (this._pointInZone(px, py, z)) return { x: px, y: py };
+      let bx = px, by = py, bd = Infinity;
+      const pts = z.pts;
+      for (let i = 0; i < pts.length; i++) {
+        const a = pts[i], b = pts[(i + 1) % pts.length];
+        const vx = b[0] - a[0], vy = b[1] - a[1];
+        const len2 = vx * vx + vy * vy || 1;
+        const t = Phaser.Math.Clamp(((px - a[0]) * vx + (py - a[1]) * vy) / len2, 0, 1);
+        const cx = a[0] + t * vx, cy = a[1] + t * vy;
+        const d = Math.hypot(px - cx, py - cy);
+        if (d < bd) { bd = d; bx = cx; by = cy; }
+      }
+      return { x: bx, y: by };
+    }
+    return { x: px, y: py };
+  }
+
+  _isWalkable(x, y, footOff = 20) {
+    const zones = this.townData?.walkableZones;
+    if (!zones || zones.length === 0) return true;
+    const fy = y + footOff;
+    return zones.some((z) => this._pointInZone(x, fy, z));
+  }
+
+  _clampToWalkable(x, y, footOff = 20) {
+    const zones = this.townData?.walkableZones;
+    if (!zones || zones.length === 0) return { x, y, clamped: false };
+    const fy = y + footOff;
+    if (zones.some((z) => this._pointInZone(x, fy, z))) return { x, y, clamped: false };
+    let bx = x, by = fy, bd = Infinity;
+    for (const z of zones) {
+      const pt = this._closestInZone(x, fy, z);
+      const d = Math.hypot(x - pt.x, fy - pt.y);
+      if (d < bd) { bd = d; bx = pt.x; by = pt.y; }
+    }
+    return { x: bx, y: by - footOff, clamped: true };
+  }
+
   update(time, delta) {
     if (!this.hero) return;
     const dt = Math.min(0.05, delta / 1000);
@@ -737,26 +849,17 @@ export class TownScene extends Phaser.Scene {
       }
     }
 
-    let nx = Phaser.Math.Clamp(this.hero.x + vx * dt, 180, td.mapWidth - 180);
-    let ny = Phaser.Math.Clamp(this.hero.y + vy * dt, 220, td.mapHeight - 160);
-    if (td.walkableZones && td.walkableZones.length > 0) {
-      const inside = td.walkableZones.some((z) => nx >= z.x1 && nx <= z.x2 && ny >= z.y1 && ny <= z.y2);
-      if (!inside) {
-        let bestX = nx;
-        let bestY = ny;
-        let bestDist = Infinity;
-        for (const z of td.walkableZones) {
-          const cx = Phaser.Math.Clamp(nx, z.x1, z.x2);
-          const cy = Phaser.Math.Clamp(ny, z.y1, z.y2);
-          const d = Math.hypot(nx - cx, ny - cy);
-          if (d < bestDist) {
-            bestDist = d;
-            bestX = cx;
-            bestY = cy;
-          }
-        }
-        nx = bestX;
-        ny = bestY;
+    let nx = Phaser.Math.Clamp(this.hero.x + vx * dt, 140, td.mapWidth - 140);
+    let ny = Phaser.Math.Clamp(this.hero.y + vy * dt, 180, td.mapHeight - 140);
+    if (td.walkableZones && td.walkableZones.length > 0 && !this._isWalkable(nx, ny, 20)) {
+      if (this._isWalkable(nx, this.hero.y, 20)) {
+        ny = this.hero.y;
+      } else if (this._isWalkable(this.hero.x, ny, 20)) {
+        nx = this.hero.x;
+      } else {
+        const res = this._clampToWalkable(nx, ny, 20);
+        nx = res.x;
+        ny = res.y;
       }
     }
     this.hero.x = nx;
@@ -993,20 +1096,11 @@ export class TownScene extends Phaser.Scene {
     let x = Phaser.Math.Clamp(nx, 180, td.mapWidth - 180);
     let y = Phaser.Math.Clamp(ny, 220, td.mapHeight - 160);
     let hitWall = false;
-    if (td.walkableZones && td.walkableZones.length > 0) {
-      const inside = td.walkableZones.some((z) => x >= z.x1 && x <= z.x2 && y >= z.y1 && y <= z.y2);
-      if (!inside) {
-        hitWall = true;
-        let bx = x, by = y, bd = Infinity;
-        for (const z of td.walkableZones) {
-          const cx = Phaser.Math.Clamp(x, z.x1, z.x2);
-          const cy = Phaser.Math.Clamp(y, z.y1, z.y2);
-          const d = Math.hypot(x - cx, y - cy);
-          if (d < bd) { bd = d; bx = cx; by = cy; }
-        }
-        x = bx;
-        y = by;
-      }
+    if (td.walkableZones && td.walkableZones.length > 0 && !this._isWalkable(x, y, 20)) {
+      hitWall = true;
+      const res = this._clampToWalkable(x, y, 20);
+      x = res.x;
+      y = res.y;
     }
     for (const ob of this.obstacles) {
       const dx = x - ob.x;
