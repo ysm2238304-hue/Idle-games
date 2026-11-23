@@ -55,10 +55,10 @@ const townBgm = new TownBgmEngine();
 const heroShowcase = new HeroSkillShowcase();
 const ui = new DashboardUI({
   onSelectClass: (classId) => {
-    gameState.classId = classId;
+    switchStateToClass(classId, gameState);
     selectedLobbyClass = classId;
     const cls = CLASSES[classId];
-    ui.addLog(`切換職業為【${cls.name}】！`, 'system');
+    ui.addLog(`切換職業為【${cls.name} Lv.${gameState.level}】！`, 'system');
     refreshStatsAndUI();
     if (battleScene) battleScene.refreshHeroClass(classId);
     persistAll(true);
@@ -367,6 +367,35 @@ const ui = new DashboardUI({
   },
 });
 
+function ensureClassProgress(st = gameState) {
+  if (!st.classProgress) st.classProgress = {};
+  const curId = st.classId || 'warrior';
+  for (const cid of Object.keys(CLASSES)) {
+    if (!st.classProgress[cid]) {
+      st.classProgress[cid] = (cid === curId)
+        ? { level: st.level || 1, exp: st.exp || 0 }
+        : { level: 1, exp: 0 };
+    }
+  }
+  return st.classProgress;
+}
+
+function syncActiveClassProgress(st = gameState) {
+  const cp = ensureClassProgress(st);
+  const curId = st.classId || 'warrior';
+  cp[curId] = { level: st.level || 1, exp: st.exp || 0 };
+}
+
+function switchStateToClass(newClassId, st = gameState) {
+  const cp = ensureClassProgress(st);
+  const oldId = st.classId || 'warrior';
+  cp[oldId] = { level: st.level || 1, exp: st.exp || 0 };
+  st.classId = newClassId;
+  const next = cp[newClassId] || { level: 1, exp: 0 };
+  st.level = next.level || 1;
+  st.exp = next.exp || 0;
+}
+
 function grantExp(amount) {
   const expBuffMult = ((gameState.potionBuffs?.expUntil || 0) > Date.now()) ? 1.5 : 1.0;
   const gained = Math.round(amount * (computedStats.expMult || 1) * expBuffMult);
@@ -379,6 +408,7 @@ function grantExp(amount) {
     need = getExpToNext(gameState.level);
     ui.addLog(`🎉 角色升級至 Lv.${gameState.level}（獲得 +1 技能點）`, 'victory');
   }
+  syncActiveClassProgress(gameState);
 }
 
 function handleLootDrop(item) {
@@ -1359,40 +1389,44 @@ function updateStartButtonState() {
   const nick = (nicknameInput.value || '').trim();
   const valid = nick.length >= 2 && nick.length <= 12;
   startGameBtn.disabled = !valid;
-  if (gameState.characterCreated) {
-    startGameBtn.textContent = valid ? `⚔️ 以「${nick}」繼續冒險` : '請輸入 2~12 字冒險者暱稱';
-  } else {
-    startGameBtn.textContent = valid ? '⚔️ 締結契約・踏入深淵' : '請先輸入 2~12 字暱稱';
-  }
+  const cp = ensureClassProgress(gameState);
+  const cls = CLASSES[selectedLobbyClass] || CLASSES.warrior;
+  const lv = cp[cls.id]?.level || 1;
+  startGameBtn.textContent = valid
+    ? `⚔️ 以「${nick}」進入（${cls.name} Lv.${lv}）`
+    : '請輸入 2~12 字冒險者暱稱';
 }
 
 function renderWelcomeClasses() {
   if (!welcomeClassList || !welcomeClassStage) return;
-  const isLocked = !!gameState.characterCreated;
+  const cp = ensureClassProgress(gameState);
   welcomeClassList.innerHTML = '';
 
   Object.values(CLASSES).forEach((cls) => {
     const ext = CLASS_META_EXT[cls.id] || { role: cls.title, bars: [80, 80, 80, 80] };
+    const lv = cp[cls.id]?.level || 1;
     const isSel = selectedLobbyClass === cls.id;
     const item = document.createElement('button');
     item.type = 'button';
-    item.className = `cls-tab-item ${isSel ? 'active' : ''} ${isLocked && !isSel ? 'locked' : ''}`;
+    item.className = `cls-tab-item ${isSel ? 'active' : ''}`;
     item.innerHTML = `
       <img src="${cls.spritePath}" alt="${cls.name}" />
       <div class="cls-tab-meta">
-        <span class="cls-tab-name" style="color:${cls.color}">${cls.name} ${isLocked && isSel ? '🔒' : ''}</span>
+        <span class="cls-tab-name" style="color:${cls.color}">${cls.name}</span>
         <span class="cls-tab-role">${ext.role}</span>
       </div>
+      <span class="cls-lv-badge ${lv <= 1 ? 'is-lv1' : ''}">Lv.${lv}</span>
     `;
     item.onclick = () => {
-      if (isLocked && !isSel) return;
       selectedLobbyClass = cls.id;
       renderWelcomeClasses();
+      updateStartButtonState();
     };
     welcomeClassList.appendChild(item);
   });
 
   const cls = CLASSES[selectedLobbyClass] || CLASSES.warrior;
+  const lv = cp[cls.id]?.level || 1;
   const ext = CLASS_META_EXT[cls.id] || { role: cls.title, bars: [80, 80, 80, 80] };
   const barNames = ['攻擊破壞', '生存護甲', '攻速機動', '奧義爆發'];
   const clsSkills = CLASS_SKILLS_MAP[cls.id] || [];
@@ -1407,7 +1441,7 @@ function renderWelcomeClasses() {
     <div class="stage-info-col">
       <div class="stage-hero-title">
         <h2 style="color:${cls.color}">${cls.name}</h2>
-        <span>${cls.title} ${isLocked ? '（已締結單一職業契約）' : ''}</span>
+        <span>${cls.title}・Lv.${lv}</span>
       </div>
       <p style="margin:0;font-size:13px;color:#cbd5e1;line-height:1.55;">${cls.desc}</p>
       <div class="stage-stat-bars">
@@ -1426,10 +1460,10 @@ function renderWelcomeClasses() {
   const scCanvas = document.getElementById('preview-skill-canvas');
   const scDesc = document.getElementById('showcase-sk-desc');
   const scBtns = welcomeClassStage.querySelectorAll('.showcase-sk-btn');
-  heroShowcase.attach(scCanvas, cls.id, (idx, sk) => {
+  try { heroShowcase.attach(scCanvas, cls.id, (idx, sk) => {
     scBtns.forEach((b, bi) => b.classList.toggle('active', bi === idx));
     if (scDesc && sk) scDesc.innerHTML = `<b style="color:${cls.color};">【${sk.name}】</b> ${sk.desc || ''}`;
-  });
+  }); } catch (err) { console.warn('Showcase err:', err); }
   scBtns.forEach((b) => {
     b.onclick = () => heroShowcase.triggerSkill(Number(b.dataset.skIdx));
   });
@@ -1443,7 +1477,7 @@ function enterWelcomeClassStep(userLabel) {
     welcomeSaveSummary.textContent = `${userLabel} ｜ 【${gameState.nickname || '無名英雄'}】Lv.${gameState.level}・第 ${getStageLabel(gameState.stage)} 關`;
     if (resetCharBtn) resetCharBtn.classList.remove('hidden');
   } else {
-    welcomeSaveSummary.textContent = `${userLabel} ｜ 🆕 首次創角（職業選定後將永久綁定）`;
+    welcomeSaveSummary.textContent = `${userLabel} ｜ 🆕 首次創角（各職業獨立保留等級）`;
     if (resetCharBtn) resetCharBtn.classList.add('hidden');
   }
   if (nicknameInput) {
@@ -1479,10 +1513,8 @@ function startAdventure() {
     return;
   }
   gameState.nickname = nick;
-  if (!gameState.characterCreated) {
-    gameState.classId = selectedLobbyClass;
-    gameState.characterCreated = true;
-  }
+  gameState.characterCreated = true;
+  switchStateToClass(selectedLobbyClass, gameState);
   gameStarted = true;
   welcomeScreen.classList.add('hidden');
   gameScreen.classList.remove('hidden');

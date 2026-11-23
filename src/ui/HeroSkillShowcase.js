@@ -234,6 +234,12 @@ export class HeroSkillShowcase {
 
     // Draw Hero
     const heroAtlas = this.atlasCache.get(`./assets/heroes/atlas_${this.classId}.png?v=66`);
+    if (!heroAtlas?.ready) {
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '12px Noto Sans TC, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('⚔️ 載入職業實戰演武中...', w / 2, h / 2);
+    }
     const pf = HERO_PREFIX[this.classId] || 'wf';
     if (heroAtlas?.ready) {
       const isAtk = now < this.castAnimUntil;
