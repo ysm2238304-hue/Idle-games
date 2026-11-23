@@ -1,4 +1,4 @@
-// 全域暗黑 HUD 自由排版（拖曳／個別縮放／開關）與系統設定視窗模組 (v78)
+// 全域暗黑 HUD 自由排版（拖曳／個別縮放／開關）與系統設定＋自訂快捷鍵模組 (v89)
 const SETTINGS_KEY = 'desk_diablo_settings_v1';
 
 const PANEL_META = {
@@ -8,6 +8,61 @@ const PANEL_META = {
   'hud-bottom-left': { label: '暗黑戰鬥／掉落日誌', origin: 'bottom left' },
   'diablo-hud': { label: '底部雙球技能祭壇', origin: 'bottom center' },
 };
+
+export const DEFAULT_KEYBINDS = {
+  potion: 'KeyH',
+  skill0: 'Space',
+  skill1: 'KeyE',
+  skill2: 'KeyR',
+  autoHunt: 'KeyT',
+  quickSalvage: 'KeyQ',
+  townToggle: 'KeyG',
+  worldMap: 'KeyM',
+  gear: 'KeyI',
+  bag: 'KeyB',
+  upgrade: 'KeyU',
+  tree: 'KeyK',
+  skills: 'KeyN',
+  rebirth: 'KeyV',
+  switchClass: 'KeyC',
+  waypoint: 'KeyY',
+  pets: 'KeyP',
+  shop: 'KeyS',
+  log: 'KeyL',
+  settings: 'KeyO',
+};
+
+const KEYBIND_META = [
+  { id: 'potion', label: '使用生命藥水', group: '戰鬥操作' },
+  { id: 'skill0', label: '核心技能槽 1', group: '戰鬥操作' },
+  { id: 'skill1', label: '核心技能槽 2', group: '戰鬥操作' },
+  { id: 'skill2', label: '核心技能槽 3', group: '戰鬥操作' },
+  { id: 'autoHunt', label: '自動狩獵切換', group: '戰鬥操作' },
+  { id: 'quickSalvage', label: '一鍵分解裝備', group: '戰鬥操作' },
+  { id: 'townToggle', label: '返回主城 / 出城戰鬥', group: '戰鬥操作' },
+  { id: 'gear', label: '角色與裝備欄', group: '介面選單' },
+  { id: 'bag', label: '物品背包 / 寵物欄', group: '介面選單' },
+  { id: 'pets', label: '寵物圖鑑面板', group: '介面選單' },
+  { id: 'shop', label: '暗黑深淵商城', group: '介面選單' },
+  { id: 'upgrade', label: '金幣屬性強化', group: '介面選單' },
+  { id: 'tree', label: '深淵技能樹', group: '介面選單' },
+  { id: 'skills', label: '職業技能配置', group: '介面選單' },
+  { id: 'rebirth', label: '深淵輪迴轉生', group: '介面選單' },
+  { id: 'worldMap', label: '世界大地圖選關', group: '介面選單' },
+  { id: 'switchClass', label: '切換冒險職業', group: '介面選單' },
+  { id: 'waypoint', label: '主城快速傳送陣', group: '介面選單' },
+  { id: 'log', label: '完整戰鬥日誌', group: '介面選單' },
+  { id: 'settings', label: '開啟系統設定', group: '介面選單' },
+];
+
+export function formatKeyCode(code) {
+  if (!code) return '-';
+  if (code === 'Space') return '空白';
+  if (code.startsWith('Key')) return code.slice(3);
+  if (code.startsWith('Digit')) return code.slice(5);
+  if (code.startsWith('Numpad')) return 'N' + code.slice(6);
+  return code;
+}
 
 function createDefaultSettings() {
   const panels = {};
@@ -19,6 +74,7 @@ function createDefaultSettings() {
     audio: { master: 0.85, bgm: 0.65, sfx: 0.85, muted: false },
     graphics: { quality: 'high', particles: 'high', damageText: true, screenShake: true },
     gameplay: { showTargetFrame: true, showChatTimestamp: true, autoHuntDefault: true },
+    keybinds: { ...DEFAULT_KEYBINDS },
   };
 }
 
@@ -29,6 +85,7 @@ export class HudSettingsManager {
     this.settings = this._load();
     this.activeTab = 'ui';
     this._dragState = null;
+    this._listeningKeyId = null;
     this.modal = null;
     this.banner = null;
   }
@@ -50,10 +107,19 @@ export class HudSettingsManager {
         audio: { ...def.audio, ...(p.audio || {}) },
         graphics: { ...def.graphics, ...(p.graphics || {}) },
         gameplay: { ...def.gameplay, ...(p.gameplay || {}) },
+        keybinds: { ...DEFAULT_KEYBINDS, ...(p.keybinds || {}) },
       };
     } catch {
       return def;
     }
+  }
+
+  getKeybinds() {
+    return this.settings.keybinds || DEFAULT_KEYBINDS;
+  }
+
+  isListeningKey() {
+    return !!this._listeningKeyId;
   }
 
   save() {
@@ -130,6 +196,31 @@ export class HudSettingsManager {
       this.save();
     });
 
+    window.addEventListener('keydown', (e) => {
+      if (!this._listeningKeyId) return;
+      e.preventDefault();
+      e.stopPropagation();
+      if (e.code === 'Escape') {
+        this._listeningKeyId = null;
+        this.renderModalBody();
+        return;
+      }
+      const targetId = this._listeningKeyId;
+      const kb = this.settings.keybinds;
+      const prevCode = kb[targetId];
+      // 衝突自動交換
+      for (const [k, v] of Object.entries(kb)) {
+        if (k !== targetId && v === e.code) {
+          kb[k] = prevCode;
+        }
+      }
+      kb[targetId] = e.code;
+      this._listeningKeyId = null;
+      this.applyAll();
+      this.save();
+      this.renderModalBody();
+    }, true);
+
     document.getElementById('btn-open-settings')?.addEventListener('click', () => this.openModal());
     document.getElementById('btn-close-settings')?.addEventListener('click', () => this.closeModal());
     document.getElementById('btn-finish-hud-edit')?.addEventListener('click', () => this.setEditMode(false));
@@ -171,13 +262,65 @@ export class HudSettingsManager {
     if (lbl) lbl.textContent = `${Math.round(p.scale * 100)}%`;
   }
 
+  syncHotkeyLabels() {
+    const kb = this.getKeybinds();
+    const fmt = (id) => formatKeyCode(kb[id]);
+
+    // 1. 底部技能熱鍵欄
+    const setHotbar = (sel, keyId) => {
+      const el = document.querySelector(`${sel} .mmo-hotkey`);
+      if (el) el.textContent = fmt(keyId);
+    };
+    setHotbar('#btn-potion', 'potion');
+    setHotbar('#skill-slot-0', 'skill0');
+    setHotbar('#skill-slot-1', 'skill1');
+    setHotbar('#skill-slot-2', 'skill2');
+    setHotbar('#btn-toggle-auto', 'autoHunt');
+
+    const qBtn = document.getElementById('btn-quick-salvage');
+    if (qBtn) qBtn.textContent = `🧹 一鍵分解 [${fmt('quickSalvage')}]`;
+
+    const townBtn = document.getElementById('btn-town-toggle');
+    if (townBtn) {
+      townBtn.textContent = townBtn.textContent.replace(/\([^)]*\)$/, `(${fmt('townToggle')})`);
+    }
+
+    // 2. 右上角機能矩陣角標與 data-tip 同步
+    const matrixMap = [
+      ['[data-drawer="gear"]', 'gear', '角色與裝備'],
+      ['[data-drawer="bag"]', 'bag', '物品背包'],
+      ['[data-drawer="upgrade"]', 'upgrade', '金幣屬性強化'],
+      ['[data-drawer="tree"]', 'tree', '深淵技能樹'],
+      ['[data-drawer="skills"]', 'skills', '職業技能配置'],
+      ['[data-drawer="rebirth"]', 'rebirth', '深淵輪迴轉生'],
+      ['#btn-world-map', 'worldMap', '世界大地圖選關'],
+      ['#btn-switch-class', 'switchClass', '切換冒險職業'],
+      ['#btn-top-waypoint', 'waypoint', '主城快速傳送陣'],
+      ['[data-drawer="pets"]', 'pets', '技能變異寵物'],
+      ['[data-drawer="log"]', 'log', '完整戰鬥日誌'],
+      ['#btn-open-shop', 'shop', '暗黑深淵商城'],
+      ['#btn-open-settings', 'settings', '系統設定'],
+    ];
+    for (const [sel, keyId, tipBase] of matrixMap) {
+      const btn = document.querySelector(sel);
+      if (!btn) continue;
+      const k = fmt(keyId);
+      const hk = btn.querySelector('.mmo-hk');
+      if (hk) hk.textContent = k;
+      btn.setAttribute('data-tip', `${tipBase} [${k}]`);
+    }
+
+    // 3. 彈窗與大廳按鈕提示同步
+    const lobbySet = document.getElementById('btn-lobby-settings');
+    if (lobbySet) lobbySet.textContent = `⚙️ 設定(${fmt('settings')})`;
+  }
+
   applyAll() {
     document.documentElement.style.setProperty('--hud-global-scale', String(this.settings.ui.globalScale || 1));
     for (const id of Object.keys(PANEL_META)) {
       this._applyPanelTransform(id);
     }
 
-    // 音量同步
     const { master, bgm, muted } = this.settings.audio;
     if (this.townBgm) {
       this.townBgm.setVolume(master * bgm, muted);
@@ -185,27 +328,30 @@ export class HudSettingsManager {
     const bgVid = document.getElementById('welcome-bg-video');
     if (bgVid) bgVid.volume = muted ? 0 : Math.min(1, master * bgm);
 
-    // 畫質與遊戲全域旗標
     window.__gameSettings = {
       audio: { ...this.settings.audio },
       graphics: { ...this.settings.graphics },
       gameplay: { ...this.settings.gameplay },
+      keybinds: { ...this.getKeybinds() },
     };
 
     const tf = document.getElementById('hud-top-center');
     if (tf) tf.classList.toggle('setting-hide-target', !this.settings.gameplay.showTargetFrame);
 
+    this.syncHotkeyLabels();
     this.onApply?.(this.settings);
   }
 
   openModal(tab = null) {
     if (tab) this.activeTab = tab;
     if (!this.modal) return;
+    this._listeningKeyId = null;
     this.renderModalBody();
     this.modal.classList.remove('hidden');
   }
 
   closeModal() {
+    this._listeningKeyId = null;
     this.modal?.classList.add('hidden');
   }
 
@@ -221,6 +367,7 @@ export class HudSettingsManager {
     tabs?.forEach((b) => b.classList.toggle('active', b.dataset.tab === this.activeTab));
     tabs?.forEach((b) => {
       b.onclick = () => {
+        this._listeningKeyId = null;
         this.activeTab = b.dataset.tab;
         this.renderModalBody();
       };
@@ -285,6 +432,42 @@ export class HudSettingsManager {
           this.applyAll();
           this.save();
         });
+      });
+    } else if (this.activeTab === 'keys') {
+      const kb = this.getKeybinds();
+      body.innerHTML = `
+        <div class="set-section">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+            <small style="color:#cbd5e1;">點擊右側按鍵鈕後直接按下新按鍵（按 Esc 取消，重複自動交換並立即同步至 UI）</small>
+            <button type="button" id="btn-reset-keybinds" class="btn-ghost-sm">↺ 恢復預設按鍵</button>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;">
+            ${KEYBIND_META.map((item) => {
+              const listening = this._listeningKeyId === item.id;
+              return `
+                <div class="set-row compact" style="border-bottom:1px solid rgba(255,255,255,0.06);">
+                  <span style="font-size:12px;color:#e2d5be;">${item.label}</span>
+                  <button type="button" class="${listening ? 'btn-gold-sm' : 'btn-ghost-sm'}" data-rebind="${item.id}" style="min-width:74px;font-weight:700;">
+                    ${listening ? '請按鍵...' : formatKeyCode(kb[item.id])}
+                  </button>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+      body.querySelector('#btn-reset-keybinds')?.addEventListener('click', () => {
+        this.settings.keybinds = { ...DEFAULT_KEYBINDS };
+        this._listeningKeyId = null;
+        this.applyAll();
+        this.save();
+        this.renderModalBody();
+      });
+      body.querySelectorAll('[data-rebind]').forEach((btn) => {
+        btn.onclick = () => {
+          this._listeningKeyId = btn.dataset.rebind;
+          this.renderModalBody();
+        };
       });
     } else if (this.activeTab === 'audio') {
       body.innerHTML = `
@@ -359,26 +542,10 @@ export class HudSettingsManager {
           </div>
         </div>
       `;
-      body.querySelector('#set-gfx-quality')?.addEventListener('change', (e) => {
-        s.graphics.quality = e.target.value;
-        this.applyAll();
-        this.save();
-      });
-      body.querySelector('#set-gfx-particles')?.addEventListener('change', (e) => {
-        s.graphics.particles = e.target.value;
-        this.applyAll();
-        this.save();
-      });
-      body.querySelector('#set-gfx-dmg')?.addEventListener('change', (e) => {
-        s.graphics.damageText = e.target.checked;
-        this.applyAll();
-        this.save();
-      });
-      body.querySelector('#set-gfx-shake')?.addEventListener('change', (e) => {
-        s.graphics.screenShake = e.target.checked;
-        this.applyAll();
-        this.save();
-      });
+      body.querySelector('#set-gfx-quality')?.addEventListener('change', (e) => { s.graphics.quality = e.target.value; this.applyAll(); this.save(); });
+      body.querySelector('#set-gfx-particles')?.addEventListener('change', (e) => { s.graphics.particles = e.target.value; this.applyAll(); this.save(); });
+      body.querySelector('#set-gfx-dmg')?.addEventListener('change', (e) => { s.graphics.damageText = e.target.checked; this.applyAll(); this.save(); });
+      body.querySelector('#set-gfx-shake')?.addEventListener('change', (e) => { s.graphics.screenShake = e.target.checked; this.applyAll(); this.save(); });
     } else {
       body.innerHTML = `
         <div class="set-section">
@@ -394,29 +561,11 @@ export class HudSettingsManager {
             <div><b>進場預設開啟自動狩獵</b><small>進入戰鬥地圖後自動接管技能與走位</small></div>
             <label class="set-chk"><input type="checkbox" id="set-gp-hunt" ${s.gameplay.autoHuntDefault ? 'checked' : ''} /> <span>自動狩獵</span></label>
           </div>
-          <div class="set-row">
-            <div><b>快捷鍵總覽</b><small>快速操作說明</small></div>
-            <div class="set-keys-hint">
-              <span><b>WASD</b> 移動</span><span><b>F</b> 互動</span><span><b>O</b> 系統設定</span><span><b>Y</b> 傳送陣</span><span><b>M</b> 地圖</span><span><b>I</b> 裝備</span><span><b>B</b> 背包</span>
-            </div>
-          </div>
         </div>
       `;
-      body.querySelector('#set-gp-target')?.addEventListener('change', (e) => {
-        s.gameplay.showTargetFrame = e.target.checked;
-        this.applyAll();
-        this.save();
-      });
-      body.querySelector('#set-gp-ts')?.addEventListener('change', (e) => {
-        s.gameplay.showChatTimestamp = e.target.checked;
-        this.applyAll();
-        this.save();
-      });
-      body.querySelector('#set-gp-hunt')?.addEventListener('change', (e) => {
-        s.gameplay.autoHuntDefault = e.target.checked;
-        this.applyAll();
-        this.save();
-      });
+      body.querySelector('#set-gp-target')?.addEventListener('change', (e) => { s.gameplay.showTargetFrame = e.target.checked; this.applyAll(); this.save(); });
+      body.querySelector('#set-gp-ts')?.addEventListener('change', (e) => { s.gameplay.showChatTimestamp = e.target.checked; this.applyAll(); this.save(); });
+      body.querySelector('#set-gp-hunt')?.addEventListener('change', (e) => { s.gameplay.autoHuntDefault = e.target.checked; this.applyAll(); this.save(); });
     }
   }
 }

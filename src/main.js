@@ -6,12 +6,12 @@ import { MAGE_SKILLS } from './data/mageSkills.js';
 import { PALADIN_SKILLS } from './data/paladinSkills.js';
 import { NECRO_SKILLS } from './data/necroSkills.js';
 import { ASSASSIN_SKILLS } from './data/assassinSkills.js';
-import { RARITIES } from './data/items.js?v=88';
-import { PET_CATALOG, rollPetDrop } from './data/pets.js?v=88';
+import { RARITIES } from './data/items.js?v=90';
+import { PET_CATALOG, rollPetDrop } from './data/pets.js?v=90';
 import { SKILL_TREE_NODES, isNodeUnlocked } from './data/skillTree.js';
-import { generateLoot, calcItemPower, getSalvageReward, rerollItemAffixes, generateBlackMarketItem } from './logic/lootGen.js?v=88';
-import { recalcPlayerStats, getExpToNext, getUpgradeCost, calcRebirthCrystals, formatNum } from './logic/statCalc.js?v=88';
-import { createInitialState, loadGame, saveGame, calcOfflineProgress } from './logic/saveSystem.js?v=88';
+import { generateLoot, calcItemPower, getSalvageReward, rerollItemAffixes, generateBlackMarketItem } from './logic/lootGen.js?v=90';
+import { recalcPlayerStats, getExpToNext, getUpgradeCost, calcRebirthCrystals, formatNum } from './logic/statCalc.js?v=90';
+import { createInitialState, loadGame, saveGame, calcOfflineProgress } from './logic/saveSystem.js?v=90';
 import {
   initCloudAuth,
   signInWithGoogle,
@@ -20,15 +20,15 @@ import {
   loadCloudSave,
   saveCloudData,
 } from './auth/firebase.js';
-import { BattleScene } from './scenes/BattleScene.js?v=88';
-import { TownScene } from './scenes/TownScene.js?v=88';
+import { BattleScene } from './scenes/BattleScene.js?v=90';
+import { TownScene } from './scenes/TownScene.js?v=90';
 import { TOWN_SPLASHES } from './data/towns/splashes.js';
-import { DashboardUI } from './ui/DashboardUI.js?v=88';
+import { DashboardUI } from './ui/DashboardUI.js?v=90';
 import { TownBgmEngine } from './audio/TownBgmEngine.js';
-import { HudSettingsManager } from './ui/HudSettingsManager.js?v=88';
-import { ShopModal } from './ui/ShopModal.js?v=88';
-import { rollEnhance, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEVEL } from './logic/enhanceSystem.js?v=88';
-import { HeroSkillShowcase, CLASS_SKILLS_MAP } from './ui/HeroSkillShowcase.js?v=88';
+import { HudSettingsManager } from './ui/HudSettingsManager.js?v=90';
+import { ShopModal } from './ui/ShopModal.js?v=90';
+import { rollEnhance, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEVEL } from './logic/enhanceSystem.js?v=90';
+import { HeroSkillShowcase, CLASS_SKILLS_MAP } from './ui/HeroSkillShowcase.js?v=90';
 
 let gameState = loadGame() || createInitialState('warrior');
 let computedStats = recalcPlayerStats(gameState);
@@ -1735,52 +1735,59 @@ document.getElementById('hud-stage-title')?.addEventListener('click', () => ui.o
 
 window.addEventListener('keydown', (e) => {
   if (!gameStarted) return;
+  if (hudSettings.isListeningKey()) return;
   if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
 
-  if (e.code === 'Space') {
+  const kb = hudSettings.getKeybinds();
+  if (e.code === kb.skill0) {
     e.preventDefault();
     battleScene?.castSkillSlot(0, true);
-  } else if (e.code === 'KeyE') {
+  } else if (e.code === kb.skill1) {
     battleScene?.castSkillSlot(1, true);
-  } else if (e.code === 'KeyR') {
+  } else if (e.code === kb.skill2) {
     battleScene?.castSkillSlot(2, true);
-  } else if (e.code === 'KeyT') {
+  } else if (e.code === kb.autoHunt) {
     toggleAutoMoveMode();
-  } else if (e.code === 'KeyH') {
+  } else if (e.code === kb.potion) {
     battleScene?.usePotion(true);
-  } else if (e.code === 'KeyM') {
+  } else if (e.code === kb.worldMap) {
     const wm = document.getElementById('modal-world-map');
     wm?.classList.contains('hidden') ? ui.openWorldMapModal(gameState) : wm.classList.add('hidden');
-  } else if (e.code === 'KeyI') {
+  } else if (e.code === kb.gear) {
     ui.activeDrawer === 'gear' ? ui.closeDrawer() : ui.openDrawer('gear');
-  } else if (e.code === 'KeyB') {
+  } else if (e.code === kb.bag) {
     ui.activeDrawer === 'bag' ? ui.closeDrawer() : ui.openDrawer('bag');
-  } else if (e.code === 'KeyU') {
+  } else if (e.code === kb.upgrade) {
     ui.activeDrawer === 'upgrade' ? ui.closeDrawer() : ui.openDrawer('upgrade');
-  } else if (e.code === 'KeyK') {
+  } else if (e.code === kb.tree) {
     ui.activeDrawer === 'tree' ? ui.closeDrawer() : ui.openDrawer('tree');
-  } else if (e.code === 'KeyN') {
+  } else if (e.code === kb.skills) {
     ui.activeDrawer === 'skills' ? ui.closeDrawer() : ui.openDrawer('skills');
-  } else if (e.code === 'KeyV') {
+  } else if (e.code === kb.rebirth) {
     ui.activeDrawer === 'rebirth' ? ui.closeDrawer() : ui.openDrawer('rebirth');
-  } else if (e.code === 'KeyC') {
+  } else if (e.code === kb.switchClass) {
     const cm = document.getElementById('modal-class');
     cm?.classList.contains('hidden') ? ui.openClassModal(gameState) : cm.classList.add('hidden');
-  } else if (e.code === 'KeyG') {
+  } else if (e.code === kb.townToggle) {
     if (isInTown) exitTownToBattle(); else enterTown(Math.min(9, getChapterIdx(gameState.stage)));
-  } else if (e.code === 'KeyS') { e.preventDefault(); shopModal.toggle(); return; }
-  if (e.code === 'KeyP') { e.preventDefault(); ui.openDrawer('pets'); return; }
-  if (e.code === 'KeyO') { e.preventDefault(); hudSettings.toggleModal(); return; }
-  if (e.code === 'KeyY') {
+  } else if (e.code === kb.shop) {
+    e.preventDefault(); shopModal.toggle();
+  } else if (e.code === kb.pets) {
+    e.preventDefault(); ui.activeDrawer === 'pets' ? ui.closeDrawer() : ui.openDrawer('pets');
+  } else if (e.code === kb.settings) {
+    e.preventDefault(); hudSettings.toggleModal();
+  } else if (e.code === kb.waypoint) {
     if (isInTown) openTownWaypointUI();
-  } else if (e.code === 'KeyL') {
+  } else if (e.code === kb.log) {
     ui.activeDrawer === 'log' ? ui.closeDrawer() : ui.openDrawer('log');
-  } else if (e.code === 'KeyQ') {
+  } else if (e.code === kb.quickSalvage) {
     document.getElementById('btn-salvage-junk')?.click();
   } else if (e.code === 'Escape') {
     ui.closeDrawer();
     document.getElementById('modal-class')?.classList.add('hidden');
     document.getElementById('modal-world-map')?.classList.add('hidden');
+    shopModal.close();
+    hudSettings.closeModal();
   } else if (e.key === '1') {
     ui.activeDrawer === 'gear' ? ui.closeDrawer() : ui.openDrawer('gear');
   } else if (e.key === '2') {

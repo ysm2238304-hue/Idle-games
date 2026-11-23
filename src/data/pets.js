@@ -53,6 +53,8 @@ export const PET_CATALOG = [
   { id: 'pet_s6', name: '混沌星神體',   rarity: 'set',    school: 'void',      emoji: '🌀', tint: 0x4ade80, bonusHits: 5, dmgMult: 1.15, desc: '【太古變異】技能撕裂深淵星界，觸發超重力黑洞奇點聚怪引爆！' },
 ];
 
+PET_CATALOG.forEach((p) => { p.icon = `./assets/pets/${p.id}.png?v=90`; });
+
 export function getPetDef(petId) {
   return PET_CATALOG.find((p) => p.id === petId) || null;
 }

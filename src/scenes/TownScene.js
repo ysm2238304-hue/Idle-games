@@ -57,6 +57,7 @@ export class TownScene extends Phaser.Scene {
   }
 
   preload() {
+    PET_CATALOG.forEach((p) => { if (!this.textures.exists(`pet_${p.id}`)) this.load.image(`pet_${p.id}`, `./assets/pets/${p.id}.png?v=90`); });
     const td = this.townData;
     const cid = this.callbacks?.getState?.()?.classId || 'warrior';
     const heroAtlas = `atlas_${cid}`;
@@ -899,7 +900,8 @@ export class TownScene extends Phaser.Scene {
       if (pet) {
         const tx = this.hero.x + (this.heroFlipX ? 44 : -44);
         const ty = this.hero.y - 22 + Math.sin(time * 0.005) * 5;
-        this.petBuddy.setVisible(true).setText(pet.emoji).setPosition(Phaser.Math.Linear(this.petBuddy.x, tx, 0.12), Phaser.Math.Linear(this.petBuddy.y, ty, 0.12)).setDepth(ty + 2);
+        const ptk = `pet_${pet.id}`; if (this.textures.exists(ptk) && this.petBuddy.texture?.key !== ptk) this.petBuddy.setTexture(ptk);
+        this.petBuddy.setVisible(true).setScale(0.44).setFlipX(this.heroFlipX).setPosition(Phaser.Math.Linear(this.petBuddy.x, tx, 0.12), Phaser.Math.Linear(this.petBuddy.y, ty, 0.12)).setDepth(ty + 2);
         this.petAura?.setVisible(true).setFillStyle(pet.tint, 0.28).setPosition(this.petBuddy.x, this.petBuddy.y).setDepth(ty + 1);
       } else {
         this.petBuddy.setVisible(false); this.petAura?.setVisible(false);

@@ -623,7 +623,7 @@ export class DashboardUI {
         { type: 'slot', id: 'ring' },
         { type: 'empty' },
         { type: 'slot', id: 'boots' },
-        { type: 'empty' },
+        { type: 'pet' },
       ];
       layout.forEach((cell) => {
         if (cell.type === 'crest') {
@@ -631,6 +631,29 @@ export class DashboardUI {
           crest.className = 'doll-center-crest';
           crest.innerHTML = `<img src="${cls.spritePath}" alt="${cls.name}" /><span style="color:${cls.color}">${cls.name}</span>`;
           dollEl.appendChild(crest);
+        } else if (cell.type === 'pet') {
+          const eqPet = state.equippedPetId ? getPetDef(state.equippedPetId) : null;
+          const eqRec = (state.pets || []).find((p) => p.petId === state.equippedPetId);
+          const box = document.createElement('div');
+          box.className = 'doll-slot';
+          box.title = eqPet ? `${eqPet.name}：${eqPet.desc}（點擊管理寵物）` : '尚未出戰寵物（點擊開啟寵物欄）';
+          if (eqPet) {
+            const r = getPetRarityMeta(eqPet.rarity);
+            const sch = PET_SCHOOLS[eqPet.school];
+            const upgStr = (eqRec?.upgradeLevel || 0) > 0 ? ` +${eqRec.upgradeLevel}` : '';
+            box.style.borderColor = r.border;
+            box.style.background = r.bg;
+            box.style.boxShadow = `inset 0 0 10px ${r.border}55`;
+            box.innerHTML = `
+              <img src="${eqPet.icon}" alt="${eqPet.name}" style="width:40px;height:40px;object-fit:contain;" />
+              <div class="doll-name" style="color:${r.color}">${eqPet.name}${upgStr}</div>
+              <div style="font-size:9.5px;color:${sch?.color || '#fde68a'};">${sch?.label || '寵物'}</div>
+            `;
+          } else {
+            box.innerHTML = `<span style="font-size:18px;opacity:0.55;">🐾</span><div class="doll-lbl">出戰寵物</div>`;
+          }
+          box.onclick = () => this.openDrawer('pets');
+          dollEl.appendChild(box);
         } else if (cell.type === 'empty') {
           const emp = document.createElement('div');
           dollEl.appendChild(emp);
@@ -935,8 +958,32 @@ export class DashboardUI {
   }
 
   renderPets(state) {
-    const box = document.getElementById('pets-container');
-    if (!box) return;
+    this._bindBagSubTabs();
+    const targets = [document.getElementById('pets-container'), document.getElementById('bag-pets-container')].filter(Boolean);
+    if (!targets.length) return;
+    for (const box of targets) this._renderPetsInto(box, state);
+  }
+
+  _bindBagSubTabs() {
+    if (this._bagSubBound) return;
+    const bar = document.getElementById('bag-subtab-bar');
+    if (!bar) return;
+    this._bagSubBound = true;
+    bar.querySelectorAll('.bag-sub-btn').forEach((btn) => {
+      btn.onclick = () => {
+        const sub = btn.dataset.bagsub;
+        bar.querySelectorAll('.bag-sub-btn').forEach((b) => {
+          const act = b.dataset.bagsub === sub;
+          b.classList.toggle('active', act);
+          b.className = `${act ? 'btn-gold-sm' : 'btn-ghost-sm'} bag-sub-btn${act ? ' active' : ''}`;
+        });
+        document.getElementById('bag-pane-gear')?.classList.toggle('hidden', sub !== 'gear');
+        document.getElementById('bag-pane-pets')?.classList.toggle('hidden', sub !== 'pets');
+      };
+    });
+  }
+
+  _renderPetsInto(box, state) {
     const pets = state.pets || [];
     const eqId = state.equippedPetId;
     const eqPet = eqId ? getPetDef(eqId) : null;
@@ -952,7 +999,7 @@ export class DashboardUI {
         </div>
         ${eqPet ? `
           <div style="display:flex;align-items:center;gap:10px;">
-            <div style="font-size:28px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:${eqRar.bg};border:1.5px solid ${eqRar.border};">${eqPet.emoji}</div>
+            <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:${eqRar.bg};border:1.5px solid ${eqRar.border};overflow:hidden;flex-shrink:0;"><img src="${eqPet.icon}" alt="${eqPet.name}" style="width:44px;height:44px;object-fit:contain;" /></div>
             <div style="flex:1;">
               <div><b style="color:${eqRar.color};">[${eqRar.label}] ${eqPet.name}${(eqRec?.upgradeLevel || 0) > 0 ? ` +${eqRec.upgradeLevel}` : ''}</b> <span style="font-size:11px;color:${eqSch.color};">・${eqSch.label}</span></div>
               <div style="font-size:11.5px;color:#cbd5e1;margin-top:2px;">${eqPet.desc}</div>
@@ -978,7 +1025,7 @@ export class DashboardUI {
           const canEnh = lv < MAX_ENHANCE_LEVEL && (state.gold || 0) >= gold && (state.petEssence || 0) >= essence;
           return `
             <div style="display:flex;align-items:center;gap:7px;padding:7px 9px;border-radius:7px;background:${isEq ? 'rgba(120,53,15,0.28)' : 'rgba(14,11,15,0.85)'};border:1px solid ${isEq ? '#f59e0b' : rar.border};">
-              <div style="font-size:22px;width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:${rar.bg};flex-shrink:0;">${def.emoji}</div>
+              <div style="width:38px;height:38px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:${rar.bg};border:1px solid ${rar.border};overflow:hidden;flex-shrink:0;"><img src="${def.icon}" alt="${def.name}" style="width:34px;height:34px;object-fit:contain;" /></div>
               <div style="flex:1;min-width:0;">
                 <div style="font-size:12.5px;"><b style="color:${rar.color};">[${rar.label}] ${def.name}${lv > 0 ? ` +${lv}` : ''}</b> <span style="font-size:10.5px;color:${sch.color};">${sch.label}</span></div>
                 <div style="font-size:11px;color:#94a3b8;">${def.desc}</div>
@@ -992,16 +1039,16 @@ export class DashboardUI {
       </div>
     `;
 
-    box.querySelector('#btn-unequip-pet')?.addEventListener('click', () => this.callbacks.onEquipPet?.(null));
-    box.querySelector('#btn-summon-pet')?.addEventListener('click', () => this.callbacks.onSummonPet?.());
+    box.querySelector('#btn-unequip-pet')?.addEventListener('click', () => this.handlers.onEquipPet?.(null));
+    box.querySelector('#btn-summon-pet')?.addEventListener('click', () => this.handlers.onSummonPet?.());
     box.querySelectorAll('[data-enh-pet]').forEach((b) => {
-      b.onclick = () => this.callbacks.onEnhancePet?.(b.dataset.enhPet, !!box.querySelector('#chk-pet-protect')?.checked);
+      b.onclick = () => this.handlers.onEnhancePet?.(b.dataset.enhPet, !!box.querySelector('#chk-pet-protect')?.checked);
     });
     box.querySelectorAll('[data-equip-pet]').forEach((b) => {
-      b.onclick = () => this.callbacks.onEquipPet?.(b.dataset.equipPet);
+      b.onclick = () => this.handlers.onEquipPet?.(b.dataset.equipPet);
     });
     box.querySelectorAll('[data-salvage-pet]').forEach((b) => {
-      b.onclick = () => this.callbacks.onSalvagePet?.(b.dataset.salvagePet);
+      b.onclick = () => this.handlers.onSalvagePet?.(b.dataset.salvagePet);
     });
   }
 

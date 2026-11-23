@@ -6,7 +6,7 @@ import { PALADIN_SKILLS } from '../data/paladinSkills.js';
 import { NECRO_SKILLS } from '../data/necroSkills.js';
 import { ASSASSIN_SKILLS } from '../data/assassinSkills.js';
 import { RARITIES } from '../data/items.js';
-import { getPetDef, PET_SCHOOLS } from '../data/pets.js';
+import { PET_CATALOG, getPetDef, PET_SCHOOLS } from '../data/pets.js';
 import { createStageEncounters, spawnSingleMonster, getChapterIdx, getStageLabel, ZONE_OBSTACLES } from '../data/monsters.js';
 import { formatNum } from '../logic/statCalc.js';
 
@@ -122,6 +122,7 @@ export class BattleScene extends Phaser.Scene {
     if (initCid === 'necro') {
       this.loadedSummons = true;
       this.load.atlas('atlas_summons', './assets/heroes/atlas_summons.png', './assets/heroes/atlas_summons.json');
+    PET_CATALOG.forEach((p) => { if (!this.textures.exists(`pet_${p.id}`)) this.load.image(`pet_${p.id}`, `./assets/pets/${p.id}.png?v=90`); });
       ['skel_summon', 'skel_slash', 'frenzy', 'wraith_boom', 'golem_summon', 'golem_slam', 'blood_leech', 'bone_shield'].forEach((k) => {
         this.load.image(`sfx_${k}`, `./assets/fx/sfx_${k}.png`);
       });
@@ -3334,9 +3335,13 @@ export class BattleScene extends Phaser.Scene {
     const ty = this.hero.y - 24 + Math.sin(time * 0.005) * 6;
     const nx = Phaser.Math.Linear(this.petBuddy.x, tx, 0.12);
     const ny = Phaser.Math.Linear(this.petBuddy.y, ty, 0.12);
-    this.petBuddy.setVisible(true).setText(pet.emoji).setPosition(nx, ny).setDepth(ny + 2);
-    this.petAura?.setVisible(true).setFillStyle(pet.tint, 0.3).setPosition(nx, ny).setDepth(ny + 1);
-    this.petLabel?.setVisible(true).setText(pet.name).setColor(sch.color).setPosition(nx, ny - 18).setDepth(ny + 3);
+    const texKey = `pet_${pet.id}`;
+    if (this.textures.exists(texKey) && this.petBuddy.texture?.key !== texKey) {
+      this.petBuddy.setTexture(texKey);
+    }
+    this.petBuddy.setVisible(true).setScale(0.44).setFlipX(this.heroFlipX).setPosition(nx, ny).setDepth(ny + 2);
+    this.petAura?.setVisible(true).setFillStyle(pet.tint, 0.28).setPosition(nx, ny + 4).setDepth(ny + 1);
+    this.petLabel?.setVisible(true).setText(pet.name).setColor(sch.color).setPosition(nx, ny - 28).setDepth(ny + 3);
   }
 
   triggerPetSkillDerivative(aimX, aimY) {
@@ -3423,13 +3428,13 @@ export class BattleScene extends Phaser.Scene {
       .setStrokeStyle(2, 0xffffff).setDepth(4401);
 
     const labelStr = item.isPet ? `${item.emoji || '🐾'} [寵物・${r.label}] ${item.name}` : `[${r.label}] ${item.name}`;
-    const tag = this.add.text(lx, ly - 36, labelStr, {
-      fontSize: '12px', color: r.color, fontFamily: 'Noto Sans TC, sans-serif', fontStyle: 'bold',
-      stroke: '#000000', strokeThickness: 3,
+    const tag = this.add.text(lx, ly - 42, labelStr, {
+      fontSize: (isHigh || item.isPet) ? '17px' : '16px', color: r.color, fontFamily: 'Noto Sans TC, sans-serif', fontStyle: 'bold',
+      stroke: '#000000', strokeThickness: 4,
     }).setOrigin(0.5).setDepth(4403);
-    const padW = Math.max(92, tag.width + 18);
-    const plate = this.add.rectangle(lx, ly - 36, padW, 22, 0x090b12, 0.9)
-      .setStrokeStyle(1.5, r.beam).setDepth(4402)
+    const padW = Math.max(120, tag.width + 24);
+    const plate = this.add.rectangle(lx, ly - 42, padW, 30, 0x090b12, 0.92)
+      .setStrokeStyle(2, r.beam).setDepth(4402)
       .setInteractive({ useHandCursor: true });
 
     const lootObj = {
