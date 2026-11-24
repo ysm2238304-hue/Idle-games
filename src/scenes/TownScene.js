@@ -274,6 +274,16 @@ export class TownScene extends Phaser.Scene {
     this.hero = this.add.sprite(td.spawn.x, td.spawn.y, atlasKey, initFrame)
       .setScale(0.56)
       .setDepth(td.spawn.y);
+    const initNick = (this.callbacks?.getState?.()?.nickname || window.__IDLE_ARPG_BRIDGE__?.getState?.()?.nickname || '冒險者').trim();
+    this.heroNameText = this.add.text(td.spawn.x, td.spawn.y - 72, initNick, {
+      fontSize: '19px',
+      fontFamily: 'Noto Sans TC, sans-serif',
+      fontStyle: 'bold',
+      color: '#fef08a',
+      stroke: '#000000',
+      strokeThickness: 5,
+      shadow: { offsetX: 0, offsetY: 2, color: '#000000', blur: 6, fill: true },
+    }).setOrigin(0.5).setDepth(4800);
 
     this.cameras.main.startFollow(this.hero, true, 0.14, 0.14);
 
@@ -935,6 +945,11 @@ export class TownScene extends Phaser.Scene {
     this.hero.setDepth(this.hero.y);
     if (this.heroShadow) {
       this.heroShadow.setPosition(this.hero.x, this.hero.y + 42);
+    }
+    if (this.heroNameText) {
+      this.heroNameText.setPosition(this.hero.x, this.hero.y - 72);
+      const curNick = (this.callbacks?.getState?.()?.nickname || window.__IDLE_ARPG_BRIDGE__?.getState?.()?.nickname || '冒險者').trim();
+      if (this.heroNameText.text !== curNick) this.heroNameText.setText(curNick);
     }
 
     this.updateHeroAnim(vx, vy, time);

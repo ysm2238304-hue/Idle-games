@@ -115,19 +115,21 @@ export const TOWN_SPLASHES = [
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   queueMicrotask(async () => {
     try {
-      const [{ DashboardUI }, { renderTownFacilityModal }, monsters, { initLobbyClassClarity }, { initWelcomeAuthUI }, { initBagSalvageFix }, { initBattleStuckGuard }] = await Promise.all([
+      const [{ DashboardUI }, { renderTownFacilityModal }, monsters, { initLobbyClassClarity }, { initWelcomeAuthUI }, { initBagSalvageFix }, { initBattleStuckGuard }, { initHudOverhaulV217 }] = await Promise.all([
         import('../../ui/DashboardUI.js?v=99'),
         import('../../ui/NpcModalRenderer.js?v=204'),
         import('../monsters.js?v=99'),
         import('../../ui/LobbyClassClarity.js?v=213'),
         import('../../ui/BagFixEnhancer.js?v=213'),
         import('../../ui/BattleStuckGuard.js?v=214'),
+        import('../../ui/HudOverhaulV217.js?v=217'),
         import('../../ui/WelcomeAuthUI.js?v=212'),
       ]);
       initLobbyClassClarity();
       initWelcomeAuthUI();
       initBagSalvageFix(DashboardUI);
       initBattleStuckGuard();
+      initHudOverhaulV217();
       if (DashboardUI?.prototype) {
         DashboardUI.prototype.openTownFacilityModal = function (action, data, ctx) {
           renderTownFacilityModal(this, action, data, ctx, {

@@ -455,6 +455,16 @@ export class BattleScene extends Phaser.Scene {
       fontFamily: 'sans-serif', fontStyle: 'bold',
       stroke: '#000000', strokeThickness: 3,
     }).setOrigin(0.5).setDepth(4003);
+    const battleNick = (this.getState?.()?.nickname || window.__IDLE_ARPG_BRIDGE__?.getState?.()?.nickname || '冒險者').trim();
+    this.heroNameText = this.add.text(cx, cy - 140, battleNick, {
+      fontSize: '20px',
+      fontFamily: 'Noto Sans TC, sans-serif',
+      fontStyle: 'bold',
+      color: '#fef08a',
+      stroke: '#000000',
+      strokeThickness: 5,
+      shadow: { offsetX: 0, offsetY: 2, color: '#000000', blur: 6, fill: true },
+    }).setOrigin(0.5).setDepth(4005);
 
     this.cameras.main.startFollow(this.hero, true, 0.14, 0.14);
     this.cameras.main.setZoom(0.86);
@@ -1229,6 +1239,11 @@ export class BattleScene extends Phaser.Scene {
     this.heroHpFill.setPosition(this.hero.x - 54, this.hero.y - 86);
     this.heroHpText.setPosition(this.hero.x, this.hero.y - 101);
     if (this.heroAfkText) this.heroAfkText.setPosition(this.hero.x, this.hero.y - 117);
+    if (this.heroNameText) {
+      this.heroNameText.setPosition(this.hero.x, this.hero.y - 140);
+      const curNick = (this.getState?.()?.nickname || window.__IDLE_ARPG_BRIDGE__?.getState?.()?.nickname || '冒險者').trim();
+      if (this.heroNameText.text !== curNick) this.heroNameText.setText(curNick);
+    }
     this.updatePetCompanion?.(time);
     this.updateCombatFeel?.(time);
   }

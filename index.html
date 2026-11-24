@@ -12,6 +12,7 @@
   <link id="welcome-auth-v207-css" rel="stylesheet" href="./src/ui/welcomeAuth.css?v=215" />
   <link id="class-hall-v102-css" rel="stylesheet" href="./src/ui/classHall.css?v=215" />
   <link id="npc-modal-v100-css" rel="stylesheet" href="./src/ui/npcModal.css?v=215" />
+  <link id="hud-overhaul-v217-css" rel="stylesheet" href="./src/ui/hudOverhaul.css?v=217" />
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
 </head>
 <body>
@@ -162,25 +163,7 @@
             </div>
           </div>
         </div>
-
-        <div class="mmo-quest-tracker" id="quest-tracker">
-          <div class="tracker-header">
-            <div class="tracker-stage-nav">
-              <button id="btn-stage-prev" class="btn-stage-xs" title="上一關">◀</button>
-              <span id="hud-stage-title" class="tracker-stage-title" title="點擊開啟世界地圖選關">第 1-1 關・腐朽邊境營地</span>
-              <button id="btn-stage-next" class="btn-stage-xs" title="下一關">▶</button>
-            </div>
-            <button id="btn-toggle-tracker" class="btn-collapse" title="收合/展開追蹤">▾</button>
-          </div>
-          <div class="tracker-body" id="tracker-body">
-            <div class="tracker-row">
-              <span id="hud-wave-badge" class="wave-pill">⚔️ 全清小王</span>
-              <span id="tracker-mob-count" class="tracker-val">剩餘 0 / 0</span>
-            </div>
-            <div class="tracker-prog-track"><div id="tracker-prog-fill"></div></div>
-            <div id="tracker-boss-line" class="tracker-sub">自動巡邏清怪中・擊破首領可進下一關</div>
-          </div>
-        </div>
+        <div id="hud-quest-panel" class="hud-quest-panel"></div>
         <div id="hud-potion-buffs" class="hud-potion-buffs"></div>
         <button id="btn-town-toggle" class="btn-town-toggle" title="返回主城 / 出城戰鬥 [G]">🏰 返回主城 (G)</button>
       </div>
@@ -578,6 +561,6 @@
     </div>
   </div>
 
-  <script type="module" src="./src/main.js?v=216"></script>
+  <script type="module" src="./src/main.js?v=217"></script>
 </body>
 </html>

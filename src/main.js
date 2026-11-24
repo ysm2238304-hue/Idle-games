@@ -19,10 +19,10 @@ import {
   getCurrentUser,
   loadCloudSave,
   saveCloudData,
-} from './auth/firebase.js?v=99';
-import { BattleScene } from './scenes/BattleScene.js?v=99';
-import { TownScene } from './scenes/TownScene.js?v=216';
-import { TOWN_SPLASHES } from './data/towns/splashes.js?v=215';
+} from './auth/firebase.js?v=217';
+import { BattleScene } from './scenes/BattleScene.js?v=217';
+import { TownScene } from './scenes/TownScene.js?v=217';
+import { TOWN_SPLASHES } from './data/towns/splashes.js?v=217';
 import { DashboardUI } from './ui/DashboardUI.js?v=99';
 import { TownBgmEngine } from './audio/TownBgmEngine.js?v=99';
 import { BattleSfxEngine } from './audio/BattleSfxEngine.js?v=99';
@@ -604,6 +604,26 @@ function initPhaserGame() {
   window.__IDLE_ARPG_BRIDGE__ = {
     getState: () => gameState,
     getStats: () => computedStats,
+    addLog: (msg, type, cat) => ui.addLog(msg, type, cat),
+    refreshUI: () => { refreshStatsAndUI(); persistAll(true); },
+    openWorldMap: () => ui.openWorldMapModal(gameState),
+    claimBounty: (qid, rewardGold = 1000, rewardType = 'gear', stageHint = 1) => {
+      if (!gameState.bountyProgress) gameState.bountyProgress = { bossKills: 0, claimed: {} };
+      if (gameState.bountyProgress.claimed[qid]) return false;
+      gameState.bountyProgress.claimed[qid] = true;
+      gameState.gold = (gameState.gold || 0) + rewardGold;
+      if (rewardType === 'sp') {
+        gameState.skillPoints = (gameState.skillPoints || 0) + 1;
+        ui.addLog(`📜 任務完成：獲得 ${rewardGold.toLocaleString()} 金幣與 +1 技能點！`, 'victory', 'system');
+      } else {
+        const mf = rewardType === 'legendary' ? 360 : 160;
+        handleLootDrop(generateLoot(Math.max(stageHint, gameState.maxStageReached || 1), true, mf, false, gameState.classId));
+        ui.addLog(`📜 任務完成：獲得 ${rewardGold.toLocaleString()} 金幣與${rewardType === 'legendary' ? '傳說保底箱' : '高階稀有箱'}！`, 'victory', 'loot');
+      }
+      refreshStatsAndUI();
+      persistAll(true);
+      return true;
+    },
     callbacks: {
       onSkillTicks: (ratios, cdDetails) => ui.updateSkillProgress(ratios, cdDetails),
       onVitalsTick: (vitals) => ui.updateVitals(vitals),

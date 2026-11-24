@@ -1,0 +1,448 @@
+/**
+ * HudOverhaulV217.js (v217)
+ * 1. 右上功能列移至右下角橫排 + 放大圖示 + 直覺縮放小圖示
+ * 2. 左上角角色名片放大 + 下方全新獨立任務欄 + 移除舊關卡追蹤
+ * 3. 左下角多頻道可輸入聊天室（一般 / 世界 / 隊伍 / 私訊 / 系統 / 掉落）+ Firestore 世界頻道即時同步
+ */
+
+import { subscribeWorldChat, sendWorldChatMessage } from '../auth/firebase.js?v=217';
+
+const QUESTS_BY_CH = {
+  1:  [
+    { id: 'ch1_q1', tag: '野怪懸賞', cls: '',         title: '清剿腐朽野狼群',           type: 'kills', req: 30,    gold: 600,    rType: 'gear',      reward: '600金 + 稀有箱' },
+    { id: 'ch1_q2', tag: '首領通緝', cls: 'is-elite', title: '討伐邊境首領 (5/10 關)',   type: 'boss',  req: 2,     gold: 1200,   rType: 'sp',        reward: '1,200金 + 1技能點' },
+    { id: 'ch1_q3', tag: '黃金試煉', cls: 'is-trial', title: '百戰哨兵試煉',             type: 'kills', req: 120,   gold: 2500,   rType: 'legendary', reward: '2,500金 + 傳說箱' },
+  ],
+  2:  [
+    { id: 'ch2_q1', tag: '野怪懸賞', cls: '',         title: '清剿巢穴哥布林與孢子怪',   type: 'kills', req: 200,   gold: 1800,   rType: 'gear',      reward: '1,800金 + 稀有箱' },
+    { id: 'ch2_q2', tag: '首領通緝', cls: 'is-elite', title: '討伐地下巢穴首領',         type: 'boss',  req: 5,     gold: 3200,   rType: 'sp',        reward: '3,200金 + 1技能點' },
+    { id: 'ch2_q3', tag: '黃金試煉', cls: 'is-trial', title: '深淵礦脈清道夫',           type: 'kills', req: 450,   gold: 6000,   rType: 'legendary', reward: '6,000金 + 傳說箱' },
+  ],
+  3:  [
+    { id: 'ch3_q1', tag: '野怪懸賞', cls: '',         title: '淨化白骨墓穴食屍鬼',       type: 'kills', req: 550,   gold: 4200,   rType: 'gear',      reward: '4,200金 + 稀有箱' },
+    { id: 'ch3_q2', tag: '首領通緝', cls: 'is-elite', title: '討伐白骨領主首領',         type: 'boss',  req: 10,    gold: 7500,   rType: 'sp',        reward: '7,500金 + 1技能點' },
+    { id: 'ch3_q3', tag: '黃金試煉', cls: 'is-trial', title: '守夜人聖骨試煉',           type: 'kills', req: 900,   gold: 12000,  rType: 'legendary', reward: '12,000金 + 傳說箱' },
+  ],
+  4:  [
+    { id: 'ch4_q1', tag: '野怪懸賞', cls: '',         title: '清剿焦土炎魔與火蜥蜴',     type: 'kills', req: 1150,  gold: 8500,   rType: 'gear',      reward: '8,500金 + 稀有箱' },
+    { id: 'ch4_q2', tag: '首領通緝', cls: 'is-elite', title: '討伐伊弗利特烈焰首領',     type: 'boss',  req: 18,    gold: 15000,  rType: 'sp',        reward: '15,000金 + 1技能點' },
+    { id: 'ch4_q3', tag: '黃金試煉', cls: 'is-trial', title: '黑曜石熔爐宗師試煉',       type: 'kills', req: 1700,  gold: 24000,  rType: 'legendary', reward: '24,000金 + 傳說箱' },
+  ],
+  5:  [
+    { id: 'ch5_q1', tag: '野怪懸賞', cls: '',         title: '肅清深淵聖殿魅魔與魔僕',   type: 'kills', req: 2200,  gold: 18000,  rType: 'gear',      reward: '18,000金 + 稀有箱' },
+    { id: 'ch5_q2', tag: '首領通緝', cls: 'is-elite', title: '討伐深淵將軍與魔王首領',   type: 'boss',  req: 28,    gold: 30000,  rType: 'sp',        reward: '30,000金 + 1技能點' },
+    { id: 'ch5_q3', tag: '黃金試煉', cls: 'is-trial', title: '緋紅王庭血戰試煉',         type: 'kills', req: 3200,  gold: 48000,  rType: 'legendary', reward: '48,000金 + 傳說箱' },
+  ],
+  6:  [
+    { id: 'ch6_q1', tag: '野怪懸賞', cls: '',         title: '獵殺永凍雪原冰狼與雪怪',   type: 'kills', req: 3800,  gold: 36000,  rType: 'gear',      reward: '36,000金 + 稀有箱' },
+    { id: 'ch6_q2', tag: '首領通緝', cls: 'is-elite', title: '討伐冰霜泰坦首領',         type: 'boss',  req: 40,    gold: 55000,  rType: 'sp',        reward: '55,000金 + 1技能點' },
+    { id: 'ch6_q3', tag: '黃金試煉', cls: 'is-trial', title: '英靈殿女武神試煉',         type: 'kills', req: 5200,  gold: 88000,  rType: 'legendary', reward: '88,000金 + 傳說箱' },
+  ],
+  7:  [
+    { id: 'ch7_q1', tag: '野怪懸賞', cls: '',         title: '肅清毒沼巨蛙與劇毒食人花', type: 'kills', req: 6500,  gold: 68000,  rType: 'gear',      reward: '68,000金 + 稀有箱' },
+    { id: 'ch7_q2', tag: '首領通緝', cls: 'is-elite', title: '討伐劇毒九頭蛇首領',       type: 'boss',  req: 55,    gold: 95000,  rType: 'sp',        reward: '95,000金 + 1技能點' },
+    { id: 'ch7_q3', tag: '黃金試煉', cls: 'is-trial', title: '翠玉樹冠水寨守護試煉',     type: 'kills', req: 8500,  gold: 150000, rType: 'legendary', reward: '150,000金 + 傳說箱' },
+  ],
+  8:  [
+    { id: 'ch8_q1', tag: '野怪懸賞', cls: '',         title: '攔截風暴高塔電弧元素',     type: 'kills', req: 10500, gold: 120000, rType: 'gear',      reward: '120,000金 + 稀有箱' },
+    { id: 'ch8_q2', tag: '首領通緝', cls: 'is-elite', title: '討伐雷鳴風暴泰坦首領',     type: 'boss',  req: 75,    gold: 180000, rType: 'sp',        reward: '180,000金 + 1技能點' },
+    { id: 'ch8_q3', tag: '黃金試煉', cls: 'is-trial', title: '蒼穹浮空城制空試煉',       type: 'kills', req: 13500, gold: 280000, rType: 'legendary', reward: '280,000金 + 傳說箱' },
+  ],
+  9:  [
+    { id: 'ch9_q1', tag: '野怪懸賞', cls: '',         title: '淨化血色修道院墮落審判官', type: 'kills', req: 16000, gold: 210000, rType: 'gear',      reward: '210,000金 + 稀有箱' },
+    { id: 'ch9_q2', tag: '首領通緝', cls: 'is-elite', title: '討伐血色大主教領主首領',   type: 'boss',  req: 100,   gold: 320000, rType: 'sp',        reward: '320,000金 + 1技能點' },
+    { id: 'ch9_q3', tag: '黃金試煉', cls: 'is-trial', title: '聖血薔薇修道院聖戰試煉',   type: 'kills', req: 20000, gold: 500000, rType: 'legendary', reward: '500,000金 + 傳說箱' },
+  ],
+  10: [
+    { id: 'ch10_q1', tag: '終局懸賞', cls: '',         title: '討伐深淵萬界殘響魔軍',    type: 'kills', req: 25000, gold: 400000, rType: 'gear',      reward: '400,000金 + 稀有箱' },
+    { id: 'ch10_q2', tag: '終局首領', cls: 'is-elite', title: '擊破星界魔王化身首領',    type: 'boss',  req: 140,   gold: 650000, rType: 'sp',        reward: '650,000金 + 1技能點' },
+    { id: 'ch10_q3', tag: '終極試煉', cls: 'is-trial', title: '永恆星辰聖域至高試煉',    type: 'kills', req: 35000, gold: 999999, rType: 'legendary', reward: '999,999金 + 傳說箱' },
+  ],
+};
+
+const LOCAL_CHAT_KEY = 'idle_arpg_local_chat_v217';
+const CH_META = {
+  general: { label: '一般', cls: 'general' },
+  world:   { label: '世界', cls: 'world' },
+  party:   { label: '隊伍', cls: 'party' },
+  whisper: { label: '私訊', cls: 'whisper' },
+};
+
+let initialized = false;
+
+function ensureCss() {
+  if (document.getElementById('hud-overhaul-v217-css')) return;
+  const link = document.createElement('link');
+  link.id = 'hud-overhaul-v217-css';
+  link.rel = 'stylesheet';
+  link.href = './src/ui/hudOverhaul.css?v=217';
+  document.head.appendChild(link);
+}
+
+/* ===== 1. 右下角橫排功能列 + 縮放小圖示 ===== */
+function mountBottomRightDock() {
+  const menu = document.querySelector('.mmo-top-menu.v80-matrix-dock');
+  const viewport = document.getElementById('battle-viewport');
+  if (!menu || !viewport || document.getElementById('hud-bottom-right-dock')) return;
+
+  const dockWrap = document.createElement('div');
+  dockWrap.id = 'hud-bottom-right-dock';
+  dockWrap.appendChild(menu);
+  viewport.appendChild(dockWrap);
+
+  const oldBtn = document.getElementById('btn-collapse-topmenu');
+  if (oldBtn) {
+    // 用 clone 取代舊監聽器，改為直覺的右下角展開/縮合小圖示
+    const newBtn = oldBtn.cloneNode(false);
+    oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+
+    const hasAlert = () => {
+      const bagDot = document.getElementById('bag-dot');
+      const achDot = document.getElementById('ach-dot');
+      const spBadge = document.getElementById('tree-sp-badge');
+      return (bagDot && !bagDot.classList.contains('hidden'))
+        || (achDot && !achDot.classList.contains('hidden'))
+        || (spBadge && !spBadge.classList.contains('hidden'));
+    };
+
+    const renderToggle = () => {
+      const collapsed = menu.classList.contains('is-dock-collapsed');
+      if (collapsed) {
+        newBtn.setAttribute('data-tip', '展開功能選單');
+        newBtn.innerHTML = `
+          <div class="dock-mini-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="#fde68a" stroke-width="2.1" stroke-linecap="round">
+              <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+              <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+              <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+              <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+            </svg>
+            <span class="dock-mini-label">選單</span>
+          </div>
+          ${hasAlert() ? '<span class="dock-mini-dot"></span>' : ''}
+        `;
+      } else {
+        newBtn.setAttribute('data-tip', '收合功能列');
+        newBtn.innerHTML = `<span style="font-size:15px;font-weight:900;">▸</span><span style="font-size:10px;opacity:.85;">收合</span>`;
+      }
+    };
+
+    newBtn.addEventListener('click', () => {
+      menu.classList.toggle('is-dock-collapsed');
+      try { localStorage.setItem('idle_arpg_dock_collapsed', menu.classList.contains('is-dock-collapsed') ? '1' : '0'); } catch { /* ignore */ }
+      renderToggle();
+    });
+
+    try {
+      if (localStorage.getItem('idle_arpg_dock_collapsed') === '1') {
+        menu.classList.add('is-dock-collapsed');
+      }
+    } catch { /* ignore */ }
+    renderToggle();
+    setInterval(renderToggle, 1500);
+  }
+}
+
+/* ===== 2. 左上角全新任務欄（角色名片下方） ===== */
+function mountQuestPanel() {
+  const topLeft = document.getElementById('hud-top-left');
+  if (!topLeft) return;
+
+  // 確保移除舊關卡追蹤
+  const oldTracker = document.getElementById('quest-tracker');
+  if (oldTracker) oldTracker.remove();
+
+  let panel = document.getElementById('hud-quest-panel');
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = 'hud-quest-panel';
+    panel.className = 'hud-quest-panel';
+    const heroCard = topLeft.querySelector('.mmo-hero-card');
+    if (heroCard && heroCard.nextSibling) {
+      topLeft.insertBefore(panel, heroCard.nextSibling);
+    } else {
+      topLeft.appendChild(panel);
+    }
+  }
+
+  let collapsed = false;
+  panel.innerHTML = `
+    <div class="hqp-header" id="hqp-header">
+      <div class="hqp-title">
+        <span>📜 冒險任務</span>
+        <span class="hqp-stage-tag" id="hqp-stage-tag">第 1-1 關</span>
+      </div>
+      <button type="button" class="hqp-toggle" id="hqp-toggle-btn">▾</button>
+    </div>
+    <div class="hqp-body" id="hqp-body"></div>
+  `;
+
+  panel.querySelector('#hqp-header')?.addEventListener('click', () => {
+    collapsed = !collapsed;
+    panel.classList.toggle('is-collapsed', collapsed);
+    const btn = panel.querySelector('#hqp-toggle-btn');
+    if (btn) btn.textContent = collapsed ? '▸' : '▾';
+  });
+
+  const renderQuests = () => {
+    const st = window.__IDLE_ARPG_BRIDGE__?.getState?.();
+    const body = document.getElementById('hqp-body');
+    const stageTag = document.getElementById('hqp-stage-tag');
+    if (!st || !body) return;
+
+    const stage = Math.max(1, st.stage || 1);
+    const ch = Math.max(1, Math.min(10, Math.floor((stage - 1) / 10) + 1));
+    const sub = ((stage - 1) % 10) + 1;
+    if (stageTag) stageTag.textContent = `第 ${ch}-${sub} 關`;
+
+    const bp = st.bountyProgress || { bossKills: 0, claimed: {} };
+    const quests = QUESTS_BY_CH[ch] || QUESTS_BY_CH[1];
+
+    body.innerHTML = quests.map((q) => {
+      const cur = q.type === 'boss' ? (bp.bossKills || 0) : (st.kills || 0);
+      const pct = Math.min(100, Math.round((cur / q.req) * 100));
+      const done = !!bp.claimed?.[q.id];
+      const ready = !done && cur >= q.req;
+      return `
+        <div class="hqp-item ${ready ? 'is-ready' : ''} ${done ? 'is-done' : ''}">
+          <div class="hqp-item-top">
+            <span class="hqp-item-name"><span class="hqp-tag ${q.cls}">${q.tag}</span>${q.title}</span>
+            <span class="hqp-item-prog-txt">${Math.min(cur, q.req)} / ${q.req}</span>
+          </div>
+          <div class="hqp-bar-track"><div class="hqp-bar-fill" style="width:${pct}%"></div></div>
+          <div class="hqp-item-bot">
+            <span class="hqp-reward">獎勵：${q.reward}</span>
+            ${done
+              ? '<span class="hqp-done-lbl">✓ 已完成</span>'
+              : (ready
+                ? `<button type="button" class="hqp-claim-btn" data-qid="${q.id}" data-gold="${q.gold}" data-rtype="${q.rType}" data-stage="${(ch - 1) * 10 + 1}">領取獎勵</button>`
+                : '<span style="font-size:10.5px;color:#64748b;">進行中</span>')}
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    body.querySelectorAll('.hqp-claim-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const qid = btn.dataset.qid;
+        const gold = Number(btn.dataset.gold) || 1000;
+        const rType = btn.dataset.rtype || 'gear';
+        const stHint = Number(btn.dataset.stage) || 1;
+        window.__IDLE_ARPG_BRIDGE__?.claimBounty?.(qid, gold, rType, stHint);
+        renderQuests();
+      });
+    });
+  };
+
+  renderQuests();
+  setInterval(renderQuests, 1000);
+}
+
+/* ===== 3. 左下角：多頻道可輸入聊天室（一般/世界/隊伍/私訊/系統/掉落） ===== */
+function mountMultiChannelChat() {
+  const box = document.getElementById('floating-log-box');
+  const tabsWrap = box?.querySelector('.floating-log-tabs');
+  const entries = document.getElementById('floating-log-entries');
+  if (!box || !tabsWrap || !entries || box.dataset.v217ChatMounted) return;
+  box.dataset.v217ChatMounted = '1';
+
+  let activeFilter = 'all';
+
+  tabsWrap.innerHTML = `
+    <button class="flog-tab active" data-logfilter="all">全部</button>
+    <button class="flog-tab" data-logfilter="general">一般</button>
+    <button class="flog-tab" data-logfilter="world">世界</button>
+    <button class="flog-tab" data-logfilter="party">隊伍</button>
+    <button class="flog-tab" data-logfilter="whisper">私訊</button>
+    <button class="flog-tab" data-logfilter="loot">掉落</button>
+    <button class="flog-tab" data-logfilter="system">系統</button>
+    <button id="btn-toggle-flog-v217" class="btn-collapse" title="收合/展開訊息框" style="margin-left:auto;">▾</button>
+  `;
+
+  const inputBar = document.createElement('div');
+  inputBar.className = 'chat-input-bar';
+  inputBar.innerHTML = `
+    <select id="chat-channel-select" class="chat-ch-select" title="選擇發言頻道">
+      <option value="general">一般</option>
+      <option value="world" selected>世界</option>
+      <option value="party">隊伍</option>
+      <option value="whisper">私訊</option>
+    </select>
+    <input id="chat-target-input" class="chat-target-input hidden" type="text" maxlength="16" placeholder="對方暱稱" />
+    <input id="chat-text-input" class="chat-text-input" type="text" maxlength="180" placeholder="輸入訊息，按 Enter 發送（/w 對象 訊息）" />
+    <button type="button" id="btn-chat-send" class="chat-send-btn">發送</button>
+  `;
+  box.appendChild(inputBar);
+
+  const chSelect = document.getElementById('chat-channel-select');
+  const targetInput = document.getElementById('chat-target-input');
+  const textInput = document.getElementById('chat-text-input');
+  const sendBtn = document.getElementById('btn-chat-send');
+  const toggleBtn = document.getElementById('btn-toggle-flog-v217');
+
+  const applyFilter = () => {
+    Array.from(entries.children).forEach((el) => {
+      const cat = el.dataset.cat || 'system';
+      el.classList.toggle('hidden', activeFilter !== 'all' && cat !== activeFilter);
+    });
+    entries.scrollTop = entries.scrollHeight;
+  };
+
+  tabsWrap.querySelectorAll('.flog-tab').forEach((tab) => {
+    tab.addEventListener('click', () => {
+      activeFilter = tab.dataset.logfilter || 'all';
+      tabsWrap.querySelectorAll('.flog-tab').forEach((t) => t.classList.toggle('active', t === tab));
+      if (['general', 'world', 'party', 'whisper'].includes(activeFilter) && chSelect) {
+        chSelect.value = activeFilter;
+        targetInput?.classList.toggle('hidden', activeFilter !== 'whisper');
+      }
+      applyFilter();
+    });
+  });
+
+  toggleBtn?.addEventListener('click', () => {
+    const col = entries.classList.toggle('collapsed');
+    inputBar.style.display = col ? 'none' : 'flex';
+    toggleBtn.textContent = col ? '▸' : '▾';
+  });
+
+  chSelect?.addEventListener('change', () => {
+    targetInput?.classList.toggle('hidden', chSelect.value !== 'whisper');
+  });
+
+  const seenRemoteIds = new Set();
+
+  const appendChatLine = ({ id, channel, sender, target, text, createdAt }) => {
+    if (id && seenRemoteIds.has(id)) return;
+    if (id) seenRemoteIds.add(id);
+
+    const meta = CH_META[channel] || CH_META.general;
+    const d = createdAt ? new Date(createdAt) : new Date();
+    const ts = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+    const el = document.createElement('div');
+    el.className = `log-entry chat-${meta.cls}`;
+    el.dataset.cat = channel;
+    const prefix = channel === 'whisper' && target
+      ? `[${ts}] <span class="chat-badge ${meta.cls}">${meta.label}</span><b>${escapeHtml(sender)}</b> → <b>${escapeHtml(target)}</b>：`
+      : `[${ts}] <span class="chat-badge ${meta.cls}">${meta.label}</span><b>${escapeHtml(sender)}</b>：`;
+    el.innerHTML = `${prefix}${escapeHtml(text)}`;
+    if (activeFilter !== 'all' && activeFilter !== channel) el.classList.add('hidden');
+    entries.appendChild(el);
+    while (entries.children.length > 100) entries.removeChild(entries.firstChild);
+    entries.scrollTop = entries.scrollHeight;
+  };
+
+  // 載入本機近期聊天紀錄
+  try {
+    const saved = JSON.parse(localStorage.getItem(LOCAL_CHAT_KEY) || '[]');
+    if (Array.isArray(saved)) saved.slice(-25).forEach((m) => appendChatLine(m));
+  } catch { /* ignore */ }
+
+  const saveLocalMsg = (msg) => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(LOCAL_CHAT_KEY) || '[]');
+      saved.push(msg);
+      localStorage.setItem(LOCAL_CHAT_KEY, JSON.stringify(saved.slice(-40)));
+    } catch { /* ignore */ }
+  };
+
+  let worldSyncAvailable = true;
+  let warnedNoPerm = false;
+
+  // 訂閱 Firestore 世界頻道即時同步
+  subscribeWorldChat(
+    (msgs) => {
+      worldSyncAvailable = true;
+      msgs.forEach((m) => appendChatLine(m));
+    },
+    () => {
+      worldSyncAvailable = false;
+    }
+  );
+
+  const doSend = async () => {
+    let raw = (textInput?.value || '').trim();
+    if (!raw) return;
+    let channel = chSelect?.value || 'general';
+    let target = (targetInput?.value || '').trim();
+
+    // 支援 /w 對象 訊息 快速私訊
+    if (raw.startsWith('/w ') || raw.startsWith('/W ')) {
+      const parts = raw.slice(3).trim().split(/\s+/);
+      if (parts.length >= 2) {
+        channel = 'whisper';
+        target = parts[0];
+        raw = parts.slice(1).join(' ');
+      }
+    }
+    if (channel === 'whisper' && !target) {
+      target = '隊友';
+    }
+
+    const st = window.__IDLE_ARPG_BRIDGE__?.getState?.();
+    const sender = (st?.nickname || '冒險者').trim();
+    textInput.value = '';
+
+    const payload = {
+      id: `local_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      channel,
+      sender,
+      target,
+      text: raw,
+      createdAt: Date.now(),
+    };
+
+    if (channel === 'world' && worldSyncAvailable) {
+      const res = await sendWorldChatMessage(payload);
+      if (res.ok) return; // onSnapshot 會自動回推顯示
+      if (res.reason === 'permission-denied') {
+        worldSyncAvailable = false;
+        if (!warnedNoPerm) {
+          warnedNoPerm = true;
+          window.__IDLE_ARPG_BRIDGE__?.addLog?.('💬 世界頻道尚未在 Firebase 後台開放規則，暫以本機顯示（開通後自動即時同步）', 'system', 'system');
+        }
+      }
+    }
+
+    appendChatLine(payload);
+    saveLocalMsg(payload);
+  };
+
+  sendBtn?.addEventListener('click', doSend);
+  textInput?.addEventListener('keydown', (e) => {
+    e.stopPropagation();
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      doSend();
+    } else if (e.key === 'Escape') {
+      textInput.blur();
+    }
+  });
+  targetInput?.addEventListener('keydown', (e) => e.stopPropagation());
+}
+
+function escapeHtml(s) {
+  return String(s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+export function initHudOverhaulV217() {
+  if (initialized || typeof document === 'undefined') return;
+  initialized = true;
+  ensureCss();
+
+  const run = () => {
+    mountBottomRightDock();
+    mountQuestPanel();
+    mountMultiChannelChat();
+  };
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', run, { once: true });
+  } else {
+    run();
+  }
+}

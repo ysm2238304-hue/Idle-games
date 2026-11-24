@@ -236,3 +236,70 @@ export async function saveCloudData(uid, state) {
     return false;
   }
 }
+
+const CHAT_COLLECTION = 'idle_arpg_chat';
+let chatSyncDisabled = false;
+
+export async function subscribeWorldChat(onMessages, onPermissionDenied) {
+  if (chatSyncDisabled) {
+    onPermissionDenied?.();
+    return () => {};
+  }
+  const ctx = await ensureFirebase();
+  if (!ctx) {
+    onPermissionDenied?.();
+    return () => {};
+  }
+  try {
+    const { collection, query, orderBy, limit, onSnapshot } = ctx.fsMod;
+    const q = query(collection(ctx.db, CHAT_COLLECTION), orderBy('createdAt', 'desc'), limit(40));
+    const unsub = onSnapshot(q, (snap) => {
+      const msgs = [];
+      snap.forEach((d) => {
+        const data = d.data() || {};
+        msgs.push({ id: d.id, ...data });
+      });
+      msgs.reverse();
+      onMessages?.(msgs);
+    }, (err) => {
+      const msg = String(err?.message || '');
+      if (err?.code === 'permission-denied' || msg.includes('permissions')) {
+        chatSyncDisabled = true;
+        onPermissionDenied?.();
+      } else {
+        console.warn('世界頻道訂閱失敗:', err);
+      }
+    });
+    return unsub;
+  } catch (e) {
+    chatSyncDisabled = true;
+    onPermissionDenied?.();
+    return () => {};
+  }
+}
+
+export async function sendWorldChatMessage({ sender, channel = 'world', target = '', text }) {
+  if (chatSyncDisabled) return { ok: false, reason: 'permission-denied' };
+  const ctx = await ensureFirebase();
+  if (!ctx) return { ok: false, reason: 'no-firebase' };
+  try {
+    const { collection, addDoc, serverTimestamp } = ctx.fsMod;
+    await addDoc(collection(ctx.db, CHAT_COLLECTION), {
+      sender: String(sender || '冒險者').slice(0, 20),
+      uid: currentUser?.uid || 'guest',
+      channel: String(channel || 'world'),
+      target: String(target || '').slice(0, 20),
+      text: String(text || '').slice(0, 200),
+      createdAt: Date.now(),
+      serverAt: serverTimestamp(),
+    });
+    return { ok: true };
+  } catch (e) {
+    const msg = String(e?.message || '');
+    if (e?.code === 'permission-denied' || msg.includes('permissions')) {
+      chatSyncDisabled = true;
+      return { ok: false, reason: 'permission-denied' };
+    }
+    return { ok: false, reason: msg || 'error' };
+  }
+}
