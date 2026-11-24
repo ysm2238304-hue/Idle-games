@@ -19,11 +19,11 @@ import {
   getCurrentUser,
   loadCloudSave,
   saveCloudData,
-} from './auth/firebase.js?v=217';
+} from './auth/firebase.js?v=218';
 import { BattleScene } from './scenes/BattleScene.js?v=217';
 import { TownScene } from './scenes/TownScene.js?v=217';
-import { TOWN_SPLASHES } from './data/towns/splashes.js?v=217';
-import { DashboardUI } from './ui/DashboardUI.js?v=99';
+import { TOWN_SPLASHES } from './data/towns/splashes.js?v=219';
+import { DashboardUI } from './ui/DashboardUI.js?v=219';
 import { TownBgmEngine } from './audio/TownBgmEngine.js?v=99';
 import { BattleSfxEngine } from './audio/BattleSfxEngine.js?v=99';
 import { HudSettingsManager } from './ui/HudSettingsManager.js?v=99';

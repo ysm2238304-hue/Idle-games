@@ -358,10 +358,14 @@ export class DashboardUI {
 
     const sLabel = getStageLabel(state.stage);
     const sub = getSubStage(state.stage);
-    document.getElementById('hud-stage-title').textContent = `第 ${sLabel} 關・${getZoneName(state.stage)}`;
-    document.getElementById('hud-wave-badge').textContent = `難度 ${state.stage} 階`;
-    document.getElementById('btn-stage-next').disabled = state.stage >= 100;
-    document.getElementById('btn-stage-prev').disabled = state.stage <= 1;
+    const _stTitle = document.getElementById('hud-stage-title');
+    if (_stTitle) _stTitle.textContent = `第 ${sLabel} 關・${getZoneName(state.stage)}`;
+    const _wBadge = document.getElementById('hud-wave-badge');
+    if (_wBadge) _wBadge.textContent = `難度 ${state.stage} 階`;
+    const _stNext = document.getElementById('btn-stage-next');
+    if (_stNext) _stNext.disabled = state.stage >= 100;
+    const _stPrev = document.getElementById('btn-stage-prev');
+    if (_stPrev) _stPrev.disabled = state.stage <= 1;
 
     const spDot = document.getElementById('tree-sp-badge');
     if (spDot) {
