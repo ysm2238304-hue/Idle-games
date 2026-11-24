@@ -1,10 +1,10 @@
 // 創角大廳：全 6 職業 × 全 8 技能 (48 招) 實戰貼圖特效、真實召喚物/分身與戰鬥背景演武預覽模組 (v77)
-import { WARRIOR_SKILLS } from '../data/warriorSkills.js';
-import { RANGER_SKILLS } from '../data/rangerSkills.js';
-import { MAGE_SKILLS } from '../data/mageSkills.js';
-import { PALADIN_SKILLS } from '../data/paladinSkills.js';
-import { NECRO_SKILLS } from '../data/necroSkills.js';
-import { ASSASSIN_SKILLS } from '../data/assassinSkills.js';
+import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=94';
+import { RANGER_SKILLS } from '../data/rangerSkills.js?v=94';
+import { MAGE_SKILLS } from '../data/mageSkills.js?v=94';
+import { PALADIN_SKILLS } from '../data/paladinSkills.js?v=94';
+import { NECRO_SKILLS } from '../data/necroSkills.js?v=94';
+import { ASSASSIN_SKILLS } from '../data/assassinSkills.js?v=94';
 
 export const CLASS_SKILLS_MAP = {
   warrior: WARRIOR_SKILLS,

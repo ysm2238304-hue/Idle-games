@@ -1,18 +1,18 @@
-import { TOWN_SPLASHES } from '../data/towns/splashes.js';
-import { CLASSES } from '../data/classes.js';
-import { WARRIOR_SKILLS } from '../data/warriorSkills.js';
-import { RANGER_SKILLS } from '../data/rangerSkills.js';
-import { MAGE_SKILLS } from '../data/mageSkills.js';
-import { PALADIN_SKILLS } from '../data/paladinSkills.js';
-import { NECRO_SKILLS } from '../data/necroSkills.js';
-import { ASSASSIN_SKILLS } from '../data/assassinSkills.js';
-import { EQUIP_SLOTS, CLASS_REQ_LABELS, RARITIES, BASE_ITEMS, SET_DEFINITIONS } from '../data/items.js';
-import { PET_CATALOG, PET_SCHOOLS, getPetDef, getPetRarityMeta, getPetPickupRadius, getPetCodexInfo } from '../data/pets.js';
-import { getEnhanceRate, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEVEL } from '../logic/enhanceSystem.js';
-import { MONSTER_TEMPLATES, STAGE_ZONES, ZONE_POOLS, getZoneName, getStageLabel, getSubStage, getChapterIdx } from '../data/monsters.js';
-import { CLASS_BUILD_INFO, SKILL_TREE_NODES, getTreeSpentPoints, isNodeBlockedByMutex, isNodeUnlocked } from '../data/skillTree.js';
-import { calcItemPower, getSalvageReward } from '../logic/lootGen.js';
-import { formatNum, getExpToNext, getUpgradeCost, calcRebirthCrystals } from '../logic/statCalc.js';
+import { TOWN_SPLASHES } from '../data/towns/splashes.js?v=94';
+import { CLASSES } from '../data/classes.js?v=94';
+import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=94';
+import { RANGER_SKILLS } from '../data/rangerSkills.js?v=94';
+import { MAGE_SKILLS } from '../data/mageSkills.js?v=94';
+import { PALADIN_SKILLS } from '../data/paladinSkills.js?v=94';
+import { NECRO_SKILLS } from '../data/necroSkills.js?v=94';
+import { ASSASSIN_SKILLS } from '../data/assassinSkills.js?v=94';
+import { EQUIP_SLOTS, CLASS_REQ_LABELS, RARITIES, BASE_ITEMS, SET_DEFINITIONS } from '../data/items.js?v=94';
+import { PET_CATALOG, PET_SCHOOLS, getPetDef, getPetRarityMeta, getPetPickupRadius, getPetCodexInfo } from '../data/pets.js?v=94';
+import { getEnhanceRate, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEVEL } from '../logic/enhanceSystem.js?v=94';
+import { MONSTER_TEMPLATES, STAGE_ZONES, ZONE_POOLS, getZoneName, getStageLabel, getSubStage, getChapterIdx } from '../data/monsters.js?v=94';
+import { CLASS_BUILD_INFO, SKILL_TREE_NODES, getTreeSpentPoints, isNodeBlockedByMutex, isNodeUnlocked } from '../data/skillTree.js?v=94';
+import { calcItemPower, getSalvageReward } from '../logic/lootGen.js?v=94';
+import { formatNum, getExpToNext, getUpgradeCost, calcRebirthCrystals } from '../logic/statCalc.js?v=94';
 
 const STAT_LABELS = {
   atkFlat: '攻擊力',

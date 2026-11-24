@@ -1,14 +1,14 @@
-import { CLASSES } from '../data/classes.js';
-import { WARRIOR_SKILLS } from '../data/warriorSkills.js';
-import { RANGER_SKILLS } from '../data/rangerSkills.js';
-import { MAGE_SKILLS } from '../data/mageSkills.js';
-import { PALADIN_SKILLS } from '../data/paladinSkills.js';
-import { NECRO_SKILLS } from '../data/necroSkills.js';
-import { ASSASSIN_SKILLS } from '../data/assassinSkills.js';
-import { RARITIES } from '../data/items.js';
-import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta, getPetPickupRadius, getPetCodexInfo } from '../data/pets.js';
-import { createStageEncounters, spawnSingleMonster, getChapterIdx, getStageLabel, ZONE_OBSTACLES } from '../data/monsters.js';
-import { formatNum } from '../logic/statCalc.js';
+import { CLASSES } from '../data/classes.js?v=94';
+import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=94';
+import { RANGER_SKILLS } from '../data/rangerSkills.js?v=94';
+import { MAGE_SKILLS } from '../data/mageSkills.js?v=94';
+import { PALADIN_SKILLS } from '../data/paladinSkills.js?v=94';
+import { NECRO_SKILLS } from '../data/necroSkills.js?v=94';
+import { ASSASSIN_SKILLS } from '../data/assassinSkills.js?v=94';
+import { RARITIES } from '../data/items.js?v=94';
+import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta, getPetPickupRadius, getPetCodexInfo } from '../data/pets.js?v=94';
+import { createStageEncounters, spawnSingleMonster, getChapterIdx, getStageLabel, ZONE_OBSTACLES } from '../data/monsters.js?v=94';
+import { formatNum } from '../logic/statCalc.js?v=94';
 
 const MAP_W = 4096;
 const MAP_H = 2304;

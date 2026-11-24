@@ -1,4 +1,4 @@
-import { EQUIP_SLOTS, RARITIES, BASE_ITEMS, AFFIX_POOL, LEGENDARY_EFFECTS, SET_DEFINITIONS } from '../data/items.js';
+import { EQUIP_SLOTS, RARITIES, BASE_ITEMS, AFFIX_POOL, LEGENDARY_EFFECTS, SET_DEFINITIONS } from '../data/items.js?v=94';
 
 let itemUidCounter = Date.now();
 

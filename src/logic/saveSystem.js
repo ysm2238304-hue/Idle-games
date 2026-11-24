@@ -1,5 +1,5 @@
-import { createWaveSquad } from '../data/monsters.js';
-import { generateLoot } from './lootGen.js';
+import { createWaveSquad } from '../data/monsters.js?v=94';
+import { generateLoot } from './lootGen.js?v=94';
 
 const SAVE_KEY = 'desk_diablo_idle_save_v1';
 

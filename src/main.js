@@ -1,17 +1,17 @@
-import { CLASSES } from './data/classes.js';
-import { getStageLabel, getSubStage, getChapterIdx } from './data/monsters.js';
-import { WARRIOR_SKILLS } from './data/warriorSkills.js';
-import { RANGER_SKILLS } from './data/rangerSkills.js';
-import { MAGE_SKILLS } from './data/mageSkills.js';
-import { PALADIN_SKILLS } from './data/paladinSkills.js';
-import { NECRO_SKILLS } from './data/necroSkills.js';
-import { ASSASSIN_SKILLS } from './data/assassinSkills.js';
-import { RARITIES } from './data/items.js?v=93';
-import { PET_CATALOG, rollPetDrop } from './data/pets.js?v=93';
-import { SKILL_TREE_NODES, isNodeUnlocked } from './data/skillTree.js';
-import { generateLoot, calcItemPower, getSalvageReward, rerollItemAffixes, generateBlackMarketItem } from './logic/lootGen.js?v=93';
-import { recalcPlayerStats, getExpToNext, getUpgradeCost, calcRebirthCrystals, formatNum } from './logic/statCalc.js?v=93';
-import { createInitialState, loadGame, saveGame, calcOfflineProgress } from './logic/saveSystem.js?v=93';
+import { CLASSES } from './data/classes.js?v=94';
+import { getStageLabel, getSubStage, getChapterIdx } from './data/monsters.js?v=94';
+import { WARRIOR_SKILLS } from './data/warriorSkills.js?v=94';
+import { RANGER_SKILLS } from './data/rangerSkills.js?v=94';
+import { MAGE_SKILLS } from './data/mageSkills.js?v=94';
+import { PALADIN_SKILLS } from './data/paladinSkills.js?v=94';
+import { NECRO_SKILLS } from './data/necroSkills.js?v=94';
+import { ASSASSIN_SKILLS } from './data/assassinSkills.js?v=94';
+import { RARITIES } from './data/items.js?v=94';
+import { PET_CATALOG, rollPetDrop } from './data/pets.js?v=94';
+import { SKILL_TREE_NODES, isNodeUnlocked } from './data/skillTree.js?v=94';
+import { generateLoot, calcItemPower, getSalvageReward, rerollItemAffixes, generateBlackMarketItem } from './logic/lootGen.js?v=94';
+import { recalcPlayerStats, getExpToNext, getUpgradeCost, calcRebirthCrystals, formatNum } from './logic/statCalc.js?v=94';
+import { createInitialState, loadGame, saveGame, calcOfflineProgress } from './logic/saveSystem.js?v=94';
 import {
   initCloudAuth,
   signInWithGoogle,
@@ -19,16 +19,16 @@ import {
   getCurrentUser,
   loadCloudSave,
   saveCloudData,
-} from './auth/firebase.js';
-import { BattleScene } from './scenes/BattleScene.js?v=93';
-import { TownScene } from './scenes/TownScene.js?v=93';
-import { TOWN_SPLASHES } from './data/towns/splashes.js';
-import { DashboardUI } from './ui/DashboardUI.js?v=93';
-import { TownBgmEngine } from './audio/TownBgmEngine.js';
-import { HudSettingsManager } from './ui/HudSettingsManager.js?v=93';
-import { ShopModal } from './ui/ShopModal.js?v=93';
-import { rollEnhance, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEVEL } from './logic/enhanceSystem.js?v=93';
-import { HeroSkillShowcase, CLASS_SKILLS_MAP } from './ui/HeroSkillShowcase.js?v=93';
+} from './auth/firebase.js?v=94';
+import { BattleScene } from './scenes/BattleScene.js?v=94';
+import { TownScene } from './scenes/TownScene.js?v=94';
+import { TOWN_SPLASHES } from './data/towns/splashes.js?v=94';
+import { DashboardUI } from './ui/DashboardUI.js?v=94';
+import { TownBgmEngine } from './audio/TownBgmEngine.js?v=94';
+import { HudSettingsManager } from './ui/HudSettingsManager.js?v=94';
+import { ShopModal } from './ui/ShopModal.js?v=94';
+import { rollEnhance, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEVEL } from './logic/enhanceSystem.js?v=94';
+import { HeroSkillShowcase, CLASS_SKILLS_MAP } from './ui/HeroSkillShowcase.js?v=94';
 
 let gameState = loadGame() || createInitialState('warrior');
 let computedStats = recalcPlayerStats(gameState);
@@ -1672,7 +1672,7 @@ function playCinematicIntro(onDone) {
     if (t < 3.6) cap.textContent = '深淵裂隙開啟，六大英雄整裝集結⋯';
     else if (t < 6.4) cap.textContent = '各職奧義齊發，向暗黑軍團發動總攻！';
     else if (t < 10.2) cap.textContent = '無盡魔軍壓境，毀滅之戰一觸即發——';
-    else cap.textContent = '《暗黑聖域》—— 終局之戰，即刻啟程！';
+    else cap.textContent = '《無限深淵》—— 終局之戰，即刻啟程！';
   };
   vid.onended = finishIntro;
   vid.onerror = finishIntro;

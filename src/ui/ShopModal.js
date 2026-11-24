@@ -1,7 +1,7 @@
 // 暗黑深淵商城模組：基礎物資 / 裝備盲盒 / 寵物契約蛋 / 強效藥水 (v86)
-import { RARITIES } from '../data/items.js';
-import { PET_CATALOG } from '../data/pets.js';
-import { generateLoot, generateBlackMarketItem } from '../logic/lootGen.js';
+import { RARITIES } from '../data/items.js?v=94';
+import { PET_CATALOG } from '../data/pets.js?v=94';
+import { generateLoot, generateBlackMarketItem } from '../logic/lootGen.js?v=94';
 
 export const SHOP_ITEMS = {
   basic: [

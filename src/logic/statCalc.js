@@ -1,5 +1,5 @@
-import { CLASSES } from '../data/classes.js';
-import { SET_DEFINITIONS } from '../data/items.js';
+import { CLASSES } from '../data/classes.js?v=94';
+import { SET_DEFINITIONS } from '../data/items.js?v=94';
 
 export function formatNum(num) {
   const n = Math.floor(num);

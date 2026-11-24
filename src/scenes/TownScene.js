@@ -1,15 +1,15 @@
-import { TOWN_CH1 } from '../data/towns/ch1.js';
-import { TOWN_CH2 } from '../data/towns/ch2.js';
-import { TOWN_CH3 } from '../data/towns/ch3.js';
-import { TOWN_CH4 } from '../data/towns/ch4.js';
-import { TOWN_CH5 } from '../data/towns/ch5.js';
-import { TOWN_CH6 } from '../data/towns/ch6.js';
-import { TOWN_CH7 } from '../data/towns/ch7.js';
-import { TOWN_CH8 } from '../data/towns/ch8.js';
-import { TOWN_CH9 } from '../data/towns/ch9.js';
-import { TOWN_CH10 } from '../data/towns/ch10.js';
-import { formatNum } from '../logic/statCalc.js';
-import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta } from '../data/pets.js';
+import { TOWN_CH1 } from '../data/towns/ch1.js?v=94';
+import { TOWN_CH2 } from '../data/towns/ch2.js?v=94';
+import { TOWN_CH3 } from '../data/towns/ch3.js?v=94';
+import { TOWN_CH4 } from '../data/towns/ch4.js?v=94';
+import { TOWN_CH5 } from '../data/towns/ch5.js?v=94';
+import { TOWN_CH6 } from '../data/towns/ch6.js?v=94';
+import { TOWN_CH7 } from '../data/towns/ch7.js?v=94';
+import { TOWN_CH8 } from '../data/towns/ch8.js?v=94';
+import { TOWN_CH9 } from '../data/towns/ch9.js?v=94';
+import { TOWN_CH10 } from '../data/towns/ch10.js?v=94';
+import { formatNum } from '../logic/statCalc.js?v=94';
+import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta } from '../data/pets.js?v=94';
 
 const TOWN_REGISTRY = {
   0: TOWN_CH1,

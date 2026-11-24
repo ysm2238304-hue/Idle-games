@@ -4575,3 +4575,17 @@ body.hud-edit-active #target-frame.hidden {
   box-shadow: none !important;
   background: linear-gradient(90deg, rgba(120, 53, 15, 0.72), rgba(69, 26, 3, 0.92), rgba(120, 53, 15, 0.72)) !important;
 }
+
+/* === v94: 修復歡迎頁開場背景影片被靜態底圖遮擋問題 === */
+.welcome-backdrop {
+  z-index: 0 !important;
+}
+.welcome-bg-video {
+  z-index: 1 !important;
+  opacity: 1 !important;
+  filter: brightness(0.82) contrast(1.06) !important;
+}
+.welcome-vignette {
+  z-index: 2 !important;
+  background: radial-gradient(circle at center, rgba(10, 10, 16, 0.16) 0%, rgba(5, 6, 10, 0.78) 88%) !important;
+}
