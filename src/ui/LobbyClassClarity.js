@@ -1,7 +1,8 @@
 /**
- * LobbyClassClarity.js (v206)
- * 方向 B（各職業獨立練等）：優化歡迎大廳的職業等級標示，
- * 明確顯示「上次出戰職業與等級」及「6 大職業獨立儲存」提示，避免切換職業時誤以為等級跳掉。
+ * LobbyClassClarity.js (v211)
+ * 1. 載入 classHall.css?v=211（去框化圖騰徽章＋16:9 舞台修正＋8 格遊戲快捷列）
+ * 2. 移除會擠壓格線的 #lobby-class-indep-note
+ * 3. 在左上角 #welcome-save-summary 明確標示「上次出戰：職業名 Lv.X」
  */
 
 const CLASS_NAMES = {
@@ -12,6 +13,17 @@ const CLASS_NAMES = {
   necro: '死靈法師',
   assassin: '影殺刺客',
 };
+
+function ensureClassHallCss() {
+  if (typeof document === 'undefined') return;
+  const old = document.getElementById('class-hall-v211-css');
+  if (old) return;
+  const link = document.createElement('link');
+  link.id = 'class-hall-v211-css';
+  link.rel = 'stylesheet';
+  link.href = './src/ui/classHall.css?v=211';
+  document.head.appendChild(link);
+}
 
 function getSavedClassLabel() {
   try {
@@ -26,10 +38,14 @@ function getSavedClassLabel() {
 }
 
 export function initLobbyClassClarity() {
+  ensureClassHallCss();
   if (typeof document === 'undefined') return;
 
+  // 清除舊版插錯位置的提示條，確保不破壞格線佈局
+  const oldNote = document.getElementById('lobby-class-indep-note');
+  if (oldNote) oldNote.remove();
+
   const summaryEl = document.getElementById('welcome-save-summary');
-  const classListEl = document.getElementById('welcome-class-list');
 
   const applySummaryFormat = () => {
     if (!summaryEl) return;
@@ -37,30 +53,11 @@ export function initLobbyClassClarity() {
     if (!txt || txt.includes('上次出戰：')) return;
     const clsName = getSavedClassLabel();
     if (!clsName) return;
-    // 將 "【暱稱】 Lv.21 • 第 1-1 關" 轉為 "【暱稱】上次出戰：秘法師 Lv.21 • 第 1-1 關"
     const updated = txt.replace(/(Lv\.\d+)/, `上次出戰：${clsName} $1`);
     if (updated !== txt) {
       summaryEl.textContent = updated;
     }
   };
-
-  if (classListEl && !document.getElementById('lobby-class-indep-note')) {
-    const note = document.createElement('div');
-    note.id = 'lobby-class-indep-note';
-    note.style.cssText = [
-      'margin: 6px auto 2px;',
-      'padding: 4px 12px;',
-      'border-radius: 999px;',
-      'font-size: 11.5px;',
-      'color: #cbd5e1;',
-      'background: rgba(15, 23, 42, 0.72);',
-      'border: 1px solid rgba(251, 191, 36, 0.28);',
-      'text-align: center;',
-      'width: fit-content;',
-    ].join('');
-    note.textContent = '提示：6 大職業等級、裝備與技能各自獨立練等儲存，點選不同職業將載入該職業進度';
-    classListEl.insertAdjacentElement('afterend', note);
-  }
 
   applySummaryFormat();
 

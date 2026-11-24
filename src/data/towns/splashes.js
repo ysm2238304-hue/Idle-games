@@ -119,7 +119,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
         import('../../ui/DashboardUI.js?v=99'),
         import('../../ui/NpcModalRenderer.js?v=204'),
         import('../monsters.js?v=99'),
-        import('../../ui/LobbyClassClarity.js?v=206'),
+        import('../../ui/LobbyClassClarity.js?v=211'),
         import('../../ui/WelcomeAuthUI.js?v=209'),
       ]);
       initLobbyClassClarity();
@@ -135,7 +135,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
         };
       }
     } catch (err) {
-      console.warn('[v209] NPC Modal auto-wire failed:', err);
+      console.warn('[v211] NPC Modal auto-wire failed:', err);
     }
   });
 }
