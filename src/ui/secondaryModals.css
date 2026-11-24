@@ -1,0 +1,150 @@
+/* ==========================================================================
+   secondaryModals.css (v102 - Batch 3)
+   統一商店 (#modal-shop)、成就與無盡深淵塔 (#modal-ach-tower) 及輔助視窗質感
+   ========================================================================== */
+
+#modal-shop.sec-modal-v2,
+#modal-ach-tower.sec-modal-v2,
+#modal-world-map.sec-modal-v2,
+#modal-class.sec-modal-v2,
+#modal-settings.sec-modal-v2,
+#modal-stage-clear.sec-modal-v2 {
+  --sec-accent: #fbbf24;
+  --sec-accent-soft: rgba(251, 191, 36, 0.22);
+  --sec-accent-glow: rgba(251, 191, 36, 0.45);
+  --sec-frame-bg: linear-gradient(165deg, #1b140d 0%, #110c08 55%, #0a0705 100%);
+  --sec-panel-bg: linear-gradient(180deg, rgba(34, 25, 17, 0.90), rgba(18, 13, 9, 0.96));
+  --sec-border: rgba(251, 191, 36, 0.42);
+  --sec-cta-grad: linear-gradient(180deg, #fbbf24 0%, #d97706 55%, #b45309 100%);
+  --sec-cta-lip: #78350f;
+}
+
+.sec-modal-v2[data-chapter="2"] { --sec-accent: #a855f7; --sec-accent-soft: rgba(168,85,247,0.24); --sec-accent-glow: rgba(168,85,247,0.48); --sec-frame-bg: linear-gradient(165deg, #171026 0%, #0e0918 100%); --sec-panel-bg: linear-gradient(180deg, rgba(32,20,52,0.90), rgba(16,10,28,0.96)); --sec-border: rgba(168,85,247,0.48); --sec-cta-grad: linear-gradient(180deg, #c084fc 0%, #7e22ce 100%); --sec-cta-lip: #4c1d95; }
+.sec-modal-v2[data-chapter="3"] { --sec-accent: #38bdf8; --sec-accent-soft: rgba(56,189,248,0.22); --sec-accent-glow: rgba(56,189,248,0.46); --sec-frame-bg: linear-gradient(165deg, #0b1624 0%, #060d17 100%); --sec-panel-bg: linear-gradient(180deg, rgba(16,31,49,0.90), rgba(9,17,29,0.96)); --sec-border: rgba(56,189,248,0.48); --sec-cta-grad: linear-gradient(180deg, #38bdf8 0%, #0284c7 100%); --sec-cta-lip: #075985; }
+.sec-modal-v2[data-chapter="4"] { --sec-accent: #f97316; --sec-accent-soft: rgba(249,115,22,0.25); --sec-accent-glow: rgba(249,115,22,0.50); --sec-frame-bg: linear-gradient(165deg, #21100a 0%, #120805 100%); --sec-panel-bg: linear-gradient(180deg, rgba(44,20,12,0.90), rgba(22,9,6,0.96)); --sec-border: rgba(249,115,22,0.52); --sec-cta-grad: linear-gradient(180deg, #fb923c 0%, #c2410c 100%); --sec-cta-lip: #7c2d12; }
+.sec-modal-v2[data-chapter="5"] { --sec-accent: #e879f9; --sec-accent-soft: rgba(232,121,249,0.23); --sec-accent-glow: rgba(232,121,249,0.48); --sec-frame-bg: linear-gradient(165deg, #220b1d 0%, #11050f 100%); --sec-panel-bg: linear-gradient(180deg, rgba(44,14,38,0.90), rgba(22,7,19,0.96)); --sec-border: rgba(232,121,249,0.48); --sec-cta-grad: linear-gradient(180deg, #e879f9 0%, #a21caf 100%); --sec-cta-lip: #701a75; }
+.sec-modal-v2[data-chapter="6"] { --sec-accent: #22d3ee; --sec-accent-soft: rgba(34,211,238,0.24); --sec-accent-glow: rgba(34,211,238,0.48); --sec-frame-bg: linear-gradient(165deg, #091b24 0%, #050f14 100%); --sec-panel-bg: linear-gradient(180deg, rgba(13,38,49,0.90), rgba(7,20,27,0.96)); --sec-border: rgba(34,211,238,0.50); --sec-cta-grad: linear-gradient(180deg, #22d3ee 0%, #0891b2 100%); --sec-cta-lip: #155e75; }
+.sec-modal-v2[data-chapter="7"] { --sec-accent: #4ade80; --sec-accent-soft: rgba(74,222,128,0.22); --sec-accent-glow: rgba(74,222,128,0.46); --sec-frame-bg: linear-gradient(165deg, #091d12 0%, #05100a 100%); --sec-panel-bg: linear-gradient(180deg, rgba(13,41,25,0.90), rgba(7,22,13,0.96)); --sec-border: rgba(74,222,128,0.48); --sec-cta-grad: linear-gradient(180deg, #4ade80 0%, #15803d 100%); --sec-cta-lip: #14532d; }
+.sec-modal-v2[data-chapter="8"] { --sec-accent: #facc15; --sec-accent-soft: rgba(250,204,21,0.23); --sec-accent-glow: rgba(250,204,21,0.48); --sec-frame-bg: linear-gradient(165deg, #161829 0%, #0b0c16 100%); --sec-panel-bg: linear-gradient(180deg, rgba(28,32,54,0.90), rgba(14,16,29,0.96)); --sec-border: rgba(250,204,21,0.50); --sec-cta-grad: linear-gradient(180deg, #fde047 0%, #ca8a04 100%); --sec-cta-lip: #713f12; }
+.sec-modal-v2[data-chapter="9"] { --sec-accent: #f43f5e; --sec-accent-soft: rgba(244,63,94,0.24); --sec-accent-glow: rgba(244,63,94,0.48); --sec-frame-bg: linear-gradient(165deg, #210a12 0%, #110509 100%); --sec-panel-bg: linear-gradient(180deg, rgba(44,13,24,0.90), rgba(22,6,12,0.96)); --sec-border: rgba(244,63,94,0.50); --sec-cta-grad: linear-gradient(180deg, #fb7185 0%, #be123c 100%); --sec-cta-lip: #881337; }
+.sec-modal-v2[data-chapter="10"] { --sec-accent: #c084fc; --sec-accent-soft: rgba(192,132,252,0.26); --sec-accent-glow: rgba(192,132,252,0.52); --sec-frame-bg: linear-gradient(165deg, #140d2b 0%, #090617 100%); --sec-panel-bg: linear-gradient(180deg, rgba(27,18,56,0.90), rgba(13,8,30,0.96)); --sec-border: rgba(192,132,252,0.54); --sec-cta-grad: linear-gradient(180deg, #d8b4fe 0%, #7e22ce 100%); --sec-cta-lip: #4c1d95; }
+
+/* 統一 .modal-card 框體質感 */
+.sec-modal-v2 .modal-card {
+  background: var(--sec-frame-bg) !important;
+  border: 2px solid var(--sec-border) !important;
+  border-radius: 14px !important;
+  box-shadow:
+    0 24px 64px rgba(0, 0, 0, 0.85),
+    0 0 32px var(--sec-accent-soft),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12),
+    inset 0 0 0 4px rgba(0, 0, 0, 0.45) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.sec-modal-v2 .modal-header {
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.55), var(--sec-accent-soft), rgba(0, 0, 0, 0.55)) !important;
+  border-bottom: 1px solid var(--sec-border) !important;
+  padding: 12px 18px !important;
+}
+
+.sec-modal-v2 .modal-header h2 {
+  font-family: 'Cinzel', 'Noto Sans TC', serif;
+  color: #fef3c7 !important;
+  text-shadow: 0 2px 10px var(--sec-accent-glow);
+}
+
+/* 商店錢包列與分頁鈕 */
+#modal-shop.sec-modal-v2 #shop-wallet-bar {
+  background: var(--sec-panel-bg);
+  border: 1px solid var(--sec-border);
+  border-radius: 10px;
+  padding: 10px 14px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+#modal-shop.sec-modal-v2 .shop-tab-btn {
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  color: #cbd5e1;
+  font-weight: 800;
+  padding: 8px 14px;
+  transition: all 0.15s ease;
+}
+
+#modal-shop.sec-modal-v2 .shop-tab-btn.active,
+#modal-shop.sec-modal-v2 .shop-tab-btn:hover {
+  background: var(--sec-accent-soft);
+  border-color: var(--sec-accent);
+  color: #fef3c7;
+  box-shadow: 0 0 14px var(--sec-accent-soft);
+}
+
+#modal-shop.sec-modal-v2 #shop-modal-body > div > div,
+#modal-shop.sec-modal-v2 .shop-item-card {
+  background: var(--sec-panel-bg) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  border-radius: 10px !important;
+  box-shadow:
+    0 6px 16px rgba(0, 0, 0, 0.40),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07) !important;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+#modal-shop.sec-modal-v2 .shop-buy-btn {
+  background: var(--sec-cta-grad) !important;
+  color: #111827 !important;
+  font-weight: 900 !important;
+  border: 0 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 3px 0 var(--sec-cta-lip), 0 6px 14px rgba(0, 0, 0, 0.45) !important;
+  transition: transform 0.12s ease, filter 0.12s ease !important;
+}
+
+#modal-shop.sec-modal-v2 .shop-buy-btn:hover:not(:disabled) {
+  transform: translateY(-1.5px);
+  filter: brightness(1.08);
+}
+
+#modal-shop.sec-modal-v2 .shop-buy-btn:disabled {
+  background: linear-gradient(180deg, #374151 0%, #1f2937 100%) !important;
+  color: #9ca3af !important;
+  box-shadow: 0 2px 0 #111827 !important;
+}
+
+/* 成就與無盡深淵塔 */
+#modal-ach-tower.sec-modal-v2 .set-section {
+  background: var(--sec-panel-bg) !important;
+  border: 1px solid var(--sec-border) !important;
+  border-radius: 12px !important;
+  box-shadow:
+    0 8px 22px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08) !important;
+}
+
+#modal-ach-tower.sec-modal-v2 #btn-tower-start-next {
+  background: var(--sec-cta-grad) !important;
+  color: #111827 !important;
+  font-weight: 900 !important;
+  border: 0 !important;
+  border-radius: 9px !important;
+  box-shadow: 0 3px 0 var(--sec-cta-lip), 0 8px 20px var(--sec-accent-glow) !important;
+}
+
+#modal-ach-tower.sec-modal-v2 #btn-tower-start-1,
+#modal-ach-tower.sec-modal-v2 [data-set-title] {
+  background: rgba(15, 23, 42, 0.78) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  border-radius: 8px !important;
+  color: #e2e8f0 !important;
+  transition: all 0.15s ease;
+}
+
+#modal-ach-tower.sec-modal-v2 [data-set-title]:hover,
+#modal-ach-tower.sec-modal-v2 #btn-tower-start-1:hover {
+  border-color: var(--sec-accent) !important;
+  color: #fef3c7 !important;
+  box-shadow: 0 0 12px var(--sec-accent-soft);
+}
