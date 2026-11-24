@@ -11,13 +11,13 @@ function ensureAuthCss() {
   if (typeof document === 'undefined') return;
   const old = document.getElementById('welcome-auth-v207-css');
   if (old) {
-    old.href = './src/ui/welcomeAuth.css?v=209';
+    old.href = './src/ui/welcomeAuth.css?v=212';
     return;
   }
   const link = document.createElement('link');
   link.id = 'welcome-auth-v207-css';
   link.rel = 'stylesheet';
-  link.href = './src/ui/welcomeAuth.css?v=209';
+  link.href = './src/ui/welcomeAuth.css?v=212';
   document.head.appendChild(link);
 }
 
@@ -89,8 +89,17 @@ export function initWelcomeAuthUI() {
   if (guestBtn) guestBtn.remove();
   if (bottomBar) bottomBar.remove();
 
-  if (statusPill && statusPill.textContent.includes('正在檢查')) {
-    statusPill.textContent = '請選擇登入或註冊帳號';
+  const syncStatusText = () => {
+    if (!statusPill) return;
+    const t = statusPill.textContent || '';
+    if (t.includes('正在檢查') || t.includes('離線試玩')) {
+      statusPill.textContent = '請使用 Email 或 Google 帳號登入';
+    }
+  };
+  syncStatusText();
+  if (statusPill && !statusPill.dataset.v212Obs) {
+    statusPill.dataset.v212Obs = '1';
+    new MutationObserver(syncStatusText).observe(statusPill, { childList: true, characterData: true, subtree: true });
   }
 
   if (!pedestal || pedestal.dataset.authV208Mounted) return;

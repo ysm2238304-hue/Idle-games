@@ -1,12 +1,12 @@
 /* ==========================================================================
-   classHall.css (v211)
+   classHall.css (v212)
    選角與技能預覽：去框化 3A 暗黑殿堂風
    - 頂部 6 枚懸浮發光職階圖騰徽章（取代矩形色塊卡片）
    - 鎖定 16:9 沉浸式演武舞台（徹底修復圓形黑洞變形問題）
    - 8 格遊戲實戰技能快捷列 + 無框浮雕右側職業情報（零捲軸）
    ========================================================================== */
 
-#welcome-step-class.welcome-creation-theater {
+#welcome-step-class.welcome-creation-theater:not(.hidden) {
   background:
     radial-gradient(ellipse at 35% 48%, rgba(251, 191, 36, 0.08), transparent 55%),
     radial-gradient(ellipse at 75% 30%, rgba(168, 85, 247, 0.08), transparent 55%),
