@@ -1,33 +1,34 @@
 /* ==========================================================================
-   classHall.css (v212)
-   選角與技能預覽：去框化 3A 暗黑殿堂風
-   - 頂部 6 枚懸浮發光職階圖騰徽章（取代矩形色塊卡片）
-   - 鎖定 16:9 沉浸式演武舞台（徹底修復圓形黑洞變形問題）
-   - 8 格遊戲實戰技能快捷列 + 無框浮雕右側職業情報（零捲軸）
+   classHall.css (v213)
+   - 放大頂部 6 大職業圖騰徽章 (78x78) 與字體
+   - 修復 8 格技能快捷列與下方暱稱輸入框重疊問題
+   - 修復背包「分解所選 / 出售(2.5x金)」按鈕文字斷行
    ========================================================================== */
 
 #welcome-step-class.welcome-creation-theater:not(.hidden) {
   background:
     radial-gradient(ellipse at 35% 48%, rgba(251, 191, 36, 0.08), transparent 55%),
     radial-gradient(ellipse at 75% 30%, rgba(168, 85, 247, 0.08), transparent 55%),
-    linear-gradient(180deg, rgba(8, 10, 16, 0.88) 0%, rgba(5, 6, 10, 0.96) 100%) !important;
+    linear-gradient(180deg, rgba(8, 10, 16, 0.90) 0%, rgba(5, 6, 10, 0.97) 100%) !important;
   border: 0 !important;
   box-shadow: none !important;
   max-width: 1180px !important;
   width: min(1180px, 95vw) !important;
-  padding: 14px 20px !important;
+  padding: 12px 20px 14px !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 12px !important;
+  gap: 10px !important;
+  overflow-y: auto !important;
+  max-height: 95vh !important;
 }
 
-/* 1. 頂部欄：去除厚重色塊，改為細緻暗金浮雕 */
 #welcome-step-class .theater-topbar {
   background: transparent !important;
   border: 0 !important;
   border-bottom: 1px solid rgba(251, 191, 36, 0.18) !important;
   border-radius: 0 !important;
-  padding: 0 4px 10px !important;
+  padding: 0 4px 8px !important;
+  flex-shrink: 0 !important;
 }
 
 #welcome-step-class .save-summary-pill {
@@ -36,14 +37,15 @@
   backdrop-filter: none !important;
 }
 
-/* 2. 6 大職業：發光職階圖騰徽章（無方框色塊） */
+/* 6 大職業：放大發光職階圖騰徽章 (78x78) */
 #welcome-class-list.theater-class-strip {
   display: grid !important;
   grid-template-columns: repeat(6, 1fr) !important;
-  gap: 10px !important;
+  gap: 12px !important;
   background: transparent !important;
   border: 0 !important;
-  padding: 4px 0 !important;
+  padding: 6px 0 4px !important;
+  flex-shrink: 0 !important;
 }
 
 #welcome-class-list .theater-class-card {
@@ -53,40 +55,40 @@
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
-  gap: 6px !important;
-  padding: 6px 4px !important;
+  gap: 7px !important;
+  padding: 4px !important;
   cursor: pointer;
-  transition: transform 0.18s ease, filter 0.18s ease !important;
-  opacity: 0.68;
+  transition: transform 0.18s ease, opacity 0.18s ease !important;
+  opacity: 0.72;
 }
 
 #welcome-class-list .theater-class-card:hover {
-  opacity: 0.92;
+  opacity: 0.95;
   transform: translateY(-2px);
 }
 
 #welcome-class-list .theater-class-card.active {
   opacity: 1;
-  transform: translateY(-3px) scale(1.04);
+  transform: translateY(-3px) scale(1.05);
 }
 
 #welcome-class-list .theater-class-card img {
-  width: 56px !important;
-  height: 56px !important;
+  width: 78px !important;
+  height: 78px !important;
   border-radius: 50% !important;
   object-fit: cover !important;
-  padding: 3px !important;
-  background: radial-gradient(circle, rgba(30, 24, 18, 0.9), rgba(10, 12, 18, 0.98)) !important;
-  border: 2px solid rgba(255, 255, 255, 0.18) !important;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.65) !important;
+  padding: 4px !important;
+  background: radial-gradient(circle, rgba(30, 24, 18, 0.92), rgba(10, 12, 18, 0.98)) !important;
+  border: 2.5px solid rgba(255, 255, 255, 0.22) !important;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.70) !important;
   transition: all 0.18s ease !important;
 }
 
 #welcome-class-list .theater-class-card.active img {
   border-color: #fbbf24 !important;
   box-shadow:
-    0 0 22px rgba(251, 191, 36, 0.55),
-    0 8px 22px rgba(0, 0, 0, 0.8) !important;
+    0 0 26px rgba(251, 191, 36, 0.62),
+    0 10px 26px rgba(0, 0, 0, 0.85) !important;
 }
 
 #welcome-class-list .tcard-meta {
@@ -94,13 +96,13 @@
   flex-direction: row !important;
   align-items: center !important;
   justify-content: center !important;
-  gap: 5px !important;
+  gap: 6px !important;
 }
 
 #welcome-class-list .tcard-name {
-  font-size: 12.5px !important;
-  font-weight: 800 !important;
-  color: #cbd5e1 !important;
+  font-size: 14px !important;
+  font-weight: 900 !important;
+  color: #e2e8f0 !important;
   text-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
 }
 
@@ -109,22 +111,22 @@
 }
 
 #welcome-class-list .tcard-lv {
-  padding: 1px 7px !important;
+  padding: 2px 8px !important;
   border-radius: 999px !important;
-  font-size: 10.5px !important;
+  font-size: 12px !important;
   font-weight: 900 !important;
-  background: rgba(251, 191, 36, 0.22) !important;
+  background: rgba(251, 191, 36, 0.25) !important;
   color: #fde68a !important;
-  border: 1px solid rgba(251, 191, 36, 0.45) !important;
+  border: 1px solid rgba(251, 191, 36, 0.5) !important;
 }
 
 #welcome-class-list .tcard-lv.is-lv1 {
-  background: rgba(15, 23, 42, 0.72) !important;
+  background: rgba(15, 23, 42, 0.75) !important;
   color: #94a3b8 !important;
-  border-color: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
 }
 
-/* 3. 主舞台雙欄：左側沉浸式 16:9 演武舞台 + 右側無框浮雕情報 */
+/* 主舞台雙欄（避免擠壓到底部 footer） */
 #welcome-class-stage.theater-main-grid {
   display: grid !important;
   grid-template-columns: 1.25fr 1fr !important;
@@ -132,8 +134,10 @@
   align-items: start !important;
   background: transparent !important;
   border: 0 !important;
-  padding: 4px 0 !important;
-  min-height: 360px !important;
+  padding: 4px 0 8px !important;
+  margin-bottom: 10px !important;
+  min-height: 0 !important;
+  flex: 1 1 auto !important;
 }
 
 #welcome-class-stage .theater-arena-col {
@@ -145,10 +149,10 @@
   padding: 0 !important;
 }
 
-/* 強制修正為 16:9 矩形寬景畫布，徹底解決圓形黑洞問題 */
 #welcome-class-stage .theater-canvas-wrap {
   position: relative !important;
   width: 100% !important;
+  max-height: 255px !important;
   height: auto !important;
   aspect-ratio: 520 / 292 !important;
   border-radius: 14px !important;
@@ -167,27 +171,27 @@
   border-radius: 0 !important;
 }
 
-/* 4. 8 格遊戲實戰技能快捷列（取代 2x4 文字色塊按鈕） */
 #welcome-class-stage .theater-skill-grid {
   display: grid !important;
   grid-template-columns: repeat(8, 1fr) !important;
-  gap: 8px !important;
+  gap: 7px !important;
   padding: 6px 8px !important;
   border-radius: 12px !important;
-  background: rgba(8, 10, 16, 0.72) !important;
+  background: rgba(8, 10, 16, 0.78) !important;
   border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  position: relative !important;
+  z-index: 2 !important;
 }
 
 #welcome-class-stage .showcase-sk-btn {
-  position: relative !important;
   display: flex !important;
   flex-direction: column !important;
   align-items: center !important;
   justify-content: center !important;
   gap: 4px !important;
-  padding: 6px 3px !important;
+  padding: 5px 3px !important;
   border-radius: 9px !important;
-  background: rgba(17, 20, 30, 0.85) !important;
+  background: rgba(17, 20, 30, 0.88) !important;
   border: 1.5px solid rgba(255, 255, 255, 0.14) !important;
   cursor: pointer;
   transition: all 0.15s ease !important;
@@ -202,12 +206,11 @@
   border-color: #fbbf24 !important;
   background: radial-gradient(circle at center, rgba(251, 191, 36, 0.24), rgba(17, 20, 30, 0.95)) !important;
   box-shadow: 0 0 16px rgba(251, 191, 36, 0.42) !important;
-  transform: translateY(-2px);
 }
 
 #welcome-class-stage .showcase-sk-btn .sk-btn-ico {
-  width: 34px !important;
-  height: 34px !important;
+  width: 32px !important;
+  height: 32px !important;
   border-radius: 6px !important;
   object-fit: cover !important;
 }
@@ -222,19 +225,14 @@
   max-width: 100% !important;
 }
 
-#welcome-class-stage .showcase-sk-btn.active span {
-  color: #fef3c7 !important;
-}
-
-/* 5. 右側：無框浮雕式職業情報（完全去除色塊底框與捲軸） */
 #welcome-class-stage .theater-info-col {
   background: transparent !important;
   border: 0 !important;
   box-shadow: none !important;
-  padding: 4px 6px !important;
+  padding: 2px 6px !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 12px !important;
+  gap: 10px !important;
   overflow: visible !important;
   max-height: none !important;
 }
@@ -251,15 +249,15 @@
 #welcome-class-stage .theater-hero-desc {
   color: #cbd5e1 !important;
   font-size: 13px !important;
-  line-height: 1.55 !important;
+  line-height: 1.5 !important;
   margin: 0 !important;
 }
 
 #welcome-class-stage .stage-stat-bars {
   background: transparent !important;
   border: 0 !important;
-  padding: 4px 0 !important;
-  gap: 8px !important;
+  padding: 2px 0 !important;
+  gap: 7px !important;
 }
 
 #welcome-class-stage .stat-bar-track {
@@ -283,31 +281,42 @@
   font-size: 12.5px !important;
 }
 
-/* 技能說明區：取消捲軸壓扁，改為乾淨浮雕預覽條 */
 #welcome-class-stage #stage-skill-dynamic.skill-lore-scroll {
-  background: rgba(10, 12, 20, 0.55) !important;
+  background: rgba(10, 12, 20, 0.58) !important;
   border: 0 !important;
   border-top: 1px solid rgba(251, 191, 36, 0.25) !important;
   border-radius: 10px !important;
-  padding: 10px 12px !important;
+  padding: 9px 12px !important;
   max-height: none !important;
   height: auto !important;
   overflow: visible !important;
 }
 
-/* 6. 底部極簡出發列 */
+/* 底部出發列：安全間距防止與技能列重疊 */
 #welcome-step-class .theater-footer {
   background: transparent !important;
   border: 0 !important;
-  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
-  padding: 10px 4px 0 !important;
+  border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+  padding: 12px 4px 0 !important;
+  margin-top: 6px !important;
+  flex-shrink: 0 !important;
+  position: relative !important;
+  z-index: 5 !important;
 }
 
 #welcome-step-class #input-hero-nickname {
-  background: rgba(10, 12, 20, 0.65) !important;
+  background: rgba(10, 12, 20, 0.72) !important;
   border: 0 !important;
   border-bottom: 1.5px solid rgba(251, 191, 36, 0.45) !important;
   border-radius: 6px 6px 0 0 !important;
+}
+
+/* 背包分解與出售按鈕防換行 */
+#btn-salvage-junk,
+#btn-sell-junk {
+  white-space: nowrap !important;
+  font-size: 12px !important;
+  padding: 7px 10px !important;
 }
 
 @media (max-width: 900px) {

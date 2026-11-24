@@ -115,15 +115,17 @@ export const TOWN_SPLASHES = [
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   queueMicrotask(async () => {
     try {
-      const [{ DashboardUI }, { renderTownFacilityModal }, monsters, { initLobbyClassClarity }, { initWelcomeAuthUI }] = await Promise.all([
+      const [{ DashboardUI }, { renderTownFacilityModal }, monsters, { initLobbyClassClarity }, { initWelcomeAuthUI }, { initBagSalvageFix }] = await Promise.all([
         import('../../ui/DashboardUI.js?v=99'),
         import('../../ui/NpcModalRenderer.js?v=204'),
         import('../monsters.js?v=99'),
-        import('../../ui/LobbyClassClarity.js?v=212'),
+        import('../../ui/LobbyClassClarity.js?v=213'),
+        import('../../ui/BagFixEnhancer.js?v=213'),
         import('../../ui/WelcomeAuthUI.js?v=212'),
       ]);
       initLobbyClassClarity();
       initWelcomeAuthUI();
+      initBagSalvageFix(DashboardUI);
       if (DashboardUI?.prototype) {
         DashboardUI.prototype.openTownFacilityModal = function (action, data, ctx) {
           renderTownFacilityModal(this, action, data, ctx, {
@@ -135,7 +137,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
         };
       }
     } catch (err) {
-      console.warn('[v212] NPC Modal auto-wire failed:', err);
+      console.warn('[v213] NPC Modal auto-wire failed:', err);
     }
   });
 }
