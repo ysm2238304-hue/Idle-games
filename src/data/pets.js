@@ -1,5 +1,4 @@
-// 30 隻「技能特效＆衍生型」寵物資料庫 (v83)
-// 與裝備做出本質差異：寵物不加基礎面板，而是改變技能視覺特效並衍生額外攻擊機制
+// 30 隻「技能特效&衍生型」寵物資料庫 (v214 - 掉率與裝備 10 章硬核曲線同步)
 import { RARITIES } from './items.js?v=99';
 
 export const PET_SCHOOLS = {
@@ -29,7 +28,7 @@ export const PET_CATALOG = [
   { id: 'pet_m6', name: '星界小靈狐',   rarity: 'magic',  school: 'void',      emoji: '🦊', tint: 0xc084fc, bonusHits: 2, dmgMult: 0.45, desc: '技能附加星軌殘影，生成小型黑洞奇點聚攏半徑內怪物。' },
 
   // === 稀有 (Rare) 6 隻 ===
-  { id: 'pet_r1', name: '炎魔小惡魔',   rarity: 'rare',   school: 'fire',      emoji: '👿', tint: 0xef4444, bonusHits: 3, dmgMult: 0.65, desc: '所有技能化為地獄紅蓮特效，衍生 3 道烈焰衝擊波連環炸裂。' },
+  { id: 'pet_r1', name: '炎魔小惡魔',   rarity: 'rare',   school: 'fire',      emoji: '😈', tint: 0xef4444, bonusHits: 3, dmgMult: 0.65, desc: '所有技能化為地獄紅蓮特效，衍生 3 道烈焰衝擊波連環炸裂。' },
   { id: 'pet_r2', name: '雷霆天鷹',     rarity: 'rare',   school: 'lightning', emoji: '🦅', tint: 0x38bdf8, bonusHits: 3, dmgMult: 0.65, desc: '技能觸發蒼穹落雷特效，衍生 3 段連鎖閃電貫穿整群目標。' },
   { id: 'pet_r3', name: '冰晶鳳凰雛',   rarity: 'rare',   school: 'frost',     emoji: '🕊️', tint: 0x38bdf8, bonusHits: 3, dmgMult: 0.62, desc: '技能轉為極光冰華特效，引爆大型寒冰新星並凍結敵人節奏。' },
   { id: 'pet_r4', name: '冥界渡鴉',     rarity: 'rare',   school: 'shadow',    emoji: '🐦‍⬛', tint: 0x9333ea, bonusHits: 3, dmgMult: 0.65, desc: '技能染上冥界鬼火，衍生 3 隻追蹤怨靈直撲敵方引爆。' },
@@ -49,7 +48,7 @@ export const PET_CATALOG = [
   { id: 'pet_s2', name: '天譴雷神獸',   rarity: 'set',    school: 'lightning', emoji: '🌩️', tint: 0x38bdf8, bonusHits: 5, dmgMult: 1.15, desc: '【太古變異】技能引動九霄神雷特效，衍生 5 段毀滅電弧全場彈射！' },
   { id: 'pet_s3', name: '極光蒼穹龍',   rarity: 'set',    school: 'frost',     emoji: '🧊', tint: 0x22d3ee, bonusHits: 5, dmgMult: 1.12, desc: '【太古變異】技能展開極光領域特效，觸發全場絕對零度冰爆！' },
   { id: 'pet_s4', name: '冥界骨龍王',   rarity: 'set',    school: 'shadow',    emoji: '🦴', tint: 0x2dd4bf, bonusHits: 5, dmgMult: 1.15, desc: '【太古變異】技能喚起亡靈潮汐特效，齊射 5 道冥界骨龍魂火彈幕！' },
-  { id: 'pet_s5', name: '熾天使聖靈',   rarity: 'set',    school: 'holy',      emoji: '☀️', tint: 0xfacc15, bonusHits: 5, dmgMult: 1.12, desc: '【太古變異】技能降下黃金聖殿裁決，衍生 5 道神聖光柱並回血 8%！' },
+  { id: 'pet_s5', name: '熾天使聖靈',   rarity: 'set',    school: 'holy',      emoji: '🌟', tint: 0xfacc15, bonusHits: 5, dmgMult: 1.12, desc: '【太古變異】技能降下黃金聖殿裁決，衍生 5 道神聖光柱並回血 8%！' },
   { id: 'pet_s6', name: '混沌星神體',   rarity: 'set',    school: 'void',      emoji: '🌀', tint: 0x4ade80, bonusHits: 5, dmgMult: 1.15, desc: '【太古變異】技能撕裂深淵星界，觸發超重力黑洞奇點聚怪引爆！' },
 ];
 
@@ -59,16 +58,55 @@ export function getPetDef(petId) {
   return PET_CATALOG.find((p) => p.id === petId) || null;
 }
 
+const PET_CHAPTER_DROP = {
+  1:  { mobMin: 0.15, mobMax: 0.30, boss: 2.5,  wC: 84, wM: 16, wR: 0,    wL: 0,   wS: 0 },
+  2:  { mobMin: 0.20, mobMax: 0.38, boss: 4.0,  wC: 76, wM: 22, wR: 2.0,  wL: 0,   wS: 0 },
+  3:  { mobMin: 0.35, mobMax: 0.60, boss: 5.0,  wC: 66, wM: 28, wR: 5.8,  wL: 0.2, wS: 0 },
+  4:  { mobMin: 0.45, mobMax: 0.75, boss: 7.0,  wC: 58, wM: 32, wR: 9.5,  wL: 0.5, wS: 0 },
+  5:  { mobMin: 0.75, mobMax: 1.10, boss: 8.5,  wC: 50, wM: 35, wR: 13.5, wL: 1.2, wS: 0.3 },
+  6:  { mobMin: 0.90, mobMax: 1.25, boss: 10.0, wC: 44, wM: 36, wR: 17.0, wL: 2.3, wS: 0.7 },
+  7:  { mobMin: 1.05, mobMax: 1.40, boss: 12.0, wC: 38, wM: 37, wR: 20.0, wL: 3.8, wS: 1.2 },
+  8:  { mobMin: 1.35, mobMax: 1.65, boss: 14.0, wC: 32, wM: 37, wR: 23.0, wL: 6.0, wS: 2.0 },
+  9:  { mobMin: 1.50, mobMax: 1.85, boss: 16.0, wC: 27, wM: 36, wR: 25.5, wL: 8.5, wS: 3.0 },
+  10: { mobMin: 1.65, mobMax: 2.00, boss: 18.0, wC: 22, wM: 35, wR: 27.5, wL: 11.0,wS: 4.5 },
+};
+
 export function rollPetDrop(stage = 1, isBoss = false, magicFindPct = 0) {
-  const chance = isBoss ? Math.min(35, 14 + magicFindPct * 0.08) : Math.min(4.5, 1.4 + magicFindPct * 0.02);
+  const ch = Math.max(1, Math.min(10, Math.floor((Math.max(1, stage) - 1) / 10) + 1));
+  const cfg = PET_CHAPTER_DROP[ch];
+  const mf = Math.max(0, Number(magicFindPct) || 0);
+
+  const mobChance = Math.min(cfg.mobMax, cfg.mobMin + (cfg.mobMax - cfg.mobMin) * (mf / (mf + 220)));
+  const bossChance = Math.min(cfg.boss + 6, cfg.boss + mf * 0.025);
+  const chance = isBoss ? bossChance : mobChance;
+
   if (Math.random() * 100 > chance) return null;
-  const mfMult = 1 + Math.min(1.5, magicFindPct / 150);
-  const r = Math.random() * 100;
+
+  const mfMult = 1 + (0.45 * mf) / (mf + 220);
+  let wC = cfg.wC;
+  let wM = cfg.wM;
+  let wR = cfg.wR * (isBoss ? 1.6 : 1.0) * (1 + (mfMult - 1) * 0.6);
+  let wL = cfg.wL * (isBoss ? 1.8 : 0.45) * mfMult;
+  let wS = cfg.wS * (isBoss ? 1.8 : 0.35) * mfMult;
+  if (isBoss) wC *= 0.4;
+
+  const total = wC + wM + wR + wL + wS;
+  let r = Math.random() * total;
   let rarity = 'common';
-  if (r < (isBoss ? 4 : 0.8) * mfMult) rarity = 'set';
-  else if (r < (isBoss ? 14 : 3.5) * mfMult) rarity = 'legendary';
-  else if (r < (isBoss ? 34 : 14) * mfMult) rarity = 'rare';
-  else if (r < (isBoss ? 65 : 42) * mfMult) rarity = 'magic';
+  if (r < wS) rarity = 'set';
+  else {
+    r -= wS;
+    if (r < wL) rarity = 'legendary';
+    else {
+      r -= wL;
+      if (r < wR) rarity = 'rare';
+      else {
+        r -= wR;
+        if (r < wM) rarity = 'magic';
+      }
+    }
+  }
+
   const pool = PET_CATALOG.filter((p) => p.rarity === rarity);
   const tpl = pool[Math.floor(Math.random() * pool.length)] || PET_CATALOG[0];
   return {
@@ -88,18 +126,18 @@ export function getPetRarityMeta(rarity) {
 
 export function getPetPickupRadius(petDef, upgLv = 0) {
   if (!petDef) return 58;
-  const rarBase = { common: 110, magic: 130, rare: 150, legendary: 175, set: 195 }[petDef.rarity] || 110;
-  return Math.min(240, rarBase + (upgLv || 0) * 5);
+  const base = { common: 110, magic: 130, rare: 150, legendary: 175, set: 195 }[petDef.rarity] || 110;
+  return Math.min(240, base + upgLv * 5);
 }
 
 export function getPetCodexInfo(pets = [], unlockedIds = []) {
-  const s = new Set(unlockedIds || []);
-  for (const p of pets || []) if (p?.petId) s.add(p.petId);
-  const count = s.size;
+  const unlockedSet = new Set(unlockedIds);
+  pets.forEach((p) => unlockedSet.add(p.petId));
+  const count = unlockedSet.size;
   let bonusPct = 0;
   if (count >= 30) bonusPct = 100;
   else if (count >= 20) bonusPct = 50;
   else if (count >= 10) bonusPct = 25;
   else if (count >= 5) bonusPct = 10;
-  return { unlockedSet: s, count, total: PET_CATALOG.length, bonusPct };
+  return { unlockedSet, count, total: PET_CATALOG.length, bonusPct };
 }
