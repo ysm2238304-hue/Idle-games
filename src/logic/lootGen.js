@@ -10,34 +10,73 @@ function pickRandom(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
+/**
+ * 耐玩漸進型・正規化權重池（總和永遠 100%，不會溢位）
+ * - MF 採用遞減曲線：mfMult = 1 + (2.5 * mf) / (mf + 250)，永遠有效且不爆表
+ * - 即使 81+ 關堆滿 MF，小怪傳說仍維持在 ~8.5%，章節王 ~38%，維持神裝價值
+ */
 export function rollRarity(isBoss, magicFindPct = 0, stage = 1) {
-  const mfMult = 1 + Math.min(2.0, Math.max(0, magicFindPct) / 120);
-  let legBase = 0.5, rareBase = 4.5, magicBase = 27;
+  const mf = Math.max(0, Number(magicFindPct) || 0);
+  const mfMult = 1 + (2.5 * mf) / (mf + 250);
+  const isChapterBoss = isBoss && (stage % 10 === 0);
+
+  let wCommon = 72;
+  let wMagic = 24;
+  let wRare = 3.4;
+  let wLeg = 0.35;
+  let wSet = 0.25;
+
   if (stage > 80) {
-    legBase = 11.0; rareBase = 34.0; magicBase = 40.0;
+    wCommon = 20; wMagic = 44; wRare = 29; wLeg = 4.8; wSet = 2.2;
   } else if (stage > 50) {
-    legBase = 6.0; rareBase = 24.0; magicBase = 42.0;
+    wCommon = 34; wMagic = 44; wRare = 18; wLeg = 2.8; wSet = 1.2;
   } else if (stage > 20) {
-    legBase = 2.5; rareBase = 13.5; magicBase = 36.0;
+    wCommon = 52; wMagic = 37; wRare = 9.2; wLeg = 1.2; wSet = 0.6;
   }
 
-  const isChapterBoss = isBoss && (stage % 10 === 0);
-  const legChance = legBase * (isChapterBoss ? 3.0 : (isBoss ? 2.2 : 1.0)) * mfMult;
-  const rareChance = rareBase * (isChapterBoss ? 2.0 : (isBoss ? 1.65 : 1.0)) * mfMult;
-  const magicChance = isChapterBoss ? Math.max(0, 100 - legChance - rareChance) : magicBase;
+  if (isChapterBoss) {
+    wCommon = 0;
+    wMagic = Math.max(10, wMagic * 0.6);
+    wRare *= 2.4;
+    wLeg *= 6.0;
+    wSet *= 5.5;
+  } else if (isBoss) {
+    wCommon *= 0.25;
+    wMagic *= 1.1;
+    wRare *= 2.0;
+    wLeg *= 3.8;
+    wSet *= 3.5;
+  }
 
-  const setChance = Math.min(6.0, (isChapterBoss ? 5.0 : (isBoss ? 2.6 : 0.75)) * mfMult);
-  const roll = Math.random() * 100;
-  if (roll < setChance) return 'set';
-  if (roll < setChance + legChance) return 'legendary';
-  if (roll < setChance + legChance + rareChance) return 'rare';
-  if (roll < setChance + legChance + rareChance + magicChance) return 'magic';
+  // MF 只放大稀有、傳說、套裝權重，不吃掉整體權重正規化
+  wRare *= (1 + (mfMult - 1) * 0.65);
+  wLeg *= mfMult;
+  wSet *= mfMult;
+
+  const total = wCommon + wMagic + wRare + wLeg + wSet;
+  let roll = Math.random() * total;
+
+  if (roll < wSet) return 'set';
+  roll -= wSet;
+  if (roll < wLeg) return 'legendary';
+  roll -= wLeg;
+  if (roll < wRare) return 'rare';
+  roll -= wRare;
+  if (roll < wMagic) return 'magic';
   return 'common';
 }
 
 export function generateLoot(stage, isBoss = false, magicFindPct = 0, guaranteed = false, playerClassId = 'warrior') {
   const isChapterBoss = isBoss && (stage % 10 === 0);
-  const dropChance = guaranteed ? 100 : (isChapterBoss ? 100 : (isBoss ? Math.min(75, 50 + magicFindPct * 0.15) : Math.min(18, 5 + magicFindPct * 0.08)));
+  // 耐玩偏低掉率：小怪 3.5%~12%、一般 Boss 40%~68%、章節 Boss 100%
+  const dropChance = guaranteed
+    ? 100
+    : (isChapterBoss
+      ? 100
+      : (isBoss
+        ? Math.min(68, 40 + magicFindPct * 0.10)
+        : Math.min(12, 3.5 + magicFindPct * 0.04)));
+
   if (Math.random() * 100 > dropChance) return null;
 
   const slotKeys = Object.keys(EQUIP_SLOTS);
@@ -146,17 +185,16 @@ export function calcItemPower(item) {
   }
   score *= 1 + (item.upgradeLevel || 0) * 0.12;
   if (item.legendaryEffect) score += 95;
+  if (item.setId) score += 120;
   return Math.round(score);
 }
 
 export function getSalvageReward(item) {
   const rarityMult = { common: 1, magic: 2.2, rare: 5, legendary: 14, set: 18 }[item.rarity] || 1;
-  if (item.setId) score += 120;
   const gold = Math.round((5 + item.level * 3) * rarityMult);
   const dust = Math.max(1, Math.round((1 + item.level * 0.5) * rarityMult));
   return { gold, dust };
 }
-
 
 export function rerollItemAffixes(item, lockedIdx = -1) {
   if (!item) return null;
@@ -191,8 +229,22 @@ export function rerollItemAffixes(item, lockedIdx = -1) {
 export function generateBlackMarketItem(stage, playerClassId = 'warrior', forceRarity = null) {
   const slotKeys = Object.keys(EQUIP_SLOTS);
   const slot = pickRandom(slotKeys);
-  const rarityId = forceRarity || (Math.random() < 0.25 ? 'legendary' : (Math.random() < 0.65 ? 'rare' : 'magic'));
+
+  // 黑市貨架稀有度隨章節進度成長（不再第 1 關就固定 25% 賣傳說）
+  let legRate = 0.03;
+  let rareRate = 0.35;
+  if (stage > 80) {
+    legRate = 0.20; rareRate = 0.60;
+  } else if (stage > 50) {
+    legRate = 0.14; rareRate = 0.56;
+  } else if (stage > 20) {
+    legRate = 0.08; rareRate = 0.48;
+  }
+  const r = Math.random();
+  const rolledRarity = r < legRate ? 'legendary' : (r < legRate + rareRate ? 'rare' : 'magic');
+  const rarityId = forceRarity || rolledRarity;
   const rarity = RARITIES[rarityId] || RARITIES.rare;
+
   const allBases = BASE_ITEMS[slot];
   const smartPool = allBases.filter((b) => !b.classReq || b.classReq === 'all' || b.classReq === playerClassId);
   const bases = (Math.random() < 0.85 && smartPool.length > 0) ? smartPool : allBases;
