@@ -1,11 +1,14 @@
 /**
- * NpcModalRenderer.js (v201 - Batch 2 Complete)
- * 全 23 個 NPC 視窗完整概念重構版：
- * - Batch 1: 鐵砧鍛造台、煉金沸騰大鍋、黑市走私賭桌、十界星圖軌跡
- * - Batch 2: 實木通緝告示板、動態跳字木樁演武場、三芒星魂晶祭壇、重型金庫密碼門、10 章限定 NPC 封蠟禮盒
+ * NpcModalRenderer.js (v203 - Full Parity + Concept Refactor)
+ * 修復排查出的 5 項遺漏與數值誤差：
+ * 1. modal_waypoint 完整補回「出城挑戰關卡 (data-wp-stg)」與「跨章節主城傳送 (data-wp-ch)」
+ * 2. modal_bounty 還原第 1～10 章全部 30 個專屬任務標題、目標數與獎勵
+ * 3. modal_market 補回貨架刷新倒數 (nextRefreshAt) 並對齊原版價格基數 (600 / 350)
+ * 4. modal_alchemy 對齊原版藥水價格基數 (180/420/480/520/680/620/700)
+ * 5. modal_trainer 補回目前裝備技能與暴擊率顯示
  */
 
-import { NpcStageEngine } from './NpcStageEngine.js?v=202';
+import { NpcStageEngine } from './NpcStageEngine.js?v=203';
 
 let activeStageEngine = null;
 let activeDummyTimer = null;
@@ -25,13 +28,13 @@ function ensureNpcModalCss() {
   if (typeof document === 'undefined') return;
   const old = document.getElementById('npc-modal-v2-css');
   if (old) {
-    if (!old.href.includes('v=202')) old.href = './src/ui/npcModal.css?v=202';
+    if (!old.href.includes('v=203')) old.href = './src/ui/npcModal.css?v=203';
     return;
   }
   const link = document.createElement('link');
   link.id = 'npc-modal-v2-css';
   link.rel = 'stylesheet';
-  link.href = './src/ui/npcModal.css?v=202';
+  link.href = './src/ui/npcModal.css?v=203';
   document.head.appendChild(link);
 }
 
@@ -50,9 +53,62 @@ const SVG = {
 };
 
 const CHAPTER_NAMES = [
-  '第一章・曙光哨站堡壘', '第二章・地下菌菇黑市', '第三章・守夜人聖骨禮拜堂', '第四章・黑曜石熔爐要塞', '第五章・緋紅魔獄王庭',
-  '第六章・極光冰晶堡', '第七章・翠玉樹冠水寨', '第八章・蒼穹電弧浮空城', '第九章・聖血薔薇修道院', '第十章・永恆星辰聖域',
+  '第1章・曙光哨站堡壘', '第2章・地下菌菇黑市', '第3章・守夜人聖骨禮拜堂', '第4章・黑曜石熔爐要塞', '第5章・緋紅魔獄王庭',
+  '第6章・極光冰晶堡', '第7章・翠玉樹冠水寨', '第8章・蒼穹電弧浮空城', '第9章・聖血薔薇修道院', '第10章・永恆星辰聖域',
 ];
+
+const BOUNTIES_BY_CH = {
+  1: [
+    { id: 'ch1_q1', tag: '野怪懸賞', cls: '', title: '清剿腐朽野狼群', type: 'kills', req: 30, reward: '600 金幣 + 稀有裝備箱' },
+    { id: 'ch1_q2', tag: '首領通緝', cls: 'is-elite', title: '討伐邊境首領 (5/10 關)', type: 'boss', req: 2, reward: '1,200 金幣 + +1 技能點' },
+    { id: 'ch1_q3', tag: '黃金試煉', cls: 'is-trial', title: '百戰哨兵試煉', type: 'kills', req: 120, reward: '2,500 金幣 + 傳說保底箱' },
+  ],
+  2: [
+    { id: 'ch2_q1', tag: '野怪懸賞', cls: '', title: '清剿巢穴哥布林與孢子怪', type: 'kills', req: 200, reward: '1,800 金幣 + 高階稀有箱' },
+    { id: 'ch2_q2', tag: '首領通緝', cls: 'is-elite', title: '討伐地下巢穴首領', type: 'boss', req: 5, reward: '3,200 金幣 + +1 技能點' },
+    { id: 'ch2_q3', tag: '黃金試煉', cls: 'is-trial', title: '深淵礦脈清道夫', type: 'kills', req: 450, reward: '6,000 金幣 + 傳說保底箱' },
+  ],
+  3: [
+    { id: 'ch3_q1', tag: '野怪懸賞', cls: '', title: '淨化白骨墓穴食屍鬼', type: 'kills', req: 550, reward: '4,200 金幣 + 高階稀有箱' },
+    { id: 'ch3_q2', tag: '首領通緝', cls: 'is-elite', title: '討伐白骨領主首領', type: 'boss', req: 10, reward: '7,500 金幣 + +1 技能點' },
+    { id: 'ch3_q3', tag: '黃金試煉', cls: 'is-trial', title: '守夜人聖骨試煉', type: 'kills', req: 900, reward: '12,000 金幣 + 傳說保底箱' },
+  ],
+  4: [
+    { id: 'ch4_q1', tag: '野怪懸賞', cls: '', title: '清剿焦土炎魔與火蜥蜴', type: 'kills', req: 1150, reward: '8,500 金幣 + 高階稀有箱' },
+    { id: 'ch4_q2', tag: '首領通緝', cls: 'is-elite', title: '討伐伊弗利特烈焰首領', type: 'boss', req: 18, reward: '15,000 金幣 + +1 技能點' },
+    { id: 'ch4_q3', tag: '黃金試煉', cls: 'is-trial', title: '黑曜石熔爐宗師試煉', type: 'kills', req: 1700, reward: '24,000 金幣 + 傳說保底箱' },
+  ],
+  5: [
+    { id: 'ch5_q1', tag: '野怪懸賞', cls: '', title: '肅清深淵聖殿魅魔與魔僕', type: 'kills', req: 2200, reward: '18,000 金幣 + 高階稀有箱' },
+    { id: 'ch5_q2', tag: '首領通緝', cls: 'is-elite', title: '討伐深淵將軍與魔王首領', type: 'boss', req: 28, reward: '30,000 金幣 + +1 技能點' },
+    { id: 'ch5_q3', tag: '黃金試煉', cls: 'is-trial', title: '緋紅王庭血戰試煉', type: 'kills', req: 3200, reward: '48,000 金幣 + 傳說保底箱' },
+  ],
+  6: [
+    { id: 'ch6_q1', tag: '野怪懸賞', cls: '', title: '獵殺永凍雪原冰狼與雪怪', type: 'kills', req: 3800, reward: '36,000 金幣 + 高階稀有箱' },
+    { id: 'ch6_q2', tag: '首領通緝', cls: 'is-elite', title: '討伐冰霜泰坦首領', type: 'boss', req: 40, reward: '55,000 金幣 + +1 技能點' },
+    { id: 'ch6_q3', tag: '黃金試煉', cls: 'is-trial', title: '英靈殿女武神試煉', type: 'kills', req: 5200, reward: '88,000 金幣 + 傳說保底箱' },
+  ],
+  7: [
+    { id: 'ch7_q1', tag: '野怪懸賞', cls: '', title: '肅清毒沼巨蛙與劇毒食人花', type: 'kills', req: 6500, reward: '68,000 金幣 + 高階稀有箱' },
+    { id: 'ch7_q2', tag: '首領通緝', cls: 'is-elite', title: '討伐劇毒九頭蛇首領', type: 'boss', req: 55, reward: '95,000 金幣 + +1 技能點' },
+    { id: 'ch7_q3', tag: '黃金試煉', cls: 'is-trial', title: '翠玉樹冠水寨守護試煉', type: 'kills', req: 8500, reward: '150,000 金幣 + 傳說保底箱' },
+  ],
+  8: [
+    { id: 'ch8_q1', tag: '野怪懸賞', cls: '', title: '攔截風暴高塔電弧元素', type: 'kills', req: 10500, reward: '120,000 金幣 + 高階稀有箱' },
+    { id: 'ch8_q2', tag: '首領通緝', cls: 'is-elite', title: '討伐雷鳴風暴泰坦首領', type: 'boss', req: 75, reward: '180,000 金幣 + +1 技能點' },
+    { id: 'ch8_q3', tag: '黃金試煉', cls: 'is-trial', title: '蒼穹浮空城制空試煉', type: 'kills', req: 13500, reward: '280,000 金幣 + 傳說保底箱' },
+  ],
+  9: [
+    { id: 'ch9_q1', tag: '野怪懸賞', cls: '', title: '淨化血色修道院墮落審判官', type: 'kills', req: 16000, reward: '210,000 金幣 + 高階稀有箱' },
+    { id: 'ch9_q2', tag: '首領通緝', cls: 'is-elite', title: '討伐血色大主教領主首領', type: 'boss', req: 100, reward: '320,000 金幣 + +1 技能點' },
+    { id: 'ch9_q3', tag: '黃金試煉', cls: 'is-trial', title: '聖血薔薇修道院聖戰試煉', type: 'kills', req: 20000, reward: '500,000 金幣 + 傳說保底箱' },
+  ],
+  10: [
+    { id: 'ch10_q1', tag: '野怪懸賞', cls: '', title: '肅清混沌星界星靈與吞噬者', type: 'kills', req: 25000, reward: '380,000 金幣 + 高階稀有箱' },
+    { id: 'ch10_q2', tag: '首領通緝', cls: 'is-elite', title: '討伐混沌星界終極泰坦首領', type: 'boss', req: 150, reward: '600,000 金幣 + +2 技能點' },
+    { id: 'ch10_q3', tag: '終局試煉', cls: 'is-trial', title: '永恆星辰聖域終局試煉', type: 'kills', req: 32000, reward: '1,000,000 金幣 + 神話保底箱' },
+  ],
+};
 
 const FACILITY_META = {
   modal_blacksmith: { title: '鐵匠鍛造台・詞綴洗鍊與精煉', icon: './assets/ui/ui_upgrade.png', defaultName: '鐵砧・布魯', defaultRole: '鍛造大師', greeting: '把裝備放上鐵砧！只要材料夠，廢鐵也能敲成神兵！' },
@@ -63,7 +119,7 @@ const FACILITY_META = {
   modal_tavern: { title: '冒險者酒館', icon: './assets/ui/ui_potion.png', defaultName: '酒館老闆', defaultRole: '補給總管', greeting: '進來歇口氣吧，熱騰騰的佳餚能讓你戰力暴漲。' },
   modal_tower: { title: '瞭望哨塔・魔物圖鑑', icon: './assets/ui/ui_worldmap.png', defaultName: '哨塔瞭望員', defaultRole: '情報官', greeting: '從高處已鎖定本章魔物動向，知己知彼才能百戰百勝。' },
   modal_trainer: { title: '戰技神殿・實戰木樁演武場', icon: './assets/ui/ui_skills.png', defaultName: '雷恩', defaultRole: '戰技總教頭', greeting: '實戰與木人樁演練缺一不可，隨時來測試你的流派輸出！' },
-  modal_waypoint: { title: '主城快速傳送陣', icon: './assets/ui/ui_waypoint.png', defaultName: '傳送陣導師', defaultRole: '空間引導者', greeting: '透過符文節點，可以瞬間抵達城內各處或已解鎖關卡。' },
+  modal_waypoint: { title: '主城快速傳送陣', icon: './assets/ui/ui_waypoint.png', defaultName: '傳送陣導師', defaultRole: '空間引導者', greeting: '透過符文節點，可以瞬間抵達城內各處、出城關卡或跨章節主城。' },
   modal_vault: { title: '冒險者金庫・防誤拆鎖定庫', icon: './assets/ui/ui_bag.png', defaultName: '霍克', defaultRole: '軍需書記官', greeting: '把極品神裝鎖進重型金庫，才不會在批量分解時誤傷。' },
   modal_sanctum: { title: '三芒星魂晶祭壇・永久光環', icon: './assets/ui/ui_rebirth.png', defaultName: '奧爾登', defaultRole: '虛空先知', greeting: '將魂晶注入祭壇星辰，這份力量將跨越多輪輪迴。' },
   modal_patrol_guard: { title: '城防巡邏衛兵', icon: './assets/ui/ui_auto.png', defaultName: '巡邏衛兵', defaultRole: '城防精銳', greeting: '防線一切正常！需要我為你施加城防激勵嗎？' },
@@ -81,6 +137,13 @@ const FACILITY_META = {
 };
 
 const fmtNum = (n) => Math.floor(Number(n) || 0).toLocaleString();
+
+function fmtCountdown(ms) {
+  const sec = Math.max(0, Math.floor(ms / 1000));
+  const m = String(Math.floor(sec / 60)).padStart(2, '0');
+  const s = String(sec % 60).padStart(2, '0');
+  return `${m}:${s}`;
+}
 
 function costBtnHtml(idOrAttr, label, costText, canAfford) {
   return `<button ${idOrAttr} class="npc-btn-primary ${canAfford ? '' : 'is-short'}" ${canAfford ? '' : 'disabled'}>
@@ -253,14 +316,14 @@ function buildWorkspaceHtml(ui, action, data, ctx, deps, st, chIdx, chapter) {
   if (action === 'modal_alchemy') {
     const buffs = st.potionBuffs || {};
     const now = Date.now();
-    const hpCost = Math.floor(150 * chMult);
+    const hpCost = Math.floor(180 * chMult);
     const brews = [
-      { id: 'exp_pot', name: '濃稠經驗藥水', desc: '擊殺經驗 +50%', color: '#facc15', cost: Math.floor(300 * chMult), active: (buffs.expUntil || 0) > now },
-      { id: 'fury_pot', name: '狂戰士藥水', desc: '攻速 +25%・暴擊 +10%', color: '#c084fc', cost: Math.floor(400 * chMult), active: (buffs.furyUntil || 0) > now },
-      { id: 'mf_pot', name: '黃金尋寶藥水', desc: '掉寶 +40%・金幣 +30%', color: '#4ade80', cost: Math.floor(450 * chMult), active: (buffs.mfUntil || 0) > now },
-      { id: 'titan_pot', name: '泰坦巨力秘藥', desc: '攻擊 +30%・暴傷 +40%', color: '#f97316', cost: Math.floor(1400 * chMult), active: (buffs.titanUntil || 0) > now },
-      { id: 'iron_pot', name: '鋼鐵壁壘秘藥', desc: '防禦 +35%・減傷 +12%', color: '#38bdf8', cost: Math.floor(1400 * chMult), active: (buffs.ironUntil || 0) > now },
-      { id: 'sage_pot', name: '秘法先知秘藥', desc: '冷卻縮減 +18%・掉寶 +50%', color: '#e879f9', cost: Math.floor(1800 * chMult), active: (buffs.sageUntil || 0) > now },
+      { id: 'exp_pot', name: '濃稠經驗藥水', desc: '擊殺經驗 +50%', color: '#facc15', cost: Math.floor(420 * chMult), active: (buffs.expUntil || 0) > now },
+      { id: 'fury_pot', name: '狂戰士藥水', desc: '攻速 +25%・暴擊 +10%', color: '#c084fc', cost: Math.floor(480 * chMult), active: (buffs.furyUntil || 0) > now },
+      { id: 'mf_pot', name: '黃金尋寶藥水', desc: '掉寶 +40%・金幣 +30%', color: '#4ade80', cost: Math.floor(520 * chMult), active: (buffs.mfUntil || 0) > now },
+      { id: 'titan_pot', name: '泰坦巨力秘藥', desc: '攻擊 +30%・暴傷 +40%', color: '#f97316', cost: Math.floor(680 * chMult), active: (buffs.titanUntil || 0) > now },
+      { id: 'iron_pot', name: '鋼鐵壁壘秘藥', desc: '防禦 +35%・減傷 +12%', color: '#38bdf8', cost: Math.floor(620 * chMult), active: (buffs.ironUntil || 0) > now },
+      { id: 'sage_pot', name: '秘法先知秘藥', desc: '冷卻縮減 +18%・掉寶 +50%', color: '#e879f9', cost: Math.floor(700 * chMult), active: (buffs.sageUntil || 0) > now },
     ];
     const activeCount = brews.filter((b) => b.active).length;
     const bundleCost = Math.floor(brews.reduce((s, b) => s + b.cost, 0) * 0.9);
@@ -314,15 +377,17 @@ function buildWorkspaceHtml(ui, action, data, ctx, deps, st, chIdx, chapter) {
     const bm = st.blackMarket || {};
     const items = bm.items || [];
     const pity = Number(bm.pityCount) || 0;
-    const stageCost = Math.floor(350 * (1 + (st.stage || 1) * 0.22));
+    const nextRefresh = Number(bm.nextRefreshAt) || 0;
+    const cdText = nextRefresh > Date.now() ? fmtCountdown(nextRefresh - Date.now()) : '可刷新';
+    const stageCost = Math.floor(600 * (1 + (st.stage || 1) * 0.22));
     const highCost = stageCost * 3;
-    const refreshCost = Math.floor(500 * chMult);
+    const refreshCost = Math.floor(350 * chMult);
 
     return `
       <div class="npc-sec-head">
         <div class="npc-sec-title">地下走私賭桌與神秘寶箱</div>
         <button id="btn-bm-refresh" class="npc-btn-secondary" ${gold >= refreshCost ? '' : 'disabled'}>
-          <span>翻轉沙漏刷新貨架</span>
+          <span>刷新貨架 (${cdText})</span>
           <span class="npc-cost-pill ${gold >= refreshCost ? 'is-ok' : 'is-short'}">${fmtNum(refreshCost)} G</span>
         </button>
       </div>
@@ -398,19 +463,12 @@ function buildWorkspaceHtml(ui, action, data, ctx, deps, st, chIdx, chapter) {
     `;
   }
 
-  // =========================================================
-  // Batch 2 概念重構 5：實木通緝告示板 + 羊皮紙海報
-  // =========================================================
   if (action === 'modal_bounty') {
     const bp = st.bountyProgress || {};
     const kills = bp.kills ?? st.kills ?? 0;
     const bossKills = bp.bossKills ?? 0;
     const claimed = bp.claimed || {};
-    const quests = [
-      { id: `ch${chapter}_q1`, tag: '野怪懸賞', cls: '', title: chapter === 1 ? '清剿腐朽野狼群' : `清剿第 ${chapter} 章魔物群`, cur: kills, req: 30 * chapter, reward: `${fmtNum(600 * chapter)} 金幣 + 稀有裝備箱` },
-      { id: `ch${chapter}_q2`, tag: '首領通緝', cls: 'is-elite', title: chapter === 1 ? '討伐邊境首領 (5/10 關)' : `討伐第 ${chapter} 章首領`, cur: bossKills, req: 2 * chapter, reward: `${fmtNum(1200 * chapter)} 金幣 + 1 技能點` },
-      { id: `ch${chapter}_q3`, tag: '黃金試煉', cls: 'is-trial', title: '百戰哨兵試煉', cur: kills, req: 120 * chapter, reward: `${fmtNum(2500 * chapter)} 金幣 + 傳說保底箱` },
-    ];
+    const quests = BOUNTIES_BY_CH[chapter] || BOUNTIES_BY_CH[1];
     return `
       <div class="npc-sec-head">
         <div class="npc-sec-title">第 ${chapter} 章實木通緝告示板</div>
@@ -418,9 +476,10 @@ function buildWorkspaceHtml(ui, action, data, ctx, deps, st, chIdx, chapter) {
       </div>
       <div class="bounty-board">
         ${quests.map((q) => {
+          const cur = q.type === 'boss' ? bossKills : kills;
           const isClaimed = !!claimed[q.id];
-          const pct = Math.min(100, Math.floor((q.cur / Math.max(1, q.req)) * 100));
-          const ready = q.cur >= q.req && !isClaimed;
+          const pct = Math.min(100, Math.floor((cur / Math.max(1, q.req)) * 100));
+          const ready = cur >= q.req && !isClaimed;
           return `
             <div class="wanted-poster ${q.cls}">
               <div>
@@ -429,7 +488,7 @@ function buildWorkspaceHtml(ui, action, data, ctx, deps, st, chIdx, chapter) {
                 <div class="npc-card-title" style="text-align:center;">${q.title}</div>
                 <div class="npc-card-desc" style="text-align:center;margin:6px 0;">賞金：${q.reward}</div>
                 <div class="npc-progress-track"><div class="npc-progress-fill" style="width:${pct}%"></div></div>
-                <div style="font-size:11px;color:#94a3b8;text-align:center;margin-top:4px;">${fmtNum(q.cur)} / ${fmtNum(q.req)}（${pct}%）</div>
+                <div style="font-size:11px;color:#94a3b8;text-align:center;margin-top:4px;">${fmtNum(cur)} / ${fmtNum(q.req)}（${pct}%）</div>
               </div>
               ${isClaimed ? `<div class="npc-btn-claimed">${SVG.check}<span>已結案領賞</span></div>` : costBtnHtml(`data-bounty="${q.id}"`, ready ? '蓋章領取賞金' : '懸賞進行中', `${pct}%`, ready)}
             </div>
@@ -439,15 +498,14 @@ function buildWorkspaceHtml(ui, action, data, ctx, deps, st, chIdx, chapter) {
     `;
   }
 
-  // =========================================================
-  // Batch 2 概念重構 6：跳字動態木樁演武場 + 三本劍譜捲軸
-  // =========================================================
   if (action === 'modal_trainer') {
     const cid = st.classId || 'warrior';
     const presets = st.skillPresetsByClass?.[cid] || [null, null, null];
+    const eqSkills = (st.equippedSkillsByClass?.[cid] || []).filter(Boolean);
     const bestDps = Number(st.bestDummyDps) || 0;
     const stats = ctx?.getComputedStats?.() || {};
     const estDps = Number(stats.dps) || 0;
+    const critPct = Math.round((Number(stats.critRate) || 0) * 100);
     return `
       <div class="npc-sec-head">
         <div class="npc-sec-title">實戰演武木樁場與劍譜流派</div>
@@ -456,12 +514,13 @@ function buildWorkspaceHtml(ui, action, data, ctx, deps, st, chIdx, chapter) {
       <div class="trainer-arena">
         <div id="dummy-target-box" class="dummy-target-box">
           ${SVG.dummy}
-          <span style="font-size:11px;color:#fde68a;margin-top:6px;">演武木樁（點擊測試）</span>
+          <span style="font-size:11px;color:#fde68a;margin-top:6px;">演武木樁（實戰測試）</span>
         </div>
         <div style="display:flex;flex-direction:column;justify-content:space-between;gap:8px;">
           <div>
             <div class="npc-card-title">歷史最高木樁 DPS：${fmtNum(bestDps)}</div>
-            <div id="npc-dummy-status" class="npc-card-desc">面板預估秒傷：${fmtNum(estDps)} ｜ 準備就緒</div>
+            <div id="npc-dummy-status" class="npc-card-desc">面板預估秒傷：${fmtNum(estDps)} ｜ 暴擊率：${critPct}%</div>
+            <div style="font-size:11.5px;color:#cbd5e1;margin-top:4px;">當前技能：${eqSkills.length ? eqSkills.join(' / ') : '尚未配置技能'}</div>
           </div>
           <div class="npc-progress-track"><div id="npc-dummy-bar" class="npc-progress-fill" style="width:0%"></div></div>
           ${costBtnHtml('id="btn-start-dummy"', '開始 10 秒木樁實戰演武', '免費演武', true)}
@@ -485,9 +544,6 @@ function buildWorkspaceHtml(ui, action, data, ctx, deps, st, chIdx, chapter) {
     `;
   }
 
-  // =========================================================
-  // Batch 2 概念重構 7：三芒星魂晶祭壇 + 10 顆水晶刻度
-  // =========================================================
   if (action === 'modal_sanctum') {
     const lv = st.sanctumLevels || {};
     const auras = [
@@ -527,9 +583,6 @@ function buildWorkspaceHtml(ui, action, data, ctx, deps, st, chIdx, chapter) {
     `;
   }
 
-  // =========================================================
-  // Batch 2 概念重構 8：重型金庫密碼門 + 機械撥桿
-  // =========================================================
   if (action === 'modal_vault') {
     const vaultItems = st.vaultItems || [];
     const rules = st.vaultRules || {};
@@ -586,15 +639,43 @@ function buildWorkspaceHtml(ui, action, data, ctx, deps, st, chIdx, chapter) {
     `;
   }
 
+  // =========================================================
+  // 完整修復 modal_waypoint：城內瞬移 + 出城打第 X 關 + 10 章主城傳送
+  // =========================================================
   if (action === 'modal_waypoint') {
     const wps = ctx?.getWaypoints?.() || [];
+    const maxStg = st.maxStageReached || st.maxStage || st.stage || 1;
+    const maxCh = Math.min(9, getChapterIdx(maxStg));
+    const getStageLabel = deps.getStageLabel || ((s) => `${Math.floor((s - 1) / 10) + 1}-${((s - 1) % 10) + 1}`);
+    const quickStages = [chIdx * 10 + 1, chIdx * 10 + 5, chIdx * 10 + 10].filter((s) => s <= maxStg);
+
     return `
       <div class="npc-sec-head">
-        <div class="npc-sec-title">主城快速傳送陣</div>
-        <button id="btn-wp-exit-cur" class="npc-btn-primary" style="width:auto;"><span>繼續第 ${st.stage || 1} 關作戰</span></button>
+        <div class="npc-sec-title">城內設施瞬移節點</div>
+        <button id="btn-wp-exit-cur" class="npc-btn-primary" style="width:auto;"><span>繼續第 ${getStageLabel(st.stage || 1)} 關作戰</span></button>
       </div>
       <div class="npc-chip-list">
         ${wps.map((wp, idx) => `<button data-wp-idx="${idx}" class="npc-btn-secondary">${wp.label || `傳送點 ${idx + 1}`}</button>`).join('')}
+      </div>
+      ${quickStages.length ? `
+        <div class="npc-sec-head"><div class="npc-sec-title">快速出城挑戰本章關卡</div></div>
+        <div class="npc-chip-list">
+          ${quickStages.map((s) => `<button data-wp-stg="${s}" class="npc-btn-secondary">出城打第 ${getStageLabel(s)} 關</button>`).join('')}
+        </div>
+      ` : ''}
+      <div class="npc-sec-head"><div class="npc-sec-title">跨章節主城傳送（1～10 章）</div></div>
+      <div class="starmap-route">
+        ${CHAPTER_NAMES.map((name, i) => {
+          const isCur = i === chIdx;
+          const isUnlocked = i <= maxCh;
+          const cls = isCur ? 'is-current' : (isUnlocked ? '' : 'is-preview');
+          return `
+            <button data-wp-ch="${i}" class="starmap-node ${cls}" ${isCur ? 'disabled' : ''}>
+              <span style="font-size:12.5px;font-weight:800;">${name}</span>
+              <span class="starmap-badge">${isCur ? '所在主城' : (isUnlocked ? '傳送' : '觀光傳送')}</span>
+            </button>
+          `;
+        }).join('')}
       </div>
     `;
   }
@@ -627,9 +708,6 @@ function buildWorkspaceHtml(ui, action, data, ctx, deps, st, chIdx, chapter) {
     `;
   }
 
-  // =========================================================
-  // Batch 2 概念重構 9：10 章限定 NPC 封蠟補給禮盒 + 機關攻略提示
-  // =========================================================
   const CHAPTER_GIFTS = {
     modal_scout: { key: 'ch1ScoutGiftClaimed', btn: 'btn-claim-scout', title: '曙光哨站新人補給包', rewards: ['500 金幣', '經驗藥水（60 秒 +50% 經驗）'], tip: '點擊城中央「曙光烽火台」可獲得 5 分鐘全屬性祝福。' },
     modal_smuggler: { key: 'ch2SmugglerGiftClaimed', btn: 'btn-claim-smuggler', title: '洞窟走私見面禮盒', rewards: ['1,500 金幣', '奧術粉塵補給'], tip: '轉動城內的「高壓蒸汽閥門」可釋放蒸汽並瞬間回滿生命與能量。' },
@@ -676,7 +754,7 @@ function bindWorkspaceEvents(ui, action, data, ctx, deps, st, chIdx, bodyEl, mod
 
   if (action === 'modal_alchemy') {
     const chMult = 1 + chIdx * 0.4;
-    const bundleCost = Math.floor((300 + 400 + 450 + 1400 + 1400 + 1800) * chMult * 0.9);
+    const bundleCost = Math.floor((420 + 480 + 520 + 680 + 620 + 700) * chMult * 0.9);
     bodyEl.querySelectorAll('.vial-slot').forEach((slot) => {
       slot.addEventListener('mouseenter', () => activeStageEngine?.setLiquidColor(slot.dataset.vialColor));
     });
@@ -694,9 +772,9 @@ function bindWorkspaceEvents(ui, action, data, ctx, deps, st, chIdx, bodyEl, mod
     });
   } else if (action === 'modal_market') {
     const chMult = 1 + chIdx * 0.4;
-    const stageCost = Math.floor(350 * (1 + (st.stage || 1) * 0.22));
+    const stageCost = Math.floor(600 * (1 + (st.stage || 1) * 0.22));
     const highCost = stageCost * 3;
-    const refreshCost = Math.floor(500 * chMult);
+    const refreshCost = Math.floor(350 * chMult);
     bodyEl.querySelectorAll('button[data-shelf]').forEach((btn) => {
       btn.addEventListener('click', () => { ctx?.onBuyMarketShelf?.(Number(btn.dataset.shelf)); say('成交！這件貨品現在歸你了。', 'success'); setTimeout(reopen, 260); });
     });
@@ -782,6 +860,12 @@ function bindWorkspaceEvents(ui, action, data, ctx, deps, st, chIdx, bodyEl, mod
     bodyEl.querySelector('#btn-wp-exit-cur')?.addEventListener('click', () => closeAnd(() => ctx?.onExitTown?.()));
     bodyEl.querySelectorAll('button[data-wp-idx]').forEach((b) => {
       b.addEventListener('click', () => { const wp = wps[Number(b.dataset.wpIdx)]; if (wp) closeAnd(() => ctx?.onTeleportWaypoint?.(wp.x, wp.y, wp.label)); });
+    });
+    bodyEl.querySelectorAll('button[data-wp-stg]').forEach((b) => {
+      b.addEventListener('click', () => closeAnd(() => ctx?.onTeleportToStage?.(Number(b.dataset.wpStg))));
+    });
+    bodyEl.querySelectorAll('button[data-wp-ch]').forEach((b) => {
+      b.addEventListener('click', () => closeAnd(() => ctx?.onTeleportTown?.(Number(b.dataset.wpCh))));
     });
   } else if (action === 'modal_vault') {
     bodyEl.querySelector('#btn-vault-bag')?.addEventListener('click', () => closeAnd(() => ctx?.onOpenDrawer?.('bag')));

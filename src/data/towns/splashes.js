@@ -111,26 +111,27 @@ export const TOWN_SPLASHES = [
   },
 ];
 
-// v202 自動掛載新版 NPC 概念視窗（直接覆蓋檔案即可生效，免手動改 DashboardUI.js / index.html）
+// v203 自動掛載新版 NPC 概念視窗（直接覆蓋檔案即可生效，免手動改 DashboardUI.js / index.html）
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   queueMicrotask(async () => {
     try {
       const [{ DashboardUI }, { renderTownFacilityModal }, monsters] = await Promise.all([
         import('../../ui/DashboardUI.js?v=99'),
-        import('../../ui/NpcModalRenderer.js?v=202'),
+        import('../../ui/NpcModalRenderer.js?v=203'),
         import('../monsters.js?v=99'),
       ]);
       if (DashboardUI?.prototype) {
         DashboardUI.prototype.openTownFacilityModal = function (action, data, ctx) {
           renderTownFacilityModal(this, action, data, ctx, {
             getChapterIdx: monsters.getChapterIdx,
+            getStageLabel: monsters.getStageLabel,
             ZONE_POOLS: monsters.ZONE_POOLS,
             MONSTER_TEMPLATES: monsters.MONSTER_TEMPLATES,
           });
         };
       }
     } catch (err) {
-      console.warn('[v202] NPC Modal auto-wire failed:', err);
+      console.warn('[v203] NPC Modal auto-wire failed:', err);
     }
   });
 }
