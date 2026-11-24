@@ -11,13 +11,13 @@ function ensureAuthCss() {
   if (typeof document === 'undefined') return;
   const old = document.getElementById('welcome-auth-v207-css');
   if (old) {
-    old.href = './src/ui/welcomeAuth.css?v=208';
+    old.href = './src/ui/welcomeAuth.css?v=209';
     return;
   }
   const link = document.createElement('link');
   link.id = 'welcome-auth-v207-css';
   link.rel = 'stylesheet';
-  link.href = './src/ui/welcomeAuth.css?v=208';
+  link.href = './src/ui/welcomeAuth.css?v=209';
   document.head.appendChild(link);
 }
 
@@ -81,6 +81,8 @@ export function initWelcomeAuthUI() {
   const googleBtn = document.getElementById('btn-google-login');
   const guestBtn = document.getElementById('btn-guest-play');
   const bottomBar = document.querySelector('#welcome-step-auth .gate-bottom-bar');
+  const eraPill = document.querySelector('#welcome-step-auth .gate-era-pill');
+  if (eraPill) eraPill.remove();
   const statusPill = document.getElementById('welcome-auth-status');
 
   // 1. 移除「本機離線冒險」與底部三格特色文案
