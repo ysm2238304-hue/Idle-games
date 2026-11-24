@@ -67,7 +67,7 @@ export class TownScene extends Phaser.Scene {
       }
     });
     const td = this.townData;
-    const cid = this.callbacks?.getState?.()?.classId || 'warrior';
+    const cid = (this.callbacks?.getState?.()?.classId || window.__IDLE_ARPG_BRIDGE__?.getState?.()?.classId || 'warrior');
     const heroAtlas = `atlas_${cid}`;
     if (!this.textures.exists(heroAtlas)) {
       this.load.atlas(heroAtlas, `./assets/heroes/atlas_${cid}.png?v=66`, `./assets/heroes/atlas_${cid}.json?v=66`);
@@ -102,7 +102,7 @@ export class TownScene extends Phaser.Scene {
     const npcAtlasKey = td.atlasKey.replace('town_atlas_', 'town_npc_atlas_');
     this.npcAtlasKey = npcAtlasKey;
     this.registerNpcAnims(npcAtlasKey);
-    this.registerHeroAnims(this.callbacks?.getState?.()?.classId || 'warrior');
+    this.registerHeroAnims((this.callbacks?.getState?.()?.classId || window.__IDLE_ARPG_BRIDGE__?.getState?.()?.classId || 'warrior'));
     this.physics?.world?.setBounds(0, 0, td.mapWidth, td.mapHeight);
     this.cameras.main.setBounds(0, 0, td.mapWidth, td.mapHeight);
 
@@ -258,7 +258,7 @@ export class TownScene extends Phaser.Scene {
     }
 
     // 9. 建立玩家英雄角色（使用與 BattleScene 一致的 atlas_${cid} 與專屬幀前綴）
-    const cid = this.callbacks?.getState?.()?.classId || 'warrior';
+    const cid = (this.callbacks?.getState?.()?.classId || window.__IDLE_ARPG_BRIDGE__?.getState?.()?.classId || 'warrior');
     const framePrefix = this.getHeroFramePrefix(cid);
     const atlasKey = `atlas_${cid}`;
     const initFrame = `${framePrefix}_down_walk_0`;
@@ -718,13 +718,24 @@ export class TownScene extends Phaser.Scene {
 
   syncHeroAppearance() {
     if (!this.hero) return;
-    const cid = this.callbacks?.getState?.()?.classId || 'warrior';
+    const cid = (this.callbacks?.getState?.()?.classId || window.__IDLE_ARPG_BRIDGE__?.getState?.()?.classId || 'warrior');
     const atlasKey = `atlas_${cid}`;
     const fp = this.getHeroFramePrefix(cid);
     this.registerHeroAnims(cid);
     const dir = this.heroDir === 'left' ? 'right' : (this.heroDir || 'down');
-    if (this.hero.texture.key !== atlasKey && this.textures.exists(atlasKey)) {
-      this.hero.setTexture(atlasKey, `${fp}_${dir}_idle_0`);
+    if (this.hero.texture.key !== atlasKey) {
+      if (this.textures.exists(atlasKey)) {
+        this.hero.setTexture(atlasKey, `${fp}_${dir}_idle_0`);
+      } else if (this.load) {
+        this.load.atlas(atlasKey, `./assets/heroes/atlas_${cid}.png?v=66`, `./assets/heroes/atlas_${cid}.json?v=66`);
+        this.load.once('complete', () => {
+          this.registerHeroAnims(cid);
+          if (this.hero && this.textures.exists(atlasKey)) {
+            this.hero.setTexture(atlasKey, `${fp}_${dir}_idle_0`);
+          }
+        });
+        this.load.start();
+      }
     }
   }
 
@@ -1016,7 +1027,7 @@ export class TownScene extends Phaser.Scene {
   }
 
   updateHeroAnim(vx, vy, time) {
-    const cid = this.callbacks?.getState?.()?.classId || 'warrior';
+    const cid = (this.callbacks?.getState?.()?.classId || window.__IDLE_ARPG_BRIDGE__?.getState?.()?.classId || 'warrior');
     this.registerHeroAnims(cid);
     const prefix = this.getHeroPrefix(cid);
     const spd = Math.hypot(vx, vy);

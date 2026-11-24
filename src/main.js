@@ -21,7 +21,7 @@ import {
   saveCloudData,
 } from './auth/firebase.js?v=99';
 import { BattleScene } from './scenes/BattleScene.js?v=99';
-import { TownScene } from './scenes/TownScene.js?v=99';
+import { TownScene } from './scenes/TownScene.js?v=216';
 import { TOWN_SPLASHES } from './data/towns/splashes.js?v=215';
 import { DashboardUI } from './ui/DashboardUI.js?v=99';
 import { TownBgmEngine } from './audio/TownBgmEngine.js?v=99';
@@ -598,7 +598,7 @@ function initPhaserGame() {
       mode: Phaser.Scale.RESIZE,
       autoCenter: Phaser.Scale.CENTER_BOTH,
     },
-    scene: [TownScene, BattleScene],
+    scene: [],
   };
 
   window.__IDLE_ARPG_BRIDGE__ = {
@@ -779,6 +779,8 @@ function initPhaserGame() {
   phaserGame = new Phaser.Game(config);
 
   phaserGame.events.once('ready', () => {
+    phaserGame.scene.add('TownScene', TownScene, false);
+    phaserGame.scene.add('BattleScene', BattleScene, false);
     battleScene = phaserGame.scene.getScene('BattleScene');
     townScene = phaserGame.scene.getScene('TownScene');
     requestAnimationFrame(() => {
@@ -1448,13 +1450,15 @@ function enterTown(chapterIdx = 0, instant = false) {
   };
 
   if (phaserGame.scene.isSleeping('TownScene') || phaserGame.scene.isActive('TownScene')) {
-    if (townScene && townScene.townData?.chapterIdx !== chapterIdx) {
+    if (townScene && (townScene.townData?.chapterIdx !== chapterIdx || !townScene.callbacks)) {
       phaserGame.scene.stop('TownScene');
       battleScene?.collectAllGroundLoot?.();
-      battleScene?.collectAllGroundLoot?.();
-    phaserGame.scene.start('TownScene', { chapterIdx, callbacks: townCallbacks });
+      phaserGame.scene.start('TownScene', { chapterIdx, callbacks: townCallbacks });
     } else {
-      phaserGame.scene.wake('TownScene', { chapterIdx, callbacks: townCallbacks });
+      if (townScene) townScene.callbacks = townCallbacks;
+      if (phaserGame.scene.isSleeping('TownScene')) {
+        phaserGame.scene.wake('TownScene', { chapterIdx, callbacks: townCallbacks });
+      }
       townScene?.syncHeroAppearance?.();
     }
   } else {
