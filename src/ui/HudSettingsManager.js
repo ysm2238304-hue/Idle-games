@@ -9,6 +9,11 @@ const PANEL_META = {
   'diablo-hud': { label: '底部雙球技能祭壇', origin: 'bottom center' },
 };
 
+export const RESERVED_MOVE_KEYS = new Set([
+  'KeyW', 'KeyA', 'KeyS', 'KeyD',
+  'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+]);
+
 export const DEFAULT_KEYBINDS = {
   potion: 'KeyH',
   skill0: 'Space',
@@ -27,10 +32,23 @@ export const DEFAULT_KEYBINDS = {
   switchClass: 'KeyC',
   waypoint: 'KeyY',
   pets: 'KeyP',
-  shop: 'KeyS',
+  achTower: 'KeyJ',
+  shop: 'KeyF',
+  powerSave: 'KeyZ',
+  bgmToggle: 'KeyX',
   log: 'KeyL',
   settings: 'KeyO',
 };
+
+function sanitizeKeybinds(raw) {
+  const merged = { ...DEFAULT_KEYBINDS, ...(raw || {}) };
+  for (const [k, v] of Object.entries(merged)) {
+    if (!v || RESERVED_MOVE_KEYS.has(v)) {
+      merged[k] = DEFAULT_KEYBINDS[k];
+    }
+  }
+  return merged;
+}
 
 const KEYBIND_META = [
   { id: 'potion', label: '使用生命藥水', group: '戰鬥操作' },
@@ -43,7 +61,10 @@ const KEYBIND_META = [
   { id: 'gear', label: '角色與裝備欄', group: '介面選單' },
   { id: 'bag', label: '物品背包 / 寵物欄', group: '介面選單' },
   { id: 'pets', label: '寵物圖鑑面板', group: '介面選單' },
+  { id: 'achTower', label: '成就稱號與無盡爬塔', group: '介面選單' },
   { id: 'shop', label: '暗黑深淵商城', group: '介面選單' },
+  { id: 'powerSave', label: '暗黑省電掛機模式', group: '介面選單' },
+  { id: 'bgmToggle', label: '主城背景音樂靜音', group: '介面選單' },
   { id: 'upgrade', label: '金幣屬性強化', group: '介面選單' },
   { id: 'tree', label: '深淵技能樹', group: '介面選單' },
   { id: 'skills', label: '職業技能配置', group: '介面選單' },
@@ -89,6 +110,7 @@ export class HudSettingsManager {
     this.activeTab = 'ui';
     this._dragState = null;
     this._listeningKeyId = null;
+    this._keybindNotice = '';
     this.modal = null;
     this.banner = null;
   }
@@ -110,7 +132,7 @@ export class HudSettingsManager {
         audio: { ...def.audio, ...(p.audio || {}) },
         graphics: { ...def.graphics, ...(p.graphics || {}) },
         gameplay: { ...def.gameplay, ...(p.gameplay || {}) },
-        keybinds: { ...DEFAULT_KEYBINDS, ...(p.keybinds || {}) },
+        keybinds: sanitizeKeybinds(p.keybinds),
       };
     } catch {
       return def;
@@ -148,7 +170,7 @@ export class HudSettingsManager {
       audio: { ...def.audio, ...(remote.audio || {}) },
       graphics: { ...def.graphics, ...(remote.graphics || {}) },
       gameplay: { ...def.gameplay, ...(remote.gameplay || {}) },
-      keybinds: { ...DEFAULT_KEYBINDS, ...(remote.keybinds || {}) },
+      keybinds: sanitizeKeybinds(remote.keybinds),
     };
     this.applyAll();
     this.save(true);
@@ -228,6 +250,13 @@ export class HudSettingsManager {
       e.stopPropagation();
       if (e.code === 'Escape') {
         this._listeningKeyId = null;
+        this._keybindNotice = '';
+        this.renderModalBody();
+        return;
+      }
+      if (RESERVED_MOVE_KEYS.has(e.code)) {
+        this._keybindNotice = '⚠️ W / A / S / D 與方向鍵為系統預設移動鍵，不可覆蓋！';
+        this._listeningKeyId = null;
         this.renderModalBody();
         return;
       }
@@ -242,6 +271,7 @@ export class HudSettingsManager {
       }
       kb[targetId] = e.code;
       this._listeningKeyId = null;
+      this._keybindNotice = '';
       this.applyAll();
       this.save();
       this.renderModalBody();
@@ -324,7 +354,9 @@ export class HudSettingsManager {
       ['#btn-top-waypoint', 'waypoint', '主城快速傳送陣'],
       ['[data-drawer="pets"]', 'pets', '技能變異寵物'],
       ['[data-drawer="log"]', 'log', '完整戰鬥日誌'],
+      ['#btn-open-ach-tower', 'achTower', '成就稱號與無盡爬塔'],
       ['#btn-open-shop', 'shop', '暗黑深淵商城'],
+      ['#btn-town-bgm', 'bgmToggle', '開啟 / 靜音主城 BGM'],
       ['#btn-open-settings', 'settings', '系統設定'],
     ];
     for (const [sel, keyId, tipBase] of matrixMap) {
@@ -337,6 +369,12 @@ export class HudSettingsManager {
     }
 
     // 3. 彈窗與大廳按鈕提示同步
+    const psBtn = document.getElementById('btn-power-save');
+    if (psBtn) {
+      const pk = fmt('powerSave');
+      psBtn.textContent = `🌙 省電掛機 [${pk}]`;
+      psBtn.title = `開啟暗黑掛機省電幕布 [${pk}]`;
+    }
     const lobbySet = document.getElementById('btn-lobby-settings');
     if (lobbySet) lobbySet.textContent = `⚙️ 設定(${fmt('settings')})`;
   }
@@ -463,10 +501,11 @@ export class HudSettingsManager {
       const kb = this.getKeybinds();
       body.innerHTML = `
         <div class="set-section">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-            <small style="color:#cbd5e1;">點擊右側按鍵鈕後直接按下新按鍵（按 Esc 取消，重複自動交換並立即同步至 UI）</small>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:8px;">
+            <small style="color:#cbd5e1;">點擊右側按鍵鈕後按下新鍵（Esc 取消，重複自動交換；<b style="color:#fbbf24;">WASD 與方向鍵固定為移動鍵不可覆蓋</b>）</small>
             <button type="button" id="btn-reset-keybinds" class="btn-ghost-sm">↺ 恢復預設按鍵</button>
           </div>
+          ${this._keybindNotice ? `<div style="margin-bottom:8px;padding:6px 10px;border-radius:6px;background:rgba(239,68,68,0.16);border:1px solid rgba(248,113,113,0.45);color:#fca5a5;font-size:12px;">${this._keybindNotice}</div>` : ''}
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;">
             ${KEYBIND_META.map((item) => {
               const listening = this._listeningKeyId === item.id;
@@ -485,6 +524,7 @@ export class HudSettingsManager {
       body.querySelector('#btn-reset-keybinds')?.addEventListener('click', () => {
         this.settings.keybinds = { ...DEFAULT_KEYBINDS };
         this._listeningKeyId = null;
+        this._keybindNotice = '';
         this.applyAll();
         this.save();
         this.renderModalBody();
@@ -492,6 +532,7 @@ export class HudSettingsManager {
       body.querySelectorAll('[data-rebind]').forEach((btn) => {
         btn.onclick = () => {
           this._listeningKeyId = btn.dataset.rebind;
+          this._keybindNotice = '';
           this.renderModalBody();
         };
       });

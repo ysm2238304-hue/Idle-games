@@ -1,17 +1,17 @@
-import { CLASSES } from './data/classes.js?v=98';
-import { getStageLabel, getSubStage, getChapterIdx } from './data/monsters.js?v=98';
-import { WARRIOR_SKILLS } from './data/warriorSkills.js?v=98';
-import { RANGER_SKILLS } from './data/rangerSkills.js?v=98';
-import { MAGE_SKILLS } from './data/mageSkills.js?v=98';
-import { PALADIN_SKILLS } from './data/paladinSkills.js?v=98';
-import { NECRO_SKILLS } from './data/necroSkills.js?v=98';
-import { ASSASSIN_SKILLS } from './data/assassinSkills.js?v=98';
-import { RARITIES } from './data/items.js?v=98';
-import { PET_CATALOG, rollPetDrop } from './data/pets.js?v=98';
-import { SKILL_TREE_NODES, isNodeUnlocked } from './data/skillTree.js?v=98';
-import { generateLoot, calcItemPower, getSalvageReward, rerollItemAffixes, generateBlackMarketItem } from './logic/lootGen.js?v=98';
-import { recalcPlayerStats, getExpToNext, getUpgradeCost, calcRebirthCrystals, formatNum } from './logic/statCalc.js?v=98';
-import { createInitialState, loadGame, saveGame, calcOfflineProgress } from './logic/saveSystem.js?v=98';
+import { CLASSES } from './data/classes.js?v=99';
+import { getStageLabel, getSubStage, getChapterIdx } from './data/monsters.js?v=99';
+import { WARRIOR_SKILLS } from './data/warriorSkills.js?v=99';
+import { RANGER_SKILLS } from './data/rangerSkills.js?v=99';
+import { MAGE_SKILLS } from './data/mageSkills.js?v=99';
+import { PALADIN_SKILLS } from './data/paladinSkills.js?v=99';
+import { NECRO_SKILLS } from './data/necroSkills.js?v=99';
+import { ASSASSIN_SKILLS } from './data/assassinSkills.js?v=99';
+import { RARITIES } from './data/items.js?v=99';
+import { PET_CATALOG, rollPetDrop } from './data/pets.js?v=99';
+import { SKILL_TREE_NODES, isNodeUnlocked } from './data/skillTree.js?v=99';
+import { generateLoot, calcItemPower, getSalvageReward, rerollItemAffixes, generateBlackMarketItem } from './logic/lootGen.js?v=99';
+import { recalcPlayerStats, getExpToNext, getUpgradeCost, calcRebirthCrystals, formatNum } from './logic/statCalc.js?v=99';
+import { createInitialState, loadGame, saveGame, calcOfflineProgress } from './logic/saveSystem.js?v=99';
 import {
   initCloudAuth,
   signInWithGoogle,
@@ -19,19 +19,19 @@ import {
   getCurrentUser,
   loadCloudSave,
   saveCloudData,
-} from './auth/firebase.js?v=98';
-import { BattleScene } from './scenes/BattleScene.js?v=98';
-import { TownScene } from './scenes/TownScene.js?v=98';
-import { TOWN_SPLASHES } from './data/towns/splashes.js?v=98';
-import { DashboardUI } from './ui/DashboardUI.js?v=98';
-import { TownBgmEngine } from './audio/TownBgmEngine.js?v=98';
-import { BattleSfxEngine } from './audio/BattleSfxEngine.js?v=98';
-import { HudSettingsManager } from './ui/HudSettingsManager.js?v=98';
-import { ShopModal } from './ui/ShopModal.js?v=98';
-import { AchievementTowerModal } from './ui/AchievementTowerModal.js?v=98';
-import { ACHIEVEMENTS } from './data/achievements.js?v=98';
-import { rollEnhance, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEVEL } from './logic/enhanceSystem.js?v=98';
-import { HeroSkillShowcase, CLASS_SKILLS_MAP } from './ui/HeroSkillShowcase.js?v=98';
+} from './auth/firebase.js?v=99';
+import { BattleScene } from './scenes/BattleScene.js?v=99';
+import { TownScene } from './scenes/TownScene.js?v=99';
+import { TOWN_SPLASHES } from './data/towns/splashes.js?v=99';
+import { DashboardUI } from './ui/DashboardUI.js?v=99';
+import { TownBgmEngine } from './audio/TownBgmEngine.js?v=99';
+import { BattleSfxEngine } from './audio/BattleSfxEngine.js?v=99';
+import { HudSettingsManager } from './ui/HudSettingsManager.js?v=99';
+import { ShopModal } from './ui/ShopModal.js?v=99';
+import { AchievementTowerModal } from './ui/AchievementTowerModal.js?v=99';
+import { ACHIEVEMENTS } from './data/achievements.js?v=99';
+import { rollEnhance, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEVEL } from './logic/enhanceSystem.js?v=99';
+import { HeroSkillShowcase, CLASS_SKILLS_MAP } from './ui/HeroSkillShowcase.js?v=99';
 
 let gameState = loadGame() || createInitialState('warrior');
 let computedStats = recalcPlayerStats(gameState);
@@ -1921,10 +1921,12 @@ window.addEventListener('keydown', (e) => {
     cm?.classList.contains('hidden') ? ui.openClassModal(gameState) : cm.classList.add('hidden');
   } else if (e.code === kb.townToggle) {
     if (isInTown) exitTownToBattle(); else enterTown(Math.min(9, getChapterIdx(gameState.stage)));
-  } else if (e.code === 'KeyZ') {
+  } else if (e.code === kb.powerSave) {
     e.preventDefault(); togglePowerSaveMode();
-  } else if (e.code === 'KeyA') {
+  } else if (e.code === kb.achTower) {
     e.preventDefault(); achTowerModal.toggle();
+  } else if (e.code === kb.bgmToggle) {
+    e.preventDefault(); document.getElementById('btn-town-bgm')?.click();
   } else if (e.code === kb.shop) {
     e.preventDefault(); shopModal.toggle();
   } else if (e.code === kb.pets) {
@@ -1944,18 +1946,13 @@ window.addEventListener('keydown', (e) => {
     shopModal.close();
     achTowerModal.close();
     hudSettings.closeModal();
-  } else if (e.key === '1') {
-    ui.activeDrawer === 'gear' ? ui.closeDrawer() : ui.openDrawer('gear');
-  } else if (e.key === '2') {
-    ui.activeDrawer === 'bag' ? ui.closeDrawer() : ui.openDrawer('bag');
-  } else if (e.key === '3') {
-    ui.activeDrawer === 'upgrade' ? ui.closeDrawer() : ui.openDrawer('upgrade');
-  } else if (e.key === '4') {
-    ui.activeDrawer === 'tree' ? ui.closeDrawer() : ui.openDrawer('tree');
-  } else if (e.key === '5') {
-    ui.activeDrawer === 'rebirth' ? ui.closeDrawer() : ui.openDrawer('rebirth');
-  } else if (e.key === '6') {
-    ui.activeDrawer === 'skills' ? ui.closeDrawer() : ui.openDrawer('skills');
+  } else if (!Object.values(kb).includes(e.code)) {
+    if (e.key === '1') ui.activeDrawer === 'gear' ? ui.closeDrawer() : ui.openDrawer('gear');
+    else if (e.key === '2') ui.activeDrawer === 'bag' ? ui.closeDrawer() : ui.openDrawer('bag');
+    else if (e.key === '3') ui.activeDrawer === 'upgrade' ? ui.closeDrawer() : ui.openDrawer('upgrade');
+    else if (e.key === '4') ui.activeDrawer === 'tree' ? ui.closeDrawer() : ui.openDrawer('tree');
+    else if (e.key === '5') ui.activeDrawer === 'rebirth' ? ui.closeDrawer() : ui.openDrawer('rebirth');
+    else if (e.key === '6') ui.activeDrawer === 'skills' ? ui.closeDrawer() : ui.openDrawer('skills');
   }
 });
 

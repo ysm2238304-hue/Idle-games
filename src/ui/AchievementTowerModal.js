@@ -1,5 +1,5 @@
 // 成就里程碑稱號 ＋ 無盡深淵爬塔限時副本介面模組 (v97)
-import { ACHIEVEMENTS } from '../data/achievements.js?v=98';
+import { ACHIEVEMENTS } from '../data/achievements.js?v=99';
 
 export class AchievementTowerModal {
   constructor({ getState, onClaimAchievement, onEquipTitle, onStartTower } = {}) {

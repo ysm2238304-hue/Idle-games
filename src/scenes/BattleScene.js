@@ -1,14 +1,14 @@
-import { CLASSES } from '../data/classes.js?v=98';
-import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=98';
-import { RANGER_SKILLS } from '../data/rangerSkills.js?v=98';
-import { MAGE_SKILLS } from '../data/mageSkills.js?v=98';
-import { PALADIN_SKILLS } from '../data/paladinSkills.js?v=98';
-import { NECRO_SKILLS } from '../data/necroSkills.js?v=98';
-import { ASSASSIN_SKILLS } from '../data/assassinSkills.js?v=98';
-import { RARITIES } from '../data/items.js?v=98';
-import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta, getPetPickupRadius, getPetCodexInfo } from '../data/pets.js?v=98';
-import { createStageEncounters, spawnSingleMonster, getChapterIdx, getStageLabel, ZONE_OBSTACLES } from '../data/monsters.js?v=98';
-import { formatNum } from '../logic/statCalc.js?v=98';
+import { CLASSES } from '../data/classes.js?v=99';
+import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=99';
+import { RANGER_SKILLS } from '../data/rangerSkills.js?v=99';
+import { MAGE_SKILLS } from '../data/mageSkills.js?v=99';
+import { PALADIN_SKILLS } from '../data/paladinSkills.js?v=99';
+import { NECRO_SKILLS } from '../data/necroSkills.js?v=99';
+import { ASSASSIN_SKILLS } from '../data/assassinSkills.js?v=99';
+import { RARITIES } from '../data/items.js?v=99';
+import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta, getPetPickupRadius, getPetCodexInfo } from '../data/pets.js?v=99';
+import { createStageEncounters, spawnSingleMonster, getChapterIdx, getStageLabel, ZONE_OBSTACLES } from '../data/monsters.js?v=99';
+import { formatNum } from '../logic/statCalc.js?v=99';
 
 const MAP_W = 4096;
 const MAP_H = 2304;
@@ -122,7 +122,14 @@ export class BattleScene extends Phaser.Scene {
     if (initCid === 'necro') {
       this.loadedSummons = true;
       this.load.atlas('atlas_summons', './assets/heroes/atlas_summons.png', './assets/heroes/atlas_summons.json');
-    PET_CATALOG.forEach((p) => { if (!this.textures.exists(`pet_${p.id}`)) this.load.image(`pet_${p.id}`, `./assets/pets/${p.id}.png?v=90`); });
+    window.__petTexQueued = window.__petTexQueued || new Set();
+    PET_CATALOG.forEach((p) => {
+      const k = `pet_${p.id}`;
+      if (!this.textures.exists(k) && !window.__petTexQueued.has(k)) {
+        window.__petTexQueued.add(k);
+        this.load.image(k, `./assets/pets/${p.id}.png?v=90`);
+      }
+    });
       ['skel_summon', 'skel_slash', 'frenzy', 'wraith_boom', 'golem_summon', 'golem_slam', 'blood_leech', 'bone_shield'].forEach((k) => {
         this.load.image(`sfx_${k}`, `./assets/fx/sfx_${k}.png`);
       });
@@ -3430,7 +3437,7 @@ export class BattleScene extends Phaser.Scene {
 
         const dist = Math.hypot(this.hero.x - tx, (this.hero.y + 12) - ty);
         if (dist <= radius) {
-          this.damageHero(boss, 1.55);
+          this.performMonsterAttack(boss, this.getStats(), 1.55, true);
         } else {
           this._perfectDodgeUntil = (this.time?.now || 0) + 3500;
           window.__battleSfx?.playPerfectDodge?.();

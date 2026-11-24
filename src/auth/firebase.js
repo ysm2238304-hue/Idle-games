@@ -94,11 +94,14 @@ export async function signOutGoogle() {
   if (!ctx) return;
   await ctx.authMod.signOut(ctx.auth);
   currentUser = null;
+  cloudWriteDisabled = false;
 }
 
 export function getCurrentUser() {
   return currentUser;
 }
+
+let cloudWriteDisabled = false;
 
 export async function loadCloudSave(uid) {
   const ctx = await ensureFirebase();
@@ -114,6 +117,7 @@ export async function loadCloudSave(uid) {
 }
 
 export async function saveCloudData(uid, state) {
+  if (cloudWriteDisabled) return false;
   const ctx = await ensureFirebase();
   if (!ctx || !uid) return false;
   try {
@@ -124,7 +128,15 @@ export async function saveCloudData(uid, state) {
     }, { merge: true });
     return true;
   } catch (e) {
-    console.warn('雲端存檔失敗:', e);
+    const msg = String(e?.message || '');
+    if (e?.code === 'permission-denied' || msg.includes('permissions')) {
+      cloudWriteDisabled = true;
+      console.info('雲端存檔權限未開放，已自動切換為本地存檔模式（不再重複提示）。');
+      const badge = document.getElementById('hud-cloud-status');
+      if (badge) badge.textContent = '💾 本地存檔';
+    } else {
+      console.warn('雲端存檔失敗:', e);
+    }
     return false;
   }
 }
