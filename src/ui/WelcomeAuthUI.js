@@ -1,36 +1,98 @@
 /**
- * WelcomeAuthUI.js (v207)
- * 將歡迎頁的登入區升級為「Email + 密碼登入/註冊表單 + 手動 Google 登入 + 本機試玩」，
- * 並完整保留原本 #btn-google-login 與 #btn-guest-play 的事件綁定。
+ * WelcomeAuthUI.js (v208)
+ * - 移除「本機離線冒險」按鈕與底部三格特色文案
+ * - Google 按鈕改名為「Google帳號登入」
+ * - 優化歡迎頁背景影片：移除模糊消耗、進遊戲自動暫停、緩衝卡頓超過 2.5 秒自動降級為靜態暗黑背景
  */
 
 import { signInWithEmail, registerWithEmail, resetPasswordEmail } from '../auth/firebase.js?v=207';
 
 function ensureAuthCss() {
   if (typeof document === 'undefined') return;
-  if (document.getElementById('welcome-auth-v207-css')) return;
+  const old = document.getElementById('welcome-auth-v207-css');
+  if (old) {
+    old.href = './src/ui/welcomeAuth.css?v=208';
+    return;
+  }
   const link = document.createElement('link');
   link.id = 'welcome-auth-v207-css';
   link.rel = 'stylesheet';
-  link.href = './src/ui/welcomeAuth.css?v=207';
+  link.href = './src/ui/welcomeAuth.css?v=208';
   document.head.appendChild(link);
+}
+
+function optimizeWelcomeVideo() {
+  const video = document.getElementById('welcome-bg-video');
+  const screen = document.getElementById('welcome-screen');
+  if (!video || video.dataset.v208Opt) return;
+  video.dataset.v208Opt = '1';
+
+  video.muted = true;
+  video.playsInline = true;
+  video.preload = 'auto';
+
+  let stallTimer = null;
+  const markStalled = () => {
+    video.classList.add('is-video-stalled');
+  };
+  const clearStall = () => {
+    if (stallTimer) {
+      clearTimeout(stallTimer);
+      stallTimer = null;
+    }
+    video.classList.remove('is-video-stalled');
+  };
+
+  video.addEventListener('playing', clearStall);
+  video.addEventListener('canplay', clearStall);
+  video.addEventListener('error', markStalled);
+
+  const onBuffering = () => {
+    if (stallTimer || video.paused) return;
+    stallTimer = setTimeout(() => {
+      if (video.readyState < 3) markStalled();
+    }, 2500);
+  };
+  video.addEventListener('waiting', onBuffering);
+  video.addEventListener('stalled', onBuffering);
+
+  if (screen) {
+    const syncPlayback = () => {
+      const hidden = screen.classList.contains('hidden') || screen.style.display === 'none';
+      if (hidden) {
+        if (!video.paused) video.pause();
+      } else if (video.paused && !video.classList.contains('is-video-stalled')) {
+        video.play().catch(() => {});
+      }
+    };
+    const obs = new MutationObserver(syncPlayback);
+    obs.observe(screen, { attributes: true, attributeFilter: ['class', 'style'] });
+    syncPlayback();
+  }
 }
 
 export function initWelcomeAuthUI() {
   ensureAuthCss();
   if (typeof document === 'undefined') return;
 
+  optimizeWelcomeVideo();
+
   const pedestal = document.querySelector('#welcome-step-auth .gate-login-pedestal');
   const googleBtn = document.getElementById('btn-google-login');
   const guestBtn = document.getElementById('btn-guest-play');
+  const bottomBar = document.querySelector('#welcome-step-auth .gate-bottom-bar');
   const statusPill = document.getElementById('welcome-auth-status');
 
+  // 1. 移除「本機離線冒險」與底部三格特色文案
+  if (guestBtn) guestBtn.remove();
+  if (bottomBar) bottomBar.remove();
+
   if (statusPill && statusPill.textContent.includes('正在檢查')) {
-    statusPill.textContent = '請手動登入或註冊帳號（已關閉自動登入）';
+    statusPill.textContent = '請選擇登入或註冊帳號';
   }
 
-  if (!pedestal || pedestal.dataset.authV207Mounted) return;
-  pedestal.dataset.authV207Mounted = '1';
+  if (!pedestal || pedestal.dataset.authV208Mounted) return;
+  pedestal.dataset.authV208Mounted = '1';
 
   const card = document.createElement('div');
   card.className = 'auth-altar-card';
@@ -72,17 +134,12 @@ export function initWelcomeAuthUI() {
 
     <button type="button" id="btn-email-submit" class="auth-submit-btn">登入冒險帳號</button>
 
-    <div class="auth-divider">或使用以下方式進入</div>
+    <div class="auth-divider">或</div>
   `;
 
-  // 把原本的 Google 登入與本機試玩按鈕保留原實體移入卡片底部（不遺失 main.js 綁定的事件）
   if (googleBtn) {
-    googleBtn.textContent = 'Google 帳號手動登入（雲端同步）';
+    googleBtn.textContent = 'Google帳號登入';
     card.appendChild(googleBtn);
-  }
-  if (guestBtn) {
-    guestBtn.textContent = '本機離線冒險（免登入試玩）';
-    card.appendChild(guestBtn);
   }
 
   pedestal.innerHTML = '';

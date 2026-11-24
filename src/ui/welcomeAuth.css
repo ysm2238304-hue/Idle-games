@@ -1,20 +1,31 @@
 /* ==========================================================================
-   welcomeAuth.css (v207)
-   歡迎頁暗黑奇幻登入 / 註冊祭壇卡片樣式
+   welcomeAuth.css (v208)
+   歡迎頁暗黑奇幻登入 / 註冊祭壇卡片樣式 + 影片硬體加速與防卡頓樣式
    ========================================================================== */
+
+#welcome-bg-video {
+  transform: translateZ(0);
+  will-change: transform, opacity;
+  transition: opacity 0.45s ease;
+}
+
+#welcome-bg-video.is-video-stalled {
+  opacity: 0 !important;
+  pointer-events: none;
+}
 
 .auth-altar-card {
   width: min(410px, 92vw);
   margin: 0 auto;
   padding: 18px 20px 16px;
   border-radius: 14px;
-  background: linear-gradient(170deg, rgba(22, 16, 14, 0.92), rgba(10, 12, 20, 0.96));
+  /* 移除耗能的 backdrop-filter: blur()，改用高質感深色漸層避免影片掉幀卡頓 */
+  background: linear-gradient(170deg, rgba(22, 16, 14, 0.94), rgba(10, 12, 20, 0.97));
   border: 1.5px solid rgba(251, 191, 36, 0.45);
   box-shadow:
     0 20px 52px rgba(0, 0, 0, 0.85),
     0 0 28px rgba(251, 191, 36, 0.16),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(8px);
   display: flex;
   flex-direction: column;
   gap: 11px;
@@ -73,7 +84,7 @@
   padding: 9px 12px;
   border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.16);
-  background: rgba(9, 11, 18, 0.85);
+  background: rgba(9, 11, 18, 0.88);
   color: #f8fafc;
   font-size: 13px;
   outline: none;
@@ -179,10 +190,9 @@
   background: rgba(255, 255, 255, 0.1);
 }
 
-.auth-altar-card .gate-btn-main,
-.auth-altar-card .gate-btn-sub {
+.auth-altar-card .gate-btn-main {
   width: 100% !important;
   margin: 0 !important;
-  font-size: 12.5px !important;
-  padding: 9px 12px !important;
+  font-size: 13px !important;
+  padding: 10px 14px !important;
 }
