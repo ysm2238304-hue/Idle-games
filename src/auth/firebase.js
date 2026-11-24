@@ -1,6 +1,6 @@
-// src/auth/firebase.js — 沿用 hoshino-game 專案，存檔獨立寫入 idle_arpg_saves 集合
+// src/auth/firebase.js (v207) - 嚴格手動登入 + Email/密碼註冊登入 + Google 手動登入 + Cloud Firestore (idle_arpg_saves)
 const firebaseConfig = {
-  apiKey: 'AIzaSyDUwnKiTdmlJaSLADPxwt4OdLqUpfod0Ck',
+  apiKey: 'AIzaSyDUwnKiTdmlJaSLADPxwt40dLqUpfod0Ck',
   authDomain: 'hoshino-game.firebaseapp.com',
   projectId: 'hoshino-game',
   storageBucket: 'hoshino-game.firebasestorage.app',
@@ -15,6 +15,26 @@ let sdkPromise = null;
 let fbCtx = null;
 let currentUser = null;
 let isLoggingIn = false;
+let manualLoginTriggered = false;
+let cloudWriteDisabled = false;
+
+function translateAuthError(err) {
+  const code = err?.code || '';
+  const map = {
+    'auth/invalid-email': 'Email 格式不正確，請重新確認。',
+    'auth/user-disabled': '此帳號已被停用。',
+    'auth/user-not-found': '找不到此 Email 帳號，請先切換至「註冊」建立帳號。',
+    'auth/wrong-password': '密碼錯誤，請再試一次。',
+    'auth/invalid-credential': '帳號或密碼錯誤，請重新確認。',
+    'auth/email-already-in-use': '此 Email 已經註冊過，請直接切換至「登入」。',
+    'auth/weak-password': '密碼強度不足，請至少輸入 6 個字元。',
+    'auth/operation-not-allowed': '請先到 Firebase 後台 Authentication 開啟「電子郵件/密碼」登入方式。',
+    'auth/too-many-requests': '嘗試次數過多，請稍後再試。',
+    'auth/network-request-failed': '網路連線異常，請檢查網路狀態。',
+    'auth/unauthorized-domain': `網域未授權 (${typeof window !== 'undefined' ? window.location.hostname : ''})，請於 Firebase 後台加入授權網域。`,
+  };
+  return map[code] || err?.message || '登入失敗，請稍後再試。';
+}
 
 async function ensureFirebase() {
   if (fbCtx) return fbCtx;
@@ -46,16 +66,90 @@ export async function initCloudAuth(onUserChanged) {
   }
 
   const { auth, authMod } = ctx;
-  authMod.getRedirectResult(auth).catch((err) => {
+
+  // 檢查是否剛從 Redirect 登入返回
+  try {
+    const redir = await authMod.getRedirectResult(auth);
+    if (redir?.user) {
+      manualLoginTriggered = true;
+    }
+  } catch (err) {
     if (err && err.code !== 'auth/null-user') {
       console.warn('Redirect 登入結果異常:', err.code, err.message);
     }
-  });
+  }
 
-  authMod.onAuthStateChanged(auth, (user) => {
+  // 嚴格不自動登入：若頁面剛載入且非使用者手動觸發，強制登出舊快取，停在歡迎頁等待手動登入
+  if (!manualLoginTriggered && auth.currentUser) {
+    try {
+      await authMod.signOut(auth);
+    } catch { /* ignore */ }
+  }
+
+  let initialHandled = false;
+  authMod.onAuthStateChanged(auth, async (user) => {
+    if (!initialHandled && !manualLoginTriggered && user) {
+      initialHandled = true;
+      try {
+        await authMod.signOut(auth);
+      } catch { /* ignore */ }
+      currentUser = null;
+      onUserChanged(null, 'signed_out');
+      return;
+    }
+    initialHandled = true;
     currentUser = user;
     onUserChanged(user, user ? 'signed_in' : 'signed_out');
   });
+}
+
+export async function signInWithEmail(email, password) {
+  if (isLoggingIn) return null;
+  isLoggingIn = true;
+  try {
+    const ctx = await ensureFirebase();
+    if (!ctx) throw new Error('無法連線至雲端驗證服務。');
+    manualLoginTriggered = true;
+    const res = await ctx.authMod.signInWithEmailAndPassword(ctx.auth, email.trim(), password);
+    currentUser = res.user;
+    cloudWriteDisabled = false;
+    return res.user;
+  } catch (err) {
+    manualLoginTriggered = false;
+    throw new Error(translateAuthError(err));
+  } finally {
+    isLoggingIn = false;
+  }
+}
+
+export async function registerWithEmail(email, password) {
+  if (isLoggingIn) return null;
+  isLoggingIn = true;
+  try {
+    const ctx = await ensureFirebase();
+    if (!ctx) throw new Error('無法連線至雲端驗證服務。');
+    manualLoginTriggered = true;
+    const res = await ctx.authMod.createUserWithEmailAndPassword(ctx.auth, email.trim(), password);
+    currentUser = res.user;
+    cloudWriteDisabled = false;
+    return res.user;
+  } catch (err) {
+    manualLoginTriggered = false;
+    throw new Error(translateAuthError(err));
+  } finally {
+    isLoggingIn = false;
+  }
+}
+
+export async function resetPasswordEmail(email) {
+  const ctx = await ensureFirebase();
+  if (!ctx) throw new Error('無法連線至雲端驗證服務。');
+  try {
+    await ctx.authMod.sendPasswordResetEmail(ctx.auth, email.trim());
+    return true;
+  } catch (err) {
+    throw new Error(translateAuthError(err));
+  }
 }
 
 export async function signInWithGoogle() {
@@ -68,21 +162,24 @@ export async function signInWithGoogle() {
     const { auth, authMod } = ctx;
     const provider = new authMod.GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
+    manualLoginTriggered = true;
 
     try {
       const res = await authMod.signInWithPopup(auth, provider);
       currentUser = res.user;
+      cloudWriteDisabled = false;
       return res.user;
     } catch (err) {
-      if (err.code === 'auth/popup-closed-by-user') return null;
+      if (err.code === 'auth/popup-closed-by-user') {
+        manualLoginTriggered = false;
+        return null;
+      }
       if (err.code === 'auth/popup-blocked' || err.code === 'auth/operation-not-supported-in-this-environment') {
         await authMod.signInWithRedirect(auth, provider);
         return null;
       }
-      if (err.code === 'auth/unauthorized-domain') {
-        throw new Error(`網域未授權 (${window.location.hostname})，請於 Firebase 後台 Authorized domains 加入此網域。`);
-      }
-      throw err;
+      manualLoginTriggered = false;
+      throw new Error(translateAuthError(err));
     }
   } finally {
     isLoggingIn = false;
@@ -90,6 +187,7 @@ export async function signInWithGoogle() {
 }
 
 export async function signOutGoogle() {
+  manualLoginTriggered = false;
   const ctx = await ensureFirebase();
   if (!ctx) return;
   await ctx.authMod.signOut(ctx.auth);
@@ -100,8 +198,6 @@ export async function signOutGoogle() {
 export function getCurrentUser() {
   return currentUser;
 }
-
-let cloudWriteDisabled = false;
 
 export async function loadCloudSave(uid) {
   const ctx = await ensureFirebase();

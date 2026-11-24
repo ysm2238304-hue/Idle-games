@@ -115,13 +115,15 @@ export const TOWN_SPLASHES = [
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   queueMicrotask(async () => {
     try {
-      const [{ DashboardUI }, { renderTownFacilityModal }, monsters, { initLobbyClassClarity }] = await Promise.all([
+      const [{ DashboardUI }, { renderTownFacilityModal }, monsters, { initLobbyClassClarity }, { initWelcomeAuthUI }] = await Promise.all([
         import('../../ui/DashboardUI.js?v=99'),
         import('../../ui/NpcModalRenderer.js?v=204'),
         import('../monsters.js?v=99'),
         import('../../ui/LobbyClassClarity.js?v=206'),
+        import('../../ui/WelcomeAuthUI.js?v=207'),
       ]);
       initLobbyClassClarity();
+      initWelcomeAuthUI();
       if (DashboardUI?.prototype) {
         DashboardUI.prototype.openTownFacilityModal = function (action, data, ctx) {
           renderTownFacilityModal(this, action, data, ctx, {
@@ -133,7 +135,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
         };
       }
     } catch (err) {
-      console.warn('[v206] NPC Modal auto-wire failed:', err);
+      console.warn('[v207] NPC Modal auto-wire failed:', err);
     }
   });
 }
