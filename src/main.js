@@ -22,7 +22,7 @@ import {
 } from './auth/firebase.js?v=99';
 import { BattleScene } from './scenes/BattleScene.js?v=99';
 import { TownScene } from './scenes/TownScene.js?v=99';
-import { TOWN_SPLASHES } from './data/towns/splashes.js?v=99';
+import { TOWN_SPLASHES } from './data/towns/splashes.js?v=215';
 import { DashboardUI } from './ui/DashboardUI.js?v=99';
 import { TownBgmEngine } from './audio/TownBgmEngine.js?v=99';
 import { BattleSfxEngine } from './audio/BattleSfxEngine.js?v=99';
@@ -55,7 +55,7 @@ function refreshStatsAndUI() {
   computedStats = recalcPlayerStats(gameState);
   ui.updateTopBar(gameState, computedStats);
   ui.renderAllPanels(gameState, computedStats);
-  if (battleScene) battleScene.syncMaxHp();
+  if (battleScene?.sys?.isActive() || battleScene?.sys?.isSleeping()) battleScene.syncMaxHp();
 }
 
 const townBgm = new TownBgmEngine();
@@ -183,7 +183,7 @@ const ui = new DashboardUI({
     const cls = CLASSES[classId];
     ui.addLog(`切換職業為【${cls.name} Lv.${gameState.level}】！`, 'system');
     refreshStatsAndUI();
-    if (battleScene) battleScene.refreshHeroClass(classId);
+    if (battleScene?.sys?.isActive() || battleScene?.sys?.isSleeping()) battleScene.refreshHeroClass(classId);
     persistAll(true);
   },
 
@@ -467,8 +467,10 @@ const ui = new DashboardUI({
     ui.addLog(`🌀 深淵輪迴成功！獲得 +${gain} 魂晶（目前共 ${gameState.soulCrystals} 顆）！`, 'victory');
     refreshStatsAndUI();
     if (battleScene) {
-      battleScene.refreshHeroClass(gameState.classId);
-      battleScene.spawnWaveSquad();
+      if (battleScene?.sys?.isActive() || battleScene?.sys?.isSleeping()) {
+        battleScene.refreshHeroClass(gameState.classId);
+        battleScene.spawnWaveSquad();
+      }
     }
     persistAll(true);
   },
@@ -596,7 +598,7 @@ function initPhaserGame() {
       mode: Phaser.Scale.RESIZE,
       autoCenter: Phaser.Scale.CENTER_BOTH,
     },
-    scene: [BattleScene, TownScene],
+    scene: [TownScene, BattleScene],
   };
 
   window.__IDLE_ARPG_BRIDGE__ = {
@@ -779,7 +781,6 @@ function initPhaserGame() {
   phaserGame.events.once('ready', () => {
     battleScene = phaserGame.scene.getScene('BattleScene');
     townScene = phaserGame.scene.getScene('TownScene');
-    battleScene?.setPaused(true);
     requestAnimationFrame(() => {
       phaserGame?.scale?.refresh();
       enterTown(Math.min(9, getChapterIdx(gameState.stage)), true);
@@ -1492,8 +1493,9 @@ function exitTownToBattle(forceRespawn = false) {
   }
   phaserGame.scene.bringToTop('BattleScene');
   battleScene = phaserGame.scene.getScene('BattleScene');
+  if (battleScene) battleScene.isPaused = false;
   battleScene?.cameras?.main?.fadeIn?.(350, 0, 0, 0);
-  battleScene?.setPaused(false);
+  battleScene?.setPaused?.(false);
   if (forceRespawn && battleScene?.sys?.isActive()) {
     battleScene.spawnWaveSquad?.();
   }
@@ -1861,6 +1863,7 @@ document.getElementById('btn-cloud-logout')?.addEventListener('click', async () 
 
 function toggleAutoMoveMode() {
   if (!battleScene) return;
+  if (!battleScene?.sys?.isActive()) return;
   const isAuto = battleScene.toggleAutoMove();
   const label = document.getElementById('auto-mode-label');
   const btn = document.getElementById('btn-toggle-auto');

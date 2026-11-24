@@ -105,6 +105,9 @@ export function initWelcomeAuthUI() {
   if (!pedestal || pedestal.dataset.authV208Mounted) return;
   pedestal.dataset.authV208Mounted = '1';
 
+  if (pedestal.querySelector('.auth-altar-card')) {
+    if (googleBtn) googleBtn.textContent = 'Google帳號登入';
+  } else {
   const card = document.createElement('div');
   card.className = 'auth-altar-card';
   card.innerHTML = `
@@ -155,6 +158,7 @@ export function initWelcomeAuthUI() {
 
   pedestal.innerHTML = '';
   pedestal.appendChild(card);
+  }
 
   let mode = 'login';
   const tabLogin = document.getElementById('auth-tab-login');

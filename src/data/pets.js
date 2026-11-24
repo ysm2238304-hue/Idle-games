@@ -59,16 +59,16 @@ export function getPetDef(petId) {
 }
 
 const PET_CHAPTER_DROP = {
-  1:  { mobMin: 0.15, mobMax: 0.30, boss: 2.5,  wC: 84, wM: 16, wR: 0,    wL: 0,   wS: 0 },
-  2:  { mobMin: 0.20, mobMax: 0.38, boss: 4.0,  wC: 76, wM: 22, wR: 2.0,  wL: 0,   wS: 0 },
-  3:  { mobMin: 0.35, mobMax: 0.60, boss: 5.0,  wC: 66, wM: 28, wR: 5.8,  wL: 0.2, wS: 0 },
-  4:  { mobMin: 0.45, mobMax: 0.75, boss: 7.0,  wC: 58, wM: 32, wR: 9.5,  wL: 0.5, wS: 0 },
-  5:  { mobMin: 0.75, mobMax: 1.10, boss: 8.5,  wC: 50, wM: 35, wR: 13.5, wL: 1.2, wS: 0.3 },
-  6:  { mobMin: 0.90, mobMax: 1.25, boss: 10.0, wC: 44, wM: 36, wR: 17.0, wL: 2.3, wS: 0.7 },
-  7:  { mobMin: 1.05, mobMax: 1.40, boss: 12.0, wC: 38, wM: 37, wR: 20.0, wL: 3.8, wS: 1.2 },
-  8:  { mobMin: 1.35, mobMax: 1.65, boss: 14.0, wC: 32, wM: 37, wR: 23.0, wL: 6.0, wS: 2.0 },
-  9:  { mobMin: 1.50, mobMax: 1.85, boss: 16.0, wC: 27, wM: 36, wR: 25.5, wL: 8.5, wS: 3.0 },
-  10: { mobMin: 1.65, mobMax: 2.00, boss: 18.0, wC: 22, wM: 35, wR: 27.5, wL: 11.0,wS: 4.5 },
+  1:  { mobMin: 0.06, mobMax: 0.12, boss: 1.2,  wC: 85, wM: 15, wR: 0,    wL: 0,   wS: 0 },
+  2:  { mobMin: 0.09, mobMax: 0.18, boss: 1.8,  wC: 77, wM: 21, wR: 2.0,  wL: 0,   wS: 0 },
+  3:  { mobMin: 0.14, mobMax: 0.25, boss: 2.5,  wC: 67, wM: 27, wR: 5.8,  wL: 0.2, wS: 0 },
+  4:  { mobMin: 0.18, mobMax: 0.32, boss: 3.2,  wC: 59, wM: 31, wR: 9.5,  wL: 0.5, wS: 0 },
+  5:  { mobMin: 0.25, mobMax: 0.42, boss: 4.0,  wC: 51, wM: 34, wR: 13.5, wL: 1.2, wS: 0.3 },
+  6:  { mobMin: 0.32, mobMax: 0.52, boss: 5.0,  wC: 45, wM: 35, wR: 17.0, wL: 2.3, wS: 0.7 },
+  7:  { mobMin: 0.40, mobMax: 0.62, boss: 6.2,  wC: 39, wM: 36, wR: 20.0, wL: 3.8, wS: 1.2 },
+  8:  { mobMin: 0.48, mobMax: 0.72, boss: 7.5,  wC: 33, wM: 36, wR: 23.0, wL: 6.0, wS: 2.0 },
+  9:  { mobMin: 0.54, mobMax: 0.80, boss: 8.8,  wC: 28, wM: 35, wR: 25.5, wL: 8.5, wS: 3.0 },
+  10: { mobMin: 0.60, mobMax: 0.90, boss: 10.0, wC: 23, wM: 34, wR: 27.5, wL: 11.0,wS: 4.5 },
 };
 
 export function rollPetDrop(stage = 1, isBoss = false, magicFindPct = 0) {
@@ -77,7 +77,7 @@ export function rollPetDrop(stage = 1, isBoss = false, magicFindPct = 0) {
   const mf = Math.max(0, Number(magicFindPct) || 0);
 
   const mobChance = Math.min(cfg.mobMax, cfg.mobMin + (cfg.mobMax - cfg.mobMin) * (mf / (mf + 220)));
-  const bossChance = Math.min(cfg.boss + 6, cfg.boss + mf * 0.025);
+  const bossChance = Math.min(cfg.boss + 3.5, cfg.boss + mf * 0.015);
   const chance = isBoss ? bossChance : mobChance;
 
   if (Math.random() * 100 > chance) return null;

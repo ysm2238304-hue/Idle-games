@@ -9,6 +9,9 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="./style.css?v=99" />
+  <link id="welcome-auth-v207-css" rel="stylesheet" href="./src/ui/welcomeAuth.css?v=215" />
+  <link id="class-hall-v102-css" rel="stylesheet" href="./src/ui/classHall.css?v=215" />
+  <link id="npc-modal-v100-css" rel="stylesheet" href="./src/ui/npcModal.css?v=215" />
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
 </head>
 <body>
@@ -17,12 +20,11 @@
     <div class="welcome-backdrop" style="z-index:0;"></div>
     <div class="welcome-vignette"></div>
 
-    <!-- 步驟 1：全螢幕三層景深史詩扉頁 -->
+    <!-- 步驟 1：全螢幕三層景深史詩扉頁（v215 直接內嵌新版登入祭壇，零舊UI閃現） -->
     <div id="welcome-step-auth" class="welcome-title-gate">
       <header class="gate-top-strip">
-        <div class="gate-era-pill">⚔️ 無限深淵・深淵紀元 <b>v98</b></div>
         <div class="gate-top-right">
-          <div id="welcome-auth-status" class="auth-status-pill">正在檢查 Google 登入狀態...</div>
+          <div id="welcome-auth-status" class="auth-status-pill">請使用 Email 或 Google 帳號登入</div>
           <button id="btn-welcome-bgm" class="welcome-bgm-btn" title="開啟 / 靜音登入背景音樂">🔇 開啟背景音樂</button>
         </div>
       </header>
@@ -34,16 +36,50 @@
           <p class="crest-subtitle">DARK FANTASY IDLE ACTION RPG・暗黑深淵遠征</p>
         </div>
         <div class="gate-login-pedestal">
-          <button id="btn-google-login" class="btn-epic-gold gate-btn-main">🔐 Google 帳號登入（雲端同步存檔）</button>
-          <button id="btn-guest-play" class="btn-epic-ghost gate-btn-sub">⚔️ 本機離線冒險（免登入試玩）</button>
+          <div class="auth-altar-card">
+            <div class="auth-tab-row">
+              <button type="button" id="auth-tab-login" class="auth-tab-btn is-active">帳號登入</button>
+              <button type="button" id="auth-tab-register" class="auth-tab-btn">註冊新帳號</button>
+            </div>
+
+            <div class="auth-field">
+              <label for="auth-email-input">電子郵件（Email）</label>
+              <div class="auth-input-wrap">
+                <input id="auth-email-input" class="auth-input" type="email" autocomplete="email" placeholder="example@gmail.com" />
+              </div>
+            </div>
+
+            <div class="auth-field">
+              <label for="auth-pass-input">密碼（至少 6 碼）</label>
+              <div class="auth-input-wrap">
+                <input id="auth-pass-input" class="auth-input" type="password" autocomplete="current-password" placeholder="請輸入密碼" style="padding-right:34px;" />
+                <button type="button" id="btn-toggle-pass" class="auth-eye-btn" title="顯示 / 隱藏密碼">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <div id="auth-pass2-field" class="auth-field" style="display:none;">
+              <label for="auth-pass2-input">確認密碼</label>
+              <div class="auth-input-wrap">
+                <input id="auth-pass2-input" class="auth-input" type="password" autocomplete="new-password" placeholder="請再次輸入密碼" />
+              </div>
+            </div>
+
+            <div id="auth-reset-row" class="auth-sub-actions">
+              <button type="button" id="btn-email-reset" class="auth-link-btn">忘記密碼？寄送重設信</button>
+            </div>
+
+            <div id="auth-msg-box" class="auth-msg-box"></div>
+
+            <button type="button" id="btn-email-submit" class="auth-submit-btn">登入冒險帳號</button>
+
+            <div class="auth-divider">或</div>
+
+            <button id="btn-google-login" class="btn-epic-gold gate-btn-main">Google帳號登入</button>
+          </div>
         </div>
       </div>
-
-      <footer class="gate-bottom-bar">
-        <div class="gate-feature-pill"><span>⚔️</span> 六大職業・四十八招實戰演武</div>
-        <div class="gate-feature-pill"><span>🏰</span> 十大章節・主城探索與自動狩獵</div>
-        <div class="gate-feature-pill"><span>💎</span> 詞條鍛造・深淵輪迴永恆成長</div>
-      </footer>
     </div>
 
     <!-- 步驟 2：方向 A｜精緻置中劇院版 (1120 × 680 黃金比例) -->
@@ -542,6 +578,6 @@
     </div>
   </div>
 
-  <script type="module" src="./src/main.js?v=99"></script>
+  <script type="module" src="./src/main.js?v=215"></script>
 </body>
 </html>
