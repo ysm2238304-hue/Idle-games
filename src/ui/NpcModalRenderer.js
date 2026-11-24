@@ -8,7 +8,7 @@
  * 5. modal_trainer 補回目前裝備技能與暴擊率顯示
  */
 
-import { NpcStageEngine } from './NpcStageEngine.js?v=203';
+import { NpcStageEngine } from './NpcStageEngine.js?v=204';
 
 let activeStageEngine = null;
 let activeDummyTimer = null;
@@ -28,13 +28,13 @@ function ensureNpcModalCss() {
   if (typeof document === 'undefined') return;
   const old = document.getElementById('npc-modal-v2-css');
   if (old) {
-    if (!old.href.includes('v=203')) old.href = './src/ui/npcModal.css?v=203';
+    if (!old.href.includes('v=204')) old.href = './src/ui/npcModal.css?v=204';
     return;
   }
   const link = document.createElement('link');
   link.id = 'npc-modal-v2-css';
   link.rel = 'stylesheet';
-  link.href = './src/ui/npcModal.css?v=203';
+  link.href = './src/ui/npcModal.css?v=204';
   document.head.appendChild(link);
 }
 
@@ -645,7 +645,8 @@ function buildWorkspaceHtml(ui, action, data, ctx, deps, st, chIdx, chapter) {
   if (action === 'modal_waypoint') {
     const wps = ctx?.getWaypoints?.() || [];
     const maxStg = st.maxStageReached || st.maxStage || st.stage || 1;
-    const maxCh = Math.min(9, getChapterIdx(maxStg));
+    const getChIdx = deps.getChapterIdx || ((s) => Math.min(9, Math.floor((Math.max(1, s) - 1) / 10)));
+    const maxCh = Math.min(9, getChIdx(maxStg));
     const getStageLabel = deps.getStageLabel || ((s) => `${Math.floor((s - 1) / 10) + 1}-${((s - 1) % 10) + 1}`);
     const quickStages = [chIdx * 10 + 1, chIdx * 10 + 5, chIdx * 10 + 10].filter((s) => s <= maxStg);
 

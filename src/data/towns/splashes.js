@@ -117,7 +117,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     try {
       const [{ DashboardUI }, { renderTownFacilityModal }, monsters] = await Promise.all([
         import('../../ui/DashboardUI.js?v=99'),
-        import('../../ui/NpcModalRenderer.js?v=203'),
+        import('../../ui/NpcModalRenderer.js?v=204'),
         import('../monsters.js?v=99'),
       ]);
       if (DashboardUI?.prototype) {
@@ -131,7 +131,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
         };
       }
     } catch (err) {
-      console.warn('[v203] NPC Modal auto-wire failed:', err);
+      console.warn('[v204] NPC Modal auto-wire failed:', err);
     }
   });
 }
