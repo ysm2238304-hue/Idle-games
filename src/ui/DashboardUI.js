@@ -1,18 +1,19 @@
-import { TOWN_SPLASHES } from '../data/towns/splashes.js?v=94';
-import { CLASSES } from '../data/classes.js?v=94';
-import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=94';
-import { RANGER_SKILLS } from '../data/rangerSkills.js?v=94';
-import { MAGE_SKILLS } from '../data/mageSkills.js?v=94';
-import { PALADIN_SKILLS } from '../data/paladinSkills.js?v=94';
-import { NECRO_SKILLS } from '../data/necroSkills.js?v=94';
-import { ASSASSIN_SKILLS } from '../data/assassinSkills.js?v=94';
-import { EQUIP_SLOTS, CLASS_REQ_LABELS, RARITIES, BASE_ITEMS, SET_DEFINITIONS } from '../data/items.js?v=94';
-import { PET_CATALOG, PET_SCHOOLS, getPetDef, getPetRarityMeta, getPetPickupRadius, getPetCodexInfo } from '../data/pets.js?v=94';
-import { getEnhanceRate, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEVEL } from '../logic/enhanceSystem.js?v=94';
-import { MONSTER_TEMPLATES, STAGE_ZONES, ZONE_POOLS, getZoneName, getStageLabel, getSubStage, getChapterIdx } from '../data/monsters.js?v=94';
-import { CLASS_BUILD_INFO, SKILL_TREE_NODES, getTreeSpentPoints, isNodeBlockedByMutex, isNodeUnlocked } from '../data/skillTree.js?v=94';
-import { calcItemPower, getSalvageReward } from '../logic/lootGen.js?v=94';
-import { formatNum, getExpToNext, getUpgradeCost, calcRebirthCrystals } from '../logic/statCalc.js?v=94';
+import { TOWN_SPLASHES } from '../data/towns/splashes.js?v=98';
+import { CLASSES } from '../data/classes.js?v=98';
+import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=98';
+import { RANGER_SKILLS } from '../data/rangerSkills.js?v=98';
+import { MAGE_SKILLS } from '../data/mageSkills.js?v=98';
+import { PALADIN_SKILLS } from '../data/paladinSkills.js?v=98';
+import { NECRO_SKILLS } from '../data/necroSkills.js?v=98';
+import { ASSASSIN_SKILLS } from '../data/assassinSkills.js?v=98';
+import { EQUIP_SLOTS, CLASS_REQ_LABELS, RARITIES, BASE_ITEMS, SET_DEFINITIONS } from '../data/items.js?v=98';
+import { PET_CATALOG, PET_SCHOOLS, getPetDef, getPetRarityMeta, getPetPickupRadius, getPetCodexInfo } from '../data/pets.js?v=98';
+import { getClaimableAchievementCount } from '../data/achievements.js?v=98';
+import { getEnhanceRate, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEVEL } from '../logic/enhanceSystem.js?v=98';
+import { MONSTER_TEMPLATES, STAGE_ZONES, ZONE_POOLS, getZoneName, getStageLabel, getSubStage, getChapterIdx } from '../data/monsters.js?v=98';
+import { CLASS_BUILD_INFO, SKILL_TREE_NODES, getTreeSpentPoints, isNodeBlockedByMutex, isNodeUnlocked } from '../data/skillTree.js?v=98';
+import { calcItemPower, getSalvageReward } from '../logic/lootGen.js?v=98';
+import { formatNum, getExpToNext, getUpgradeCost, calcRebirthCrystals } from '../logic/statCalc.js?v=98';
 
 const STAT_LABELS = {
   atkFlat: '攻擊力',
@@ -694,6 +695,18 @@ export class DashboardUI {
       <div class="stat-row"><span>攻擊吸血</span><strong>${stats.lifesteal}%</strong></div>
       <div class="stat-row"><span>移動速度</span><strong>${stats.moveSpeed}</strong></div>
       <div class="stat-row"><span>金幣 / 掉寶</span><strong>+${stats.goldFind}% / +${stats.magicFind}%</strong></div>
+      ${(stats.activeSets && stats.activeSets.length) ? `
+        <div style="margin-top:8px;padding:8px 10px;border-radius:7px;background:rgba(22,163,74,0.14);border:1px solid rgba(34,197,94,0.45);font-size:11.5px;">
+          <div style="color:#4ade80;font-weight:700;margin-bottom:4px;">🌿 已啟動綠色套裝效果</div>
+          ${stats.activeSets.map((s) => `
+            <div style="margin-top:3px;">
+              <b style="color:#86efac;">${s.name} (${s.count}/4)</b>
+              <div style="color:${s.count >= 2 ? '#bbf7d0' : '#64748b'};font-size:10.5px;">(2件) ${s.def.bonus2Desc}</div>
+              <div style="color:${s.count >= 4 ? '#bbf7d0' : '#64748b'};font-size:10.5px;">(4件) ${s.def.bonus4Desc}</div>
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
     `;
   }
 
@@ -1281,6 +1294,28 @@ export class DashboardUI {
     const w = canvas.width;
     const h = canvas.height;
     const zoom = this._minimapZoom || 1.0;
+    let hxN = (heroX / mapW) * w, hyN = (heroY / mapH) * h;
+    if (zoom > 1.01) {
+      const halfW = w / (2 * zoom), halfH = h / (2 * zoom);
+      hxN = Math.max(halfW, Math.min(w - halfW, hxN));
+      hyN = Math.max(halfH, Math.min(h - halfH, hyN));
+    }
+    this._lastMinimapMeta = { mode, mapW, mapH, w, h, zoom, hxN, hyN };
+    if (!canvas._navBound) {
+      canvas._navBound = true;
+      canvas.addEventListener('click', (ev) => {
+        const meta = this._lastMinimapMeta;
+        if (!meta || meta.mode !== 'town') return;
+        const rect = canvas.getBoundingClientRect();
+        const px = ((ev.clientX - rect.left) / rect.width) * meta.w;
+        const py = ((ev.clientY - rect.top) / rect.height) * meta.h;
+        const mx = meta.zoom > 1.01 ? ((px - meta.w / 2) / meta.zoom + meta.hxN) : px;
+        const my = meta.zoom > 1.01 ? ((py - meta.h / 2) / meta.zoom + meta.hyN) : py;
+        const wx = Math.max(120, Math.min(meta.mapW - 120, (mx / meta.w) * meta.mapW));
+        const wy = Math.max(120, Math.min(meta.mapH - 120, (my / meta.h) * meta.mapH));
+        this.handlers.onMinimapClick?.(wx, wy);
+      });
+    }
 
     ctx.clearRect(0, 0, w, h);
     ctx.fillStyle = '#090d16';
@@ -1876,7 +1911,7 @@ export class DashboardUI {
               <span style="color:#fde047;">戰力評分：${it.powerScore || 0}${deltaHtml}</span>
             </div>
             <div style="color:#cbd5e1;">主屬性：${statName} +${Math.round((it.baseStat?.value || 0) * (1 + lv * 0.12))}</div>
-            <div style="color:#93c5fd;margin-top:4px;">隨機詞綴：${(it.affixes || []).length ? it.affixes.map((a) => `${a.label} +${a.value}${a.unit}`).join(' ｜ ') : '無隨機詞綴'}</div>
+            <div style="color:#93c5fd;margin-top:4px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;"><span>隨機詞綴：</span>${(it.affixes || []).length ? it.affixes.map((a, ai) => `<button type="button" data-bs-lock="${ai}" style="padding:2px 7px;border-radius:5px;border:1px solid ${this._bsLockIdx === ai ? '#fbbf24' : 'rgba(147,197,253,0.4)'};background:${this._bsLockIdx === ai ? 'rgba(120,53,15,0.45)' : 'rgba(15,23,42,0.75)'};color:${this._bsLockIdx === ai ? '#fde047' : '#bfdbfe'};font-size:11px;cursor:pointer;">${this._bsLockIdx === ai ? '🔒' : '🔓'} ${a.label} +${a.value}${a.unit}</button>`).join('') : '<span>無隨機詞綴</span>'}</div>
             ${it.legendaryEffect ? `<div style="color:#fb923c;margin-top:4px;">★ 傳奇特效：${it.legendaryEffect.name} — ${it.legendaryEffect.desc}</div>` : ''}
           </div>
           <div class="town-option-grid">
@@ -1899,15 +1934,18 @@ export class DashboardUI {
         <div class="town-item-selector">${chipsHtml}</div>
         ${detailHtml}`;
       bodyEl.querySelectorAll('button[data-bs-uid]').forEach((btn) => {
-        btn.onclick = () => { this._bsSelectedUid = btn.dataset.bsUid; this.openTownFacilityModal(action, data, ctx); };
+        btn.onclick = () => { this._bsSelectedUid = btn.dataset.bsUid; this._bsLockIdx = -1; this.openTownFacilityModal(action, data, ctx); };
+      });
+      bodyEl.querySelectorAll('button[data-bs-lock]').forEach((btn) => {
+        btn.onclick = () => { const li = Number(btn.dataset.bsLock); this._bsLockIdx = this._bsLockIdx === li ? -1 : li; this.openTownFacilityModal(action, data, ctx); };
       });
       bodyEl.querySelector('#btn-bs-drawer')?.addEventListener('click', () => { modal.classList.add('hidden'); ctx.onOpenDrawer?.('upgrade'); });
       bodyEl.querySelector('#btn-bs-reroll')?.addEventListener('click', () => {
-        if (curTarget) ctx.onRerollItem?.(curTarget.uid, curTarget.isEq);
+        if (curTarget) ctx.onRerollItem?.(curTarget.uid, curTarget.isEq, this._bsLockIdx ?? -1);
         this.openTownFacilityModal(action, data, ctx);
       });
       bodyEl.querySelector('#btn-bs-refine')?.addEventListener('click', () => {
-        if (curTarget) ctx.onRefineItem?.(curTarget.uid, curTarget.isEq);
+        if (curTarget) ctx.onRefineItem?.(curTarget.uid, curTarget.isEq, !!bodyEl.querySelector('#chk-bs-protect')?.checked);
         this.openTownFacilityModal(action, data, ctx);
       });
     } else if (action === 'modal_trainer') {

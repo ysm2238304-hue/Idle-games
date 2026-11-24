@@ -1,5 +1,5 @@
-import { createWaveSquad } from '../data/monsters.js?v=94';
-import { generateLoot } from './lootGen.js?v=94';
+import { createWaveSquad } from '../data/monsters.js?v=98';
+import { generateLoot } from './lootGen.js?v=98';
 
 const SAVE_KEY = 'desk_diablo_idle_save_v1';
 
@@ -49,6 +49,11 @@ export function createInitialState(classId = 'warrior') {
     petEssence: 0,
     protectStones: 0,
     userSettings: null,
+    equipmentByClass: null,
+    petByClass: null,
+    claimedAchievements: {},
+    activeTitle: '',
+    maxTowerFloor: 0,
     autoSalvage: {
       common: false,
       magic: false,
@@ -95,6 +100,11 @@ export function loadGame() {
       petEssence: parsed.petEssence || 0,
       protectStones: parsed.protectStones || 0,
       userSettings: parsed.userSettings || null,
+      equipmentByClass: parsed.equipmentByClass || null,
+      petByClass: parsed.petByClass || null,
+      claimedAchievements: parsed.claimedAchievements || {},
+      activeTitle: parsed.activeTitle || '',
+      maxTowerFloor: parsed.maxTowerFloor || 0,
     };
     if (!merged.equippedSkillsByClass.mage || merged.equippedSkillsByClass.mage.every((s) => !s)) {
       merged.equippedSkillsByClass.mage = ['meteor', null, null];

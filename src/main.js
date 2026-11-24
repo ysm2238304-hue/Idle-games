@@ -1,17 +1,17 @@
-import { CLASSES } from './data/classes.js?v=94';
-import { getStageLabel, getSubStage, getChapterIdx } from './data/monsters.js?v=94';
-import { WARRIOR_SKILLS } from './data/warriorSkills.js?v=94';
-import { RANGER_SKILLS } from './data/rangerSkills.js?v=94';
-import { MAGE_SKILLS } from './data/mageSkills.js?v=94';
-import { PALADIN_SKILLS } from './data/paladinSkills.js?v=94';
-import { NECRO_SKILLS } from './data/necroSkills.js?v=94';
-import { ASSASSIN_SKILLS } from './data/assassinSkills.js?v=94';
-import { RARITIES } from './data/items.js?v=94';
-import { PET_CATALOG, rollPetDrop } from './data/pets.js?v=94';
-import { SKILL_TREE_NODES, isNodeUnlocked } from './data/skillTree.js?v=94';
-import { generateLoot, calcItemPower, getSalvageReward, rerollItemAffixes, generateBlackMarketItem } from './logic/lootGen.js?v=94';
-import { recalcPlayerStats, getExpToNext, getUpgradeCost, calcRebirthCrystals, formatNum } from './logic/statCalc.js?v=94';
-import { createInitialState, loadGame, saveGame, calcOfflineProgress } from './logic/saveSystem.js?v=94';
+import { CLASSES } from './data/classes.js?v=98';
+import { getStageLabel, getSubStage, getChapterIdx } from './data/monsters.js?v=98';
+import { WARRIOR_SKILLS } from './data/warriorSkills.js?v=98';
+import { RANGER_SKILLS } from './data/rangerSkills.js?v=98';
+import { MAGE_SKILLS } from './data/mageSkills.js?v=98';
+import { PALADIN_SKILLS } from './data/paladinSkills.js?v=98';
+import { NECRO_SKILLS } from './data/necroSkills.js?v=98';
+import { ASSASSIN_SKILLS } from './data/assassinSkills.js?v=98';
+import { RARITIES } from './data/items.js?v=98';
+import { PET_CATALOG, rollPetDrop } from './data/pets.js?v=98';
+import { SKILL_TREE_NODES, isNodeUnlocked } from './data/skillTree.js?v=98';
+import { generateLoot, calcItemPower, getSalvageReward, rerollItemAffixes, generateBlackMarketItem } from './logic/lootGen.js?v=98';
+import { recalcPlayerStats, getExpToNext, getUpgradeCost, calcRebirthCrystals, formatNum } from './logic/statCalc.js?v=98';
+import { createInitialState, loadGame, saveGame, calcOfflineProgress } from './logic/saveSystem.js?v=98';
 import {
   initCloudAuth,
   signInWithGoogle,
@@ -19,16 +19,19 @@ import {
   getCurrentUser,
   loadCloudSave,
   saveCloudData,
-} from './auth/firebase.js?v=94';
-import { BattleScene } from './scenes/BattleScene.js?v=94';
-import { TownScene } from './scenes/TownScene.js?v=94';
-import { TOWN_SPLASHES } from './data/towns/splashes.js?v=94';
-import { DashboardUI } from './ui/DashboardUI.js?v=94';
-import { TownBgmEngine } from './audio/TownBgmEngine.js?v=94';
-import { HudSettingsManager } from './ui/HudSettingsManager.js?v=94';
-import { ShopModal } from './ui/ShopModal.js?v=94';
-import { rollEnhance, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEVEL } from './logic/enhanceSystem.js?v=94';
-import { HeroSkillShowcase, CLASS_SKILLS_MAP } from './ui/HeroSkillShowcase.js?v=94';
+} from './auth/firebase.js?v=98';
+import { BattleScene } from './scenes/BattleScene.js?v=98';
+import { TownScene } from './scenes/TownScene.js?v=98';
+import { TOWN_SPLASHES } from './data/towns/splashes.js?v=98';
+import { DashboardUI } from './ui/DashboardUI.js?v=98';
+import { TownBgmEngine } from './audio/TownBgmEngine.js?v=98';
+import { BattleSfxEngine } from './audio/BattleSfxEngine.js?v=98';
+import { HudSettingsManager } from './ui/HudSettingsManager.js?v=98';
+import { ShopModal } from './ui/ShopModal.js?v=98';
+import { AchievementTowerModal } from './ui/AchievementTowerModal.js?v=98';
+import { ACHIEVEMENTS } from './data/achievements.js?v=98';
+import { rollEnhance, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEVEL } from './logic/enhanceSystem.js?v=98';
+import { HeroSkillShowcase, CLASS_SKILLS_MAP } from './ui/HeroSkillShowcase.js?v=98';
 
 let gameState = loadGame() || createInitialState('warrior');
 let computedStats = recalcPlayerStats(gameState);
@@ -56,6 +59,8 @@ function refreshStatsAndUI() {
 }
 
 const townBgm = new TownBgmEngine();
+const battleSfx = new BattleSfxEngine();
+window.__battleSfx = battleSfx;
 const hudSettings = new HudSettingsManager({
   townBgm,
   onSave: (stObj) => {
@@ -63,6 +68,19 @@ const hudSettings = new HudSettingsManager({
       gameState.userSettings = stObj;
       persistAll(true);
     }
+  },
+  onExportSave: () => JSON.stringify(gameState),
+  onImportSave: (rawStr) => {
+    try {
+      const parsed = JSON.parse(rawStr);
+      if (!parsed || typeof parsed !== 'object' || !parsed.classId) return false;
+      const base = createInitialState(parsed.classId || 'warrior');
+      Object.assign(gameState, base, parsed);
+      if (gameState.userSettings) hudSettings.importSettings(gameState.userSettings);
+      refreshStatsAndUI();
+      persistAll(true);
+      return true;
+    } catch { return false; }
   },
 });
 hudSettings.init();
@@ -73,12 +91,89 @@ const shopModal = new ShopModal({
       battleScene?.healHero?.(computedStats.maxHp);
       battleScene?.addPotionCharge?.(3);
     }
+    battleSfx.playShopBuy();
     if (msg) ui.addLog(`🛒 ${msg}`, 'loot');
     refreshStatsAndUI();
     persistAll(true);
   },
 });
 shopModal.init();
+const achTowerModal = new AchievementTowerModal({
+  getState: () => gameState,
+  onClaimAchievement: (achId) => {
+    const a = ACHIEVEMENTS.find((x) => x.id === achId);
+    if (!a) return;
+    if (!gameState.claimedAchievements) gameState.claimedAchievements = {};
+    if (gameState.claimedAchievements[achId] || a.val(gameState) < a.goal) return;
+    gameState.claimedAchievements[achId] = true;
+    const r = a.reward || {};
+    if (r.crystals) gameState.soulCrystals = (gameState.soulCrystals || 0) + r.crystals;
+    if (r.protectStones) gameState.protectStones = (gameState.protectStones || 0) + r.protectStones;
+    if (r.petEssence) gameState.petEssence = (gameState.petEssence || 0) + r.petEssence;
+    if (r.dust) gameState.dust = (gameState.dust || 0) + r.dust;
+    if (r.title && !gameState.activeTitle) gameState.activeTitle = r.title;
+    battleSfx.playLevelUp();
+    ui.addLog(`🏆 領取成就【${a.name}】獎勵成功！`, 'victory');
+    refreshStatsAndUI();
+    persistAll(true);
+  },
+  onEquipTitle: (t) => {
+    gameState.activeTitle = t || '';
+    refreshStatsAndUI();
+    persistAll(true);
+  },
+  onStartTower: (floor) => {
+    if (isInTown) exitTownToBattle();
+    setTimeout(() => battleScene?.startTowerRun?.(floor), 180);
+  },
+});
+achTowerModal.init();
+let powerSaveSession = null;
+let powerSaveTimer = null;
+function togglePowerSaveMode(forceState = null) {
+  const ov = document.getElementById('power-save-overlay');
+  if (!ov) return;
+  const next = forceState !== null ? !!forceState : ov.classList.contains('hidden');
+  window.__powerSaveMode = next;
+  ov.classList.toggle('hidden', !next);
+  if (next) {
+    powerSaveSession = {
+      startAt: Date.now(),
+      startKills: gameState.kills || 0,
+      startGold: gameState.gold || 0,
+      highLoot: 0,
+      pets: 0,
+    };
+    const updatePs = () => {
+      if (!window.__powerSaveMode || !powerSaveSession) return;
+      const sec = Math.max(1, Math.floor((Date.now() - powerSaveSession.startAt) / 1000));
+      const hh = String(Math.floor(sec / 3600)).padStart(2, '0');
+      const mm = String(Math.floor((sec % 3600) / 60)).padStart(2, '0');
+      const ss = String(sec % 60).padStart(2, '0');
+      const k = Math.max(0, (gameState.kills || 0) - powerSaveSession.startKills);
+      const g = Math.max(0, (gameState.gold || 0) - powerSaveSession.startGold);
+      const gHr = Math.round((g / sec) * 3600);
+      const elT = document.getElementById('ps-time'); if (elT) elT.textContent = `${hh}:${mm}:${ss}`;
+      const elK = document.getElementById('ps-kills'); if (elK) elK.textContent = `${k.toLocaleString()} 隻`;
+      const elG = document.getElementById('ps-gold'); if (elG) elG.textContent = `+${g.toLocaleString()} (${gHr.toLocaleString()}/時)`;
+      const elL = document.getElementById('ps-loot'); if (elL) elL.textContent = `${powerSaveSession.highLoot} 裝 / ${powerSaveSession.pets} 寵`;
+      const elH = document.getElementById('ps-hero-line');
+      if (elH) elH.textContent = `【${gameState.nickname || '冒險者'}】Lv.${gameState.level} ・ 第 ${getStageLabel(gameState.stage)} 關 ・ 秒傷 ${computedStats.dps}`;
+    };
+    updatePs();
+    clearInterval(powerSaveTimer);
+    powerSaveTimer = setInterval(updatePs, 1000);
+  } else {
+    clearInterval(powerSaveTimer);
+    powerSaveTimer = null;
+  }
+}
+document.getElementById('btn-power-save')?.addEventListener('click', () => togglePowerSaveMode(true));
+document.getElementById('power-save-overlay')?.addEventListener('click', () => togglePowerSaveMode(false));
+
+document.getElementById('btn-exit-tower')?.addEventListener('click', () => {
+  battleScene?.exitTowerMode?.('已主動撤退返回主城');
+});
 document.getElementById('btn-lobby-settings')?.addEventListener('click', () => hudSettings.openModal());
 const heroShowcase = new HeroSkillShowcase();
 const ui = new DashboardUI({
@@ -143,6 +238,7 @@ const ui = new DashboardUI({
     gameState.dust -= dust;
     const res = rollEnhance(item, (gameState.protectStones || 0) > 0, gameState);
     item.powerScore = calcItemPower(item);
+    battleSfx.playEnhance(res.ok);
     if (res.ok) {
       ui.addLog(`⚒️ 強化成功！「${item.name}」升至 +${res.newLv}（成功率 ${res.rate}%）！`, 'victory');
     } else {
@@ -424,10 +520,23 @@ function switchStateToClass(newClassId, st = gameState) {
   const cp = ensureClassProgress(st);
   const oldId = st.classId || 'warrior';
   cp[oldId] = { level: st.level || 1, exp: st.exp || 0 };
+  if (!st.equipmentByClass) st.equipmentByClass = {};
+  if (!st.petByClass) st.petByClass = {};
+  st.equipmentByClass[oldId] = { ...(st.equipment || { weapon: null, helm: null, armor: null, boots: null, ring: null, amulet: null }) };
+  st.petByClass[oldId] = st.equippedPetId || null;
+
   st.classId = newClassId;
   const next = cp[newClassId] || { level: 1, exp: 0 };
   st.level = next.level || 1;
   st.exp = next.exp || 0;
+  if (oldId !== newClassId) {
+    st.equipment = st.equipmentByClass[newClassId]
+      ? { weapon: null, helm: null, armor: null, boots: null, ring: null, amulet: null, ...st.equipmentByClass[newClassId] }
+      : { weapon: null, helm: null, armor: null, boots: null, ring: null, amulet: null };
+    if (st.petByClass[newClassId] !== undefined) {
+      st.equippedPetId = st.petByClass[newClassId];
+    }
+  }
 }
 
 function grantExp(amount) {
@@ -440,6 +549,7 @@ function grantExp(amount) {
     gameState.level += 1;
     gameState.skillPoints = (gameState.skillPoints || 0) + 1;
     need = getExpToNext(gameState.level);
+    battleSfx.playLevelUp();
     ui.addLog(`🎉 角色升級至 Lv.${gameState.level}（獲得 +1 技能點）`, 'victory');
   }
   syncActiveClassProgress(gameState);
@@ -500,9 +610,33 @@ function initPhaserGame() {
         ui.updateStageTracker(data.tracker);
         ui.renderMinimap(data.minimap);
       },
+      onTowerFloorCleared: (floor) => {
+        gameState.maxTowerFloor = Math.max(gameState.maxTowerFloor || 0, floor);
+        const goldRew = floor * 450;
+        const dustRew = 18 + floor * 6;
+        gameState.gold = (gameState.gold || 0) + goldRew;
+        gameState.dust = (gameState.dust || 0) + dustRew;
+        if (floor % 5 === 0) {
+          gameState.soulCrystals = (gameState.soulCrystals || 0) + 2;
+          gameState.petEssence = (gameState.petEssence || 0) + 25;
+          const setEq = generateBlackMarketItem(Math.min(100, Math.max(gameState.maxStageReached || 1, floor * 3)), gameState.classId, 'set');
+          gameState.inventory.unshift(setEq);
+          ui.addLog(`🌀 突破無盡塔第 ${floor} 層！獲得綠色套裝【${setEq.name}】+ 2 魂晶 + 25 寵物精華！`, 'victory');
+        } else {
+          ui.addLog(`🌀 突破無盡塔第 ${floor} 層！（+${goldRew} 金幣 / +${dustRew} 粉塵）`, 'victory');
+        }
+        battleSfx.playLevelUp();
+        refreshStatsAndUI();
+        persistAll(true);
+      },
+      onTowerExit: (floor, reason) => {
+        if (reason) ui.addLog(`🌀 無盡深淵塔（第 ${floor} 層）：${reason}`, 'system');
+        enterTown(Math.min(9, getChapterIdx(gameState.stage)));
+      },
       onLootPickedUp: (item) => {
         if (!item) return;
         if (item.isPet) {
+          if (powerSaveSession) powerSaveSession.pets += 1;
           if (!gameState.pets) gameState.pets = [];
           gameState.pets.push(item);
           if (!gameState.equippedPetId) gameState.equippedPetId = item.petId;
@@ -511,19 +645,22 @@ function initPhaserGame() {
           persistAll(true);
           return;
         }
+        if (powerSaveSession && (item.rarity === 'legendary' || item.rarity === 'set')) powerSaveSession.highLoot += 1;
         handleLootDrop(item);
         refreshStatsAndUI();
         persistAll();
       },
       onMonsterKilled: (mob, waveCleared) => {
-        const goldGain = Math.round(mob.gold * (1 + computedStats.goldFind / 100));
+        const cCnt = battleScene?.comboCount || 0;
+        const comboMult = cCnt >= 100 ? 1.3 : (cCnt >= 60 ? 1.18 : (cCnt >= 30 ? 1.1 : (cCnt >= 15 ? 1.05 : 1)));
+        const goldGain = Math.round(mob.gold * (1 + computedStats.goldFind / 100) * comboMult);
         gameState.gold += goldGain;
         gameState.kills += 1;
         if (mob.isBoss) {
           if (!gameState.bountyProgress) gameState.bountyProgress = { bossKills: 0, claimed: {} };
           gameState.bountyProgress.bossKills = (gameState.bountyProgress.bossKills || 0) + 1;
         }
-        grantExp(mob.exp);
+        grantExp(Math.round(mob.exp * comboMult));
 
         const dropped = generateLoot(mob.stage, mob.isBoss, computedStats.magicFind, false, gameState.classId);
         const droppedPet = rollPetDrop(mob.stage, mob.isBoss, computedStats.magicFind);
@@ -1036,15 +1173,20 @@ function enterTown(chapterIdx = 0, instant = false) {
           },
           getComputedStats: () => computedStats,
           onOpenDrawer: (drawerName) => ui.openDrawer(drawerName),
-          onRerollItem: (uid, isEq) => {
+          onRerollItem: (uid, isEq, lockedIdx = -1) => {
             const item = isEq
               ? Object.values(gameState.equipment || {}).find((i) => i && i.uid === uid)
               : (gameState.inventory || []).find((i) => i && i.uid === uid);
             if (!item) return;
-            const cost = Math.max(200, (item.level || 1) * 120 * (item.rarity === 'legendary' ? 2 : 1));
+            const hasLock = lockedIdx >= 0 && lockedIdx < (item.affixes || []).length;
+            const baseCost = Math.max(200, (item.level || 1) * 120 * (item.rarity === 'legendary' || item.rarity === 'set' ? 2 : 1));
+            const cost = hasLock ? Math.round(baseCost * 1.5) : baseCost;
+            const dustCost = hasLock ? 15 : 0;
+            if ((gameState.dust || 0) < dustCost) { ui.addLog('鎖定洗鍊需要 15 奧術粉塵！', 'warn'); return; }
             if ((gameState.gold || 0) < cost) return;
             gameState.gold -= cost;
-            const res = rerollItemAffixes(item);
+            if (dustCost > 0) gameState.dust -= dustCost;
+            const res = rerollItemAffixes(item, lockedIdx);
             if (res) {
               const delta = res.newPower - res.oldPower;
               item._lastRerollDelta = delta;
@@ -1743,6 +1885,7 @@ document.getElementById('hud-stage-title')?.addEventListener('click', () => ui.o
 
 window.addEventListener('keydown', (e) => {
   if (!gameStarted) return;
+  if (window.__powerSaveMode) { togglePowerSaveMode(false); return; }
   if (hudSettings.isListeningKey()) return;
   if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
 
@@ -1778,6 +1921,10 @@ window.addEventListener('keydown', (e) => {
     cm?.classList.contains('hidden') ? ui.openClassModal(gameState) : cm.classList.add('hidden');
   } else if (e.code === kb.townToggle) {
     if (isInTown) exitTownToBattle(); else enterTown(Math.min(9, getChapterIdx(gameState.stage)));
+  } else if (e.code === 'KeyZ') {
+    e.preventDefault(); togglePowerSaveMode();
+  } else if (e.code === 'KeyA') {
+    e.preventDefault(); achTowerModal.toggle();
   } else if (e.code === kb.shop) {
     e.preventDefault(); shopModal.toggle();
   } else if (e.code === kb.pets) {
@@ -1795,6 +1942,7 @@ window.addEventListener('keydown', (e) => {
     document.getElementById('modal-class')?.classList.add('hidden');
     document.getElementById('modal-world-map')?.classList.add('hidden');
     shopModal.close();
+    achTowerModal.close();
     hudSettings.closeModal();
   } else if (e.key === '1') {
     ui.activeDrawer === 'gear' ? ui.closeDrawer() : ui.openDrawer('gear');

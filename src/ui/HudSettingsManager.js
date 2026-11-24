@@ -79,10 +79,12 @@ function createDefaultSettings() {
 }
 
 export class HudSettingsManager {
-  constructor({ townBgm, onApply, onSave } = {}) {
+  constructor({ townBgm, onApply, onSave, onExportSave, onImportSave } = {}) {
     this.townBgm = townBgm || null;
     this.onApply = onApply || null;
     this.onSave = onSave || null;
+    this.onExportSave = onExportSave || null;
+    this.onImportSave = onImportSave || null;
     this.settings = this._load();
     this.activeTab = 'ui';
     this._dragState = null;
@@ -586,10 +588,45 @@ export class HudSettingsManager {
             <label class="set-chk"><input type="checkbox" id="set-gp-hunt" ${s.gameplay.autoHuntDefault ? 'checked' : ''} /> <span>自動狩獵</span></label>
           </div>
         </div>
+        <div class="set-section">
+          <div class="set-sec-title">💾 本機存檔備份與跨機轉移（雙保險）</div>
+          <div style="display:flex;gap:8px;margin-bottom:8px;">
+            <button type="button" id="btn-export-save-copy" class="btn-gold-sm" style="flex:1;">📤 複製存檔碼</button>
+            <button type="button" id="btn-export-save-file" class="btn-ghost-sm" style="flex:1;">📥 下載 .json 備份檔</button>
+          </div>
+          <textarea id="txt-import-save" rows="2" placeholder="貼上先前匯出的 JSON 存檔碼..." style="width:100%;background:#0e0b10;color:#e2e8f0;border:1px solid #8a6632;border-radius:6px;padding:6px;font-size:11px;resize:vertical;"></textarea>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+            <span id="save-backup-msg" style="font-size:11px;color:#86efac;"></span>
+            <button type="button" id="btn-import-save-apply" class="btn-gold-sm">🔄 匯入並覆蓋存檔</button>
+          </div>
+        </div>
       `;
       body.querySelector('#set-gp-target')?.addEventListener('change', (e) => { s.gameplay.showTargetFrame = e.target.checked; this.applyAll(); this.save(); });
       body.querySelector('#set-gp-ts')?.addEventListener('change', (e) => { s.gameplay.showChatTimestamp = e.target.checked; this.applyAll(); this.save(); });
       body.querySelector('#set-gp-hunt')?.addEventListener('change', (e) => { s.gameplay.autoHuntDefault = e.target.checked; this.applyAll(); this.save(); });
+      const msgEl = body.querySelector('#save-backup-msg');
+      body.querySelector('#btn-export-save-copy')?.addEventListener('click', async () => {
+        const str = this.onExportSave?.();
+        if (!str) return;
+        try { await navigator.clipboard.writeText(str); if (msgEl) msgEl.textContent = '✅ 已複製完整存檔碼至剪貼簿！'; }
+        catch { const ta = body.querySelector('#txt-import-save'); if (ta) { ta.value = str; ta.select(); } if (msgEl) msgEl.textContent = '✅ 已輸出至下方輸入框，請全選複製！'; }
+      });
+      body.querySelector('#btn-export-save-file')?.addEventListener('click', () => {
+        const str = this.onExportSave?.();
+        if (!str) return;
+        const blob = new Blob([str], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = `abyss-save-${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        if (msgEl) msgEl.textContent = '✅ 已下載 .json 存檔備份！';
+      });
+      body.querySelector('#btn-import-save-apply')?.addEventListener('click', () => {
+        const raw = (body.querySelector('#txt-import-save')?.value || '').trim();
+        if (!raw) { if (msgEl) msgEl.textContent = '⚠️ 請先貼上存檔碼'; return; }
+        const ok = this.onImportSave?.(raw);
+        if (msgEl) msgEl.textContent = ok ? '✅ 存檔匯入成功！已即時同步' : '❌ 存檔碼格式無效';
+      });
     }
   }
 }

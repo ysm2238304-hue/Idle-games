@@ -1,15 +1,15 @@
-import { TOWN_CH1 } from '../data/towns/ch1.js?v=94';
-import { TOWN_CH2 } from '../data/towns/ch2.js?v=94';
-import { TOWN_CH3 } from '../data/towns/ch3.js?v=94';
-import { TOWN_CH4 } from '../data/towns/ch4.js?v=94';
-import { TOWN_CH5 } from '../data/towns/ch5.js?v=94';
-import { TOWN_CH6 } from '../data/towns/ch6.js?v=94';
-import { TOWN_CH7 } from '../data/towns/ch7.js?v=94';
-import { TOWN_CH8 } from '../data/towns/ch8.js?v=94';
-import { TOWN_CH9 } from '../data/towns/ch9.js?v=94';
-import { TOWN_CH10 } from '../data/towns/ch10.js?v=94';
-import { formatNum } from '../logic/statCalc.js?v=94';
-import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta } from '../data/pets.js?v=94';
+import { TOWN_CH1 } from '../data/towns/ch1.js?v=98';
+import { TOWN_CH2 } from '../data/towns/ch2.js?v=98';
+import { TOWN_CH3 } from '../data/towns/ch3.js?v=98';
+import { TOWN_CH4 } from '../data/towns/ch4.js?v=98';
+import { TOWN_CH5 } from '../data/towns/ch5.js?v=98';
+import { TOWN_CH6 } from '../data/towns/ch6.js?v=98';
+import { TOWN_CH7 } from '../data/towns/ch7.js?v=98';
+import { TOWN_CH8 } from '../data/towns/ch8.js?v=98';
+import { TOWN_CH9 } from '../data/towns/ch9.js?v=98';
+import { TOWN_CH10 } from '../data/towns/ch10.js?v=98';
+import { formatNum } from '../logic/statCalc.js?v=98';
+import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta } from '../data/pets.js?v=98';
 
 const TOWN_REGISTRY = {
   0: TOWN_CH1,
@@ -719,6 +719,24 @@ export class TownScene extends Phaser.Scene {
     if (this.hero.texture.key !== atlasKey && this.textures.exists(atlasKey)) {
       this.hero.setTexture(atlasKey, `${fp}_${dir}_idle_0`);
     }
+  }
+
+  navigateToWorldPoint(wx, wy) {
+    if (!this.hero || !this.townData) return;
+    let clickedObj = null;
+    let bestDist = 140;
+    for (const obj of this.interactables || []) {
+      const d = Phaser.Math.Distance.Between(wx, wy, obj.x, obj.y);
+      if (d < bestDist) { bestDist = d; clickedObj = obj; }
+    }
+    const dest = clickedObj
+      ? { x: clickedObj.x, y: clickedObj.y + 38 }
+      : this._clampToWalkable(wx, wy, 20);
+    this.moveTarget = { x: dest.x, y: dest.y, triggerObj: clickedObj };
+    const ring = this.add.image(dest.x, dest.y, 'fx_glow')
+      .setTint(clickedObj ? 0xfacc15 : 0x38bdf8)
+      .setScale(0.45).setAlpha(0.85).setDepth(4200);
+    this.tweens.add({ targets: ring, scale: 0.95, alpha: 0, duration: 400, onComplete: () => ring.destroy() });
   }
 
   _pointInZone(px, py, z) {

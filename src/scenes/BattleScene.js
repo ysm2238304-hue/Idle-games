@@ -1,14 +1,14 @@
-import { CLASSES } from '../data/classes.js?v=94';
-import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=94';
-import { RANGER_SKILLS } from '../data/rangerSkills.js?v=94';
-import { MAGE_SKILLS } from '../data/mageSkills.js?v=94';
-import { PALADIN_SKILLS } from '../data/paladinSkills.js?v=94';
-import { NECRO_SKILLS } from '../data/necroSkills.js?v=94';
-import { ASSASSIN_SKILLS } from '../data/assassinSkills.js?v=94';
-import { RARITIES } from '../data/items.js?v=94';
-import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta, getPetPickupRadius, getPetCodexInfo } from '../data/pets.js?v=94';
-import { createStageEncounters, spawnSingleMonster, getChapterIdx, getStageLabel, ZONE_OBSTACLES } from '../data/monsters.js?v=94';
-import { formatNum } from '../logic/statCalc.js?v=94';
+import { CLASSES } from '../data/classes.js?v=98';
+import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=98';
+import { RANGER_SKILLS } from '../data/rangerSkills.js?v=98';
+import { MAGE_SKILLS } from '../data/mageSkills.js?v=98';
+import { PALADIN_SKILLS } from '../data/paladinSkills.js?v=98';
+import { NECRO_SKILLS } from '../data/necroSkills.js?v=98';
+import { ASSASSIN_SKILLS } from '../data/assassinSkills.js?v=98';
+import { RARITIES } from '../data/items.js?v=98';
+import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta, getPetPickupRadius, getPetCodexInfo } from '../data/pets.js?v=98';
+import { createStageEncounters, spawnSingleMonster, getChapterIdx, getStageLabel, ZONE_OBSTACLES } from '../data/monsters.js?v=98';
+import { formatNum } from '../logic/statCalc.js?v=98';
 
 const MAP_W = 4096;
 const MAP_H = 2304;
@@ -439,6 +439,10 @@ export class BattleScene extends Phaser.Scene {
     this._lastBattlePetId = null;
     this._petTrailAt = 0;
     this._petAutoAtkAt = 0;
+    this._bossTelegraphAt = 0;
+    this._perfectDodgeUntil = 0;
+    this.comboCount = 0;
+    this.comboExpireAt = 0;
     this.heroAfkText = this.add.text(cx, cy - 117, this.autoMoveEnabled ? '★ 自動狩獵' : '手動', {
       fontSize: '11px', color: this.autoMoveEnabled ? '#fde047' : '#cbd5e1',
       fontFamily: 'sans-serif', fontStyle: 'bold',
@@ -1202,7 +1206,7 @@ export class BattleScene extends Phaser.Scene {
 
     if (Math.hypot(vx, vy) > 25) {
       this.afterimageTimer += delta;
-      if (this.afterimageTimer >= 135) {
+      if (this.afterimageTimer >= 135 && !window.__powerSaveMode && (window.__gameSettings?.graphics?.particles || 'high') !== 'low') {
         this.afterimageTimer = 0;
         const tint = classId === 'ranger' ? 0x34d399 : (classId === 'mage' ? 0xc084fc : 0xfbbf24);
         const ghost = this.add.image(this.hero.x, this.hero.y, this.hero.texture.key)
@@ -1219,6 +1223,7 @@ export class BattleScene extends Phaser.Scene {
     this.heroHpText.setPosition(this.hero.x, this.hero.y - 101);
     if (this.heroAfkText) this.heroAfkText.setPosition(this.hero.x, this.hero.y - 117);
     this.updatePetCompanion?.(time);
+    this.updateCombatFeel?.(time);
   }
 
   triggerHeroAttackAnim(durationMs = 340) {
@@ -3135,13 +3140,14 @@ export class BattleScene extends Phaser.Scene {
     }
     this.playerHp = Math.max(0, this.playerHp - dmg);
 
+    window.__battleSfx?.playHeroHurt?.();
     this.hero.setTintFill(0xff4444);
     this.time.delayedCall(90, () => this.hero && this.hero.clearTint());
     this.spawnFloatingText(this.hero.x, this.hero.y - 68, `-${formatNum(dmg)}`, '#f87171', 15);
     this.updateHeroHpBar();
 
     if (this.playerHp <= 0) {
-      this.handleHeroDefeat('生命歸零，返回第 1 波休整！');
+      if (this.towerMode) { this.playerHp = this.playerMaxHp; this.exitTowerMode('挑戰失敗，安全返回主城休整！'); } else { this.handleHeroDefeat('生命歸零，返回第 1 波休整！'); }
     }
   }
 
@@ -3179,6 +3185,7 @@ export class BattleScene extends Phaser.Scene {
     this.spawnFloatingText(m.sprite.x + Phaser.Math.Between(-18, 18), m.sprite.y - 54, label, color, size);
 
     if (isCrit) {
+      window.__battleSfx?.playCrit?.();
       if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(70, 0.003);
       if (st.activeEffects.has('toxic_arrow') && m.hp > 0) {
         m.poisonedUntil = Math.max(m.poisonedUntil || 0, nowT + 3000);
@@ -3248,6 +3255,15 @@ export class BattleScene extends Phaser.Scene {
       }
     }
     this.waveKills += 1;
+    this.comboCount = (this.comboCount || 0) + 1;
+    this.comboExpireAt = (this.time?.now || 0) + 5500;
+    if (m.isBoss) {
+      for (let bi = 0; bi < 8; bi++) {
+        const coin = this.add.circle(mx, my, 5, 0xfacc15, 0.95).setDepth(4450);
+        const ang = (Math.PI * 2 * bi) / 8;
+        this.tweens.add({ targets: coin, x: mx + Math.cos(ang) * 76, y: my + Math.sin(ang) * 48 - 18, alpha: 0, duration: 540, ease: 'Quad.easeOut', onComplete: () => coin.destroy() });
+      }
+    }
     this.mapKills = (this.mapKills || 0) + 1;
     const dropResult = this.callbacks.onMonsterKilled(m, false);
     if (dropResult && dropResult.item) {
@@ -3330,6 +3346,155 @@ export class BattleScene extends Phaser.Scene {
       duration: Phaser.Math.Between(1200, 1900),
       onComplete: () => dot.destroy(),
     });
+  }
+
+  startTowerRun(floor = 1) {
+    this.towerMode = true;
+    this.towerFloor = Math.max(1, floor);
+    this.towerEndAt = (this.time?.now || 0) + 60000;
+    this.towerClearing = false;
+    this.clearMonsters();
+    this.collectAllGroundLoot?.();
+
+    const banner = document.getElementById('tower-hud-banner');
+    if (banner) banner.classList.remove('hidden');
+    const fl = document.getElementById('tower-floor-lbl');
+    if (fl) fl.textContent = `🌀 無盡深淵 第 ${this.towerFloor} 層`;
+
+    const effStage = Math.min(100, Math.max(1, this.towerFloor * 3));
+    const scaleMult = Math.pow(1.16, this.towerFloor - 1);
+    const count = Math.min(12, 5 + Math.floor(this.towerFloor / 2));
+    for (let i = 0; i < count; i++) {
+      const mob = spawnSingleMonster(effStage, i === count - 1);
+      mob.maxHp = Math.round(mob.maxHp * scaleMult);
+      mob.hp = mob.maxHp;
+      mob.atk = Math.round(mob.atk * (1 + (this.towerFloor - 1) * 0.1));
+      if (i === count - 1) mob.name = `【第${this.towerFloor}層守衛】${mob.name}`;
+      const ang = (Math.PI * 2 * i) / count;
+      const dist = i === count - 1 ? 340 : 250 + (i % 3) * 55;
+      const mx = Phaser.Math.Clamp(this.hero.x + Math.cos(ang) * dist, 280, MAP_W - 280);
+      const my = Phaser.Math.Clamp(this.hero.y + Math.sin(ang) * dist, 280, MAP_H - 240);
+      this.spawnBossAt(mob, mx, my);
+    }
+    this.showBossAlertBanner?.(`無盡深淵 第 ${this.towerFloor} 層試煉`);
+  }
+
+  exitTowerMode(reason = '') {
+    if (!this.towerMode) return;
+    this.towerMode = false;
+    this.towerClearing = false;
+    document.getElementById('tower-hud-banner')?.classList.add('hidden');
+    this.collectAllGroundLoot?.();
+    this.callbacks?.onTowerExit?.(this.towerFloor, reason);
+  }
+
+  showBossAlertBanner(bossName) {
+    const el = document.getElementById('boss-alert-banner');
+    if (el) {
+      el.innerHTML = `☠️ 警告：深淵首領【${bossName}】降臨戰場！`;
+      el.classList.remove('hidden');
+      clearTimeout(this._bossBannerTimer);
+      this._bossBannerTimer = setTimeout(() => el.classList.add('hidden'), 3200);
+    }
+    window.__battleSfx?.playBossAlert?.();
+    if (window.__gameSettings?.graphics?.screenShake !== false) {
+      this.cameras.main.shake(260, 0.008);
+    }
+  }
+
+  castBossRedCircle(boss) {
+    if (!boss || boss.hp <= 0 || !this.hero) return;
+    const tx = this.hero.x;
+    const ty = this.hero.y + 12;
+    const radius = 104;
+    const outer = this.add.circle(tx, ty, radius, 0xef4444, 0.14)
+      .setStrokeStyle(2.5, 0xef4444, 0.92).setDepth(38);
+    const inner = this.add.circle(tx, ty, 10, 0xdc2626, 0.34).setDepth(39);
+    const warnTxt = this.add.text(tx, ty - radius - 12, '⚠️ 首領重擊！快閃避', {
+      fontSize: '13px', color: '#fca5a5', fontFamily: 'Noto Sans TC, sans-serif', fontStyle: 'bold', stroke: '#000', strokeThickness: 3,
+    }).setOrigin(0.5).setDepth(4200);
+
+    this.tweens.add({
+      targets: inner,
+      scale: radius / 10,
+      duration: 1250,
+      ease: 'Linear',
+      onComplete: () => {
+        outer.destroy();
+        inner.destroy();
+        warnTxt.destroy();
+        if (!this.scene?.isActive?.() || !boss || boss.hp <= 0 || !this.hero) return;
+        const burst = this.add.circle(tx, ty, radius, 0xf97316, 0.55).setBlendMode(Phaser.BlendModes.ADD).setDepth(4510);
+        this.tweens.add({ targets: burst, scale: 1.25, alpha: 0, duration: 280, onComplete: () => burst.destroy() });
+        if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(180, 0.01);
+
+        const dist = Math.hypot(this.hero.x - tx, (this.hero.y + 12) - ty);
+        if (dist <= radius) {
+          this.damageHero(boss, 1.55);
+        } else {
+          this._perfectDodgeUntil = (this.time?.now || 0) + 3500;
+          window.__battleSfx?.playPerfectDodge?.();
+          this.spawnFloatingText(this.hero.x, this.hero.y - 76, '✨ 完美閃避！攻速↑', '#67e8f9', 16);
+        }
+      },
+    });
+  }
+
+  updateCombatFeel(time) {
+    // 1. 低血量心跳紅幕 (<30% HP)
+    const vig = document.getElementById('low-hp-vignette');
+    if (vig) {
+      const low = this.playerMaxHp > 0 && (this.playerHp / this.playerMaxHp) < 0.3;
+      vig.classList.toggle('hidden', !low);
+    }
+
+    // 2. 連斬計數更新
+    const cBox = document.getElementById('hud-combo-box');
+    if (cBox) {
+      if (this.comboCount > 0 && time > (this.comboExpireAt || 0)) {
+        this.comboCount = 0;
+      }
+      if (this.comboCount >= 3) {
+        cBox.classList.remove('hidden');
+        const cNum = document.getElementById('combo-count');
+        const cTxt = document.getElementById('combo-bonus-txt');
+        if (cNum) cNum.textContent = String(this.comboCount);
+        const pct = this.comboCount >= 100 ? 30 : (this.comboCount >= 60 ? 18 : (this.comboCount >= 30 ? 10 : (this.comboCount >= 15 ? 5 : 0)));
+        if (cTxt) cTxt.textContent = pct > 0 ? `經驗 / 金幣 +${pct}%` : '持續連斬觸發加成';
+      } else {
+        cBox.classList.add('hidden');
+      }
+    }
+
+    // 2.5 無盡深淵爬塔計時與通關判定
+    if (this.towerMode) {
+      const leftMs = Math.max(0, (this.towerEndAt || 0) - time);
+      const aliveCnt = (this.monsters || []).filter((m) => m.hp > 0).length;
+      const tl = document.getElementById('tower-timer-lbl');
+      const ml = document.getElementById('tower-mobs-lbl');
+      if (tl) tl.textContent = `⏱️ ${(leftMs / 1000).toFixed(1)}s`;
+      if (ml) ml.textContent = `剩餘 ${aliveCnt} 隻`;
+      if (aliveCnt === 0 && !this.towerClearing) {
+        this.towerClearing = true;
+        this.callbacks?.onTowerFloorCleared?.(this.towerFloor);
+        this.time.delayedCall(2000, () => {
+          if (this.towerMode && this.scene?.isActive?.()) {
+            this.startTowerRun(this.towerFloor + 1);
+          }
+        });
+      } else if (leftMs <= 0 && aliveCnt > 0) {
+        this.exitTowerMode('時間耗盡，安全撤退回主城！');
+      }
+    }
+
+    // 3. 首領每 6.5 秒施放地面紅圈預警重擊
+    if (time >= (this._bossTelegraphAt || 0) && this.monsters?.length) {
+      const aliveBoss = this.monsters.find((m) => m.hp > 0 && m.isBoss);
+      if (aliveBoss && Math.hypot(aliveBoss.sprite.x - this.hero.x, aliveBoss.sprite.y - this.hero.y) < 620) {
+        this._bossTelegraphAt = time + 6500;
+        this.castBossRedCircle(aliveBoss);
+      }
+    }
   }
 
   updatePetCompanion(time) {
@@ -3556,6 +3721,7 @@ export class BattleScene extends Phaser.Scene {
       this.tweens.add({ targets: beam, alpha: 0.35, duration: 850, yoyo: true, repeat: -1 });
     }
 
+    window.__battleSfx?.playLootDrop?.(item.rarity, !!item.isPet);
     this.groundLoot.push(lootObj);
   }
 
@@ -3586,6 +3752,7 @@ export class BattleScene extends Phaser.Scene {
         onComplete: () => loot.orb?.destroy(),
       });
     }
+    if (!instant) window.__battleSfx?.playPickup?.();
     this.callbacks?.onLootPickedUp?.(loot.item);
   }
 
@@ -3614,6 +3781,9 @@ export class BattleScene extends Phaser.Scene {
   }
 
   spawnFloatingText(x, y, msg, color, fontSize = 16) {
+    if (window.__powerSaveMode) return;
+    const dens = window.__gameSettings?.graphics?.particles || 'high';
+    if (dens === 'low' && Math.random() < 0.45 && fontSize < 18) return;
     const txt = this.add.text(x, y, msg, {
       fontSize: `${fontSize}px`,
       color,

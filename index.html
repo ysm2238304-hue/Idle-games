@@ -7,19 +7,19 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./style.css?v=94" />
+  <link rel="stylesheet" href="./style.css?v=98" />
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
 </head>
 <body>
   <section id="welcome-screen">
-    <video id="welcome-bg-video" class="welcome-bg-video" autoplay loop muted playsinline src="./assets/video/intro.mp4?v=94"></video>
+    <video id="welcome-bg-video" class="welcome-bg-video" autoplay loop muted playsinline src="./assets/video/intro.mp4?v=98"></video>
     <div class="welcome-backdrop" style="z-index:0;"></div>
     <div class="welcome-vignette"></div>
 
     <!-- 步驟 1：全螢幕三層景深史詩扉頁 -->
     <div id="welcome-step-auth" class="welcome-title-gate">
       <header class="gate-top-strip">
-        <div class="gate-era-pill">⚔️ 無限深淵・深淵紀元 <b>v94</b></div>
+        <div class="gate-era-pill">⚔️ 無限深淵・深淵紀元 <b>v98</b></div>
         <div class="gate-top-right">
           <div id="welcome-auth-status" class="auth-status-pill">正在檢查 Google 登入狀態...</div>
           <button id="btn-welcome-bgm" class="welcome-bgm-btn" title="開啟 / 靜音登入背景音樂">🔇 開啟背景音樂</button>
@@ -28,7 +28,7 @@
 
       <div class="gate-center-axis">
         <div class="gate-crest">
-          <img class="welcome-abyss-logo" src="./assets/ui/logo_abyss.png?v=94" alt="無限深淵" />
+          <img class="welcome-abyss-logo" src="./assets/ui/logo_abyss.png?v=98" alt="無限深淵" />
           <h1 class="crest-title">無限深淵</h1>
           <p class="crest-subtitle">DARK FANTASY IDLE ACTION RPG・暗黑深淵遠征</p>
         </div>
@@ -74,7 +74,7 @@
   <!-- ========== 電影級開場動畫劇院覆蓋層 (v68) ========== -->
   <div id="cinematic-intro-overlay" class="cinematic-intro-overlay hidden">
     <div class="cinematic-letterbox top"></div>
-    <video id="cinematic-intro-video" playsinline preload="auto" src="./assets/video/intro.mp4?v=94"></video>
+    <video id="cinematic-intro-video" playsinline preload="auto" src="./assets/video/intro.mp4?v=98"></video>
     <div class="cinematic-vignette"></div>
     <div id="cinematic-caption" class="cinematic-caption"></div>
     <div class="cinematic-controls">
@@ -88,6 +88,18 @@
   <section id="game-screen" class="hidden">
     <main id="battle-viewport">
       <div id="phaser-stage"></div>
+      <div id="low-hp-vignette" class="low-hp-vignette hidden"></div>
+      <div id="boss-alert-banner" class="boss-alert-banner hidden"></div>
+      <div id="tower-hud-banner" class="tower-hud-banner hidden">
+        <span id="tower-floor-lbl">🌀 無盡深淵 第 1 層</span>
+        <span id="tower-timer-lbl" style="color:#fde047;font-weight:900;">⏱️ 60.0s</span>
+        <span id="tower-mobs-lbl" style="color:#93c5fd;">剩餘 0 隻</span>
+        <button type="button" id="btn-exit-tower" class="btn-ghost-sm" style="padding:2px 8px;font-size:11px;">撤退回城</button>
+      </div>
+      <div id="hud-combo-box" class="hud-combo-box hidden">
+        <div class="combo-num"><span id="combo-count">0</span><small>連斬</small></div>
+        <div id="combo-bonus-txt" class="combo-bonus-txt">經驗 / 金幣 +0%</div>
+      </div>
 
       <!-- 左上角：角色名片卡 ＋ 可折疊關卡追蹤面板 -->
       <div id="hud-top-left" class="hud-corner">
@@ -166,9 +178,10 @@
             <div class="matrix-row" data-group="世界系統">
               <button id="btn-world-map" class="mmo-micro-btn" data-tip="世界大地圖選關 [M]"><img class="mmo-ui-img" src="./assets/ui/ui_worldmap.png" alt="地圖" /><span class="mmo-hk">M</span></button>
               <button id="btn-switch-class" class="mmo-micro-btn" data-tip="切換冒險職業 [C]"><img class="mmo-ui-img" src="./assets/ui/ui_class.png" alt="職業" /><span class="mmo-hk">C</span></button>
-              <button id="btn-top-waypoint" class="mmo-micro-btn mmo-waypoint-btn" data-tip="主城快速傳送陣 [Y]"><img class="mmo-ui-img" src="./assets/ui/ui_waypoint.png?v=94" alt="傳送" /><span class="mmo-hk">Y</span></button>
+              <button id="btn-top-waypoint" class="mmo-micro-btn mmo-waypoint-btn" data-tip="主城快速傳送陣 [Y]"><img class="mmo-ui-img" src="./assets/ui/ui_waypoint.png?v=98" alt="傳送" /><span class="mmo-hk">Y</span></button>
               <button class="mmo-micro-btn" data-drawer="pets" data-tip="技能變異寵物 [P]"><span class="mmo-emoji">🐾</span><span class="mmo-hk">P</span></button>
               <button class="mmo-micro-btn" data-drawer="log" data-tip="完整戰鬥日誌 [L]"><img class="mmo-ui-img" src="./assets/ui/ui_log.png" alt="日誌" /><span class="mmo-hk">L</span></button>
+              <button id="btn-open-ach-tower" class="mmo-micro-btn" data-tip="成就稱號與無盡爬塔 [A]"><span class="mmo-emoji">🏆</span><span id="ach-dot" class="notify-dot hidden"></span><span class="mmo-hk">A</span></button>
               <button id="btn-open-shop" class="mmo-micro-btn" data-tip="暗黑深淵商城 (基礎/裝備/寵物/藥水) [S]"><span class="mmo-emoji">🛒</span><span class="mmo-hk">S</span></button>
               <button id="btn-town-bgm" class="mmo-micro-btn" data-tip="開啟 / 靜音主城 BGM"><span class="mmo-emoji">🎵</span><span class="mmo-hk">音</span></button>
               <button id="btn-open-settings" class="mmo-micro-btn" data-tip="系統設定 (UI/聲音/畫質/遊戲) [O]"><span class="mmo-emoji">⚙️</span><span class="mmo-hk">O</span></button>
@@ -344,6 +357,7 @@
           <div class="mmo-status-strip">
             <span id="hud-afk-pill" class="afk-pill active">★ 自動狩獵中</span>
             <button id="btn-quick-salvage" class="strip-btn" title="一鍵分解低階裝備 [Q]">🧹 一鍵分解 [Q]</button>
+            <button id="btn-power-save" class="strip-btn" title="開啟暗黑掛機省電幕布 [Z]">🌙 省電掛機</button>
           </div>
 
           <div class="diablo-exp-bar" id="diablo-exp-bar" title="經驗值進度 (10 格暗金刻度)">
@@ -380,6 +394,38 @@
   </div>
 
   
+  
+  
+  <div id="power-save-overlay" class="power-save-overlay hidden">
+    <div class="ps-card">
+      <div class="ps-moon">🌙</div>
+      <h2>無限深淵・省電掛機模式</h2>
+      <p class="ps-sub">背景自動狩獵與拾取持續運作中（已大幅降低特效渲染耗能）</p>
+      <div class="ps-stats-grid">
+        <div class="ps-stat"><small>已掛機時間</small><b id="ps-time">00:00:00</b></div>
+        <div class="ps-stat"><small>本次擊殺數</small><b id="ps-kills">0</b></div>
+        <div class="ps-stat"><small>本次金幣收益</small><b id="ps-gold" style="color:#fde047;">0</b></div>
+        <div class="ps-stat"><small>高階裝備／寵物</small><b id="ps-loot" style="color:#4ade80;">0 裝 / 0 寵</b></div>
+      </div>
+      <div id="ps-hero-line" class="ps-hero-line">載入中...</div>
+      <div class="ps-wake-hint">點擊畫面任意處或按任意鍵喚醒遊戲</div>
+    </div>
+  </div>
+
+  <div id="modal-ach-tower" class="modal-overlay hidden">
+    <div class="modal-card settings-modal-card diablo-ornate-card" style="width:min(720px,94vw);">
+      <div class="modal-header">
+        <h2>🏆 成就里程碑 & 🌀 無盡深淵爬塔 <small style="color:#94a3b8;font-size:12px;font-weight:400;">[快捷鍵 A]</small></h2>
+        <button id="btn-close-ach-tower" class="btn-ghost">關閉</button>
+      </div>
+      <div class="settings-tabs" style="grid-template-columns:1fr 1fr;">
+        <button type="button" class="acht-tab-btn settings-tab-btn active" data-achtab="ach">🏆 24 項成就與稱號</button>
+        <button type="button" class="acht-tab-btn settings-tab-btn" data-achtab="tower">🌀 無盡深淵挑戰塔</button>
+      </div>
+      <div id="ach-tower-body" class="settings-modal-body"></div>
+    </div>
+  </div>
+
   <div id="modal-shop" class="modal-overlay hidden">
     <div class="modal-card settings-modal-card diablo-ornate-card" style="width:min(700px,94vw);">
       <div class="modal-header">
@@ -495,6 +541,6 @@
     </div>
   </div>
 
-  <script type="module" src="./src/main.js?v=94"></script>
+  <script type="module" src="./src/main.js?v=98"></script>
 </body>
 </html>

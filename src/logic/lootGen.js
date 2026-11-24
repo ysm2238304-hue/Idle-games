@@ -1,4 +1,4 @@
-import { EQUIP_SLOTS, RARITIES, BASE_ITEMS, AFFIX_POOL, LEGENDARY_EFFECTS, SET_DEFINITIONS } from '../data/items.js?v=94';
+import { EQUIP_SLOTS, RARITIES, BASE_ITEMS, AFFIX_POOL, LEGENDARY_EFFECTS, SET_DEFINITIONS } from '../data/items.js?v=98';
 
 let itemUidCounter = Date.now();
 
@@ -158,19 +158,21 @@ export function getSalvageReward(item) {
 }
 
 
-export function rerollItemAffixes(item) {
+export function rerollItemAffixes(item, lockedIdx = -1) {
   if (!item) return null;
   const rarity = RARITIES[item.rarity] || RARITIES.common;
   const stage = Math.max(1, item.level || 1);
   const oldAffixes = (item.affixes || []).map((a) => ({ ...a }));
   const oldPower = calcItemPower(item);
+  const locked = (lockedIdx >= 0 && lockedIdx < oldAffixes.length) ? oldAffixes[lockedIdx] : null;
 
-  const affixCount = Math.max(1, randInt(rarity.affixes[0], rarity.affixes[1]));
+  const affixCount = Math.max(locked ? oldAffixes.length : 1, randInt(rarity.affixes[0], rarity.affixes[1]));
   const itemCls = item.classReq || 'all';
-  const eligibleAffixes = AFFIX_POOL.filter((a) => !a.classReq || itemCls === 'all' || a.classReq === itemCls);
+  const eligibleAffixes = AFFIX_POOL.filter((a) => (!a.classReq || itemCls === 'all' || a.classReq === itemCls) && (!locked || a.key !== locked.key));
   const shuffledPool = [...eligibleAffixes].sort(() => Math.random() - 0.5);
   const newAffixes = [];
-  for (let i = 0; i < affixCount && i < shuffledPool.length; i++) {
+  if (locked) newAffixes.push({ ...locked });
+  for (let i = 0; newAffixes.length < affixCount && i < shuffledPool.length; i++) {
     const a = shuffledPool[i];
     const rawVal = randInt(a.min, a.max) + (stage - 1) * a.scalePerLvl;
     const val = Math.max(1, Math.round(rawVal * (0.85 + Math.random() * 0.3)));
@@ -183,7 +185,7 @@ export function rerollItemAffixes(item) {
   }
   item.affixes = newAffixes;
   item.powerScore = calcItemPower(item);
-  return { oldAffixes, oldPower, newPower: item.powerScore };
+  return { oldAffixes, oldPower, newPower: item.powerScore, locked };
 }
 
 export function generateBlackMarketItem(stage, playerClassId = 'warrior', forceRarity = null) {

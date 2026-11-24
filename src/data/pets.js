@@ -1,6 +1,6 @@
 // 30 隻「技能特效＆衍生型」寵物資料庫 (v83)
 // 與裝備做出本質差異：寵物不加基礎面板，而是改變技能視覺特效並衍生額外攻擊機制
-import { RARITIES } from './items.js?v=94';
+import { RARITIES } from './items.js?v=98';
 
 export const PET_SCHOOLS = {
   fire:      { id: 'fire',      label: '熾炎衍生', color: '#f97316', fxKey: 'mfx_meteor_flame', derivative: 'fire_wave' },
