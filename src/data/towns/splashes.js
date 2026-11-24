@@ -15,7 +15,7 @@ export const TOWN_SPLASHES = [
     themeClass: 'splash-ch2',
     badge: '第二章・地底深處',
     title: '地下菌菇黑市',
-    styleTag: '地下洞窟菌菇＋蒸汽龐克風',
+    styleTag: '地下洞窟菌菇+蒸汽龐克風',
     quote: '「在沒有陽光的地底，發光孢子與金幣才是唯一的真理。」',
     tip: '💡 城中亮點：走過四座懸索吊橋可穿梭三座洞窟平台，哥布林黑市全面八折優惠！',
     bgUrl: './assets/bg/town_ch2.jpg',
@@ -110,3 +110,27 @@ export const TOWN_SPLASHES = [
     tintColor: 0xc084fc,
   },
 ];
+
+// v202 自動掛載新版 NPC 概念視窗（直接覆蓋檔案即可生效，免手動改 DashboardUI.js / index.html）
+if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+  queueMicrotask(async () => {
+    try {
+      const [{ DashboardUI }, { renderTownFacilityModal }, monsters] = await Promise.all([
+        import('../../ui/DashboardUI.js?v=99'),
+        import('../../ui/NpcModalRenderer.js?v=202'),
+        import('../monsters.js?v=99'),
+      ]);
+      if (DashboardUI?.prototype) {
+        DashboardUI.prototype.openTownFacilityModal = function (action, data, ctx) {
+          renderTownFacilityModal(this, action, data, ctx, {
+            getChapterIdx: monsters.getChapterIdx,
+            ZONE_POOLS: monsters.ZONE_POOLS,
+            MONSTER_TEMPLATES: monsters.MONSTER_TEMPLATES,
+          });
+        };
+      }
+    } catch (err) {
+      console.warn('[v202] NPC Modal auto-wire failed:', err);
+    }
+  });
+}

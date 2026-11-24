@@ -5,7 +5,7 @@
  * - Batch 2: 實木通緝告示板、動態跳字木樁演武場、三芒星魂晶祭壇、重型金庫密碼門、10 章限定 NPC 封蠟禮盒
  */
 
-import { NpcStageEngine } from './NpcStageEngine.js?v=201';
+import { NpcStageEngine } from './NpcStageEngine.js?v=202';
 
 let activeStageEngine = null;
 let activeDummyTimer = null;
@@ -25,13 +25,13 @@ function ensureNpcModalCss() {
   if (typeof document === 'undefined') return;
   const old = document.getElementById('npc-modal-v2-css');
   if (old) {
-    if (!old.href.includes('v=201')) old.href = './src/ui/npcModal.css?v=201';
+    if (!old.href.includes('v=202')) old.href = './src/ui/npcModal.css?v=202';
     return;
   }
   const link = document.createElement('link');
   link.id = 'npc-modal-v2-css';
   link.rel = 'stylesheet';
-  link.href = './src/ui/npcModal.css?v=201';
+  link.href = './src/ui/npcModal.css?v=202';
   document.head.appendChild(link);
 }
 
