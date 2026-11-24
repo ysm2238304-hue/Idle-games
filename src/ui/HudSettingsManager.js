@@ -79,9 +79,10 @@ function createDefaultSettings() {
 }
 
 export class HudSettingsManager {
-  constructor({ townBgm, onApply } = {}) {
+  constructor({ townBgm, onApply, onSave } = {}) {
     this.townBgm = townBgm || null;
     this.onApply = onApply || null;
+    this.onSave = onSave || null;
     this.settings = this._load();
     this.activeTab = 'ui';
     this._dragState = null;
@@ -122,10 +123,33 @@ export class HudSettingsManager {
     return !!this._listeningKeyId;
   }
 
-  save() {
+  save(skipCloud = false) {
     try {
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(this.settings));
     } catch {}
+    if (!skipCloud) {
+      this.onSave?.(JSON.parse(JSON.stringify(this.settings)));
+    }
+  }
+
+  importSettings(remote) {
+    if (!remote || typeof remote !== 'object') return;
+    const def = createDefaultSettings();
+    const mergedPanels = { ...def.ui.panels };
+    if (remote.ui?.panels) {
+      for (const id of Object.keys(PANEL_META)) {
+        mergedPanels[id] = { ...def.ui.panels[id], ...(remote.ui.panels[id] || {}) };
+      }
+    }
+    this.settings = {
+      ui: { ...def.ui, ...(remote.ui || {}), editMode: false, panels: mergedPanels },
+      audio: { ...def.audio, ...(remote.audio || {}) },
+      graphics: { ...def.graphics, ...(remote.graphics || {}) },
+      gameplay: { ...def.gameplay, ...(remote.gameplay || {}) },
+      keybinds: { ...DEFAULT_KEYBINDS, ...(remote.keybinds || {}) },
+    };
+    this.applyAll();
+    this.save(true);
   }
 
   init() {

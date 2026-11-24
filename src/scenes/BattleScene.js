@@ -252,7 +252,9 @@ export class BattleScene extends Phaser.Scene {
         const stats = this.getStats();
         const tapDmg = Math.max(2, Math.round(stats.atk * 0.55));
         this.damageMonster(target, tapDmg, false, true);
-        this.playFxSprite('wfx_cleave', target.sprite.x, target.sprite.y - 10, 0.52, Phaser.Math.FloatBetween(-0.6, 0.6), 220);
+        const tapCid = this.getState()?.classId || 'warrior';
+        const tapFx = { warrior: 'wfx_cleave', ranger: 'rfx_pierce_flash', mage: 'mfx_spark', paladin: 'pfx_slash', necro: 'nfx_p_slash', assassin: 'afx_slash' }[tapCid] || 'wfx_cleave';
+        this.playFxSprite(tapFx, target.sprite.x, target.sprite.y - 10, 0.54, Phaser.Math.FloatBetween(-0.6, 0.6), 220);
       }
     });
 
@@ -1539,7 +1541,8 @@ export class BattleScene extends Phaser.Scene {
       const cx = this.hero.x + Math.cos(baseAngle) * (isFinisher ? 68 : 56);
       const cy = this.hero.y + Math.sin(baseAngle) * (isFinisher ? 68 : 56);
       this.playFxSprite(classId === 'paladin' ? 'pfx_slash' : (classId === 'assassin' ? 'afx_slash' : 'wfx_cleave'), cx, cy, isFinisher ? 1.22 : 0.88, baseAngle + (step === 1 ? 0.3 : 0), 250);
-      this.playFxSprite('wfx_sparks', cx, cy, isFinisher ? 0.95 : 0.62, Math.random() * Math.PI, 260);
+      const atkSpark = classId === 'paladin' ? 'pfx_slash' : (classId === 'assassin' ? 'afx_slash' : 'wfx_sparks');
+      this.playFxSprite(atkSpark, cx, cy, isFinisher ? 0.95 : 0.62, Math.random() * Math.PI, 260);
 
       let hitAny = false;
       this.monsters.filter((m) => m.hp > 0).forEach((m) => {
@@ -1551,7 +1554,8 @@ export class BattleScene extends Phaser.Scene {
             const fangCrit = (classId === 'assassin' && time < (this.lethalFangsUntil || 0)) ? 20 : 0;
           const { dmg, isCrit } = calcRollDmg(m, dmgMult, fangCrit);
           if (classId === 'assassin' && time < (this.lethalFangsUntil || 0)) { m.bleedUntil = time + 4000; m.bleedDmg = Math.max(2, Math.round(stats.atk * 0.35 * (1 + (stats.poisonDmgPct || 0) / 100))); }
-            this.playFxSprite('wfx_hitflash', m.sprite.x, m.sprite.y - 10, isFinisher ? 0.56 : 0.42, 0, 180);
+            const hitFxKey = classId === 'paladin' ? 'pfx_bash' : (classId === 'assassin' ? 'afx_dash' : 'wfx_hitflash');
+            this.playFxSprite(hitFxKey, m.sprite.x, m.sprite.y - 10, isFinisher ? 0.56 : 0.42, 0, 180);
             this.applyHitEffects(m, dmg, isCrit, stats);
             if (isFinisher) {
               m.bleedUntil = time + 3500;
@@ -1834,7 +1838,7 @@ export class BattleScene extends Phaser.Scene {
         repeat: 3,
         callback: () => {
           this.playFxSprite('wfx_lava_ring', tx, ty + 12, 1.45 * radMult, 0, 420);
-          this.playFxSprite('mfx_meteor_flame', tx, ty - 24, 1.15 * radMult, 0, 420);
+          this.playFxSprite('wfx_slam_pillar', tx, ty - 24, 1.15 * radMult, 0, 420);
           const dmg = Math.round(stats.atk * (0.85 + skillLvl * 0.18) * dmgMult);
           this.monsters.filter((m) => m.hp > 0).forEach((m) => {
             if (Phaser.Math.Distance.Between(tx, ty, m.sprite.x, m.sprite.y) <= 240 * radMult) {
@@ -3403,12 +3407,33 @@ export class BattleScene extends Phaser.Scene {
           onComplete: () => {
             bolt.destroy();
             if (target.hp > 0) {
-              this.playFxSprite(sch.fxKey, target.sprite.x, target.sprite.y - 10, 0.58, 0, 260);
+              this.spawnPetExclusiveFx(sch, px, py, target.sprite.x, target.sprite.y - 10, pet.tint);
               this.damageMonster(target, dmg, false, false, sch.color, '🐾');
             }
           },
         });
       }
+    }
+  }
+
+  spawnPetExclusiveFx(sch, px, py, mx, my, tint) {
+    // 寵物專屬元素特效（完全不借用其他職業招牌技能貼圖）
+    const ring = this.add.circle(mx, my, 12, tint, 0.25).setStrokeStyle(3, tint, 0.95).setBlendMode(Phaser.BlendModes.ADD).setDepth(4515);
+    this.tweens.add({ targets: ring, scale: sch.derivative === 'void_pull' ? 3.2 : 2.6, alpha: 0, duration: 360, onComplete: () => ring.destroy() });
+    const core = this.add.image(mx, my - 6, 'fx_glow').setTint(tint).setScale(1.15).setAlpha(0.9).setBlendMode(Phaser.BlendModes.ADD).setDepth(4516);
+    this.tweens.add({ targets: core, scale: 0.2, alpha: 0, duration: 320, onComplete: () => core.destroy() });
+    if (sch.derivative === 'holy_pillar') {
+      const pil = this.add.rectangle(mx, my - 70, 20, 150, tint, 0.72).setBlendMode(Phaser.BlendModes.ADD).setDepth(4514);
+      this.tweens.add({ targets: pil, scaleX: 0.1, alpha: 0, duration: 360, onComplete: () => pil.destroy() });
+    } else if (sch.derivative === 'chain_arc') {
+      const g = this.add.graphics().setDepth(4516);
+      g.lineStyle(3, tint, 0.95);
+      g.beginPath();
+      g.moveTo(px, py);
+      g.lineTo((px + mx) / 2 + Phaser.Math.Between(-18, 18), (py + my) / 2 + Phaser.Math.Between(-18, 18));
+      g.lineTo(mx, my - 8);
+      g.strokePath();
+      this.tweens.add({ targets: g, alpha: 0, duration: 240, onComplete: () => g.destroy() });
     }
   }
 
@@ -3449,23 +3474,23 @@ export class BattleScene extends Phaser.Scene {
       this.tweens.add({ targets: trail, x: mx, y: my - 10, scale: 0.15, alpha: 0, duration: 220, onComplete: () => trail.destroy() });
 
       if (sch.derivative === 'fire_wave') {
-        this.playFxSprite('mfx_meteor_flame', mx, my - 12, 0.95, 0, 380);
+        this.spawnPetExclusiveFx(sch, px, py, mx, my - 10, pet.tint);
         this.damageMonster(tm, dmg, true, false, sch.color, '🔥');
       } else if (sch.derivative === 'chain_arc') {
-        this.playFxSprite('nfx_lightning', (px + mx) / 2, (py + my) / 2, 0.9, Math.atan2(my - py, mx - px), 300);
+        this.spawnPetExclusiveFx(sch, px, py, mx, my - 10, pet.tint);
         this.damageMonster(tm, dmg, true, false, sch.color, '⚡');
       } else if (sch.derivative === 'frost_nova') {
-        this.playFxSprite('mfx_frost_burst', mx, my, 1.0, 0, 380);
+        this.spawnPetExclusiveFx(sch, px, py, mx, my, pet.tint);
         tm.chilledUntil = Math.max(tm.chilledUntil || 0, now + 2200);
         this.damageMonster(tm, dmg, true, false, sch.color, '❄️');
       } else if (sch.derivative === 'shadow_bolt') {
-        this.playFxSprite('nfx_p_wraith', mx, my - 8, 0.95, 0, 360);
+        this.spawnPetExclusiveFx(sch, px, py, mx, my - 8, pet.tint);
         this.damageMonster(tm, dmg, true, false, sch.color, '🦇');
       } else if (sch.derivative === 'holy_pillar') {
-        this.playFxSprite('pfx_heaven', mx, my - 28, 1.0, 0, 400);
+        this.spawnPetExclusiveFx(sch, px, py, mx, my, pet.tint);
         this.damageMonster(tm, dmg, true, false, sch.color, '✨');
       } else if (sch.derivative === 'void_pull') {
-        this.playFxSprite('nfx_blackhole', mx, my, 0.95, 0, 440);
+        this.spawnPetExclusiveFx(sch, px, py, mx, my, pet.tint);
         tm.sprite.x = Phaser.Math.Linear(tm.sprite.x, targets[0].sprite.x, 0.32);
         tm.sprite.y = Phaser.Math.Linear(tm.sprite.y, targets[0].sprite.y, 0.32);
         this.damageMonster(tm, dmg, true, false, sch.color, '🌌');

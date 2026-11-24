@@ -4463,3 +4463,115 @@ body.hud-edit-active #target-frame.hidden {
   width: 28px !important;
   height: 28px !important;
 }
+
+/* === v93: 概念 1｜左上角暗黑徽章整合式「單一長條指揮儀表」重構 === */
+#hud-top-left {
+  gap: 0 !important;
+  max-width: 356px !important;
+  background: linear-gradient(180deg, rgba(20, 15, 19, 0.94), rgba(10, 8, 12, 0.96));
+  border: 1.5px solid #9a7438;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.85), inset 0 0 0 1px rgba(250, 204, 21, 0.14);
+  overflow: hidden;
+  padding: 0 !important;
+}
+#hud-top-left .mmo-hero-card {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  padding: 8px 10px 6px !important;
+  gap: 9px !important;
+  align-items: center !important;
+}
+#hud-top-left .hero-avatar-ring {
+  width: 50px !important;
+  height: 50px !important;
+  flex-shrink: 0;
+}
+#hud-top-left .hero-card-info {
+  gap: 4px !important;
+  min-width: 0;
+}
+#hud-top-left .hero-card-row {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  gap: 5px !important;
+  overflow: hidden;
+}
+#hud-top-left .badge {
+  font-size: 11px !important;
+  padding: 2px 6px !important;
+  white-space: nowrap;
+}
+#hud-top-left .cloud-badge {
+  font-size: 10.5px !important;
+  max-width: 74px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#hud-top-left #btn-cloud-logout {
+  padding: 1px 6px !important;
+  font-size: 10px !important;
+  border-radius: 4px !important;
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+#hud-top-left .hero-mini-bars {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px !important;
+}
+#hud-top-left .mini-bar {
+  height: 13px !important;
+  border-radius: 999px !important;
+}
+#hud-top-left .mini-bar span {
+  font-size: 9.5px !important;
+}
+#hud-top-left .hero-res-row {
+  gap: 5px !important;
+}
+#hud-top-left .res-pill-sm {
+  font-size: 10.5px !important;
+  padding: 1px 6px !important;
+}
+#hud-top-left .mmo-quest-tracker {
+  background: rgba(12, 9, 13, 0.85) !important;
+  border: none !important;
+  border-top: 1px solid rgba(154, 114, 54, 0.42) !important;
+  border-left: none !important;
+  border-radius: 0 !important;
+  padding: 5px 10px 6px !important;
+  box-shadow: none !important;
+}
+#hud-top-left .tracker-header {
+  margin-bottom: 3px !important;
+}
+#hud-top-left .tracker-stage-title {
+  font-size: 12px !important;
+}
+#hud-top-left .tracker-row {
+  font-size: 11px !important;
+  margin-bottom: 3px !important;
+}
+#hud-top-left .tracker-sub {
+  display: none !important;
+}
+#hud-top-left .hud-potion-buffs:not(:empty) {
+  padding: 4px 10px 0 !important;
+}
+#hud-top-left .btn-town-toggle {
+  width: 100% !important;
+  border-radius: 0 !important;
+  border: none !important;
+  border-top: 1px solid rgba(217, 119, 6, 0.45) !important;
+  padding: 5px 10px !important;
+  font-size: 11.5px !important;
+  font-weight: 700 !important;
+  box-shadow: none !important;
+  background: linear-gradient(90deg, rgba(120, 53, 15, 0.72), rgba(69, 26, 3, 0.92), rgba(120, 53, 15, 0.72)) !important;
+}

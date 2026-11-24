@@ -259,7 +259,7 @@ export class TownScene extends Phaser.Scene {
     this.petShadow = this.add.image(td.spawn.x - 52, td.spawn.y + 28, 'fx_glow').setTint(0x000000).setScale(0.65, 0.26).setAlpha(0.42).setDepth(2);
     this.petAura = this.add.image(td.spawn.x - 52, td.spawn.y - 14, 'fx_glow').setTint(0xf97316).setScale(0.95).setAlpha(0.32).setBlendMode(Phaser.BlendModes.ADD).setDepth(td.spawn.y - 1);
     this.petBuddy = this.add.image(td.spawn.x - 52, td.spawn.y - 18, this.textures.exists('pet_pet_c1') ? 'pet_pet_c1' : 'fx_glow').setScale(0.46).setOrigin(0.5).setDepth(td.spawn.y);
-    this.petLabel = this.add.text(td.spawn.x - 52, td.spawn.y - 46, '', { fontSize: '11px', color: '#fde68a', fontFamily: 'Noto Sans TC, sans-serif', fontStyle: 'bold', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(td.spawn.y + 3);
+    this.petLabel = this.add.text(td.spawn.x - 52, td.spawn.y - 46, '', { fontSize: '13px', color: '#fde68a', fontFamily: 'Noto Sans TC, sans-serif', fontStyle: 'bold', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(td.spawn.y + 3);
     this._lastTownPetId = null;
     this._petTrailAt = 0;
     this.heroShadow = this.add.image(td.spawn.x, td.spawn.y + 42, 'fx_glow')
@@ -327,10 +327,10 @@ export class TownScene extends Phaser.Scene {
       .setTint(td.ambientColor || 0xfbbf24).setScale(1.15, 0.45).setAlpha(0.55).setDepth(3).setVisible(false);
     this.speechBubble = this.add.text(0, 0, '', {
       fontFamily: 'Noto Sans TC, sans-serif',
-      fontSize: '11.5px',
+      fontSize: '15px',
       color: '#f8fafc',
       backgroundColor: 'rgba(15, 23, 42, 0.92)',
-      padding: { x: 8, y: 4 },
+      padding: { x: 11, y: 6 },
     }).setOrigin(0.5, 1).setDepth(5200).setVisible(false);
 
     this.time.addEvent({
@@ -467,9 +467,9 @@ export class TownScene extends Phaser.Scene {
       this.obstacles.push({ x: b.x, y: b.y + 24, radius: b.radius });
     }
     if (b.name && b.action) {
-      this.addNameplate(b.x, b.y - 125, b.name, '#fde68a');
+      this.addNameplate(b.x, b.y - 128, b.name, '#fde68a', true);
     } else if (b.name && b.frame && b.frame.includes('tavern')) {
-      this.addNameplate(b.x, b.y - 125, `🍺 ${b.name}`, '#fcd34d');
+      this.addNameplate(b.x, b.y - 128, `🍺 ${b.name}`, '#fcd34d', true);
       this.interactables.push({
         id: `tavern_${b.name}`,
         x: b.x,
@@ -481,7 +481,7 @@ export class TownScene extends Phaser.Scene {
         data: { atlasKey, frame: b.frame, name: b.name, title: '冒險者酒館', greeting: '歡迎光臨！進來喝杯麥酒歇息一下，恢復全部體力再戰吧！' },
       });
     } else if (b.name && b.frame && /(tower|belltower|windmill|spire|prism|watchhut|bellows)/.test(b.frame)) {
-      this.addNameplate(b.x, b.y - 135, `🔭 ${b.name}`, '#a5f3fc');
+      this.addNameplate(b.x, b.y - 138, `🔭 ${b.name}`, '#a5f3fc', true);
       this.interactables.push({
         id: `tower_${b.name}`,
         x: b.x,
@@ -593,11 +593,11 @@ export class TownScene extends Phaser.Scene {
     }
   }
 
-  addNameplate(x, y, label, color = '#f8fafc') {
+  addNameplate(x, y, label, color = '#f8fafc', isBuilding = false) {
     const clean = label.includes('・') ? label.replace('・', '\n') : label;
     return this.add.text(x, y, clean, {
       fontFamily: 'Noto Sans TC, sans-serif',
-      fontSize: '11.5px',
+      fontSize: '15px',
       fontStyle: 'bold',
       align: 'center',
       color,

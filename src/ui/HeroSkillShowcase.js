@@ -34,9 +34,9 @@ const CLASS_BG_MAP = {
 };
 
 const CLASS_FX_PRELOAD = {
-  warrior: ['wfx_whirl_outer', 'wfx_whirl_inner', 'wfx_whirl_wind', 'wfx_lava_crack', 'wfx_slam_pillar', 'wfx_lava_ring', 'wfx_rubble', 'wfx_charge_aura', 'wfx_fire_trail', 'wfx_blood_ring', 'wfx_blade_wave', 'wfx_wave_trail', 'nfx_warcry', 'wfx_cleave', 'wfx_sparks', 'nfx_totem', 'mfx_meteor_flame'],
+  warrior: ['wfx_whirl_outer', 'wfx_whirl_inner', 'wfx_whirl_wind', 'wfx_lava_crack', 'wfx_slam_pillar', 'wfx_lava_ring', 'wfx_rubble', 'wfx_charge_aura', 'wfx_fire_trail', 'wfx_blood_ring', 'wfx_blade_wave', 'wfx_wave_trail', 'nfx_warcry', 'wfx_cleave', 'wfx_sparks', 'nfx_totem', 'wfx_slam_pillar'],
   ranger: ['rfx_wind_trail', 'rfx_arrow', 'rfx_pierce_flash', 'rfx_rain_sigil', 'rfx_rain_fall', 'rfx_rain_impact', 'rfx_leaf_sparks', 'rfx_shadow_smoke', 'rfx_trap_rune', 'rfx_poison_burst', 'rfx_charge_bow', 'rfx_sonic_ring', 'rfx_phantom_dragon', 'rfx_dodge_aura', 'rfx_emerald_star', 'nfx_caltrops', 'rfx_beam', 'nfx_deathmark'],
-  mage: ['mfx_nova_ring', 'mfx_meteor_rock', 'mfx_meteor_crater', 'mfx_meteor_blast', 'mfx_meteor_flame', 'mfx_star_sigil', 'mfx_orb', 'mfx_spark', 'mfx_frost_ring', 'mfx_frost_shard', 'mfx_frost_burst', 'mfx_void_core', 'mfx_void_beam', 'mfx_void_slash', 'nfx_overload', 'mfx_arcane_shield', 'nfx_lightning', 'nfx_icicles', 'nfx_blackhole'],
+  mage: ['mfx_nova_ring', 'mfx_meteor_rock', 'mfx_meteor_crater', 'mfx_meteor_blast', 'wfx_slam_pillar', 'mfx_star_sigil', 'mfx_orb', 'mfx_spark', 'mfx_frost_ring', 'mfx_frost_shard', 'mfx_frost_burst', 'mfx_void_core', 'mfx_void_beam', 'mfx_void_slash', 'nfx_overload', 'mfx_arcane_shield', 'nfx_lightning', 'nfx_icicles', 'nfx_blackhole'],
   paladin: ['pfx_hammer', 'pfx_heaven', 'pfx_judgment', 'pfx_slash', 'pfx_storm', 'pfx_bash', 'pfx_aegis', 'pfx_consecration'],
   necro: ['sfx_skel_summon', 'nfx_p_summon', 'sfx_skel_slash', 'sfx_golem_summon', 'nfx_p_golem', 'sfx_golem_slam', 'sfx_frenzy', 'nfx_p_wraith', 'sfx_wraith_boom', 'nfx_p_spear', 'nfx_p_slash', 'nfx_p_corpse', 'nfx_p_prison', 'nfx_p_curse', 'sfx_blood_leech'],
   assassin: ['afx_dash', 'afx_slash', 'afx_smoke', 'afx_flurry', 'afx_execute', 'afx_kunai', 'afx_venom', 'afx_fangs'],
@@ -254,7 +254,7 @@ export class HeroSkillShowcase {
       } else if (id === 'volcano_totem') {
         this._addSpriteFx('nfx_totem', { x: cx - 22, y: cy, size: 110, scaleStart: 0.85, scaleEnd: 1.05, maxLife: 1350 });
         this._addSpriteFx('wfx_lava_ring', { x: cx, y: cy + 12, size: 150, scaleStart: 0.5, scaleEnd: 1.25, maxLife: 980, delay: 140 });
-        this._addSpriteFx('mfx_meteor_flame', { x: cx, y: cy - 18, size: 125, scaleStart: 0.7, scaleEnd: 1.2, maxLife: 950, delay: 180 });
+        this._addSpriteFx('wfx_slam_pillar', { x: cx, y: cy - 18, size: 125, scaleStart: 0.7, scaleEnd: 1.2, maxLife: 950, delay: 180 });
       } else {
         // earth_stomp
         this._addSpriteFx('wfx_lava_crack', { x: cx, y: cy + 14, size: 155, scaleStart: 0.7, scaleEnd: 1.2, maxLife: 1100, add: false });
@@ -312,7 +312,7 @@ export class HeroSkillShowcase {
         this._addSpriteFx('mfx_meteor_rock', { x: cx - 75, y: 12, vx: 165, vy: 250, size: 115, scaleStart: 0.85, scaleEnd: 1.15, maxLife: 520 });
         this._addSpriteFx('mfx_meteor_crater', { x: cx, y: cy + 16, size: 140, scaleStart: 0.85, scaleEnd: 1.1, delay: 460, maxLife: 950, add: false });
         this._addSpriteFx('mfx_meteor_blast', { x: cx, y: cy - 12, size: 170, scaleStart: 0.6, scaleEnd: 1.35, delay: 460, maxLife: 820 });
-        this._addSpriteFx('mfx_meteor_flame', { x: cx, y: cy - 24, size: 145, scaleStart: 0.7, scaleEnd: 1.2, delay: 490, maxLife: 880 });
+        this._addSpriteFx('wfx_slam_pillar', { x: cx, y: cy - 24, size: 145, scaleStart: 0.7, scaleEnd: 1.2, delay: 490, maxLife: 880 });
       } else if (id === 'arcane_orb') {
         this._addSpriteFx('mfx_star_sigil', { x: hx + 16, y: hy - 12, size: 115, scaleStart: 0.6, scaleEnd: 1.2, maxLife: 760 });
         for (let i = -1; i <= 1; i++) {
