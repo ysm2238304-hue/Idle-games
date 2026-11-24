@@ -123,7 +123,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
         import('../../ui/WelcomeAuthUI.js?v=218'),
         import('../../ui/BagFixEnhancer.js?v=213'),
         import('../../ui/BattleStuckGuard.js?v=214'),
-        import('../../ui/HudOverhaulV217.js?v=218'),
+        import('../../ui/HudOverhaulV217.js?v=220'),
       ]);
       initLobbyClassClarity();
       initWelcomeAuthUI();

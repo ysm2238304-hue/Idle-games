@@ -5,7 +5,7 @@
  * 3. 左下角多頻道可輸入聊天室（一般 / 世界 / 隊伍 / 私訊 / 系統 / 掉落）+ Firestore 世界頻道即時同步
  */
 
-import { subscribeWorldChat, sendWorldChatMessage } from '../auth/firebase.js?v=217';
+import { subscribeWorldChat, sendWorldChatMessage } from '../auth/firebase.js?v=218';
 
 const QUESTS_BY_CH = {
   1:  [
@@ -75,7 +75,7 @@ function ensureCss() {
   const link = document.createElement('link');
   link.id = 'hud-overhaul-v217-css';
   link.rel = 'stylesheet';
-  link.href = './src/ui/hudOverhaul.css?v=217';
+  link.href = './src/ui/hudOverhaul.css?v=220';
   document.head.appendChild(link);
 }
 
@@ -84,6 +84,18 @@ function mountBottomRightDock() {
   const menu = document.querySelector('.mmo-top-menu.v80-matrix-dock');
   const viewport = document.getElementById('battle-viewport');
   if (!menu || !viewport || document.getElementById('hud-bottom-right-dock')) return;
+
+  const SVG_ICONS = {
+    '🐾': `<svg class="dock-svg-icon" viewBox="0 0 24 24" fill="none"><circle cx="7" cy="8.5" r="2.1" fill="#c084fc" stroke="#fef08a" stroke-width="1.2"/><circle cx="12" cy="6.5" r="2.1" fill="#c084fc" stroke="#fef08a" stroke-width="1.2"/><circle cx="17" cy="8.5" r="2.1" fill="#c084fc" stroke="#fef08a" stroke-width="1.2"/><path d="M12 11.5c-3.2 0-5.5 2.4-5.5 4.8 0 1.8 1.5 2.7 3.2 2.7 1 0 1.6-.4 2.3-.4s1.3.4 2.3.4c1.7 0 3.2-.9 3.2-2.7 0-2.4-2.3-4.8-5.5-4.8z" fill="#a855f7" stroke="#fde68a" stroke-width="1.3"/></svg>`,
+    '🏆': `<svg class="dock-svg-icon" viewBox="0 0 24 24" fill="none"><path d="M7 4h10v6a5 5 0 01-10 0V4z" fill="#d97706" stroke="#fef08a" stroke-width="1.5"/><path d="M7 6H4.5a1.5 1.5 0 000 3H7M17 6h2.5a1.5 1.5 0 010 3H17M12 15v4M8.5 20h7" stroke="#fde68a" stroke-width="1.6" stroke-linecap="round"/></svg>`,
+    '🛒': `<svg class="dock-svg-icon" viewBox="0 0 24 24" fill="none"><path d="M6 8h12l-1.2 11H7.2L6 8z" fill="#b45309" stroke="#fde68a" stroke-width="1.5"/><path d="M9 8V6a3 3 0 016 0v2" stroke="#fef08a" stroke-width="1.6" stroke-linecap="round"/><circle cx="12" cy="13.5" r="2" fill="#fde047"/></svg>`,
+    '🎵': `<svg class="dock-svg-icon" viewBox="0 0 24 24" fill="none"><path d="M9 17V6l10-2v11" stroke="#38bdf8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><circle cx="7" cy="17.5" r="2.5" fill="#0284c7" stroke="#bae6fd" stroke-width="1.3"/><circle cx="17" cy="15.5" r="2.5" fill="#0284c7" stroke="#bae6fd" stroke-width="1.3"/></svg>`,
+    '⚙️': `<svg class="dock-svg-icon" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3.2" fill="#94a3b8" stroke="#fde68a" stroke-width="1.4"/><path d="M12 3.5v2.2M12 18.3v2.2M4.9 7l1.9 1.1M17.2 15.9l1.9 1.1M3.5 12h2.2M18.3 12h2.2M4.9 17l1.9-1.1M17.2 8.1l1.9-1.1" stroke="#cbd5e1" stroke-width="1.9" stroke-linecap="round"/></svg>`,
+  };
+  menu.querySelectorAll('.mmo-emoji').forEach((em) => {
+    const svg = SVG_ICONS[(em.textContent || '').trim()];
+    if (svg) em.outerHTML = svg;
+  });
 
   const dockWrap = document.createElement('div');
   dockWrap.id = 'hud-bottom-right-dock';
@@ -123,7 +135,7 @@ function mountBottomRightDock() {
         `;
       } else {
         newBtn.setAttribute('data-tip', '收合功能列');
-        newBtn.innerHTML = `<span style="font-size:15px;font-weight:900;">▸</span><span style="font-size:10px;opacity:.85;">收合</span>`;
+        newBtn.innerHTML = `<span style="font-size:14px;font-weight:900;line-height:1;">▸</span>`;
       }
     };
 
