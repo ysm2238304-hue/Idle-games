@@ -1,10 +1,10 @@
 /**
- * NpcStageEngine.js (v101 - Batch 2)
- * 60 FPS Canvas 動態 NPC 舞台引擎（全 10 章節視覺深化版）：
- * - 23 套專屬動作曲線 (MOTION_PROFILES)
- * - 10 套章節專屬背景特效（極光波紋、電弧閃電、聖光柱、星象儀軌道、岩漿脈動、孢子螢火等）
- * - 支援現有圖集精靈 (atlas_town_npc_chX) 與特效貼圖 (assets/fx/*.png)
- * - 按鈕點擊即時觸發動作反饋與特效爆發 (triggerActionBurst)
+ * NpcStageEngine.js (v201 - Batch 2 Complete)
+ * 60 FPS Canvas 動態 NPC 舞台引擎：
+ * - 外部動畫圖插槽 (WebP/APNG/GIF/MP4/WebM)
+ * - 精靈去背白邊清理濾鏡 (cleanSpriteAlpha)
+ * - 全 10 章專屬背景特效（極光、彩繪玻璃、聖光柱、岩漿、電弧、星象儀軌道、毒霧、營火）
+ * - 23 套動作曲線 + 設施專屬前景動態
  */
 
 const FX_ASSETS = {
@@ -23,122 +23,22 @@ const FX_ASSETS = {
 };
 
 const CHAPTER_ATMOSPHERE = {
-  1: {
-    name: '曙光哨站堡壘',
-    bgTop: '#1d140c',
-    bgMid: '#2a1a0e',
-    bgBot: '#120b06',
-    glow: 'rgba(251, 191, 36, 0.34)',
-    accent: '#fbbf24',
-    particleType: 'embers',
-    specialBg: 'torch',
-    particleColors: ['#fbbf24', '#f97316', '#fde68a'],
-  },
-  2: {
-    name: '地下菌菇黑市',
-    bgTop: '#110a1e',
-    bgMid: '#1f1236',
-    bgBot: '#090512',
-    glow: 'rgba(168, 85, 247, 0.34)',
-    accent: '#a855f7',
-    particleType: 'spores',
-    specialBg: 'cavern',
-    particleColors: ['#a855f7', '#c084fc', '#2dd4bf'],
-  },
-  3: {
-    name: '守夜人聖骨禮拜堂',
-    bgTop: '#08121e',
-    bgMid: '#102238',
-    bgBot: '#050b12',
-    glow: 'rgba(56, 189, 248, 0.32)',
-    accent: '#38bdf8',
-    particleType: 'wisps',
-    specialBg: 'stainedGlass',
-    particleColors: ['#38bdf8', '#7dd3fc', '#bae6fd'],
-  },
-  4: {
-    name: '黑曜石熔爐要塞',
-    bgTop: '#1d0b07',
-    bgMid: '#31130b',
-    bgBot: '#100503',
-    glow: 'rgba(249, 115, 22, 0.38)',
-    accent: '#f97316',
-    particleType: 'embers',
-    specialBg: 'magma',
-    particleColors: ['#f97316', '#ef4444', '#fbbf24'],
-  },
-  5: {
-    name: '緋紅魔獄王庭',
-    bgTop: '#1d0819',
-    bgMid: '#320d27',
-    bgBot: '#0e030c',
-    glow: 'rgba(232, 121, 249, 0.34)',
-    accent: '#e879f9',
-    particleType: 'wisps',
-    specialBg: 'demonCourt',
-    particleColors: ['#e879f9', '#f43f5e', '#c084fc'],
-  },
-  6: {
-    name: '極光冰晶堡',
-    bgTop: '#061720',
-    bgMid: '#0d2b3b',
-    bgBot: '#040d13',
-    glow: 'rgba(34, 211, 238, 0.34)',
-    accent: '#22d3ee',
-    particleType: 'snow',
-    specialBg: 'aurora',
-    particleColors: ['#22d3ee', '#cffafe', '#a5f3fc'],
-  },
-  7: {
-    name: '翠玉樹冠水寨',
-    bgTop: '#071a10',
-    bgMid: '#0e2e1d',
-    bgBot: '#040d08',
-    glow: 'rgba(74, 222, 128, 0.32)',
-    accent: '#4ade80',
-    particleType: 'spores',
-    specialBg: 'swampMist',
-    particleColors: ['#4ade80', '#86efac', '#a3e635'],
-  },
-  8: {
-    name: '蒼穹電弧浮空城',
-    bgTop: '#131625',
-    bgMid: '#1f243b',
-    bgBot: '#090b14',
-    glow: 'rgba(250, 204, 21, 0.34)',
-    accent: '#facc15',
-    particleType: 'sparks',
-    specialBg: 'electricArc',
-    particleColors: ['#facc15', '#38bdf8', '#fef08a'],
-  },
-  9: {
-    name: '聖血薔薇修道院',
-    bgTop: '#1e0810',
-    bgMid: '#310f1b',
-    bgBot: '#0f0408',
-    glow: 'rgba(244, 63, 94, 0.34)',
-    accent: '#f43f5e',
-    particleType: 'petals',
-    specialBg: 'holyShaft',
-    particleColors: ['#f43f5e', '#fda4af', '#fbbf24'],
-  },
-  10: {
-    name: '永恆星辰聖域',
-    bgTop: '#100a24',
-    bgMid: '#1e1440',
-    bgBot: '#070413',
-    glow: 'rgba(192, 132, 252, 0.38)',
-    accent: '#c084fc',
-    particleType: 'stars',
-    specialBg: 'astrolabe',
-    particleColors: ['#c084fc', '#facc15', '#e9d5ff'],
-  },
+  1: { name: '曙光哨站堡壘', bgTop: '#1d140c', bgMid: '#2a1a0e', bgBot: '#120b06', glow: 'rgba(251, 191, 36, 0.34)', accent: '#fbbf24', particleType: 'embers', specialBg: 'torch', particleColors: ['#fbbf24', '#f97316', '#fde68a'] },
+  2: { name: '地下菌菇黑市', bgTop: '#110a1e', bgMid: '#1f1236', bgBot: '#090512', glow: 'rgba(168, 85, 247, 0.34)', accent: '#a855f7', particleType: 'spores', specialBg: 'cavern', particleColors: ['#a855f7', '#c084fc', '#2dd4bf'] },
+  3: { name: '守夜人聖骨禮拜堂', bgTop: '#08121e', bgMid: '#102238', bgBot: '#050b12', glow: 'rgba(56, 189, 248, 0.32)', accent: '#38bdf8', particleType: 'wisps', specialBg: 'stainedGlass', particleColors: ['#38bdf8', '#7dd3fc', '#bae6fd'] },
+  4: { name: '黑曜石熔爐要塞', bgTop: '#1d0b07', bgMid: '#31130b', bgBot: '#100503', glow: 'rgba(249, 115, 22, 0.38)', accent: '#f97316', particleType: 'embers', specialBg: 'magma', particleColors: ['#f97316', '#ef4444', '#fbbf24'] },
+  5: { name: '緋紅魔獄王庭', bgTop: '#1d0819', bgMid: '#320d27', bgBot: '#0e030c', glow: 'rgba(232, 121, 249, 0.34)', accent: '#e879f9', particleType: 'wisps', specialBg: 'demonCourt', particleColors: ['#e879f9', '#f43f5e', '#c084fc'] },
+  6: { name: '極光冰晶堡', bgTop: '#061720', bgMid: '#0d2b3b', bgBot: '#040d13', glow: 'rgba(34, 211, 238, 0.34)', accent: '#22d3ee', particleType: 'snow', specialBg: 'aurora', particleColors: ['#22d3ee', '#cffafe', '#a5f3fc'] },
+  7: { name: '翠玉樹冠水寨', bgTop: '#071a10', bgMid: '#0e2e1d', bgBot: '#040d08', glow: 'rgba(74, 222, 128, 0.32)', accent: '#4ade80', particleType: 'spores', specialBg: 'swampMist', particleColors: ['#4ade80', '#86efac', '#a3e635'] },
+  8: { name: '蒼穹電弧浮空城', bgTop: '#131625', bgMid: '#1f243b', bgBot: '#090b14', glow: 'rgba(250, 204, 21, 0.34)', accent: '#facc15', particleType: 'sparks', specialBg: 'electricArc', particleColors: ['#facc15', '#38bdf8', '#fef08a'] },
+  9: { name: '聖血薔薇修道院', bgTop: '#1e0810', bgMid: '#310f1b', bgBot: '#0f0408', glow: 'rgba(244, 63, 94, 0.34)', accent: '#f43f5e', particleType: 'petals', specialBg: 'holyShaft', particleColors: ['#f43f5e', '#fda4af', '#fbbf24'] },
+  10: { name: '永恆星辰聖域', bgTop: '#100a24', bgMid: '#1e1440', bgBot: '#070413', glow: 'rgba(192, 132, 252, 0.38)', accent: '#c084fc', particleType: 'stars', specialBg: 'astrolabe', particleColors: ['#c084fc', '#facc15', '#e9d5ff'] },
 };
 
 export const MOTION_PROFILES = {
-  modal_blacksmith: { mode: 'hammer', speed: 2.3, ampY: 5, ampRot: 0.06, fxKey: 'crit', fxSpin: 0.2, auraColor: 'rgba(249, 115, 22, 0.40)' },
-  modal_alchemy: { mode: 'stir', speed: 1.7, ampX: 4, ampY: 3, ampRot: 0.04, fxKey: 'orb', fxSpin: -0.35, auraColor: 'rgba(16, 185, 129, 0.36)' },
-  modal_market: { mode: 'peek', speed: 1.4, ampX: 3, ampY: 4, ampRot: 0.03, fxKey: 'sigil', fxSpin: 0.15, auraColor: 'rgba(168, 85, 247, 0.35)' },
+  modal_blacksmith: { mode: 'hammer', speed: 2.3, ampY: 5, ampRot: 0.06, fxKey: 'crit', fxSpin: 0.2, auraColor: 'rgba(249, 115, 22, 0.42)' },
+  modal_alchemy: { mode: 'stir', speed: 1.7, ampX: 4, ampY: 3, ampRot: 0.04, fxKey: 'orb', fxSpin: -0.35, auraColor: 'rgba(16, 185, 129, 0.38)' },
+  modal_market: { mode: 'peek', speed: 1.4, ampX: 3, ampY: 4, ampRot: 0.03, fxKey: 'sigil', fxSpin: 0.15, auraColor: 'rgba(168, 85, 247, 0.36)' },
   modal_bounty: { mode: 'nod', speed: 1.2, ampY: 3, ampRot: 0.025, fxKey: 'sigil', fxSpin: 0.08, auraColor: 'rgba(245, 158, 11, 0.32)' },
   modal_tavern: { mode: 'sway', speed: 1.9, ampX: 5, ampY: 3, ampRot: 0.045, fxKey: 'orb', fxSpin: 0.12, auraColor: 'rgba(251, 191, 36, 0.36)' },
   modal_trainer: { mode: 'combat', speed: 2.6, ampX: 7, ampY: 4, ampRot: 0.05, fxKey: 'slash', fxSpin: 0.45, auraColor: 'rgba(239, 68, 68, 0.36)' },
@@ -149,8 +49,6 @@ export const MOTION_PROFILES = {
   modal_tower: { mode: 'scan', speed: 0.9, ampX: 8, ampY: 2, ampRot: 0.03, fxKey: 'sigil', fxSpin: 0.12, auraColor: 'rgba(56, 189, 248, 0.30)' },
   modal_patrol_guard: { mode: 'steady', speed: 1.4, ampY: 3, ampRot: 0.015, fxKey: 'aegis', fxSpin: 0.15, auraColor: 'rgba(251, 191, 36, 0.34)' },
   modal_patrol_villager: { mode: 'sway', speed: 2.0, ampX: 4, ampY: 4, ampRot: 0.04, fxKey: 'orb', fxSpin: 0.2, auraColor: 'rgba(74, 222, 128, 0.30)' },
-
-  // 10 位章節限定 NPC 專屬動作與 FX 強化
   modal_scout: { mode: 'combat', speed: 2.1, ampX: 5, ampY: 4, ampRot: 0.04, fxKey: 'sigil', fxSpin: 0.22, auraColor: 'rgba(251, 191, 36, 0.40)' },
   modal_smuggler: { mode: 'peek', speed: 1.65, ampX: 4.5, ampY: 4, ampRot: 0.045, fxKey: 'orb', fxSpin: -0.32, auraColor: 'rgba(168, 85, 247, 0.42)' },
   modal_chronicler: { mode: 'levitate', speed: 1.25, ampY: 7.5, ampRot: 0.025, fxKey: 'voidCore', fxSpin: 0.28, auraColor: 'rgba(56, 189, 248, 0.40)' },
@@ -163,6 +61,40 @@ export const MOTION_PROFILES = {
   modal_weaver: { mode: 'levitate', speed: 1.4, ampY: 9.5, ampRot: 0.025, fxKey: 'starSigil', fxSpin: 0.65, auraColor: 'rgba(192, 132, 252, 0.48)' },
 };
 
+function cleanSpriteAlpha(img) {
+  try {
+    const w = img.naturalWidth || img.width;
+    const h = img.naturalHeight || img.height;
+    if (!w || !h) return img;
+    const off = document.createElement('canvas');
+    off.width = w;
+    off.height = h;
+    const octx = off.getContext('2d', { willReadFrequently: true });
+    octx.drawImage(img, 0, 0);
+    const idata = octx.getImageData(0, 0, w, h);
+    const d = idata.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const r = d[i];
+      const g = d[i + 1];
+      const b = d[i + 2];
+      const a = d[i + 3];
+      if (a === 0) continue;
+      const max = Math.max(r, g, b);
+      const min = Math.min(r, g, b);
+      const sat = max === 0 ? 0 : (max - min) / max;
+      if (min > 232 && sat < 0.08) {
+        d[i + 3] = 0;
+      } else if (min > 205 && sat < 0.09) {
+        d[i + 3] = Math.floor(a * 0.35);
+      }
+    }
+    octx.putImageData(idata, 0, 0);
+    return off;
+  } catch {
+    return img;
+  }
+}
+
 export class NpcStageEngine {
   constructor(canvas, opts = {}) {
     this.canvas = canvas;
@@ -171,11 +103,13 @@ export class NpcStageEngine {
     this.action = opts.action || 'modal_bounty';
     this.profile = MOTION_PROFILES[this.action] || MOTION_PROFILES.modal_bounty;
     this.theme = CHAPTER_ATMOSPHERE[this.chapter] || CHAPTER_ATMOSPHERE[1];
+    this.animatedSlotEl = opts.animatedSlotEl || null;
 
     this.npcImg = null;
     this.bldImg = null;
     this.fxImg = null;
     this.burstImg = null;
+    this.liquidColor = '#10b981';
 
     this.particles = [];
     this.burstParticles = [];
@@ -187,10 +121,47 @@ export class NpcStageEngine {
     this._destroyed = false;
     this._startTime = performance.now();
 
+    this._tryLoadAnimatedSlot(opts.animatedUrl);
     this._loadImages(opts.npcUrl, opts.bldUrl);
     this._initParticles();
     if (this.ctx) {
       this._loop(performance.now());
+    }
+  }
+
+  setLiquidColor(hex) {
+    if (hex) this.liquidColor = hex;
+  }
+
+  _tryLoadAnimatedSlot(animatedUrl) {
+    if (!this.animatedSlotEl || !animatedUrl) return;
+    const isVideo = /\.(webm|mp4)(\?|$)/i.test(animatedUrl);
+    if (isVideo) {
+      const vid = document.createElement('video');
+      vid.src = animatedUrl;
+      vid.autoplay = true;
+      vid.loop = true;
+      vid.muted = true;
+      vid.playsInline = true;
+      vid.className = 'npc-anim-media';
+      vid.oncanplay = () => {
+        if (!this._destroyed) {
+          this.animatedSlotEl.innerHTML = '';
+          this.animatedSlotEl.appendChild(vid);
+          this.animatedSlotEl.classList.add('has-media');
+        }
+      };
+    } else {
+      const img = new Image();
+      img.onload = () => {
+        if (!this._destroyed) {
+          img.className = 'npc-anim-media';
+          this.animatedSlotEl.innerHTML = '';
+          this.animatedSlotEl.appendChild(img);
+          this.animatedSlotEl.classList.add('has-media');
+        }
+      };
+      img.src = animatedUrl;
     }
   }
 
@@ -205,18 +176,18 @@ export class NpcStageEngine {
   }
 
   _loadImages(npcUrl, bldUrl) {
-    this._loadImage(npcUrl, (img) => { this.npcImg = img; });
-    this._loadImage(bldUrl, (img) => { this.bldImg = img; });
+    this._loadImage(npcUrl, (img) => { this.npcImg = cleanSpriteAlpha(img); });
+    this._loadImage(bldUrl, (img) => { this.bldImg = cleanSpriteAlpha(img); });
     const fxSrc = FX_ASSETS[this.profile.fxKey] || FX_ASSETS.sigil;
     this._loadImage(fxSrc, (img) => { this.fxImg = img; });
     this._loadImage(FX_ASSETS.crit, (img) => { this.burstImg = img; });
   }
 
   _initParticles() {
-    const w = this.canvas?.width || 300;
+    const w = this.canvas?.width || 282;
     const h = this.canvas?.height || 248;
     this.particles = [];
-    for (let i = 0; i < 26; i++) {
+    for (let i = 0; i < 24; i++) {
       this.particles.push(this._makeAmbientParticle(w, h, true));
     }
   }
@@ -228,9 +199,9 @@ export class NpcStageEngine {
     return {
       x: Math.random() * w,
       y: randomY ? Math.random() * h : (isFalling ? -10 : h + 10),
-      vx: (Math.random() - 0.5) * (type === 'sparks' ? 1.9 : 0.65),
+      vx: (Math.random() - 0.5) * (type === 'sparks' ? 1.8 : 0.65),
       vy: isFalling ? (0.45 + Math.random() * 0.9) : -(0.4 + Math.random() * 1.15),
-      r: type === 'petals' ? (2.5 + Math.random() * 2.5) : (1.5 + Math.random() * 2.6),
+      r: type === 'petals' ? (2.5 + Math.random() * 2.5) : (1.5 + Math.random() * 2.5),
       alpha: 0.28 + Math.random() * 0.65,
       phase: Math.random() * Math.PI * 2,
       color: colors[Math.floor(Math.random() * colors.length)],
@@ -243,15 +214,15 @@ export class NpcStageEngine {
     const h = this.canvas.height;
     const cx = w * 0.5;
     const cy = h * 0.54;
-    this.burstTimer = 0.65;
-    this.shakeTimer = kind === 'impact' ? 0.24 : 0.12;
+    this.burstTimer = 0.68;
+    this.shakeTimer = kind === 'impact' ? 0.26 : 0.12;
 
     const palette = kind === 'impact'
       ? ['#f97316', '#fbbf24', '#ffffff']
       : [this.theme.accent, '#fde68a', '#ffffff'];
 
-    for (let i = 0; i < 24; i++) {
-      const ang = (Math.PI * 2 * i) / 24 + Math.random() * 0.25;
+    for (let i = 0; i < 26; i++) {
+      const ang = (Math.PI * 2 * i) / 26 + Math.random() * 0.25;
       const spd = 1.6 + Math.random() * 3.8;
       this.burstParticles.push({
         x: cx,
@@ -270,7 +241,6 @@ export class NpcStageEngine {
     const kind = this.theme.specialBg;
     ctx.save();
     if (kind === 'aurora') {
-      // Ch6: 極光波紋
       const grad = ctx.createLinearGradient(0, 0, w, h * 0.45);
       grad.addColorStop(0, 'rgba(34, 211, 238, 0.0)');
       grad.addColorStop(0.5, 'rgba(34, 211, 238, 0.22)');
@@ -286,7 +256,6 @@ export class NpcStageEngine {
       ctx.closePath();
       ctx.fill();
     } else if (kind === 'stainedGlass' || kind === 'holyShaft') {
-      // Ch3 / Ch9: 彩繪玻璃或聖光斜射光束
       ctx.globalCompositeOperation = 'screen';
       const beamColor = kind === 'holyShaft' ? 'rgba(244, 63, 94, 0.14)' : 'rgba(56, 189, 248, 0.13)';
       for (let i = 0; i < 3; i++) {
@@ -305,7 +274,6 @@ export class NpcStageEngine {
         ctx.fill();
       }
     } else if (kind === 'magma') {
-      // Ch4: 底部熔岩脈動熱光
       const pulse = 0.25 + Math.sin(t * 2.8) * 0.1;
       const mg = ctx.createLinearGradient(0, h * 0.65, 0, h);
       mg.addColorStop(0, 'rgba(249, 115, 22, 0)');
@@ -313,7 +281,6 @@ export class NpcStageEngine {
       ctx.fillStyle = mg;
       ctx.fillRect(0, h * 0.65, w, h * 0.35);
     } else if (kind === 'electricArc') {
-      // Ch8: 偶發電弧跳動
       if (Math.sin(t * 17) > 0.78) {
         ctx.strokeStyle = 'rgba(250, 204, 21, 0.65)';
         ctx.lineWidth = 1.6;
@@ -329,7 +296,6 @@ export class NpcStageEngine {
         ctx.stroke();
       }
     } else if (kind === 'astrolabe') {
-      // Ch10: 黃金星象儀雙軌道
       ctx.translate(w * 0.5, h * 0.52);
       ctx.strokeStyle = 'rgba(250, 204, 21, 0.24)';
       ctx.lineWidth = 1;
@@ -346,7 +312,6 @@ export class NpcStageEngine {
       ctx.arc(0, 0, Math.min(w, h) * 0.32, 0, Math.PI * 2);
       ctx.stroke();
     } else if (kind === 'swampMist') {
-      // Ch7: 沼澤底部毒霧
       const sg = ctx.createLinearGradient(0, h * 0.7, 0, h);
       sg.addColorStop(0, 'rgba(74, 222, 128, 0)');
       sg.addColorStop(1, 'rgba(74, 222, 128, 0.18)');
@@ -404,26 +369,9 @@ export class NpcStageEngine {
         rot = Math.sin(s * 0.7) * (p.ampRot || 0.02);
         scale = 1 + Math.sin(s) * 0.015;
         break;
-      case 'prayer':
-        dy = Math.sin(s) * (p.ampY || 5);
-        rot = Math.sin(s * 0.5) * (p.ampRot || 0.02);
-        scale = 1 + Math.sin(s * 1.5) * 0.018;
-        break;
-      case 'scan':
-        dx = Math.sin(s * 0.7) * (p.ampX || 7);
-        dy = Math.sin(s * 2) * (p.ampY || 2);
-        rot = Math.sin(s * 0.7) * (p.ampRot || 0.03);
-        break;
-      case 'sway':
-        dx = Math.sin(s) * (p.ampX || 4);
-        dy = Math.abs(Math.cos(s)) * -(p.ampY || 3);
-        rot = Math.sin(s) * (p.ampRot || 0.04);
-        break;
-      case 'nod':
-      case 'steady':
       default:
-        dy = Math.sin(s) * (p.ampY || 3);
-        rot = Math.sin(s * 0.5) * (p.ampRot || 0.015);
+        dy = Math.sin(s) * (p.ampY || 3.5);
+        rot = Math.sin(s * 0.6) * (p.ampRot || 0.02);
         scale = 1 + Math.sin(s) * 0.012;
         break;
     }
@@ -433,20 +381,42 @@ export class NpcStageEngine {
   _spawnLocalSparks() {
     if (!this.canvas) return;
     const cx = this.canvas.width * 0.5;
-    const cy = this.canvas.height * 0.66;
-    for (let i = 0; i < 6; i++) {
+    const cy = this.canvas.height * 0.68;
+    for (let i = 0; i < 7; i++) {
       const ang = -Math.PI * 0.15 - Math.random() * Math.PI * 0.7;
-      const spd = 1.2 + Math.random() * 2.2;
+      const spd = 1.2 + Math.random() * 2.4;
       this.burstParticles.push({
         x: cx + (Math.random() - 0.5) * 24,
         y: cy,
         vx: Math.cos(ang) * spd,
         vy: Math.sin(ang) * spd,
-        r: 1.5 + Math.random() * 2,
-        life: 0.7,
+        r: 1.6 + Math.random() * 2,
+        life: 0.75,
         decay: 0.03,
         color: this.theme.accent,
       });
+    }
+  }
+
+  _drawFacilityForeground(ctx, w, h, t) {
+    if (this.action === 'modal_alchemy') {
+      const g = ctx.createRadialGradient(w * 0.5, h * 0.86, 8, w * 0.5, h * 0.86, 78);
+      g.addColorStop(0, this.liquidColor + '88');
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, h * 0.55, w, h * 0.45);
+    } else if (this.action === 'modal_portal') {
+      ctx.save();
+      ctx.translate(w * 0.5, h * 0.52);
+      ctx.strokeStyle = this.theme.accent;
+      ctx.globalAlpha = 0.28;
+      ctx.lineWidth = 1.4;
+      ctx.rotate(t * 0.35);
+      ctx.setLineDash([8, 6]);
+      ctx.beginPath();
+      ctx.arc(0, 0, Math.min(w, h) * 0.38, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
     }
   }
 
@@ -482,9 +452,11 @@ export class NpcStageEngine {
     ctx.fillStyle = rad;
     ctx.fillRect(0, 0, w, h);
 
+    this._drawFacilityForeground(ctx, w, h, t);
+
     if (this.bldImg) {
       ctx.save();
-      ctx.globalAlpha = 0.24;
+      ctx.globalAlpha = 0.22;
       const bScale = Math.min((w * 0.85) / this.bldImg.width, (h * 0.65) / this.bldImg.height);
       const bw = this.bldImg.width * bScale;
       const bh = this.bldImg.height * bScale;
@@ -518,10 +490,10 @@ export class NpcStageEngine {
     ctx.stroke();
     ctx.restore();
 
-    if (this.npcImg) {
+    if (this.npcImg && !this.animatedSlotEl?.classList.contains('has-media')) {
       ctx.save();
-      const targetH = h * 0.54;
-      const ratio = Math.min((w * 0.68) / this.npcImg.width, targetH / this.npcImg.height);
+      const targetH = h * 0.56;
+      const ratio = Math.min((w * 0.70) / this.npcImg.width, targetH / this.npcImg.height);
       const nw = this.npcImg.width * ratio;
       const nh = this.npcImg.height * ratio;
       ctx.translate(w * 0.5 + dx, h * 0.54 + dy);
@@ -530,14 +502,6 @@ export class NpcStageEngine {
       ctx.shadowColor = this.theme.accent;
       ctx.shadowBlur = this.burstTimer > 0 ? 28 : 14;
       ctx.drawImage(this.npcImg, -nw * 0.5, -nh * 0.5, nw, nh);
-      ctx.restore();
-    } else {
-      ctx.save();
-      ctx.translate(w * 0.5 + dx, h * 0.54 + dy);
-      ctx.fillStyle = this.theme.glow;
-      ctx.beginPath();
-      ctx.arc(0, 0, 42 * scale, 0, Math.PI * 2);
-      ctx.fill();
       ctx.restore();
     }
 
