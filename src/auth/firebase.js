@@ -1,6 +1,6 @@
-// src/auth/firebase.js (v207) - 嚴格手動登入 + Email/密碼註冊登入 + Google 手動登入 + Cloud Firestore (idle_arpg_saves)
+// src/auth/firebase.js (v210) - 嚴格手動登入 + Email/密碼註冊登入 + Google 手動登入 + Cloud Firestore (idle_arpg_saves)
 const firebaseConfig = {
-  apiKey: 'AIzaSyDUwnKiTdmlJaSLADPxwt40dLqUpfod0Ck',
+  apiKey: 'AIzaSyDUwnKiTdmlJaSLADPxwt4OdLqUpfod0Ck',
   authDomain: 'hoshino-game.firebaseapp.com',
   projectId: 'hoshino-game',
   storageBucket: 'hoshino-game.firebasestorage.app',
