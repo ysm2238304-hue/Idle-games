@@ -1,14 +1,16 @@
+import { getClassMechanicConfig } from '../logic/classMechanics.js?v=234';
+import { computeSkillBuildMods, checkCompoundReaction, getSmartAutoSlotOrder } from '../logic/buildEngine.js?v=236';
 import { CLASSES } from '../data/classes.js?v=99';
-import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=99';
-import { RANGER_SKILLS } from '../data/rangerSkills.js?v=99';
-import { MAGE_SKILLS } from '../data/mageSkills.js?v=99';
-import { PALADIN_SKILLS } from '../data/paladinSkills.js?v=99';
-import { NECRO_SKILLS } from '../data/necroSkills.js?v=99';
-import { ASSASSIN_SKILLS } from '../data/assassinSkills.js?v=99';
+import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=235';
+import { RANGER_SKILLS } from '../data/rangerSkills.js?v=236';
+import { MAGE_SKILLS } from '../data/mageSkills.js?v=236';
+import { PALADIN_SKILLS } from '../data/paladinSkills.js?v=235';
+import { NECRO_SKILLS } from '../data/necroSkills.js?v=236';
+import { ASSASSIN_SKILLS } from '../data/assassinSkills.js?v=235';
 import { RARITIES } from '../data/items.js?v=99';
 import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta, getPetPickupRadius, getPetCodexInfo } from '../data/pets.js?v=99';
-import { createStageEncounters, spawnSingleMonster, getChapterIdx, getStageLabel, ZONE_OBSTACLES } from '../data/monsters.js?v=99';
-import { formatNum } from '../logic/statCalc.js?v=99';
+import { createStageEncounters, spawnSingleMonster, getChapterIdx, getStageLabel, ZONE_OBSTACLES } from '../data/monsters.js?v=232';
+import { formatNum } from '../logic/statCalc.js?v=237';
 
 const MAP_W = 4096;
 const MAP_H = 2304;
@@ -32,6 +34,13 @@ const FX_NAMES = [
   'efx_claw', 'efx_venom', 'efx_imp_fire', 'efx_necro_orb',
   'nfx_totem', 'nfx_warcry', 'nfx_caltrops', 'nfx_deathmark',
   'nfx_lightning', 'nfx_icicles', 'nfx_blackhole', 'nfx_overload',
+  'vfx_react_hemorrhage', 'vfx_react_superconduct', 'vfx_react_plaguefire', 'vfx_react_souljudge', 'vfx_proc_overpower', 'vfx_proc_luckyhit',
+  'vfx_w_rend_arc', 'vfx_w_hammer_slam', 'vfx_w_iron_dome', 'vfx_w_ancients_spirit', 'vfx_w_lava_fissure',
+  'vfx_p_cross_fire', 'vfx_p_thorns_ring', 'vfx_p_redemption_halo', 'vfx_p_seraph_wings', 'vfx_p_verdict_sword',
+  'vfx_a_boomerang', 'vfx_a_backstab_pierce', 'vfx_a_crimson_mist', 'vfx_a_bloodmoon_array', 'vfx_a_fivestar_slash',
+  'vfx_r_shadow_arrow', 'vfx_r_venom_spear', 'vfx_r_decoy_phantom', 'vfx_r_abyss_meteor_arrow', 'vfx_r_void_star_sigil',
+  'vfx_m_flame_hydra', 'vfx_m_ice_hex_shield', 'vfx_m_blink_lightning', 'vfx_m_cataclysm_sigil', 'vfx_m_supernova_core',
+  'vfx_n_blood_surge', 'vfx_n_blight_pool', 'vfx_n_bone_shield', 'vfx_n_scourge_rift', 'vfx_n_bone_splinter',
 ];
 
 export class BattleScene extends Phaser.Scene {
@@ -53,7 +62,7 @@ export class BattleScene extends Phaser.Scene {
     this.potionMaxCharges = 3;
     this.potionRechargeTimer = 0;
     this.heroAttackTimer = 0;
-    this.slotCdTimers = [99999, 99999, 99999];
+    this.slotCdTimers = [99999, 99999, 99999, 99999, 99999];
     this.bossTimeLeft = 0;
     this.isBossWave = false;
     this.isTransitioning = false;
@@ -703,7 +712,7 @@ export class BattleScene extends Phaser.Scene {
     if (!isManual && !this.shouldAutoCastSkill(info.id)) return false;
     const cost = info.mpCost || 18;
     const tree = this.getState().skillTree || {};
-    const freeAstral = (this.getState().classId === 'mage' && (tree.m_key_astral || 0) > 0 && Math.random() < 0.35);
+    const freeAstral = ((this.getState().classId === 'mage' && (tree.m_key_astral || 0) > 0 && Math.random() < 0.35) || (this.getState().classId === 'ranger' && (this.time?.now || 0) < (this._rInnerSightUntil || 0)));
     const curCid = this.getState().classId;
     if (!freeAstral && this.playerMp < cost) {
       if (isManual) {
@@ -722,9 +731,58 @@ export class BattleScene extends Phaser.Scene {
     }
     if (!freeAstral) this.playerMp = Math.max(0, this.playerMp - cost);
     const echoRefund = (curCid === 'mage' && this.getStats().activeEffects.has('arcane_echo') && Math.random() < 0.25);
-    this.slotCdTimers[slotIdx] = freeAstral ? Math.round(info.cooldownMs * 0.3) : (echoRefund ? Math.round(info.cooldownMs * 0.5) : 0);
+    const buildMods = computeSkillBuildMods(this.getState(), curCid, info.id, info.level);
+    this._activeBuildMods = buildMods;
+    this._activeBuildModsUntil = (this.time?.now || 0) + 1200;
+    const effCd = Math.max(900, Math.round(info.cooldownMs * (buildMods.cdMult || 1)));
+    const cdSaved = Math.max(0, info.cooldownMs - effCd);
+    this.slotCdTimers[slotIdx] = freeAstral ? Math.round(info.cooldownMs * 0.3) : (echoRefund ? Math.round(info.cooldownMs * 0.5) : cdSaved);
 
     const stNow = this.getStats();
+    const mechCfg = getClassMechanicConfig(this.getState(), curCid);
+    const nowCastT = this.time?.now || 0;
+
+    // v234: 施放技能觸發六大職業專屬機制
+    if (curCid === 'warrior') {
+      this._wCastCount = (this._wCastCount || 0) + 1;
+      if (this._wCastCount >= 3) {
+        this._wCastCount = 0;
+        this._wArsenalOverloadUntil = nowCastT + 1500;
+        this.spawnFloatingText(this.hero.x, this.hero.y - 102, '⚔️武器精通過載!', '#38bdf8', 15);
+      }
+    } else if (curCid === 'ranger') {
+      if (mechCfg.specialization === 'combo_points' && (this._rComboStars || 0) > 0) {
+        this._rSpentStars = this._rComboStars;
+        this._rComboStars = 0;
+        this._rSpentStarsUntil = nowCastT + 1200;
+        this.spawnFloatingText(this.hero.x, this.hero.y - 102, `★消耗 ${this._rSpentStars} 星連擊爆發!`, '#4ade80', 14);
+      } else if (mechCfg.specialization === 'preparation') {
+        this.slotCdTimers = this.slotCdTimers.map((t, idx) => (idx === slotIdx ? t : t + 1100));
+      }
+    } else if (curCid === 'mage') {
+      const ench = mechCfg.enchants || [];
+      this._mCastCount = (this._mCastCount || 0) + 1;
+      if (ench.includes('chain_lightning') && this._mCastCount % 2 === 0 && this.monsters.length > 0) {
+        const tgt = this.findNearestMonster(this.hero.x, this.hero.y);
+        if (tgt && tgt.hp > 0) {
+          this.playAdditiveVfx('vfx_react_superconduct', tgt.sprite.x, tgt.sprite.y - 12, 0.55, 320);
+          if (!tgt._statuses) tgt._statuses = {};
+          tgt._statuses.shock = Math.max(tgt._statuses.shock || 0, nowCastT + 4500);
+          this.damageMonster(tgt, Math.round(stNow.atk * 1.5), true, false, '#facc15', '⚡附魔雷鏈 ', true);
+        }
+      }
+    } else if (curCid === 'paladin') {
+      if (mechCfg.oath === 'martyr_oath' && this.playerHp > this.playerMaxHp * 0.15) {
+        this.playerHp = Math.max(1, Math.round(this.playerHp - this.playerMaxHp * 0.03));
+      }
+    } else if (curCid === 'assassin') {
+      if ((this._aShadowStars || 0) >= 5) {
+        this._aShadowStars = 0;
+        this._aFiveStarUntil = nowCastT + 1200;
+        this.spawnFloatingText(this.hero.x, this.hero.y - 102, '🌑五星暗影絕殺爆發!', '#c084fc', 16);
+      }
+    }
+
     if (info.cid === 'warrior') {
       this.castWarriorSkill(info.id, info.level, stNow, isManual);
     } else if (info.cid === 'ranger') {
@@ -776,7 +834,7 @@ export class BattleScene extends Phaser.Scene {
     this.playerHp = stats.maxHp;
     this.playerMaxMp = stats.maxMp || 100;
     this.playerMp = this.playerMaxMp;
-    this.slotCdTimers = [99999, 99999, 99999];
+    this.slotCdTimers = [99999, 99999, 99999, 99999, 99999];
     this.basicComboStep = 0;
     this.warriorGuardStacks = 0;
     this.arcaneChargeStacks = 0;
@@ -1056,8 +1114,11 @@ export class BattleScene extends Phaser.Scene {
       const dist = Phaser.Math.Distance.Between(this.hero.x, this.hero.y, nearest.sprite.x, nearest.sprite.y);
 
       if (dist <= Math.max(260, atkRange)) {
-        for (let i = 0; i < 3; i++) {
-          if (this.castSkillSlot(i)) break;
+        const eqIds = this.getState()?.equippedSkillsByClass?.[cid] || [];
+        const smartOrder = getSmartAutoSlotOrder(eqIds, this.monsters, time);
+        const orderToTry = smartOrder.length ? smartOrder : [0, 1, 2, 3, 4];
+        for (const sIdx of orderToTry) {
+          if (this.castSkillSlot(sIdx)) break;
         }
       }
 
@@ -1689,6 +1750,90 @@ export class BattleScene extends Phaser.Scene {
 
   // 戰士 4 大主動技能（游標指向＋流血引爆連動）
   castWarriorSkill(skillId, skillLvl, stats, isManual = false) {
+    const _hx = this.hero.x, _hy = this.hero.y;
+    const _n = this.findNearestMonster(_hx, _hy);
+    const _tx = _n ? _n.sprite.x : _hx + 90, _ty = _n ? _n.sprite.y : _hy;
+    const _aoe = (cx, cy, rad, mult, col, pre, stList = [], forceCrit = false) => {
+      for (const m of [...this.monsters]) {
+        if (!m || m.hp <= 0) continue;
+        if (Phaser.Math.Distance.Between(cx, cy, m.sprite.x, m.sprite.y) <= rad) {
+          const isC = forceCrit || (Math.random() * 100 < stats.critRate);
+          const d = Math.round(stats.atk * mult * (isC ? stats.critDmg / 100 : 1));
+          if (!m._statuses) m._statuses = {};
+          stList.forEach((k) => { m._statuses[k] = Math.max(m._statuses[k] || 0, this.time.now + 4800); });
+          this.damageMonster(m, d, isC, false, col, pre);
+        }
+      }
+    };
+    if (skillId === 'w_rend_slash') {
+      this.playAdditiveVfx('vfx_w_rend_arc', _tx, _ty - 10, 0.85, 340);
+      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 18);
+      _aoe(_tx, _ty, 210, (140 + skillLvl * 22) / 100, '#f87171', '🩸', ['bleed']);
+      return;
+    }
+    if (skillId === 'w_ancient_hammer') {
+      this.playAdditiveVfx('vfx_w_hammer_slam', _tx, _ty, 1.05, 460);
+      _aoe(_tx, _ty, 250, (260 + skillLvl * 40) / 100, '#fbbf24', '🔨', ['vulnerable']);
+      return;
+    }
+    if (skillId === 'w_iron_skin') {
+      this.playAdditiveVfx('vfx_w_iron_dome', _hx, _hy - 12, 0.92, 520);
+      this.healHero(Math.round(this.playerMaxHp * ((20 + skillLvl * 2) / 100)));
+      _aoe(_hx, _hy, 230, (150 + skillLvl * 24) / 100, '#cbd5e1', '🛡️', ['vulnerable']);
+      return;
+    }
+    if (skillId === 'w_chain_grasp') {
+      this.playAdditiveVfx('vfx_w_lava_fissure', _hx, _hy, 0.95, 440);
+      for (const m of [...this.monsters]) {
+        if (!m || m.hp <= 0) continue;
+        if (Phaser.Math.Distance.Between(_hx, _hy, m.sprite.x, m.sprite.y) <= 360) {
+          m.sprite.x = Phaser.Math.Linear(m.sprite.x, _hx + Phaser.Math.Between(-50, 50), 0.72);
+          m.sprite.y = Phaser.Math.Linear(m.sprite.y, _hy + Phaser.Math.Between(-40, 40), 0.72);
+        }
+      }
+      _aoe(_hx, _hy, 360, (170 + skillLvl * 26) / 100, '#fb923c', '⛓️', ['vulnerable', 'burn']);
+      return;
+    }
+    if (skillId === 'w_rupture_impale') {
+      this.playAdditiveVfx('vfx_w_rend_arc', _tx, _ty - 10, 1.05, 420);
+      for (const m of [...this.monsters]) {
+        if (!m || m.hp <= 0) continue;
+        if (Phaser.Math.Distance.Between(_tx, _ty, m.sprite.x, m.sprite.y) <= 220) {
+          const isBl = this.time.now < (m.bleedUntil || 0) || this.time.now < (m._statuses?.bleed || 0);
+          const mult = ((220 + skillLvl * 34) / 100) * (isBl ? 2.0 : 1.0);
+          this.damageMonster(m, Math.round(stats.atk * mult * (stats.critDmg / 100)), true, false, '#ef4444', '🩸血爆 ');
+          if (isBl) this.healHero(Math.round(this.playerMaxHp * 0.12));
+        }
+      }
+      return;
+    }
+    if (skillId === 'w_seismic_fissure') {
+      for (let w = 0; w < 3; w++) {
+        this.time.delayedCall(w * 280, () => {
+          this.playAdditiveVfx('vfx_w_lava_fissure', _tx + Phaser.Math.Between(-30, 30), _ty + Phaser.Math.Between(-20, 20), 0.92, 420);
+          _aoe(_tx, _ty, 240, (125 + skillLvl * 22) / 100, '#fb923c', '🌋', ['burn']);
+        });
+      }
+      return;
+    }
+    if (skillId === 'w_call_ancients') {
+      for (let w = 0; w < 4; w++) {
+        this.time.delayedCall(w * 320, () => {
+          const ox = _tx + Phaser.Math.Between(-90, 90), oy = _ty + Phaser.Math.Between(-60, 60);
+          this.playAdditiveVfx('vfx_w_ancients_spirit', ox, oy - 16, 1.05, 520);
+          _aoe(ox, oy, 300, (180 + skillLvl * 32) / 100, '#fbbf24', '🪓先祖 ', ['bleed', 'vulnerable'], true);
+        });
+      }
+      return;
+    }
+    if (skillId === 'w_wrath_berserker') {
+      this.warcryUntil = Math.max(this.warcryUntil || 0, this.time.now + 7000);
+      this._wArsenalOverloadUntil = Math.max(this._wArsenalOverloadUntil || 0, this.time.now + 7000);
+      this.playerMp = this.playerMaxMp;
+      this.playAdditiveVfx('vfx_w_hammer_slam', _hx, _hy, 1.25, 560);
+      _aoe(_hx, _hy, 320, (320 + skillLvl * 48) / 100, '#ef4444', '🔥狂戰神 ', ['burn', 'vulnerable'], true);
+      return;
+    }
     const alive = this.monsters.filter((m) => m.hp > 0);
     if (alive.length === 0) return;
     const sk = WARRIOR_SKILLS[skillId];
@@ -1901,6 +2046,74 @@ export class BattleScene extends Phaser.Scene {
 
   // 遊俠 4 大主動技能（游標指向＋獵手印記連動）
   castRangerSkill(skillId, skillLvl, stats, isManual = false) {
+    const _hx = this.hero.x, _hy = this.hero.y;
+    const _n = this.findNearestMonster(_hx, _hy);
+    const _tx = _n ? _n.sprite.x : _hx + 160, _ty = _n ? _n.sprite.y : _hy;
+    const _aoe = (cx, cy, rad, mult, col, pre, stList = [], forceCrit = false) => {
+      for (const m of [...this.monsters]) {
+        if (!m || m.hp <= 0) continue;
+        if (Phaser.Math.Distance.Between(cx, cy, m.sprite.x, m.sprite.y) <= rad) {
+          const isC = forceCrit || (Math.random() * 100 < stats.critRate);
+          const d = Math.round(stats.atk * mult * (isC ? stats.critDmg / 100 : 1));
+          if (!m._statuses) m._statuses = {};
+          stList.forEach((k) => { m._statuses[k] = Math.max(m._statuses[k] || 0, this.time.now + 4800); });
+          this.damageMonster(m, d, isC, false, col, pre);
+        }
+      }
+    };
+    if (skillId === 'r_shadow_imbue') {
+      this.playAdditiveVfx('vfx_r_shadow_arrow', _tx, _ty - 10, 0.92, 360);
+      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 18);
+      _aoe(_tx, _ty, 230, (160 + skillLvl * 25) / 100, '#c084fc', '🌑', ['vulnerable', 'curse']);
+      return;
+    }
+    if (skillId === 'r_venom_pierce') {
+      this.playAdditiveVfx('vfx_r_venom_spear', _tx, _ty - 8, 1.0, 400);
+      _aoe(_tx, _ty, 260, (245 + skillLvl * 38) / 100, '#4ade80', '☠️毒矛 ', ['poison']);
+      return;
+    }
+    if (skillId === 'r_smoke_decoy') {
+      this.playAdditiveVfx('vfx_r_decoy_phantom', _hx, _hy - 12, 0.96, 480);
+      this.healHero(Math.round(this.playerMaxHp * 0.18));
+      _aoe(_hx, _hy, 270, (195 + skillLvl * 30) / 100, '#a3e635', '💨誘餌 ', ['poison', 'vulnerable']);
+      return;
+    }
+    if (skillId === 'r_frost_barrage') {
+      for (let w = 0; w < 3; w++) {
+        this.time.delayedCall(w * 200, () => {
+          this.playAdditiveVfx('vfx_react_superconduct', _tx, _ty - 10, 0.72, 320);
+          _aoe(_tx, _ty, 240, (95 + skillLvl * 18) / 100, '#38bdf8', '❄️', ['freeze']);
+        });
+      }
+      return;
+    }
+    if (skillId === 'r_razor_snare') {
+      this.playAdditiveVfx('vfx_react_hemorrhage', _tx, _ty, 0.92, 420);
+      _aoe(_tx, _ty, 240, (230 + skillLvl * 34) / 100, '#f87171', '🩸陷阱 ', ['bleed', 'vulnerable']);
+      return;
+    }
+    if (skillId === 'r_gale_snipe') {
+      this.playAdditiveVfx('vfx_r_venom_spear', _tx, _ty - 10, 1.05, 380);
+      this._rComboStars = Math.min(3, (this._rComboStars || 0) + 2);
+      _aoe(_tx, _ty, 220, (280 + skillLvl * 44) / 100, '#34d399', '🎯狙殺 ', ['vulnerable'], true);
+      return;
+    }
+    if (skillId === 'r_abyss_barrage') {
+      for (let w = 0; w < 5; w++) {
+        this.time.delayedCall(w * 240, () => {
+          const ox = _tx + Phaser.Math.Between(-90, 90), oy = _ty + Phaser.Math.Between(-60, 60);
+          this.playAdditiveVfx('vfx_r_abyss_meteor_arrow', ox, oy - 16, 1.12, 460);
+          _aoe(ox, oy, 330, (150 + skillLvl * 28) / 100, '#c084fc', '☄️箭幕 ', ['poison', 'vulnerable'], true);
+        });
+      }
+      return;
+    }
+    if (skillId === 'r_void_hunter') {
+      this._rInnerSightUntil = Math.max(this._rInnerSightUntil || 0, this.time.now + 6000);
+      this.playAdditiveVfx('vfx_r_void_star_sigil', _tx, _ty - 10, 1.32, 620);
+      _aoe(_tx, _ty, 360, (360 + skillLvl * 54) / 100, '#e879f9', '⭐虛空獵手 ', ['curse', 'vulnerable'], true);
+      return;
+    }
     const alive = this.monsters.filter((m) => m.hp > 0);
     if (alive.length === 0) return;
     const sk = RANGER_SKILLS[skillId];
@@ -2075,6 +2288,82 @@ export class BattleScene extends Phaser.Scene {
 
   // 法師 4 大主動技能（游標指向＋冰寒共鳴與奧術充能連動）
   castMageSkill(skillId, skillLvl, stats, isManual = false) {
+    const _hx = this.hero.x, _hy = this.hero.y;
+    const _n = this.findNearestMonster(_hx, _hy);
+    const _tx = _n ? _n.sprite.x : _hx + 160, _ty = _n ? _n.sprite.y : _hy;
+    const _aoe = (cx, cy, rad, mult, col, pre, stList = [], forceCrit = false) => {
+      for (const m of [...this.monsters]) {
+        if (!m || m.hp <= 0) continue;
+        if (Phaser.Math.Distance.Between(cx, cy, m.sprite.x, m.sprite.y) <= rad) {
+          const isC = forceCrit || (Math.random() * 100 < stats.critRate);
+          const d = Math.round(stats.atk * mult * (isC ? stats.critDmg / 100 : 1));
+          if (!m._statuses) m._statuses = {};
+          stList.forEach((k) => { m._statuses[k] = Math.max(m._statuses[k] || 0, this.time.now + 4800); });
+          this.damageMonster(m, d, isC, false, col, pre);
+        }
+      }
+    };
+    if (skillId === 'm_fire_bolt') {
+      this.playAdditiveVfx('vfx_w_lava_fissure', _tx, _ty - 10, 0.72, 320);
+      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 22);
+      _aoe(_tx, _ty, 210, (145 + skillLvl * 22) / 100, '#fb923c', '🔥', ['burn']);
+      return;
+    }
+    if (skillId === 'm_flame_hydra') {
+      for (let w = 0; w < 4; w++) {
+        this.time.delayedCall(w * 280, () => {
+          this.playAdditiveVfx('vfx_m_flame_hydra', _tx, _ty - 20, 0.98, 460);
+          _aoe(_tx, _ty, 260, (115 + skillLvl * 20) / 100, '#fb923c', '🐍火蛇 ', ['burn']);
+        });
+      }
+      return;
+    }
+    if (skillId === 'm_ice_armor') {
+      this.playAdditiveVfx('vfx_m_ice_hex_shield', _hx, _hy - 12, 1.0, 520);
+      this.healHero(Math.round(this.playerMaxHp * ((24 + skillLvl * 2) / 100)));
+      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 30);
+      _aoe(_hx, _hy, 260, (155 + skillLvl * 24) / 100, '#38bdf8', '🧊冰甲 ', ['freeze']);
+      return;
+    }
+    if (skillId === 'm_arcane_blink') {
+      this.playAdditiveVfx('vfx_m_blink_lightning', _tx, _ty - 10, 1.02, 400);
+      this.slotCdTimers = this.slotCdTimers.map((t) => t + 1000);
+      _aoe(_tx, _ty, 260, (210 + skillLvl * 32) / 100, '#60a5fa', '⚡閃現 ', ['shock', 'vulnerable']);
+      return;
+    }
+    if (skillId === 'm_ball_lightning') {
+      for (let w = 0; w < 3; w++) {
+        this.time.delayedCall(w * 240, () => {
+          this.playAdditiveVfx('vfx_m_blink_lightning', _tx, _ty - 8, 0.85, 360);
+          _aoe(_tx, _ty, 240, (105 + skillLvl * 18) / 100, '#facc15', '⚡電球 ', ['shock']);
+        });
+      }
+      return;
+    }
+    if (skillId === 'm_blizzard_field') {
+      for (let w = 0; w < 4; w++) {
+        this.time.delayedCall(w * 260, () => {
+          this.playAdditiveVfx('vfx_m_ice_hex_shield', _tx + Phaser.Math.Between(-50, 50), _ty + Phaser.Math.Between(-30, 30), 0.96, 420);
+          _aoe(_tx, _ty, 290, (110 + skillLvl * 20) / 100, '#7dd3fc', '❄️暴雪 ', ['freeze']);
+        });
+      }
+      return;
+    }
+    if (skillId === 'm_elemental_cataclysm') {
+      for (let w = 0; w < 4; w++) {
+        this.time.delayedCall(w * 280, () => {
+          this.playAdditiveVfx('vfx_m_cataclysm_sigil', _tx, _ty - 10, 1.28, 520);
+          _aoe(_tx, _ty, 360, (180 + skillLvl * 32) / 100, '#e879f9', '🌀天災 ', ['burn', 'freeze', 'shock'], true);
+        });
+      }
+      return;
+    }
+    if (skillId === 'm_astral_supernova') {
+      this.playerMp = this.playerMaxMp;
+      this.playAdditiveVfx('vfx_m_supernova_core', _tx, _ty - 14, 1.38, 640);
+      _aoe(_tx, _ty, 380, (400 + skillLvl * 60) / 100, '#fde047', '🌟超新星 ', ['vulnerable', 'curse'], true);
+      return;
+    }
     const alive = this.monsters.filter((m) => m.hp > 0);
     if (alive.length === 0) return;
     const sk = MAGE_SKILLS[skillId];
@@ -2300,6 +2589,80 @@ export class BattleScene extends Phaser.Scene {
 
 
   castPaladinSkill(skillId, skillLvl, stats, isManual = false) {
+    const _hx = this.hero.x, _hy = this.hero.y;
+    const _n = this.findNearestMonster(_hx, _hy);
+    const _tx = _n ? _n.sprite.x : _hx + 90, _ty = _n ? _n.sprite.y : _hy;
+    const _aoe = (cx, cy, rad, mult, col, pre, stList = [], forceCrit = false, extraFlat = 0) => {
+      for (const m of [...this.monsters]) {
+        if (!m || m.hp <= 0) continue;
+        if (Phaser.Math.Distance.Between(cx, cy, m.sprite.x, m.sprite.y) <= rad) {
+          const isC = forceCrit || (Math.random() * 100 < stats.critRate);
+          const d = Math.round((stats.atk * mult + extraFlat) * (isC ? stats.critDmg / 100 : 1));
+          if (!m._statuses) m._statuses = {};
+          stList.forEach((k) => { m._statuses[k] = Math.max(m._statuses[k] || 0, this.time.now + 5000); });
+          this.damageMonster(m, d, isC, false, col, pre);
+        }
+      }
+    };
+    if (skillId === 'p_smite_lash') {
+      this.playAdditiveVfx('vfx_p_cross_fire', _tx, _ty - 10, 0.78, 340);
+      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 18);
+      _aoe(_tx, _ty, 220, (145 + skillLvl * 22) / 100, '#fde047', '✨', ['conviction']);
+      return;
+    }
+    if (skillId === 'p_holy_lance') {
+      this.playAdditiveVfx('vfx_p_cross_fire', _tx, _ty - 8, 1.0, 420);
+      for (const m of [...this.monsters]) {
+        if (!m || m.hp <= 0) continue;
+        if (Phaser.Math.Distance.Between(_tx, _ty, m.sprite.x, m.sprite.y) <= 250) {
+          const hasConv = this.time.now < (m._statuses?.conviction || 0);
+          const mult = ((240 + skillLvl * 38) / 100) * (hasConv ? 1.55 : 1.0);
+          this.damageMonster(m, Math.round(stats.atk * mult), Math.random() * 100 < stats.critRate, false, '#fde047', '🔱聖槍 ');
+        }
+      }
+      return;
+    }
+    if (skillId === 'p_crusader_charge') {
+      this.playAdditiveVfx('vfx_p_cross_fire', _tx, _ty, 1.08, 460);
+      _aoe(_tx, _ty, 260, (210 + skillLvl * 32) / 100, '#fbbf24', '✝️', ['burn', 'conviction']);
+      return;
+    }
+    if (skillId === 'p_redemption_prayer') {
+      this.playAdditiveVfx('vfx_p_redemption_halo', _hx, _hy - 12, 1.0, 520);
+      this.healHero(Math.round(this.playerMaxHp * ((35 + skillLvl * 3) / 100)));
+      _aoe(_hx, _hy, 260, (160 + skillLvl * 25) / 100, '#fef08a', '🕊️', ['conviction']);
+      return;
+    }
+    if (skillId === 'p_thorns_aura') {
+      this.playAdditiveVfx('vfx_p_thorns_ring', _hx, _hy - 6, 1.02, 460);
+      _aoe(_hx, _hy, 270, (175 + skillLvl * 28) / 100, '#fbbf24', '🛡️荊棘 ', ['vulnerable'], false, (stats.armor || 20) * 2.8);
+      return;
+    }
+    if (skillId === 'p_solar_beacon') {
+      for (let w = 0; w < 3; w++) {
+        this.time.delayedCall(w * 280, () => {
+          this.playAdditiveVfx('vfx_p_redemption_halo', _tx, _ty - 10, 0.95, 420);
+          _aoe(_tx, _ty, 260, (130 + skillLvl * 22) / 100, '#fde047', '☀️', ['conviction', 'burn']);
+        });
+      }
+      return;
+    }
+    if (skillId === 'p_seraph_descent') {
+      this.healHero(Math.round(this.playerMaxHp * 0.30));
+      this.playAdditiveVfx('vfx_p_seraph_wings', _hx, _hy - 30, 1.25, 680);
+      for (let w = 0; w < 4; w++) {
+        this.time.delayedCall(w * 300, () => {
+          this.playAdditiveVfx('vfx_p_redemption_halo', _tx, _ty - 12, 1.08, 460);
+          _aoe(_tx, _ty, 340, (175 + skillLvl * 30) / 100, '#fde047', '👼熾天使 ', ['conviction', 'burn'], true);
+        });
+      }
+      return;
+    }
+    if (skillId === 'p_heavens_verdict') {
+      this.playAdditiveVfx('vfx_p_verdict_sword', _tx, _ty - 36, 1.28, 620);
+      _aoe(_tx, _ty, 330, (380 + skillLvl * 55) / 100, '#fef08a', '⚔️天罰巨劍 ', ['conviction', 'shock'], true);
+      return;
+    }
     const alive = this.monsters.filter((m) => m.hp > 0);
     if (alive.length === 0) return;
     const tree = this.getState().skillTree || {};
@@ -2595,6 +2958,84 @@ export class BattleScene extends Phaser.Scene {
   }
 
   castNecroSkill(skillId, skillLvl, stats, isManual = false) {
+    const _hx = this.hero.x, _hy = this.hero.y;
+    const _n = this.findNearestMonster(_hx, _hy);
+    const _tx = _n ? _n.sprite.x : _hx + 140, _ty = _n ? _n.sprite.y : _hy;
+    const _aoe = (cx, cy, rad, mult, col, pre, stList = [], forceCrit = false) => {
+      for (const m of [...this.monsters]) {
+        if (!m || m.hp <= 0) continue;
+        if (Phaser.Math.Distance.Between(cx, cy, m.sprite.x, m.sprite.y) <= rad) {
+          const isC = forceCrit || (Math.random() * 100 < stats.critRate);
+          const d = Math.round(stats.atk * mult * (isC ? stats.critDmg / 100 : 1));
+          if (!m._statuses) m._statuses = {};
+          stList.forEach((k) => { m._statuses[k] = Math.max(m._statuses[k] || 0, this.time.now + 4800); });
+          this.damageMonster(m, d, isC, false, col, pre);
+        }
+      }
+    };
+    if (skillId === 'n_reap_scythe') {
+      this.playAdditiveVfx('vfx_n_bone_splinter', _tx, _ty - 10, 0.85, 360);
+      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 20);
+      _aoe(_tx, _ty, 230, (150 + skillLvl * 24) / 100, '#5eead4', '💀', ['curse']);
+      return;
+    }
+    if (skillId === 'n_blood_surge') {
+      this.playAdditiveVfx('vfx_n_blood_surge', _hx, _hy - 10, 1.05, 460);
+      this.healHero(Math.round(this.playerMaxHp * 0.20));
+      _aoe(_hx, _hy, 280, (235 + skillLvl * 36) / 100, '#f43f5e', '🩸血湧 ', ['bleed']);
+      return;
+    }
+    if (skillId === 'n_blight_pool') {
+      for (let w = 0; w < 3; w++) {
+        this.time.delayedCall(w * 280, () => {
+          this.playAdditiveVfx('vfx_n_blight_pool', _tx, _ty, 1.0, 440);
+          _aoe(_tx, _ty, 260, (120 + skillLvl * 20) / 100, '#a855f7', '☠️枯萎 ', ['poison', 'curse']);
+        });
+      }
+      return;
+    }
+    if (skillId === 'n_bone_shield') {
+      this.playAdditiveVfx('vfx_n_bone_shield', _hx, _hy - 12, 1.0, 520);
+      this.healHero(Math.round(this.playerMaxHp * ((22 + skillLvl * 2) / 100)));
+      _aoe(_hx, _hy, 260, (180 + skillLvl * 28) / 100, '#e2e8f0', '🦴骨盾 ', ['vulnerable']);
+      return;
+    }
+    if (skillId === 'n_corpse_tendrils') {
+      this.playAdditiveVfx('vfx_n_blood_surge', _tx, _ty, 1.0, 440);
+      for (const m of [...this.monsters]) {
+        if (!m || m.hp <= 0) continue;
+        if (Phaser.Math.Distance.Between(_tx, _ty, m.sprite.x, m.sprite.y) <= 360) {
+          m.sprite.x = Phaser.Math.Linear(m.sprite.x, _tx + Phaser.Math.Between(-35, 35), 0.75);
+          m.sprite.y = Phaser.Math.Linear(m.sprite.y, _ty + Phaser.Math.Between(-30, 30), 0.75);
+        }
+      }
+      _aoe(_tx, _ty, 360, (185 + skillLvl * 28) / 100, '#fb7185', '🩸觸鬚 ', ['vulnerable', 'bleed']);
+      return;
+    }
+    if (skillId === 'n_soul_rift') {
+      this.playAdditiveVfx('vfx_n_scourge_rift', _tx, _ty - 10, 1.05, 480);
+      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 25);
+      _aoe(_tx, _ty, 280, (240 + skillLvl * 36) / 100, '#2dd4bf', '🔮裂隙 ', ['curse', 'conviction']);
+      return;
+    }
+    if (skillId === 'n_army_scourge') {
+      for (let w = 0; w < 4; w++) {
+        this.time.delayedCall(w * 280, () => {
+          this.playAdditiveVfx('vfx_n_scourge_rift', _tx + Phaser.Math.Between(-60, 60), _ty + Phaser.Math.Between(-40, 40), 1.18, 520);
+          _aoe(_tx, _ty, 360, (185 + skillLvl * 32) / 100, '#2dd4bf', '☠️天災軍 ', ['curse', 'poison'], true);
+        });
+      }
+      return;
+    }
+    if (skillId === 'n_bone_storm') {
+      for (let w = 0; w < 4; w++) {
+        this.time.delayedCall(w * 260, () => {
+          this.playAdditiveVfx('vfx_n_bone_splinter', _hx, _hy - 10, 1.25, 460);
+          _aoe(_hx, _hy, 360, (175 + skillLvl * 30) / 100, '#e2e8f0', '🦴骨風暴 ', ['vulnerable', 'bleed'], true);
+        });
+      }
+      return;
+    }
     const alive = this.monsters.filter((m) => m.hp > 0);
     if (alive.length === 0) return;
     const tree = this.getState().skillTree || {};
@@ -2752,6 +3193,81 @@ export class BattleScene extends Phaser.Scene {
 
 
   castAssassinSkill(skillId, skillLvl, stats, isManual = false) {
+    const _hx = this.hero.x, _hy = this.hero.y;
+    const _n = this.findNearestMonster(_hx, _hy);
+    const _tx = _n ? _n.sprite.x : _hx + 90, _ty = _n ? _n.sprite.y : _hy;
+    const _aoe = (cx, cy, rad, mult, col, pre, stList = [], forceCrit = false) => {
+      for (const m of [...this.monsters]) {
+        if (!m || m.hp <= 0) continue;
+        if (Phaser.Math.Distance.Between(cx, cy, m.sprite.x, m.sprite.y) <= rad) {
+          const isC = forceCrit || (Math.random() * 100 < stats.critRate);
+          const d = Math.round(stats.atk * mult * (isC ? stats.critDmg / 100 : 1));
+          if (!m._statuses) m._statuses = {};
+          stList.forEach((k) => { m._statuses[k] = Math.max(m._statuses[k] || 0, this.time.now + 4800); });
+          this.damageMonster(m, d, isC, false, col, pre);
+        }
+      }
+    };
+    if (skillId === 'a_twin_fang') {
+      this.playAdditiveVfx('vfx_a_backstab_pierce', _tx, _ty - 10, 0.78, 320);
+      this._aShadowStars = Math.min(5, (this._aShadowStars || 0) + 2);
+      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 18);
+      _aoe(_tx, _ty, 210, (150 + skillLvl * 24) / 100, '#c084fc', '🗡️', ['bleed']);
+      return;
+    }
+    if (skillId === 'a_boomerang_blades') {
+      for (let w = 0; w < 2; w++) {
+        this.time.delayedCall(w * 260, () => {
+          this.playAdditiveVfx('vfx_a_boomerang', _tx, _ty - 8, 0.92, 380);
+          _aoe(_tx, _ty, 240, (145 + skillLvl * 26) / 100, '#d8b4fe', '🌀', ['vulnerable', 'bleed']);
+        });
+      }
+      return;
+    }
+    if (skillId === 'a_shadow_backstab') {
+      this.playAdditiveVfx('vfx_a_backstab_pierce', _tx, _ty - 12, 1.02, 380);
+      _aoe(_tx, _ty, 210, (275 + skillLvl * 42) / 100, '#f43f5e', '🩸背刺 ', ['vulnerable', 'bleed'], true);
+      this.slotCdTimers = this.slotCdTimers.map((t) => t + 1000);
+      return;
+    }
+    if (skillId === 'a_crimson_mist') {
+      for (let w = 0; w < 3; w++) {
+        this.time.delayedCall(w * 280, () => {
+          this.playAdditiveVfx('vfx_a_crimson_mist', _tx, _ty, 0.96, 440);
+          _aoe(_tx, _ty, 250, (120 + skillLvl * 20) / 100, '#4ade80', '☠️毒霧 ', ['poison', 'burn']);
+        });
+      }
+      return;
+    }
+    if (skillId === 'a_death_lotus') {
+      for (let w = 0; w < 3; w++) {
+        this.time.delayedCall(w * 220, () => {
+          this.playAdditiveVfx('vfx_a_boomerang', _hx, _hy, 1.05, 360);
+          _aoe(_hx, _hy, 280, (130 + skillLvl * 22) / 100, '#e879f9', '🌸蓮華 ', ['bleed']);
+        });
+      }
+      return;
+    }
+    if (skillId === 'a_venom_imbue') {
+      this.playAdditiveVfx('vfx_a_crimson_mist', _hx, _hy, 0.95, 420);
+      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 20);
+      _aoe(_hx, _hy, 290, (210 + skillLvl * 34) / 100, '#4ade80', '🧪淬毒 ', ['poison', 'vulnerable']);
+      return;
+    }
+    if (skillId === 'a_thousand_shadows') {
+      for (let w = 0; w < 5; w++) {
+        this.time.delayedCall(w * 220, () => {
+          this.playAdditiveVfx('vfx_a_bloodmoon_array', _tx, _ty - 10, 1.15, 460);
+          _aoe(_tx, _ty, 340, (145 + skillLvl * 26) / 100, '#f43f5e', '🌙千影 ', ['bleed', 'vulnerable'], true);
+        });
+      }
+      return;
+    }
+    if (skillId === 'a_crimson_eclipse') {
+      this.playAdditiveVfx('vfx_a_fivestar_slash', _tx, _ty - 14, 1.32, 620);
+      _aoe(_tx, _ty, 350, (390 + skillLvl * 58) / 100, '#e879f9', '⭐血月絕殺 ', ['bleed', 'vulnerable', 'poison'], true);
+      return;
+    }
     const alive = this.monsters.filter((m) => m.hp > 0);
     if (alive.length === 0) return;
     const tree = this.getState().skillTree || {};
@@ -3173,7 +3689,25 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
-  damageMonster(m, dmg, isCrit, isTap, customColor = null, prefix = '') {
+  playAdditiveVfx(key, x, y, targetScale = 0.82, durationMs = 420) {
+    if (!this.textures.exists(key)) return;
+    const sp = this.add.image(x, y, key)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setScale(targetScale * 0.25)
+      .setAlpha(0.96)
+      .setDepth(4400);
+    this.tweens.add({
+      targets: sp,
+      scale: targetScale,
+      alpha: 0,
+      angle: Phaser.Math.Between(-28, 28),
+      duration: durationMs,
+      ease: 'Cubic.easeOut',
+      onComplete: () => sp.destroy(),
+    });
+  }
+
+  damageMonster(m, dmg, isCrit, isTap, customColor = null, prefix = '', _isProc = false) {
     if (!m || m.hp <= 0) return;
     if (!m.isAggressive && !m.isProvoked) {
       m.isProvoked = true;
@@ -3192,6 +3726,31 @@ export class BattleScene extends Phaser.Scene {
     }
     if (prefix === '🩸' && (st.bleedDmgPct || 0) > 0) bonusMult += st.bleedDmgPct / 100;
     if (nowT < (m.cursedUntil || 0)) bonusMult += 0.20;
+    if (nowT < (m.shredUntil || 0)) bonusMult += 0.30;
+    const activeMods = (!_isProc && !isTap && nowT <= (this._activeBuildModsUntil || 0)) ? this._activeBuildMods : null;
+    if (activeMods && activeMods.dmgMult > 1) bonusMult *= activeMods.dmgMult;
+
+    const _cidNow = this.getState()?.classId || 'warrior';
+    const _mCfg = getClassMechanicConfig(this.getState(), _cidNow);
+    let isOverpower = false;
+    if (!_isProc && !isTap) {
+      // 職業專屬增傷倍率（武器過載 / 遊俠連擊星 / 刺客五星印記 / 死靈孤高暴君）
+      if (_cidNow === 'warrior' && nowT < (this._wArsenalOverloadUntil || 0)) bonusMult *= 1.35;
+      if (_cidNow === 'ranger' && nowT < (this._rSpentStarsUntil || 0)) bonusMult *= (1 + (this._rSpentStars || 0) * 0.28);
+      if (_cidNow === 'assassin' && nowT < (this._aFiveStarUntil || 0)) bonusMult *= 1.60;
+      if (_cidNow === 'necro' && st.isLoneTyrant) bonusMult *= 1.25;
+
+      const baseOp = (activeMods ? activeMods.overpowerChance : 0.04) + ((st.mechOverpowerPct || 0) / 100);
+      const forceOp = (_cidNow === 'warrior' && nowT < (this._wArsenalOverloadUntil || 0));
+      if (forceOp || Math.random() < baseOp) {
+        isOverpower = true;
+        const opMult = (_cidNow === 'warrior' && _mCfg.arsenal === 'warhammer') ? 2.20 : 1.75;
+        bonusMult *= opMult;
+        customColor = '#38bdf8';
+        prefix = '💠壓制 ' + (prefix || '');
+        this.playAdditiveVfx('vfx_proc_overpower', m.sprite.x, m.sprite.y - 12, 0.68, 380);
+      }
+    }
     dmg = Math.max(1, Math.round(dmg * bonusMult));
     m.hp = Math.max(0, m.hp - dmg);
 
@@ -3212,6 +3771,200 @@ export class BattleScene extends Phaser.Scene {
       if (st.activeEffects.has('toxic_arrow') && m.hp > 0) {
         m.poisonedUntil = Math.max(m.poisonedUntil || 0, nowT + 3000);
         m.poisonDmg = Math.max(m.poisonDmg || 0, Math.round(st.atk * 0.35));
+      }
+    }
+
+    if (!_isProc && !isTap && m.hp > 0) {
+      if (!m._statuses) m._statuses = {};
+      if (activeMods && activeMods.applyStatuses) {
+        activeMods.applyStatuses.forEach((sk) => {
+          m._statuses[sk] = Math.max(m._statuses[sk] || 0, nowT + 4800);
+          if (sk === 'bleed') { m.bleedUntil = Math.max(m.bleedUntil || 0, nowT + 4500); m.bleedDmg = Math.max(m.bleedDmg || 0, Math.round(st.atk * 0.25)); }
+          if (sk === 'poison') { m.poisonedUntil = Math.max(m.poisonedUntil || 0, nowT + 4500); m.poisonDmg = Math.max(m.poisonDmg || 0, Math.round(st.atk * 0.28)); }
+          if (sk === 'freeze') { m.chilledUntil = Math.max(m.chilledUntil || 0, nowT + 3500); m.slowUntil = Math.max(m.slowUntil || 0, nowT + 3500); }
+          if (sk === 'vulnerable') { m.markedUntil = Math.max(m.markedUntil || 0, nowT + 4800); }
+          if (sk === 'curse') { m.cursedUntil = Math.max(m.cursedUntil || 0, nowT + 5000); }
+        });
+      }
+
+      // v234: 六大職業命中觸發（武器庫 / 連擊星與心眼 / 法師附魔 / 聖騎印記與荊棘 / 死靈亡者之書 / 刺客雙毒與暗影星）
+      if (_cidNow === 'warrior') {
+        if (_mCfg.arsenal === 'greatsword') {
+          m._statuses.bleed = Math.max(m._statuses.bleed || 0, nowT + 4500);
+          m.bleedUntil = Math.max(m.bleedUntil || 0, nowT + 4500);
+        } else if (_mCfg.arsenal === 'dual_axes' && isCrit) {
+          this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 6);
+        } else if (_mCfg.arsenal === 'warhammer') {
+          m._statuses.vulnerable = Math.max(m._statuses.vulnerable || 0, nowT + 4500);
+        }
+      } else if (_cidNow === 'ranger') {
+        if (_mCfg.specialization === 'combo_points') {
+          this._rComboStars = Math.min(3, (this._rComboStars || 0) + 1);
+        } else if (_mCfg.specialization === 'inner_sight' && nowT >= (this._rInnerSightUntil || 0)) {
+          this._rInnerSightGauge = (this._rInnerSightGauge || 0) + 12;
+          if (this._rInnerSightGauge >= 100) {
+            this._rInnerSightGauge = 0;
+            this._rInnerSightUntil = nowT + 4000;
+            this.spawnFloatingText(this.hero.x, this.hero.y - 106, '👁️心眼洞察啟動（4秒無限精力）!', '#c084fc', 15);
+          }
+        }
+      } else if (_cidNow === 'mage') {
+        const ench = _mCfg.enchants || [];
+        if (ench.includes('meteor') && isCrit && Math.random() < 0.18) {
+          m._statuses.burn = Math.max(m._statuses.burn || 0, nowT + 4500);
+          this.playAdditiveVfx('vfx_react_plaguefire', m.sprite.x, m.sprite.y - 16, 0.72, 380);
+          this.damageMonster(m, Math.round(st.atk * 1.8), true, false, '#fb923c', '☄️附魔隕石 ', true);
+        }
+        if (ench.includes('frost_nova') && nowT - (this._mLastFrostEnch || 0) >= 5500) {
+          this._mLastFrostEnch = nowT;
+          m._statuses.freeze = Math.max(m._statuses.freeze || 0, nowT + 3500);
+          m._statuses.vulnerable = Math.max(m._statuses.vulnerable || 0, nowT + 4000);
+          this.playAdditiveVfx('vfx_react_superconduct', m.sprite.x, m.sprite.y - 10, 0.65, 360);
+          this.damageMonster(m, Math.round(st.atk * 1.35), false, false, '#38bdf8', '❄️附魔冰環 ', true);
+        }
+        if (ench.includes('arcane_orb') && isCrit && Math.random() < 0.25) {
+          m._statuses.vulnerable = Math.max(m._statuses.vulnerable || 0, nowT + 4500);
+          this.damageMonster(m, Math.round(st.atk * 1.2), false, false, '#a78bfa', '🔮附魔奧球 ', true);
+        }
+        if (ench.includes('black_hole') && nowT - (this._mLastBhEnch || 0) >= 8000) {
+          this._mLastBhEnch = nowT;
+          m._statuses.curse = Math.max(m._statuses.curse || 0, nowT + 5000);
+          this.playAdditiveVfx('vfx_react_souljudge', m.sprite.x, m.sprite.y - 12, 0.68, 380);
+          this.damageMonster(m, Math.round(st.atk * 1.65), true, false, '#c084fc', '🕳️附魔黑洞 ', true);
+        }
+        if (ench.includes('icicle_rain') && (m._statuses.freeze || 0) > nowT && Math.random() < 0.30) {
+          this.damageMonster(m, Math.round(st.atk * 1.15), false, false, '#7dd3fc', '🧊附魔冰錐 ', true);
+        }
+        if (ench.includes('void_beam') && Math.random() < 0.15) {
+          m._statuses.curse = Math.max(m._statuses.curse || 0, nowT + 4500);
+          this.damageMonster(m, Math.round(st.atk * 1.75), true, false, '#e879f9', '⚡附魔虛空 ', true);
+        }
+      } else if (_cidNow === 'paladin') {
+        if (_mCfg.oath === 'sun_oath') {
+          m._holyMarks = (m._holyMarks || 0) + 1;
+          if (m._holyMarks >= 5) {
+            m._holyMarks = 0;
+            m._statuses.conviction = Math.max(m._statuses.conviction || 0, nowT + 5000);
+            m._statuses.burn = Math.max(m._statuses.burn || 0, nowT + 4500);
+            this.playAdditiveVfx('vfx_react_souljudge', m.sprite.x, m.sprite.y - 14, 0.78, 400);
+            this.damageMonster(m, Math.round(st.atk * 2.4), true, false, '#fde047', '☀️烈陽天罰 ', true);
+          }
+        } else if (_mCfg.oath === 'bastion_oath' && nowT - (this._pLastBastion || 0) >= 3000) {
+          this._pLastBastion = nowT;
+          const thDmg = Math.max(10, Math.round((st.armor || 20) * 1.8));
+          this.damageMonster(m, thDmg, false, false, '#60a5fa', '🛡️荊棘反震 ', true);
+        }
+      } else if (_cidNow === 'necro') {
+        const bk = _mCfg.book || {};
+        if (bk.skeleton === 'reaper') { m._statuses.bleed = Math.max(m._statuses.bleed || 0, nowT + 4000); m._statuses.vulnerable = Math.max(m._statuses.vulnerable || 0, nowT + 4000); }
+        if (bk.mage === 'frost_mage') { m._statuses.freeze = Math.max(m._statuses.freeze || 0, nowT + 3500); }
+        if (bk.mage === 'shadow_mage') { m._statuses.curse = Math.max(m._statuses.curse || 0, nowT + 4500); }
+        if (bk.golem === 'iron_golem') { m._statuses.vulnerable = Math.max(m._statuses.vulnerable || 0, nowT + 4500); }
+      } else if (_cidNow === 'assassin') {
+        const vn = _mCfg.venom || {};
+        if (vn.mainHand === 'corrosive') m._statuses.vulnerable = Math.max(m._statuses.vulnerable || 0, nowT + 4500);
+        if (vn.mainHand === 'paralyze')  m._statuses.shock = Math.max(m._statuses.shock || 0, nowT + 4500);
+        if (vn.offHand === 'hellvenom')  { m._statuses.burn = Math.max(m._statuses.burn || 0, nowT + 4500); m._statuses.poison = Math.max(m._statuses.poison || 0, nowT + 4500); }
+        if (vn.offHand === 'bloodtoxin') { m._statuses.bleed = Math.max(m._statuses.bleed || 0, nowT + 4500); m._statuses.poison = Math.max(m._statuses.poison || 0, nowT + 4500); }
+        this._aShadowStars = Math.min(5, (this._aShadowStars || 0) + 1);
+      }
+
+      // v235: 近戰三職關鍵被動（Keystone）實戰觸發
+      const _ksId = st.activeKeystoneId;
+      if (_ksId === 'wk_blood_tide' && (m._statuses.bleed || 0) > nowT && Math.random() < 0.35) {
+        this.playAdditiveVfx('vfx_w_rend_arc', m.sprite.x, m.sprite.y - 10, 0.72, 320);
+        this.damageMonster(m, Math.round(st.atk * 1.15), true, false, '#f87171', '🩸血河 ', true);
+      } else if (_ksId === 'wk_aftershock' && Math.random() < 0.40) {
+        this.playAdditiveVfx('vfx_w_hammer_slam', m.sprite.x, m.sprite.y, 0.65, 340);
+        this.damageMonster(m, Math.round(st.atk * 0.65), false, false, '#fb923c', '🌋餘震 ', true);
+      } else if (_ksId === 'pk_divine_thunder' && isCrit && (m._statuses.conviction || 0) > nowT && Math.random() < 0.45) {
+        m._statuses.shock = Math.max(m._statuses.shock || 0, nowT + 4500);
+        this.playAdditiveVfx('vfx_p_verdict_sword', m.sprite.x, m.sprite.y - 24, 0.68, 360);
+        this.damageMonster(m, Math.round(st.atk * 1.40), true, false, '#38bdf8', '⚡天罰雷 ', true);
+      } else if (_ksId === 'pk_hammer_domain') {
+        m._statuses.conviction = Math.max(m._statuses.conviction || 0, nowT + 4500);
+      } else if (_ksId === 'ak_mirror_phantoms' && Math.random() < 0.40) {
+        this.playAdditiveVfx('vfx_a_backstab_pierce', m.sprite.x, m.sprite.y - 8, 0.65, 300);
+        this.damageMonster(m, Math.round(dmg * 0.55), isCrit, false, '#c084fc', '👥幻影 ', true);
+      } else if (_ksId === 'ak_corrosive_heart' && (m._statuses.poison || 0) > nowT) {
+        m._statuses.burn = Math.max(m._statuses.burn || 0, nowT + 4000);
+      } else if (_ksId === 'ak_glass_reaper' && Math.random() < 0.45) {
+        this.playAdditiveVfx('vfx_a_fivestar_slash', m.sprite.x, m.sprite.y - 10, 0.60, 300);
+        this.damageMonster(m, Math.round(dmg * 0.85), true, false, '#f43f5e', '💀死神連擊 ', true);
+      } else if (_ksId === 'rk_chain_shadow' && (m._statuses.vulnerable || 0) > nowT && Math.random() < 0.40) {
+        m._statuses.curse = Math.max(m._statuses.curse || 0, nowT + 4500);
+        this.playAdditiveVfx('vfx_r_shadow_arrow', m.sprite.x, m.sprite.y - 10, 0.72, 340);
+        this.damageMonster(m, Math.round(st.atk * 1.25), true, false, '#c084fc', '🌑連鎖暗爆 ', true);
+      } else if (_ksId === 'rk_corrosive_venom' && (m._statuses.poison || 0) > nowT && Math.random() < 0.35) {
+        m._statuses.burn = Math.max(m._statuses.burn || 0, nowT + 4000);
+      } else if (_ksId === 'rk_gale_crossbow' && Math.random() < 0.35) {
+        this.playAdditiveVfx('vfx_r_venom_spear', m.sprite.x, m.sprite.y - 8, 0.65, 300);
+        this.damageMonster(m, Math.round(st.atk * 0.90), isCrit, false, '#34d399', '🏹連弩 ', true);
+      } else if (_ksId === 'mk_shatter_frost' && (m._statuses.freeze || 0) > nowT && Math.random() < 0.45) {
+        m._statuses.shock = Math.max(m._statuses.shock || 0, nowT + 4500);
+        this.playAdditiveVfx('vfx_m_ice_hex_shield', m.sprite.x, m.sprite.y - 10, 0.74, 340);
+        this.damageMonster(m, Math.round(st.atk * 1.35), true, false, '#38bdf8', '❄️碎冰爆 ', true);
+      } else if (_ksId === 'mk_inferno_burn') {
+        m._statuses.burn = Math.max(m._statuses.burn || 0, nowT + 4500);
+      } else if (_ksId === 'mk_void_overload' && Math.random() < 0.40) {
+        this.playAdditiveVfx('vfx_m_supernova_core', m.sprite.x, m.sprite.y - 12, 0.72, 340);
+        this.damageMonster(m, Math.round(st.atk * 1.30), true, false, '#a78bfa', '🌟虛空過載 ', true);
+      } else if (_ksId === 'nk_bone_tyrant' && Math.random() < 0.40) {
+        this.playAdditiveVfx('vfx_n_bone_splinter', m.sprite.x, m.sprite.y - 8, 0.76, 340);
+        this.damageMonster(m, Math.round(st.atk * 1.15), true, false, '#e2e8f0', '🦴骨刺分裂 ', true);
+      } else if (_ksId === 'nk_plague_sea' && (m._statuses.curse || 0) > nowT && Math.random() < 0.45) {
+        m._statuses.poison = Math.max(m._statuses.poison || 0, nowT + 4500);
+        this.playAdditiveVfx('vfx_n_blight_pool', m.sprite.x, m.sprite.y, 0.72, 340);
+        this.damageMonster(m, Math.round(st.atk * 1.30), true, false, '#4ade80', '☠️血海屍爆 ', true);
+      }
+
+      // v237: 傳奇威能實戰觸發（塵魔血浪 / 幽影裂片 / 千影回響）
+      const _egProcs = st.endgameProcs;
+      if (_egProcs && _egProcs.size > 0) {
+        if (_egProcs.has('dust_devil') && Math.random() < 0.30) {
+          m._statuses.bleed = Math.max(m._statuses.bleed || 0, nowT + 4500);
+          this.playAdditiveVfx('vfx_w_rend_arc', m.sprite.x, m.sprite.y - 10, 0.72, 320);
+          this.damageMonster(m, Math.round(st.atk * 0.95), true, false, '#fb923c', '🌪️塵魔 ', true);
+        }
+        if (_egProcs.has('shadow_slicer') && isCrit && Math.random() < 0.30) {
+          this.playAdditiveVfx('vfx_r_shadow_arrow', m.sprite.x, m.sprite.y - 10, 0.70, 320);
+          this.damageMonster(m, Math.round(st.atk * 1.10), true, false, '#c084fc', '🌑裂片 ', true);
+        }
+        if (_egProcs.has('clone_echo') && Math.random() < 0.30) {
+          this.playAdditiveVfx('vfx_a_backstab_pierce', m.sprite.x, m.sprite.y - 10, 0.68, 300);
+          this.damageMonster(m, Math.round(dmg * 0.65), isCrit, false, '#e879f9', '👥影回響 ', true);
+        }
+      }
+
+      // 4 大複合異常反應結算
+      const react = checkCompoundReaction(m, nowT);
+      if (react) {
+        this.playAdditiveVfx(react.vfx, m.sprite.x, m.sprite.y - 14, 0.96, 480);
+        this.spawnFloatingText(m.sprite.x, m.sprite.y - 84, `${react.prefix}${react.name}!`, react.color, 17);
+        const rBase = Math.round(st.atk * react.dmgMult);
+        for (const other of [...this.monsters]) {
+          if (!other || other.hp <= 0) continue;
+          const d = Phaser.Math.Distance.Between(m.sprite.x, m.sprite.y, other.sprite.x, other.sprite.y);
+          if (d <= react.radius) {
+            if (react.shredMs) other.shredUntil = Math.max(other.shredUntil || 0, nowT + react.shredMs);
+            const extraPct = react.pctMaxHp ? Math.round(other.maxHp * (other.isBoss ? react.pctMaxHp * 0.5 : react.pctMaxHp)) : 0;
+            this.damageMonster(other, rBase + extraPct, true, false, react.color, react.prefix, true);
+          }
+        }
+      }
+
+      // 幸運一擊（Lucky Hit）觸發
+      const lkChance = activeMods ? activeMods.luckyChance : (isCrit ? 0.06 : 0);
+      if (lkChance > 0 && Math.random() < lkChance) {
+        this.playAdditiveVfx('vfx_proc_luckyhit', m.sprite.x, m.sprite.y - 18, 0.56, 340);
+        const eff = activeMods?.luckyEffect;
+        if (eff?.mpRefund) this.playerMp = Math.min(this.playerMaxMp, this.playerMp + eff.mpRefund);
+        if (eff?.cdRefundMs) this.slotCdTimers = this.slotCdTimers.map((t) => t + eff.cdRefundMs);
+        if (eff?.bonusMult && m.hp > 0) {
+          this.damageMonster(m, Math.max(1, Math.round(dmg * eff.bonusMult)), true, false, '#fde047', '✦幸運 ', true);
+        } else {
+          this.spawnFloatingText(m.sprite.x, m.sprite.y - 72, '✦幸運一擊!', '#fde047', 14);
+        }
       }
     }
 

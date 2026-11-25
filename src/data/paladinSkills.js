@@ -71,4 +71,52 @@ export const PALADIN_SKILLS = {
     desc: '釋放神聖波動震退周圍敵人並回復 28 聖能，4.5 秒內全傷害 +25%、普攻附帶聖光連鎖。',
     getDetail: (lvl) => `震擊造成 ${130 + lvl * 24}% 攻擊傷害，回復 28 聖能，4.5 秒內傷害 +${22 + lvl * 4}%。`,
   },
+  p_smite_lash: {
+    id: 'p_smite_lash', treeNodeId: 'p_smite_lash', name: '聖光鞭撻',
+    icon: './assets/skills/sk_p_smite_lash.png?v=235', cooldownMs: 3200,
+    desc: '【基礎】揮出熾熱聖光長鞭，穩定施加【定罪】並回復 18 點聖能。',
+    getDetail: (lvl) => `造成 ${145 + lvl * 22}% 聖光傷害、疊加【定罪】並回復 18 聖能。`,
+  },
+  p_holy_lance: {
+    id: 'p_holy_lance', treeNodeId: 'p_holy_lance', name: '聖槍貫穿',
+    icon: './assets/skills/sk_p_holy_lance.png?v=235', cooldownMs: 5600,
+    desc: '【核心】投擲黃金審判聖槍貫穿直線敵群，對【定罪】目標傷害 +55%。',
+    getDetail: (lvl) => `直線貫穿造成 ${240 + lvl * 38}% 聖光傷害（定罪目標 +55%）。`,
+  },
+  p_crusader_charge: {
+    id: 'p_crusader_charge', treeNodeId: 'p_crusader_charge', name: '聖光十字衝鋒',
+    icon: './assets/skills/sk_p_crusader_charge.png?v=235', cooldownMs: 6400,
+    desc: '【位移】舉盾衝鋒並沿途燃起聖光十字火道，附加【灼燒】與【定罪】。',
+    getDetail: (lvl) => `十字聖火路徑造成 ${210 + lvl * 32}% 傷害並掛【灼燒】＋【定罪】。`,
+  },
+  p_redemption_prayer: {
+    id: 'p_redemption_prayer', treeNodeId: 'p_redemption_prayer', name: '救贖禱言',
+    icon: './assets/skills/sk_p_redemption_prayer.png?v=235', cooldownMs: 9200,
+    desc: '【防禦】降下天使羽環瞬間回復 38% 最大生命，並以聖光淨化衝擊周圍敵人。',
+    getDetail: (lvl) => `回復 ${35 + lvl * 3}% 最大生命，並對周圍造成 ${160 + lvl * 25}% 淨化聖傷。`,
+  },
+  p_thorns_aura: {
+    id: 'p_thorns_aura', treeNodeId: 'p_thorns_aura', name: '荊棘復仇光環',
+    icon: './assets/skills/sk_p_thorns_aura.png?v=235', cooldownMs: 7400,
+    desc: '【精通】展開黃金荊棘光環，將 280% 護甲值轉化為範圍反傷刺波並掛【易傷】。',
+    getDetail: (lvl) => `爆發 ${175 + lvl * 28}% 攻擊＋280% 護甲值荊棘反傷，附加【易傷】。`,
+  },
+  p_solar_beacon: {
+    id: 'p_solar_beacon', treeNodeId: 'p_solar_beacon', name: '烈陽聖標',
+    icon: './assets/skills/sk_p_solar_beacon.png?v=235', cooldownMs: 8000,
+    desc: '【精通】降下烈陽聖旗照耀戰場，3 段光柱持續施加【定罪】與【灼燒】。',
+    getDetail: (lvl) => `3 段烈陽光柱，每段造成 ${130 + lvl * 22}% 聖火傷並掛【定罪】＋【灼燒】。`,
+  },
+  p_seraph_descent: {
+    id: 'p_seraph_descent', treeNodeId: 'p_seraph_descent', name: '熾天使降臨',
+    icon: './assets/skills/sk_p_seraph_descent.png?v=235', cooldownMs: 14800,
+    desc: '【終極】展開熾天使聖光羽翼，大幅治癒並連續降下 4 波天界審判光柱！',
+    getDetail: (lvl) => `展開光翼回復 30% 血，並對全場降下 4 波 ${175 + lvl * 30}% 聖光神罰！`,
+  },
+  p_heavens_verdict: {
+    id: 'p_heavens_verdict', treeNodeId: 'p_heavens_verdict', name: '天罰審判巨劍',
+    icon: './assets/skills/sk_p_heavens_verdict.png?v=235', cooldownMs: 15200,
+    desc: '【終極】召喚蒼穹黃金巨劍劈落雷霆，引爆全場【定罪】與【感電】目標！',
+    getDetail: (lvl) => `巨劍落雷造成 ${380 + lvl * 55}% 毀滅聖雷傷，必掛【定罪】＋【感電】並必定暴擊！`,
+  },
 };

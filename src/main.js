@@ -1,16 +1,16 @@
 import { CLASSES } from './data/classes.js?v=99';
 import { getStageLabel, getSubStage, getChapterIdx, calcLevelGapExpMult } from './data/monsters.js?v=232';
-import { WARRIOR_SKILLS } from './data/warriorSkills.js?v=99';
-import { RANGER_SKILLS } from './data/rangerSkills.js?v=99';
-import { MAGE_SKILLS } from './data/mageSkills.js?v=99';
-import { PALADIN_SKILLS } from './data/paladinSkills.js?v=99';
-import { NECRO_SKILLS } from './data/necroSkills.js?v=99';
-import { ASSASSIN_SKILLS } from './data/assassinSkills.js?v=99';
+import { WARRIOR_SKILLS } from './data/warriorSkills.js?v=235';
+import { RANGER_SKILLS } from './data/rangerSkills.js?v=236';
+import { MAGE_SKILLS } from './data/mageSkills.js?v=236';
+import { PALADIN_SKILLS } from './data/paladinSkills.js?v=235';
+import { NECRO_SKILLS } from './data/necroSkills.js?v=236';
+import { ASSASSIN_SKILLS } from './data/assassinSkills.js?v=235';
 import { RARITIES } from './data/items.js?v=99';
 import { PET_CATALOG, rollPetDrop, getPetDef } from './data/pets.js?v=99';
 import { SKILL_TREE_NODES, isNodeUnlocked } from './data/skillTree.js?v=99';
 import { generateLoot, calcItemPower, getSalvageReward, rerollItemAffixes, generateBlackMarketItem } from './logic/lootGen.js?v=99';
-import { recalcPlayerStats, getExpToNext, getUpgradeCost, calcRebirthCrystals, formatNum } from './logic/statCalc.js?v=232';
+import { recalcPlayerStats, getExpToNext, getUpgradeCost, calcRebirthCrystals, formatNum } from './logic/statCalc.js?v=237';
 import { createInitialState, loadGame, saveGame, calcOfflineProgress } from './logic/saveSystem.js?v=232';
 import {
   initCloudAuth,
@@ -20,11 +20,14 @@ import {
   loadCloudSave,
   saveCloudData,
 } from './auth/firebase.js?v=218';
-import { BattleScene } from './scenes/BattleScene.js?v=217';
+import { BattleScene } from './scenes/BattleScene.js?v=237';
 import { TownScene } from './scenes/TownScene.js?v=227';
 import { TOWN_SPLASHES } from './data/towns/splashes.js?v=229';
-import { DashboardUI } from './ui/DashboardUI.js?v=232';
+import { DashboardUI } from './ui/DashboardUI.js?v=236';
 import { UniversalTooltip } from './ui/UniversalTooltip.js?v=232';
+import { SkillSpecModal } from './ui/SkillSpecModal.js?v=236';
+import { ClassMechanicModal } from './ui/ClassMechanicModal.js?v=234';
+import { EndgameModal } from './ui/EndgameModal.js?v=237';
 import { TownBgmEngine } from './audio/TownBgmEngine.js?v=99';
 import { BattleSfxEngine } from './audio/BattleSfxEngine.js?v=99';
 import { HudSettingsManager } from './ui/HudSettingsManager.js?v=227';
@@ -663,7 +666,7 @@ function syncActiveClassProgress(st = gameState) {
 }
 
 const HERO_ISOLATED_KEYS = [
-  'nickname', 'level', 'exp', 'skillPoints', 'skillTree',
+  'nickname', 'level', 'exp', 'skillPoints', 'skillTree', 'skillSpecs', 'classMechanic', 'activeKeystone', 'imprintedAspects', 'paragonNodes', 'paragonGlyphs', 'glyphLevels', 'glyphXp', 'codexUnlocked',
   'soulCrystals', 'rebirthCount', 'gold', 'dust',
   'stage', 'wave', 'maxStageReached', 'kills', 'upgrades',
   'equipment', 'inventory', 'vaultTabs', 'vaultItems', 'vaultRules', 'autoSalvage',
@@ -1065,6 +1068,7 @@ function initPhaserGame() {
         if (mob.isBoss) {
           if (!gameState.bountyProgress) gameState.bountyProgress = { bossKills: 0, claimed: {} };
           gameState.bountyProgress.bossKills = (gameState.bountyProgress.bossKills || 0) + 1;
+          gameState.glyphXp = (gameState.glyphXp || 0) + Math.round(25 + (mob.stage || 1) * 4);
         }
         grantExp(Math.round(mob.exp * comboMult), { stage: mob.stage });
 
@@ -2449,4 +2453,58 @@ document.addEventListener('visibilitychange', () => {
 // v232: 初始化全域懸停詳情與雙欄裝備比較引擎
 if (typeof document !== 'undefined') {
   UniversalTooltip.init(() => gameState);
+}
+
+
+// v233: 初始化暗黑 4 階技能專精樹與 5 格配置視窗
+if (typeof document !== 'undefined') {
+  const skillSpecModal = new SkillSpecModal({
+    getState: () => gameState,
+    onChanged: () => {
+      try {
+        refreshStatsAndUI();
+        persistAll();
+      } catch (err) {}
+    },
+  });
+  window.__SKILL_SPEC_MODAL__ = skillSpecModal;
+  document.getElementById('btn-open-skill-spec')?.addEventListener('click', () => skillSpecModal.open());
+  for (let i = 0; i < 5; i++) {
+    document.getElementById(`skill-slot-${i}`)?.addEventListener('contextmenu', (ev) => {
+      ev.preventDefault();
+      skillSpecModal.open();
+    });
+  }
+}
+
+
+// v234: 初始化六大職業獨立專屬機制視窗
+if (typeof document !== 'undefined') {
+  const classMechModal = new ClassMechanicModal({
+    getState: () => gameState,
+    onChanged: () => {
+      try {
+        refreshStatsAndUI();
+        persistAll();
+      } catch (err) {}
+    },
+  });
+  window.__CLASS_MECHANIC_MODAL__ = classMechModal;
+  document.getElementById('btn-open-class-mech')?.addEventListener('click', () => classMechModal.open());
+}
+
+
+// v237: 初始化傳奇威能法典與 Lv.50 深淵巔峰盤視窗
+if (typeof document !== 'undefined') {
+  const endgameModal = new EndgameModal({
+    getState: () => gameState,
+    onChanged: () => {
+      try {
+        refreshStatsAndUI();
+        persistAll();
+      } catch (err) {}
+    },
+  });
+  window.__ENDGAME_MODAL__ = endgameModal;
+  document.getElementById('btn-open-endgame')?.addEventListener('click', () => endgameModal.open());
 }

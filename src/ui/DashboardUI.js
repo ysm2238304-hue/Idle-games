@@ -1,12 +1,12 @@
 import { UniversalTooltip } from './UniversalTooltip.js?v=232';
 import { TOWN_SPLASHES } from '../data/towns/splashes.js?v=99';
 import { CLASSES } from '../data/classes.js?v=99';
-import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=99';
-import { RANGER_SKILLS } from '../data/rangerSkills.js?v=99';
-import { MAGE_SKILLS } from '../data/mageSkills.js?v=99';
-import { PALADIN_SKILLS } from '../data/paladinSkills.js?v=99';
-import { NECRO_SKILLS } from '../data/necroSkills.js?v=99';
-import { ASSASSIN_SKILLS } from '../data/assassinSkills.js?v=99';
+import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=235';
+import { RANGER_SKILLS } from '../data/rangerSkills.js?v=236';
+import { MAGE_SKILLS } from '../data/mageSkills.js?v=236';
+import { PALADIN_SKILLS } from '../data/paladinSkills.js?v=235';
+import { NECRO_SKILLS } from '../data/necroSkills.js?v=236';
+import { ASSASSIN_SKILLS } from '../data/assassinSkills.js?v=235';
 import { EQUIP_SLOTS, CLASS_REQ_LABELS, RARITIES, BASE_ITEMS, SET_DEFINITIONS } from '../data/items.js?v=99';
 import { PET_CATALOG, PET_SCHOOLS, getPetDef, getPetRarityMeta, getPetPickupRadius, getPetCodexInfo } from '../data/pets.js?v=99';
 import { getClaimableAchievementCount } from '../data/achievements.js?v=99';
@@ -14,7 +14,7 @@ import { getEnhanceRate, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEV
 import { MONSTER_TEMPLATES, STAGE_ZONES, ZONE_POOLS, getZoneName, getStageLabel, getSubStage, getChapterIdx } from '../data/monsters.js?v=99';
 import { CLASS_BUILD_INFO, SKILL_TREE_NODES, getTreeSpentPoints, isNodeBlockedByMutex, isNodeUnlocked } from '../data/skillTree.js?v=99';
 import { calcItemPower, getSalvageReward } from '../logic/lootGen.js?v=99';
-import { formatNum, getExpToNext, getUpgradeCost, calcRebirthCrystals } from '../logic/statCalc.js?v=232';
+import { formatNum, getExpToNext, getUpgradeCost, calcRebirthCrystals } from '../logic/statCalc.js?v=237';
 
 const STAT_LABELS = {
   atkFlat: '攻擊力',
@@ -493,7 +493,7 @@ export class DashboardUI {
     const book = cid === 'warrior' ? WARRIOR_SKILLS : (cid === 'ranger' ? RANGER_SKILLS : (cid === 'paladin' ? PALADIN_SKILLS : (cid === 'necro' ? NECRO_SKILLS : (cid === 'assassin' ? ASSASSIN_SKILLS : MAGE_SKILLS))));
     const eqList = state.equippedSkillsByClass?.[cid] || [];
 
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 5; i++) {
       const btn = document.getElementById(`skill-slot-${i}`);
       if (!btn) continue;
       const iconEl = btn.querySelector('.sk-slot-img');
@@ -546,7 +546,7 @@ export class DashboardUI {
   updateSkillProgress(ratios, cdDetails = []) {
     const inTownNow = !!document.getElementById('btn-town-toggle')?.classList?.contains('in-town');
     if (inTownNow) {
-      for (let i = 0; i < 3; i++) {
+      for (let i = 0; i < 5; i++) {
         const slot = document.getElementById(`skill-slot-${i}`);
         if (!slot) continue;
         const cur = slot.querySelector('.mmo-cd-curtain');
@@ -557,7 +557,7 @@ export class DashboardUI {
       }
       return;
     }
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 5; i++) {
       const btn = document.getElementById(`skill-slot-${i}`);
       if (!btn) continue;
       const curtain = btn.querySelector('.mmo-cd-curtain');

@@ -71,4 +71,52 @@ export const NECRO_SKILLS = {
     desc: '展開大範圍紫青衰老法陣，使半徑 300px 敵人承受【詛咒】並降低其攻擊力 25%。',
     getDetail: (lvl) => `範圍 300px 造成 ${125 + lvl * 22}% 魂火傷害、附加 6 秒【詛咒】並回復 18 魂能。`,
   },
+  n_reap_scythe: {
+    id: 'n_reap_scythe', treeNodeId: 'n_reap_scythe', name: '亡靈收割鐮',
+    icon: './assets/skills/sk_n_reap_scythe.png?v=236', cooldownMs: 3000,
+    desc: '【基礎】揮出冥界鬼火巨鐮橫掃敵群，附加【詛咒】並回復 20 點魂能。',
+    getDetail: (lvl) => `造成 ${150 + lvl * 24}% 暗影傷害、附加【詛咒】並回復 20 魂能。`,
+  },
+  n_blood_surge: {
+    id: 'n_blood_surge', treeNodeId: 'n_blood_surge', name: '鮮血湧動',
+    icon: './assets/skills/sk_n_blood_surge.png?v=236', cooldownMs: 5800,
+    desc: '【核心】汲取周圍鮮血並引爆血潮渦流，大幅吸血且壓制率 +20%！',
+    getDetail: (lvl) => `血潮爆破造成 ${235 + lvl * 36}% 鮮血傷、回復 20% 生命並掛【流血】。`,
+  },
+  n_blight_pool: {
+    id: 'n_blight_pool', treeNodeId: 'n_blight_pool', name: '枯萎瘟疫池',
+    icon: './assets/skills/sk_n_blight_pool.png?v=236', cooldownMs: 7200,
+    desc: '【精通】展開 3 段腐蝕枯萎暗影毒池，同時掛上【中毒】＋【詛咒】。',
+    getDetail: (lvl) => `3 段腐蝕毒池，每段造成 ${120 + lvl * 20}% 暗毒傷並掛【中毒】＋【詛咒】。`,
+  },
+  n_bone_shield: {
+    id: 'n_bone_shield', treeNodeId: 'n_bone_shield', name: '骨盾護體',
+    icon: './assets/skills/sk_n_bone_shield.png?v=236', cooldownMs: 8600,
+    desc: '【防禦】召喚 5 片環繞魂火白骨盾牌，回復 24% 生命並向四周飛射骨刺！',
+    getDetail: (lvl) => `回復 ${22 + lvl * 2}% 生命，飛射骨刺造成 ${180 + lvl * 28}% 傷並掛【易傷】。`,
+  },
+  n_corpse_tendrils: {
+    id: 'n_corpse_tendrils', treeNodeId: 'n_corpse_tendrils', name: '亡骸觸鬚聚怪',
+    icon: './assets/skills/sk_n_corpse_tendrils.png?v=236', cooldownMs: 6800,
+    desc: '【控場】從地底爆出鮮血骨鬚將全場敵人拉聚一點，強制附加【易傷】＋【流血】。',
+    getDetail: (lvl) => `拉聚半徑 360px 敵群造成 ${185 + lvl * 28}% 傷並掛【易傷】＋【流血】。`,
+  },
+  n_soul_rift: {
+    id: 'n_soul_rift', treeNodeId: 'n_soul_rift', name: '靈魂裂隙',
+    icon: './assets/skills/sk_n_soul_rift.png?v=236', cooldownMs: 7600,
+    desc: '【精通】撕裂冥界裂隙吸取靈魂，同時施加【詛咒】＋【定罪】直接引爆靈魂審判！',
+    getDetail: (lvl) => `造成 ${240 + lvl * 36}% 靈魂傷，掛【詛咒】＋【定罪】並回 25 魂能。`,
+  },
+  n_army_scourge: {
+    id: 'n_army_scourge', treeNodeId: 'n_army_scourge', name: '亡者天災大軍',
+    icon: './assets/skills/sk_n_army_scourge.png?v=236', cooldownMs: 14800,
+    desc: '【終極】開啟冥界天災裂縫，連續湧出 4 波自爆亡靈大軍轟炸全場！',
+    getDetail: (lvl) => `4 波全場亡靈爆破，每波造成 ${185 + lvl * 32}% 傷並掛【詛咒】＋【中毒】！`,
+  },
+  n_bone_storm: {
+    id: 'n_bone_storm', treeNodeId: 'n_bone_storm', name: '白骨風暴',
+    icon: './assets/skills/sk_n_bone_storm.png?v=236', cooldownMs: 15200,
+    desc: '【終極】引爆 5 向分裂白骨龍捲風暴，全場必定暴擊並高速連斬 4 波！',
+    getDetail: (lvl) => `白骨風暴 4 波全場必暴，每波造成 ${175 + lvl * 30}% 傷並掛【易傷】＋【流血】！`,
+  },
 };

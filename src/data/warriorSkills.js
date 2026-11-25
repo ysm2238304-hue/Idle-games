@@ -71,4 +71,52 @@ export const WARRIOR_SKILLS = {
     desc: '重踏大地將半徑 310px 內所有怪物強力拉向身邊並暈眩 1.5 秒。',
     getDetail: (lvl) => `聚攏半徑 310px 敵人造成 ${175 + lvl * 30}% 攻擊傷害並暈眩 1.5 秒。`,
   },
+  w_rend_slash: {
+    id: 'w_rend_slash', treeNodeId: 'w_rend_slash', name: '撕裂重擊',
+    icon: './assets/skills/sk_w_rend_slash.png?v=235', cooldownMs: 3200,
+    desc: '【基礎】橫掃猩紅巨刃，穩定疊加【流血】並立即回復 18 點能量。',
+    getDetail: (lvl) => `造成 ${140 + lvl * 22}% 攻擊傷害、附加 4.5 秒【流血】並回復 18 能量。`,
+  },
+  w_ancient_hammer: {
+    id: 'w_ancient_hammer', treeNodeId: 'w_ancient_hammer', name: '上古之錘',
+    icon: './assets/skills/sk_w_ancient_hammer.png?v=235', cooldownMs: 6200,
+    desc: '【核心】傾瀉怒氣砸下上古巨錘，極高機率觸發【壓制】並附加【易傷】。',
+    getDetail: (lvl) => `範圍重擊造成 ${260 + lvl * 40}% 攻擊傷害，壓制率 +25% 並掛【易傷】。`,
+  },
+  w_iron_skin: {
+    id: 'w_iron_skin', treeNodeId: 'w_iron_skin', name: '鋼鐵戰膚',
+    icon: './assets/skills/sk_w_iron_skin.png?v=235', cooldownMs: 8500,
+    desc: '【防禦】凝聚精鋼符文護罩，回復 22% 最大生命並震傷周圍敵人。',
+    getDetail: (lvl) => `立即回復 ${20 + lvl * 2}% 最大生命，並對周圍造成 ${150 + lvl * 24}% 護甲震擊傷。`,
+  },
+  w_chain_grasp: {
+    id: 'w_chain_grasp', treeNodeId: 'w_chain_grasp', name: '鎖鏈拖曳',
+    icon: './assets/skills/sk_w_chain_grasp.png?v=235', cooldownMs: 6800,
+    desc: '【控場】擲出燃燒鐵鍊將大範圍敵人拽至身前，全體附加【易傷】與【灼燒】。',
+    getDetail: (lvl) => `拉扯半徑 360px 敵人造成 ${170 + lvl * 26}% 傷害並掛【易傷】＋【灼燒】。`,
+  },
+  w_rupture_impale: {
+    id: 'w_rupture_impale', treeNodeId: 'w_rupture_impale', name: '血脈撕裂',
+    icon: './assets/skills/sk_w_rupture_impale.png?v=235', cooldownMs: 7400,
+    desc: '【精通】貫穿目標並引爆身上所有【流血】，對流血目標造成雙倍血爆傷！',
+    getDetail: (lvl) => `貫穿造成 ${220 + lvl * 34}% 傷害（對【流血】目標翻倍並吸血 12%）。`,
+  },
+  w_seismic_fissure: {
+    id: 'w_seismic_fissure', treeNodeId: 'w_seismic_fissure', name: '熔岩裂縫',
+    icon: './assets/skills/sk_w_seismic_fissure.png?v=235', cooldownMs: 7800,
+    desc: '【精通】撕裂大地引爆 3 段熔岩地火，持續施加【灼燒】與震盪。',
+    getDetail: (lvl) => `3 段熔岩噴發，每段造成 ${125 + lvl * 22}% 火焰大地傷害並掛【灼燒】。`,
+  },
+  w_call_ancients: {
+    id: 'w_call_ancients', treeNodeId: 'w_call_ancients', name: '先祖之魂召喚',
+    icon: './assets/skills/sk_w_call_ancients.png?v=235', cooldownMs: 14500,
+    desc: '【終極】召喚 3 位上古狂戰先祖降臨戰場，發動 4 波毀滅斧氣斬擊！',
+    getDetail: (lvl) => `先祖英靈降臨連斬 4 波，每波全場造成 ${180 + lvl * 32}% 攻擊傷害並必掛【流血】＋【易傷】。`,
+  },
+  w_wrath_berserker: {
+    id: 'w_wrath_berserker', treeNodeId: 'w_wrath_berserker', name: '狂戰神降臨',
+    icon: './assets/skills/sk_w_wrath_berserker.png?v=235', cooldownMs: 15500,
+    desc: '【終極】化身不滅狂戰神 7 秒，引爆周圍烈焰衝擊波、大幅提升攻速並必觸發壓制！',
+    getDetail: (lvl) => `爆發 ${320 + lvl * 48}% 烈焰震擊，7 秒內攻速 +45%、回滿能量且必壓制！`,
+  },
 };

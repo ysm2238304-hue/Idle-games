@@ -71,4 +71,52 @@ export const RANGER_SKILLS = {
     desc: '在全場敵人身上引爆死神印記並重新標記，對已有印記目標造成雙倍爆發！',
     getDetail: (lvl) => `對範圍內敵人引爆死神印記造成 ${180 + lvl * 35}% 傷害（已標記目標傷害翻倍）。`,
   },
+  r_shadow_imbue: {
+    id: 'r_shadow_imbue', treeNodeId: 'r_shadow_imbue', name: '暗影灌注',
+    icon: './assets/skills/sk_r_shadow_imbue.png?v=236', cooldownMs: 3600,
+    desc: '【基礎】向箭矢注入暗影冥火，轟炸目標並掛【易傷】＋【詛咒】且回 18 精力。',
+    getDetail: (lvl) => `暗影爆炸造成 ${160 + lvl * 25}% 傷害、掛【易傷】＋【詛咒】並回 18 精力。`,
+  },
+  r_venom_pierce: {
+    id: 'r_venom_pierce', treeNodeId: 'r_venom_pierce', name: '劇毒貫穿箭',
+    icon: './assets/skills/sk_r_venom_pierce.png?v=236', cooldownMs: 5400,
+    desc: '【核心】射出高壓翡翠毒矛貫穿敵陣，疊加劇烈【中毒】並對易傷目標 +45% 傷。',
+    getDetail: (lvl) => `直線貫穿造成 ${245 + lvl * 38}% 毒傷並掛【中毒】（對易傷目標 +45%）。`,
+  },
+  r_smoke_decoy: {
+    id: 'r_smoke_decoy', treeNodeId: 'r_smoke_decoy', name: '煙霧誘餌陷阱',
+    icon: './assets/skills/sk_r_smoke_decoy.png?v=236', cooldownMs: 7400,
+    desc: '【防禦】留下暗影毒煙誘餌吸引仇恨並引爆範圍毒霧，附加【中毒】＋【易傷】。',
+    getDetail: (lvl) => `誘餌引爆造成 ${195 + lvl * 30}% 傷害、回復 18% 生命並掛【中毒】＋【易傷】。`,
+  },
+  r_frost_barrage: {
+    id: 'r_frost_barrage', treeNodeId: 'r_frost_barrage', name: '寒霜散射箭',
+    icon: './assets/skills/sk_r_frost_barrage.png?v=236', cooldownMs: 5800,
+    desc: '【核心】扇形齊射極寒冰晶箭幕，凍結敵群並聯動雷系觸發【超導碎冰】。',
+    getDetail: (lvl) => `3 段冰晶齊射，每段造成 ${95 + lvl * 18}% 冰傷並附加【凍結】。`,
+  },
+  r_razor_snare: {
+    id: 'r_razor_snare', treeNodeId: 'r_razor_snare', name: '血刃捕獸夾',
+    icon: './assets/skills/sk_r_razor_snare.png?v=236', cooldownMs: 6800,
+    desc: '【控場】部署猩紅鋼齒陷阱夾擊敵群，造成重創【流血】與【易傷】自爆大出血！',
+    getDetail: (lvl) => `陷阱夾擊造成 ${230 + lvl * 34}% 傷害並同時掛【流血】＋【易傷】。`,
+  },
+  r_gale_snipe: {
+    id: 'r_gale_snipe', treeNodeId: 'r_gale_snipe', name: '疾風狙擊',
+    icon: './assets/skills/sk_r_gale_snipe.png?v=236', cooldownMs: 6200,
+    desc: '【精通】凝聚疾風能量射出必暴狙殺矢，並立即累積 +2 顆連擊星。',
+    getDetail: (lvl) => `必定暴擊造成 ${280 + lvl * 44}% 傷害並獲得 +2 連擊星。`,
+  },
+  r_abyss_barrage: {
+    id: 'r_abyss_barrage', treeNodeId: 'r_abyss_barrage', name: '深淵箭幕風暴',
+    icon: './assets/skills/sk_r_abyss_barrage.png?v=236', cooldownMs: 14500,
+    desc: '【終極】召喚 5 波暗影＋劇毒流星箭幕覆蓋全場，引爆所有異常反應！',
+    getDetail: (lvl) => `5 波全場流星箭雨，每波造成 ${150 + lvl * 28}% 暗毒傷並掛【中毒】＋【易傷】！`,
+  },
+  r_void_hunter: {
+    id: 'r_void_hunter', treeNodeId: 'r_void_hunter', name: '虛空獵手降臨',
+    icon: './assets/skills/sk_r_void_hunter.png?v=236', cooldownMs: 15200,
+    desc: '【終極】展開虛空星紋陣進入 6 秒無限精力，並向全場降下必暴星光處決！',
+    getDetail: (lvl) => `全場造成 ${360 + lvl * 54}% 虛空星爆，並開啟 6 秒無限精力與必暴！`,
+  },
 };

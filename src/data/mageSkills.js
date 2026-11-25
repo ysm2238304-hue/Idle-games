@@ -71,4 +71,52 @@ export const MAGE_SKILLS = {
     desc: '召喚宇宙黑洞將半徑 330px 內所有怪物強力吸附至中心並引發星界塌縮爆炸。',
     getDetail: (lvl) => `強力聚怪 1.2 秒後引爆造成 ${250 + lvl * 42}% 虛空傷害。`,
   },
+  m_fire_bolt: {
+    id: 'm_fire_bolt', treeNodeId: 'm_fire_bolt', name: '炎彈術',
+    icon: './assets/skills/sk_m_fire_bolt.png?v=236', cooldownMs: 2800,
+    desc: '【基礎】高速連射炙熱炎彈，穩定疊加【灼燒】並立即回復 22 點魔力。',
+    getDetail: (lvl) => `造成 ${145 + lvl * 22}% 火焰傷害、附加【灼燒】並回復 22 MP。`,
+  },
+  m_flame_hydra: {
+    id: 'm_flame_hydra', treeNodeId: 'm_flame_hydra', name: '烈焰火蛇',
+    icon: './assets/skills/sk_m_flame_hydra.png?v=236', cooldownMs: 7400,
+    desc: '【精通】召喚雙頭烈焰火蛇盤踞戰場，連續噴吐 4 波炙炎火球並掛【灼燒】。',
+    getDetail: (lvl) => `雙頭火蛇連噴 4 波，每波造成 ${115 + lvl * 20}% 火焰範圍傷並掛【灼燒】。`,
+  },
+  m_ice_armor: {
+    id: 'm_ice_armor', treeNodeId: 'm_ice_armor', name: '寒冰護甲',
+    icon: './assets/skills/sk_m_ice_armor.png?v=236', cooldownMs: 8800,
+    desc: '【防禦】張開六角極寒結晶護甲，回復 26% 生命與 30 MP，並反凍周圍敵人。',
+    getDetail: (lvl) => `回復 ${24 + lvl * 2}% 生命與 30 MP，對周圍造成 ${155 + lvl * 24}% 傷並掛【凍結】。`,
+  },
+  m_arcane_blink: {
+    id: 'm_arcane_blink', treeNodeId: 'm_arcane_blink', name: '閃現傳送',
+    icon: './assets/skills/sk_m_arcane_blink.png?v=236', cooldownMs: 6000,
+    desc: '【位移】化作奧術雷電閃現爆裂，對敵群施加【感電】＋【易傷】並縮短 CD。',
+    getDetail: (lvl) => `雷電瞬爆造成 ${210 + lvl * 32}% 雷傷、掛【感電】＋【易傷】並減 CD 1s。`,
+  },
+  m_ball_lightning: {
+    id: 'm_ball_lightning', treeNodeId: 'm_ball_lightning', name: '球狀閃電',
+    icon: './assets/skills/sk_m_ball_lightning.png?v=236', cooldownMs: 5600,
+    desc: '【核心】釋放環繞高壓球狀閃電進行 3 段電弧絞殺，高頻觸發【感電】與幸運一擊。',
+    getDetail: (lvl) => `3 段高壓電球，每段造成 ${105 + lvl * 18}% 雷傷並掛【感電】。`,
+  },
+  m_blizzard_field: {
+    id: 'm_blizzard_field', treeNodeId: 'm_blizzard_field', name: '暴風雪領域',
+    icon: './assets/skills/sk_m_blizzard_field.png?v=236', cooldownMs: 7800,
+    desc: '【精通】在戰場召喚 4 波極寒暴風雪，持續冰凍並對凍結目標額外 +40% 傷。',
+    getDetail: (lvl) => `4 波極寒暴雪，每波造成 ${110 + lvl * 20}% 冰傷並掛【凍結】。`,
+  },
+  m_elemental_cataclysm: {
+    id: 'm_elemental_cataclysm', treeNodeId: 'm_elemental_cataclysm', name: '元素天災降臨',
+    icon: './assets/skills/sk_m_elemental_cataclysm.png?v=236', cooldownMs: 14800,
+    desc: '【終極】展開火冰雷三系大法陣，同時引爆【灼燒】＋【凍結】＋【感電】與【超導碎冰】！',
+    getDetail: (lvl) => `三系天災連轟 4 波，每波全場造成 ${180 + lvl * 32}% 元素傷並掛齊三系異常！`,
+  },
+  m_astral_supernova: {
+    id: 'm_astral_supernova', treeNodeId: 'm_astral_supernova', name: '星界超新星',
+    icon: './assets/skills/sk_m_astral_supernova.png?v=236', cooldownMs: 15500,
+    desc: '【終極】引爆星界超新星核心，全場造成毀滅級必暴星爆並回滿魔力！',
+    getDetail: (lvl) => `超新星全場必暴 ${400 + lvl * 60}% 奧術傷害，立即回滿 MP 並掛【易傷】＋【詛咒】！`,
+  },
 };

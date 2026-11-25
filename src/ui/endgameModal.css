@@ -1,0 +1,188 @@
+/* =====================================================================
+   v237: 傳奇威能法典刻印 + Lv.50 深淵巔峰盤＆雕紋系統樣式
+   ===================================================================== */
+.v237-endgame-open-btn {
+  padding: 5px 11px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, rgba(153, 27, 27, 0.94), rgba(69, 10, 10, 0.96));
+  border: 1.5px solid #fbbf24;
+  color: #fef08a;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.85);
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+  white-space: nowrap;
+}
+.v237-endgame-open-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0 16px rgba(251, 191, 36, 0.65);
+}
+
+#modal-endgame-hub {
+  position: fixed;
+  inset: 0;
+  z-index: 9600;
+  background: rgba(5, 4, 8, 0.86);
+  backdrop-filter: blur(5px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+#modal-endgame-hub.hidden {
+  display: none !important;
+}
+
+.v237-win {
+  width: min(1060px, 96vw);
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, #191211 0%, #0b080a 100%);
+  border: 2px solid #d97706;
+  border-radius: 12px;
+  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.96), inset 0 0 26px rgba(217, 119, 6, 0.14);
+  overflow: hidden;
+  color: #e2e8f0;
+}
+
+.v237-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 20px;
+  background: linear-gradient(90deg, rgba(124, 45, 18, 0.55), rgba(22, 14, 14, 0.95));
+  border-bottom: 1.5px solid rgba(251, 191, 36, 0.42);
+}
+
+.v237-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 10px 20px;
+  background: rgba(12, 9, 10, 0.85);
+  border-bottom: 1px solid rgba(251, 191, 36, 0.22);
+}
+.v237-tab {
+  padding: 7px 16px;
+  border-radius: 7px;
+  font-size: 12.5px;
+  font-weight: 800;
+  background: rgba(30, 22, 24, 0.9);
+  border: 1.5px solid rgba(148, 163, 184, 0.3);
+  color: #cbd5e1;
+}
+.v237-tab.is-active {
+  background: linear-gradient(180deg, rgba(180, 83, 9, 0.82), rgba(120, 53, 15, 0.92));
+  border-color: #fde047;
+  color: #fef9c3;
+}
+
+.v237-body {
+  padding: 16px 20px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+/* 威能刻印 3 槽 */
+.v237-slot-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.v237-imprint-slot {
+  padding: 12px 14px;
+  border-radius: 9px;
+  background: rgba(24, 16, 15, 0.94);
+  border: 2px solid rgba(251, 191, 36, 0.48);
+  text-align: left;
+}
+.v237-imprint-slot.is-selected {
+  border-color: #4ade80;
+  box-shadow: 0 0 16px rgba(74, 222, 128, 0.28);
+}
+
+.v237-aspect-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+}
+.v237-aspect-card {
+  padding: 11px 13px;
+  border-radius: 8px;
+  background: rgba(16, 13, 17, 0.92);
+  border: 1.5px solid rgba(148, 163, 184, 0.26);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+}
+.v237-aspect-card.is-unlocked {
+  border-color: rgba(251, 191, 36, 0.55);
+}
+
+/* 7x7 深淵巔峰棋盤 */
+.v237-paragon-layout {
+  display: grid;
+  grid-template-columns: 440px 1fr;
+  gap: 18px;
+  align-items: start;
+}
+.v237-board-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+  padding: 12px;
+  border-radius: 10px;
+  background: radial-gradient(circle at 50% 50%, rgba(45, 22, 22, 0.72), rgba(8, 6, 10, 0.96));
+  border: 1.5px solid rgba(251, 191, 36, 0.35);
+}
+.v237-pnode {
+  aspect-ratio: 1 / 1;
+  border-radius: 7px;
+  border: 1.5px solid rgba(148, 163, 184, 0.25);
+  background: rgba(15, 13, 20, 0.9);
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 800;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.v237-pnode.is-avail {
+  border-color: #fde047;
+  box-shadow: 0 0 10px rgba(253, 224, 71, 0.35);
+  color: #fef08a;
+}
+.v237-pnode.is-lit {
+  background: linear-gradient(180deg, rgba(180, 83, 9, 0.85), rgba(120, 53, 15, 0.95));
+  border-color: #fbbf24;
+  color: #fef9c3;
+  box-shadow: 0 0 12px rgba(251, 191, 36, 0.45);
+}
+.v237-pnode.type-magic.is-lit {
+  background: linear-gradient(180deg, rgba(37, 99, 235, 0.85), rgba(30, 58, 138, 0.95));
+  border-color: #60a5fa;
+}
+.v237-pnode.type-rare.is-lit {
+  background: linear-gradient(180deg, rgba(202, 138, 4, 0.9), rgba(133, 77, 14, 0.95));
+  border-color: #fde047;
+}
+.v237-pnode.type-legendary {
+  border-color: #f97316;
+}
+.v237-pnode.type-legendary.is-lit {
+  background: linear-gradient(180deg, rgba(234, 88, 12, 0.92), rgba(154, 52, 18, 0.96));
+  box-shadow: 0 0 18px rgba(249, 115, 22, 0.65);
+}
+.v237-pnode.type-glyph {
+  border-color: #c084fc;
+}
+.v237-pnode.type-glyph.is-lit {
+  background: linear-gradient(180deg, rgba(147, 51, 234, 0.9), rgba(88, 28, 135, 0.96));
+  box-shadow: 0 0 18px rgba(192, 132, 252, 0.65);
+}

@@ -1,3 +1,6 @@
+import { calcEndgameBonuses } from './endgameSystems.js?v=237';
+import { getActiveKeystone } from './buildEngine.js?v=236';
+import { getClassMechanicStatBonuses } from './classMechanics.js?v=234';
 import { CLASSES } from '../data/classes.js?v=99';
 import { SET_DEFINITIONS } from '../data/items.js?v=99';
 
@@ -339,21 +342,71 @@ export function recalcPlayerStats(state) {
   const mpRegenPerSec = (state.classId === 'mage' ? 13 : (state.classId === 'ranger' ? 9 : 7))
     + (tree.m_p_ward || 0) * 1.5 + (tree.m_cdr || 0) * 1.5 + mpRegenFlat + (activeEffects.has('frost_heart') ? 4 : 0);
 
+  // v234: 注入六大職業獨立專屬機制常駐屬性加成
+  const cm = getClassMechanicStatBonuses(state);
+  const ks = getActiveKeystone(state, state?.classId);
+  if (ks) {
+    if (ks.id === 'wk_endless_fury') { cm.atkSpeedPct += 28; cm.lifesteal += 10; }
+    if (ks.id === 'wk_blood_pact')   { cm.maxHpPct -= 55; cm.skillDmgPct += 65; cm.overpowerPct += 45; }
+    if (ks.id === 'pk_hammer_domain'){ cm.skillDmgPct += 35; }
+    if (ks.id === 'pk_immortal_bulwark') { cm.armorPct += 45; cm.maxHpPct += 30; }
+    if (ks.id === 'pk_martyr_crown') { cm.overpowerPct += 18; }
+    if (ks.id === 'ak_lethal_tempo') { cm.critRate += 15; cm.critDmg += 70; }
+    if (ks.id === 'ak_glass_reaper') { cm.armorPct -= 50; cm.skillDmgPct += 55; }
+    if (ks.id === 'rk_gale_crossbow'){ cm.atkSpeedPct += 28; cm.luckyPct += 15; }
+    if (ks.id === 'rk_void_sniper')  { cm.critDmg += 110; cm.skillDmgPct += 55; }
+    if (ks.id === 'mk_inferno_burn') { cm.skillDmgPct += 45; }
+    if (ks.id === 'mk_void_overload'){ cm.luckyPct += 18; }
+    if (ks.id === 'mk_mana_singularity') { cm.maxHpPct -= 45; cm.maxMpPct += 100; cm.mpRegenPct += 80; cm.skillDmgPct += 65; }
+    if (ks.id === 'nk_undead_overlord')  { cm.atkSpeedPct += 25; cm.critRate += 15; cm.skillDmgPct += 35; }
+    if (ks.id === 'nk_bone_tyrant')      { cm.critDmg += 85; cm.overpowerPct += 15; }
+    if (ks.id === 'nk_lich_phylactery')  { cm.armorPct -= 40; cm.lifesteal += 14; cm.skillDmgPct += 70; }
+  }
+  // v237: 注入傳奇威能法典（3槽倍率）＋ 深淵巔峰盤 ＋ 雕紋共鳴加成
+  const eg = calcEndgameBonuses(state);
+  cm.maxHpPct += eg.maxHpPct || 0;
+  cm.maxMpPct += eg.maxMpPct || 0;
+  cm.mpRegenPct += eg.mpRegenPct || 0;
+  cm.armorPct += eg.armorPct || 0;
+  cm.atkSpeedPct += eg.atkSpeedPct || 0;
+  cm.critRate += eg.critRate || 0;
+  cm.critDmg += eg.critDmg || 0;
+  cm.lifesteal += eg.lifesteal || 0;
+  cm.skillDmgPct += eg.skillDmgPct || 0;
+  cm.overpowerPct += eg.overpowerPct || 0;
+  cm.luckyPct += eg.luckyPct || 0;
+  const egAtkMult = 1 + (eg.atkPct || 0) / 100;
+  const finalMaxHp = Math.round(maxHp * (1 + (cm.maxHpPct || 0) / 100));
+  const finalMaxMp = Math.round(maxMp * (1 + (cm.maxMpPct || 0) / 100));
+  const finalMpRegen = Number((mpRegenPerSec * (1 + (cm.mpRegenPct || 0) / 100)).toFixed(2));
+  const finalArmor = Math.round(armor * (1 + (cm.armorPct || 0) / 100));
+  const finalCritRate = Math.min(95, Number((critRate + (cm.critRate || 0)).toFixed(1)));
+  const finalCritDmg = Math.round(critDmg + (cm.critDmg || 0));
+  const finalLifesteal = Number((lifesteal + (cm.lifesteal || 0)).toFixed(1));
+  const finalAtkInterval = Math.max(160, Math.round(atkIntervalMs / (1 + (cm.atkSpeedPct || 0) / 100)));
+  const finalSkillDmgMult = Number((skillDmgMult * (1 + (cm.skillDmgPct || 0) / 100)).toFixed(3));
+  const finalDps = Math.round((atk * (1 + (finalCritRate / 100) * ((finalCritDmg - 100) / 100))) / (finalAtkInterval / 1000));
+
   return {
-    maxHp,
-    maxMp,
-    mpRegenPerSec,
-    atk,
-    atkIntervalMs,
-    critRate,
-    critDmg,
-    armor,
-    dodge,
-    lifesteal,
+    maxHp: finalMaxHp,
+    maxMp: finalMaxMp,
+    mpRegenPerSec: finalMpRegen,
+    atk: Math.round(((ks?.id === 'pk_martyr_crown') ? (atk + finalArmor * 1.8) : atk) * egAtkMult + finalArmor * ((eg.armorToAtkPct || 0) / 100)),
+    atkIntervalMs: finalAtkInterval,
+    critRate: finalCritRate,
+    critDmg: finalCritDmg,
+    armor: finalArmor,
+    dodge: (ks?.id === 'pk_martyr_crown') ? 0 : dodge,
+    lifesteal: finalLifesteal,
+    mechOverpowerPct: cm.overpowerPct || 0,
+    mechLuckyPct: cm.luckyPct || 0,
+    isLoneTyrant: !!cm.isLoneTyrant,
+    activeKeystoneId: ks?.id || null,
+    endgameProcs: eg.activeProcs,
     goldFind,
     magicFind,
     moveSpeed: Math.round(flat.moveSpeed),
-    skillDmgMult,
+    skillDmgMult: finalSkillDmgMult,
     skillRadiusMult,
     cdrMult,
     treeBoltChance,
@@ -378,7 +431,7 @@ export function recalcPlayerStats(state) {
     dodgeShadow,
     dmgReducePct: (innate.dmgReducePct || 0) + (flat.dmgReducePct || 0) + setDmgReducePct,
     activeSets,
-    dps,
+    dps: finalDps,
     activeEffects,
   };
 }

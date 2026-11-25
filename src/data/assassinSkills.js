@@ -71,4 +71,52 @@ export const ASSASSIN_SKILLS = {
     desc: '激發刺客本能 4.5 秒內攻速 +45%、暴擊率 +20%，且所有普攻必附帶【劇毒】。',
     getDetail: (lvl) => `4.5 秒內攻速 +${40 + lvl * 5}%、暴擊率 +20%，普攻附加【劇毒】並爆發一次毒環。`,
   },
+  a_twin_fang: {
+    id: 'a_twin_fang', treeNodeId: 'a_twin_fang', name: '雙牙快刺',
+    icon: './assets/skills/sk_a_twin_fang.png?v=235', cooldownMs: 2800,
+    desc: '【基礎】高速雙刃連刺，立即累積 +2 顆暗影印記並回復 18 點影能。',
+    getDetail: (lvl) => `雙段連刺共造成 ${150 + lvl * 24}% 傷害、+2 暗影星並回 18 影能。`,
+  },
+  a_boomerang_blades: {
+    id: 'a_boomerang_blades', treeNodeId: 'a_boomerang_blades', name: '迴旋雙刃',
+    icon: './assets/skills/sk_a_boomerang_blades.png?v=235', cooldownMs: 5400,
+    desc: '【核心】擲出旋轉暗影雙刃來回貫穿 2 次，雙段附加【易傷】與【流血】。',
+    getDetail: (lvl) => `去回 2 段旋轉斬擊，每段造成 ${145 + lvl * 26}% 暗影傷並掛【易傷】＋【流血】。`,
+  },
+  a_shadow_backstab: {
+    id: 'a_shadow_backstab', treeNodeId: 'a_shadow_backstab', name: '影步背刺',
+    icon: './assets/skills/sk_a_shadow_backstab.png?v=235', cooldownMs: 5800,
+    desc: '【位移】瞬間突刺敵人要害必定暴擊，並掛上【易傷】與【流血】。',
+    getDetail: (lvl) => `必定暴擊造成 ${275 + lvl * 42}% 穿刺傷，附帶【易傷】並返還 1s CD。`,
+  },
+  a_crimson_mist: {
+    id: 'a_crimson_mist', treeNodeId: 'a_crimson_mist', name: '猩紅毒霧彈',
+    icon: './assets/skills/sk_a_crimson_mist.png?v=235', cooldownMs: 7400,
+    desc: '【控場】引爆猩紅劇毒領域，3 段腐蝕毒氣同時施加【中毒】與【灼燒】。',
+    getDetail: (lvl) => `3 段範圍毒霧，每段造成 ${120 + lvl * 20}% 傷並掛【中毒】＋【灼燒】。`,
+  },
+  a_death_lotus: {
+    id: 'a_death_lotus', treeNodeId: 'a_death_lotus', name: '死神蓮華陣',
+    icon: './assets/skills/sk_a_death_lotus.png?v=235', cooldownMs: 7200,
+    desc: '【精通】原地高速旋轉拋射漫天暗影飛刀，覆蓋大範圍敵群並疊加連擊星。',
+    getDetail: (lvl) => `3 波蓮華刀雨，每波造成 ${130 + lvl * 22}% 傷害並附帶【流血】。`,
+  },
+  a_venom_imbue: {
+    id: 'a_venom_imbue', treeNodeId: 'a_venom_imbue', name: '劇毒淬刃',
+    icon: './assets/skills/sk_a_venom_imbue.png?v=235', cooldownMs: 8200,
+    desc: '【精通】淬毒雙刃爆發酸液衝擊波，大幅提升毒傷並強制刷新【中毒】＋【易傷】。',
+    getDetail: (lvl) => `爆發 ${210 + lvl * 34}% 劇毒傷害，全場附加【中毒】＋【易傷】並回 20 影能。`,
+  },
+  a_thousand_shadows: {
+    id: 'a_thousand_shadows', treeNodeId: 'a_thousand_shadows', name: '千影滅絕葬',
+    icon: './assets/skills/sk_a_thousand_shadows.png?v=235', cooldownMs: 14500,
+    desc: '【終極】展開血月劍陣進行 5 段高速千影連斬，必定暴擊並引爆全場印毒！',
+    getDetail: (lvl) => `血月劍陣 5 段必暴斬擊，每段全場造成 ${145 + lvl * 26}% 暗影絕殺傷！`,
+  },
+  a_crimson_eclipse: {
+    id: 'a_crimson_eclipse', treeNodeId: 'a_crimson_eclipse', name: '血月絕影域',
+    icon: './assets/skills/sk_a_crimson_eclipse.png?v=235', cooldownMs: 15200,
+    desc: '【終極】喚出血月五星絕殺紋，瞬間撕裂全場並附加【流血】＋【易傷】＋【中毒】！',
+    getDetail: (lvl) => `五星絕殺紋造成 ${390 + lvl * 58}% 爆發傷並同時掛上三重致命異常！`,
+  },
 };
