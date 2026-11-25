@@ -807,7 +807,7 @@
   position: fixed !important;
   left: 50% !important;
   bottom: 10px !important;
-  transform: translateX(-50%) !important;
+  transform: translateX(-50%);
   width: 672px !important;
   height: 246px !important;
   background: transparent !important;
@@ -956,4 +956,122 @@
   border-radius: 6px !important;
   background: linear-gradient(180deg, rgba(28, 22, 34, 0.94), rgba(14, 11, 18, 0.96)) !important;
   border: 1px solid rgba(200, 155, 60, 0.48) !important;
+}
+
+
+/* ===== 10. v224：全 UI 9 大物件獨立定位 + 自由排版支援 + 右下功能列一列式放大 ===== */
+#hud-quest-panel.hud-indep-panel {
+  position: fixed !important;
+  top: 122px;
+  left: 14px;
+  z-index: 38;
+}
+
+#hud-town-btn-panel.hud-indep-panel {
+  position: fixed !important;
+  top: 396px;
+  left: 14px;
+  z-index: 39;
+  width: 368px;
+  pointer-events: auto;
+}
+
+#hud-town-btn-panel #btn-town-toggle {
+  width: 100% !important;
+  box-sizing: border-box !important;
+  padding: 9px 14px !important;
+  font-size: 13.5px !important;
+  font-weight: 900 !important;
+  border-radius: 11px !important;
+  border: 1.5px solid rgba(217, 119, 6, 0.68) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.55) !important;
+}
+
+/* 自由排版模式：所有 9 個獨立物件都可點擊拖曳與縮放 */
+body.hud-edit-active #diablo-hud.v222-gothic-hud,
+body.hud-edit-active #hud-bottom-right-dock,
+body.hud-edit-active #hud-quest-panel,
+body.hud-edit-active #hud-town-btn-panel,
+body.hud-edit-active #hud-combo-box {
+  pointer-events: auto !important;
+  outline: 1.5px dashed rgba(250, 204, 21, 0.85) !important;
+  outline-offset: 3px;
+}
+
+body.hud-edit-active #hud-quest-panel.is-all-done {
+  display: block !important;
+  min-height: 44px;
+}
+
+body.hud-edit-active #hud-combo-box.hidden {
+  display: flex !important;
+  opacity: 0.85;
+}
+
+body.hud-edit-active .hud-edit-bar {
+  position: relative;
+  z-index: 99 !important;
+  pointer-events: auto !important;
+}
+
+/* 右下角功能指令列：強制一列式橫排 + 放大按鈕 (46x46px) */
+#hud-bottom-right-dock {
+  right: 14px;
+  bottom: 14px;
+  z-index: 42;
+}
+
+#hud-bottom-right-dock .matrix-rows {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  gap: 5px !important;
+}
+
+#hud-bottom-right-dock .matrix-row {
+  display: flex !important;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center !important;
+  gap: 5px !important;
+}
+
+#hud-bottom-right-dock .matrix-row + .matrix-row {
+  padding-left: 8px !important;
+  margin-left: 3px !important;
+  border-left: 1px solid rgba(200, 155, 60, 0.38) !important;
+  padding-top: 0 !important;
+  border-top: none !important;
+}
+
+#hud-bottom-right-dock .mmo-micro-btn {
+  width: 46px !important;
+  height: 46px !important;
+  min-width: 46px !important;
+  min-height: 46px !important;
+  border-radius: 11px !important;
+}
+
+#hud-bottom-right-dock .mmo-micro-btn .mmo-ui-img {
+  width: 32px !important;
+  height: 32px !important;
+}
+
+#hud-bottom-right-dock .mmo-micro-btn .dock-svg-icon {
+  width: 26px !important;
+  height: 26px !important;
+}
+
+#hud-bottom-right-dock .mmo-micro-btn .mmo-hk {
+  font-size: 11px !important;
+  right: 3px !important;
+  bottom: 2px !important;
+}
+
+#hud-bottom-right-dock .mmo-collapse-btn {
+  width: 28px !important;
+  min-width: 28px !important;
+  height: 46px !important;
+  min-height: 46px !important;
 }

@@ -12,7 +12,7 @@
   <link id="welcome-auth-v207-css" rel="stylesheet" href="./src/ui/welcomeAuth.css?v=215" />
   <link id="class-hall-v102-css" rel="stylesheet" href="./src/ui/classHall.css?v=215" />
   <link id="npc-modal-v100-css" rel="stylesheet" href="./src/ui/npcModal.css?v=223" />
-  <link id="hud-overhaul-v217-css" rel="stylesheet" href="./src/ui/hudOverhaul.css?v=222" />
+  <link id="hud-overhaul-v217-css" rel="stylesheet" href="./src/ui/hudOverhaul.css?v=224" />
   <link id="worldmap-25d-v222-css" rel="stylesheet" href="./src/ui/worldMap25d.css?v=222" />
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
 </head>
@@ -164,8 +164,14 @@
             </div>
           </div>
         </div>
-        <div id="hud-quest-panel" class="hud-quest-panel"></div>
         <div id="hud-potion-buffs" class="hud-potion-buffs"></div>
+      </div>
+
+      <!-- 獨立可移動縮放：冒險任務追蹤欄 -->
+      <div id="hud-quest-panel" class="hud-corner hud-quest-panel hud-indep-panel"></div>
+
+      <!-- 獨立可移動縮放：出城／回城快捷鈕 -->
+      <div id="hud-town-btn-panel" class="hud-corner hud-town-btn-panel hud-indep-panel">
         <button id="btn-town-toggle" class="btn-town-toggle" title="返回主城 / 出城戰鬥 [G]">🏰 返回主城 (G)</button>
       </div>
 
@@ -565,6 +571,6 @@
     </div>
   </div>
 
-  <script type="module" src="./src/main.js?v=223"></script>
+  <script type="module" src="./src/main.js?v=224"></script>
 </body>
 </html>

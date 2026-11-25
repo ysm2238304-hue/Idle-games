@@ -75,7 +75,7 @@ function ensureCss() {
   const link = document.createElement('link');
   link.id = 'hud-overhaul-v217-css';
   link.rel = 'stylesheet';
-  link.href = './src/ui/hudOverhaul.css?v=221';
+  link.href = './src/ui/hudOverhaul.css?v=224';
   document.head.appendChild(link);
 }
 
@@ -529,24 +529,12 @@ ${def.tip}">
 }
 
 function mountResponsiveDockGuard() {
-  const checkOverlap = () => {
-    const altar = document.getElementById('diablo-hud');
+  // v224：維持一列式橫排並通知自由排版管理器掛載所有獨立物件把手
+  const syncHandles = () => {
     const dock = document.querySelector('#hud-bottom-right-dock .v80-matrix-dock');
-    if (!altar || !dock) return;
-    dock.classList.remove('is-compact-2row', 'is-ultra-compact');
-    if (dock.classList.contains('is-dock-collapsed')) return;
-
-    const aRect = altar.getBoundingClientRect();
-    const dRect = dock.getBoundingClientRect();
-    if (dRect.left < aRect.right + 16) {
-      dock.classList.add('is-compact-2row');
-      const dRect2 = dock.getBoundingClientRect();
-      if (dRect2.left < aRect.right + 12) {
-        dock.classList.add('is-ultra-compact');
-      }
-    }
+    if (dock) dock.classList.remove('is-compact-2row', 'is-ultra-compact');
+    window.__hudSettingsMgr?.applyAll?.();
   };
-  window.addEventListener('resize', checkOverlap);
-  setTimeout(checkOverlap, 300);
-  setInterval(checkOverlap, 1500);
+  setTimeout(syncHandles, 250);
+  setTimeout(syncHandles, 1200);
 }

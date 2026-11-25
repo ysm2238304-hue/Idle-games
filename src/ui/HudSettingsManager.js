@@ -2,11 +2,15 @@
 const SETTINGS_KEY = 'desk_diablo_settings_v1';
 
 const PANEL_META = {
-  'hud-top-left': { label: '角色頭像與關卡進度', origin: 'top left' },
-  'hud-top-center': { label: '目標／首領血條', origin: 'top center' },
-  'hud-top-right': { label: '功能選單與羅盤小地圖', origin: 'top right' },
-  'hud-bottom-left': { label: '暗黑戰鬥／掉落日誌', origin: 'bottom left' },
-  'diablo-hud': { label: '底部雙球技能祭壇', origin: 'bottom center' },
+  'hud-top-left':          { label: '角色名片卡',           origin: 'top left' },
+  'hud-quest-panel':       { label: '冒險任務追蹤欄',       origin: 'top left' },
+  'hud-town-btn-panel':    { label: '出城／回城快捷鈕',     origin: 'top left' },
+  'hud-top-center':        { label: '目標／首領血條',       origin: 'top center' },
+  'hud-top-right':         { label: '右上羅盤小地圖',       origin: 'top right' },
+  'hud-combo-box':         { label: '連斬計數器',           origin: 'top right' },
+  'hud-bottom-left':       { label: '多頻道聊天室',         origin: 'bottom left' },
+  'diablo-hud':            { label: '底部哥德雙球技能列',   origin: 'bottom center' },
+  'hud-bottom-right-dock': { label: '右下角功能指令列',     origin: 'bottom right' },
 };
 
 export const RESERVED_MOVE_KEYS = new Set([
@@ -113,6 +117,7 @@ export class HudSettingsManager {
     this._keybindNotice = '';
     this.modal = null;
     this.banner = null;
+    window.__hudSettingsMgr = this;
   }
 
   _load() {
@@ -209,8 +214,8 @@ export class HudSettingsManager {
           e.stopPropagation();
           const act = actBtn.dataset.act;
           const p = this.settings.ui.panels[id];
-          if (act === 'minus') p.scale = Math.max(0.65, +(p.scale - 0.05).toFixed(2));
-          if (act === 'plus') p.scale = Math.min(1.45, +(p.scale + 0.05).toFixed(2));
+          if (act === 'minus') p.scale = Math.max(0.60, +(p.scale - 0.05).toFixed(2));
+          if (act === 'plus') p.scale = Math.min(1.60, +(p.scale + 0.05).toFixed(2));
           if (act === 'reset') { p.dx = 0; p.dy = 0; p.scale = 1; p.visible = true; }
           this.applyAll();
           this.save();
@@ -288,9 +293,11 @@ export class HudSettingsManager {
   }
 
   setEditMode(on) {
+    this._injectPanelHandles();
     this.settings.ui.editMode = !!on;
     document.body.classList.toggle('hud-edit-active', !!on);
     if (this.banner) this.banner.classList.toggle('hidden', !on);
+    this.applyAll();
     if (on) this.closeModal();
   }
 
@@ -380,6 +387,7 @@ export class HudSettingsManager {
   }
 
   applyAll() {
+    this._injectPanelHandles();
     document.documentElement.style.setProperty('--hud-global-scale', String(this.settings.ui.globalScale || 1));
     for (const id of Object.keys(PANEL_META)) {
       this._applyPanelTransform(id);
@@ -465,7 +473,7 @@ export class HudSettingsManager {
               <div class="set-row compact">
                 <label class="set-chk"><input type="checkbox" data-panel-vis="${id}" ${p.visible ? 'checked' : ''} /> <span>${meta.label}</span></label>
                 <div class="set-ctrl">
-                  <input type="range" data-panel-scale="${id}" min="65" max="145" step="5" value="${Math.round(p.scale * 100)}" />
+                  <input type="range" data-panel-scale="${id}" min="60" max="160" step="5" value="${Math.round(p.scale * 100)}" />
                   <span class="set-val">${Math.round(p.scale * 100)}%</span>
                 </div>
               </div>

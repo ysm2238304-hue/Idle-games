@@ -115,7 +115,7 @@ export const TOWN_SPLASHES = [
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   queueMicrotask(async () => {
     try {
-      const [{ DashboardUI }, { renderTownFacilityModal }, monsters, { initLobbyClassClarity }, { initWelcomeAuthUI }, { initBagSalvageFix }, { initBattleStuckGuard }, { initHudOverhaulV217 }, { hookWorldMap25D }] = await Promise.all([
+      const [{ DashboardUI }, { renderTownFacilityModal }, monsters, { initLobbyClassClarity }, { initWelcomeAuthUI }, { initBagSalvageFix }, { initBattleStuckGuard }, { initHudOverhaulV217 }, { hookWorldMap25D }, { initSpriteWhiteCleaner }] = await Promise.all([
         import('../../ui/DashboardUI.js?v=221'),
         import('../../ui/NpcModalRenderer.js?v=223'),
         import('../monsters.js?v=99'),
@@ -123,8 +123,9 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
         import('../../ui/WelcomeAuthUI.js?v=218'),
         import('../../ui/BagFixEnhancer.js?v=213'),
         import('../../ui/BattleStuckGuard.js?v=214'),
-        import('../../ui/HudOverhaulV217.js?v=221'),
+        import('../../ui/HudOverhaulV217.js?v=224'),
         import('../../ui/WorldMap25D.js?v=222'),
+        import('../../ui/SpriteWhiteCleaner.js?v=224'),
       ]);
       initLobbyClassClarity();
       initWelcomeAuthUI();
@@ -132,6 +133,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
       initBattleStuckGuard();
       initHudOverhaulV217();
       hookWorldMap25D(DashboardUI);
+      initSpriteWhiteCleaner();
       if (DashboardUI?.prototype) {
         DashboardUI.prototype.openTownFacilityModal = function (action, data, ctx) {
           renderTownFacilityModal(this, action, data, ctx, {
