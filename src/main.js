@@ -1,5 +1,5 @@
 import { CLASSES } from './data/classes.js?v=99';
-import { getStageLabel, getSubStage, getChapterIdx } from './data/monsters.js?v=99';
+import { getStageLabel, getSubStage, getChapterIdx, calcLevelGapExpMult } from './data/monsters.js?v=232';
 import { WARRIOR_SKILLS } from './data/warriorSkills.js?v=99';
 import { RANGER_SKILLS } from './data/rangerSkills.js?v=99';
 import { MAGE_SKILLS } from './data/mageSkills.js?v=99';
@@ -10,8 +10,8 @@ import { RARITIES } from './data/items.js?v=99';
 import { PET_CATALOG, rollPetDrop, getPetDef } from './data/pets.js?v=99';
 import { SKILL_TREE_NODES, isNodeUnlocked } from './data/skillTree.js?v=99';
 import { generateLoot, calcItemPower, getSalvageReward, rerollItemAffixes, generateBlackMarketItem } from './logic/lootGen.js?v=99';
-import { recalcPlayerStats, getExpToNext, getUpgradeCost, calcRebirthCrystals, formatNum } from './logic/statCalc.js?v=99';
-import { createInitialState, loadGame, saveGame, calcOfflineProgress } from './logic/saveSystem.js?v=99';
+import { recalcPlayerStats, getExpToNext, getUpgradeCost, calcRebirthCrystals, formatNum } from './logic/statCalc.js?v=232';
+import { createInitialState, loadGame, saveGame, calcOfflineProgress } from './logic/saveSystem.js?v=232';
 import {
   initCloudAuth,
   signInWithGoogle,
@@ -23,7 +23,8 @@ import {
 import { BattleScene } from './scenes/BattleScene.js?v=217';
 import { TownScene } from './scenes/TownScene.js?v=227';
 import { TOWN_SPLASHES } from './data/towns/splashes.js?v=229';
-import { DashboardUI } from './ui/DashboardUI.js?v=221';
+import { DashboardUI } from './ui/DashboardUI.js?v=232';
+import { UniversalTooltip } from './ui/UniversalTooltip.js?v=232';
 import { TownBgmEngine } from './audio/TownBgmEngine.js?v=99';
 import { BattleSfxEngine } from './audio/BattleSfxEngine.js?v=99';
 import { HudSettingsManager } from './ui/HudSettingsManager.js?v=227';
@@ -751,10 +752,35 @@ function switchStateToClass(newClassId, st = gameState) {
   cp[newClassId] = { level: st.level || 1, exp: st.exp || 0 };
 }
 
-function grantExp(amount) {
-  const expBuffMult = ((gameState.potionBuffs?.expUntil || 0) > Date.now()) ? 1.5 : 1.0;
-  const gained = Math.round(amount * (computedStats.expMult || 1) * expBuffMult);
+// v232: 10 分鐘滾動經驗效率追蹤器（供經驗條懸停顯示 EXP/hr 與預計升級時間）
+const _expSamples = [];
+if (typeof window !== 'undefined') {
+  window.__EXP_TRACKER__ = {
+    record(xp) {
+      if (xp <= 0) return;
+      const now = Date.now();
+      _expSamples.push({ ts: now, xp });
+      const cutoff = now - 600000;
+      while (_expSamples.length > 0 && _expSamples[0].ts < cutoff) _expSamples.shift();
+    },
+    getExpPerHour() {
+      const now = Date.now();
+      const cutoff = now - 600000;
+      while (_expSamples.length > 0 && _expSamples[0].ts < cutoff) _expSamples.shift();
+      if (_expSamples.length < 2) return 0;
+      const total = _expSamples.reduce((s, r) => s + r.xp, 0);
+      const spanSec = Math.max(15, (now - _expSamples[0].ts) / 1000);
+      return Math.round((total / spanSec) * 3600);
+    },
+  };
+}
+
+function grantExp(amount, opts = {}) {
+  const expBuffMult = ((gameState.potionBuffs?.expUntil || 0) > Date.now()) ? 1.25 : 1.0;
+  const gapMult = opts.skipGap ? 1.0 : calcLevelGapExpMult(gameState.level || 1, opts.stage || gameState.stage || 1);
+  const gained = Math.max(1, Math.round(amount * (computedStats.expMult || 1) * expBuffMult * gapMult));
   gameState.exp += gained;
+  if (!opts.skipTrack) window.__EXP_TRACKER__?.record?.(gained);
   let need = getExpToNext(gameState.level);
   while (gameState.exp >= need) {
     gameState.exp -= need;
@@ -1040,7 +1066,7 @@ function initPhaserGame() {
           if (!gameState.bountyProgress) gameState.bountyProgress = { bossKills: 0, claimed: {} };
           gameState.bountyProgress.bossKills = (gameState.bountyProgress.bossKills || 0) + 1;
         }
-        grantExp(Math.round(mob.exp * comboMult));
+        grantExp(Math.round(mob.exp * comboMult), { stage: mob.stage });
 
         const dropped = generateLoot(mob.stage, mob.isBoss, computedStats.magicFind, false, gameState.classId);
         const droppedPet = rollPetDrop(mob.stage, mob.isBoss, computedStats.magicFind);
@@ -2153,7 +2179,7 @@ function startAdventure() {
   if (offline) {
     ui.showOfflineModal(offline, () => {
       gameState.gold += offline.goldEarned;
-      grantExp(offline.expEarned);
+      grantExp(offline.expEarned, { skipGap: true, skipTrack: true });
       offline.itemsFound.forEach((it) => handleLootDrop(it));
       refreshStatsAndUI();
       persistAll(true);
@@ -2418,3 +2444,9 @@ window.addEventListener('beforeunload', () => persistAll(true));
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState === 'hidden') persistAll(true);
 });
+
+
+// v232: 初始化全域懸停詳情與雙欄裝備比較引擎
+if (typeof document !== 'undefined') {
+  UniversalTooltip.init(() => gameState);
+}

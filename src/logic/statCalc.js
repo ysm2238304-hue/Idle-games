@@ -10,7 +10,21 @@ export function formatNum(num) {
 }
 
 export function getExpToNext(level) {
-  return Math.round(90 * Math.pow(1.40, level - 1));
+  // v232 千小時長線四段式等級曲線（Lv.1-20 拓荒 → Lv.21-50 養成 → Lv.51-80 深淵 → Lv.81-100+ 千小時巔峰）
+  const lv = Math.max(1, Math.floor(level || 1));
+  if (lv <= 20) {
+    return Math.round(520 * Math.pow(1.23, lv - 1));
+  }
+  const base20 = 520 * Math.pow(1.23, 19);
+  if (lv <= 50) {
+    return Math.round(base20 * Math.pow(1.108, lv - 20));
+  }
+  const base50 = base20 * Math.pow(1.108, 30);
+  if (lv <= 80) {
+    return Math.round(base50 * Math.pow(1.076, lv - 50));
+  }
+  const base80 = base50 * Math.pow(1.076, 30);
+  return Math.round(base80 * Math.pow(1.105, lv - 80));
 }
 
 export function getUpgradeCost(type, lvl) {
@@ -197,7 +211,7 @@ export function recalcPlayerStats(state) {
 
   flat.goldFind += (tree.greed_gold || 0) * 10;
   flat.magicFind += (tree.greed_mf || 0) * 8 + (tree.r_cdr || 0) * 4 + (tree.m_p_sage || 0) * 6 + (tree.n_cdr || 0) * 4;
-  let expMult = 1 + (tree.greed_exp || 0) * 0.12;
+  let expMult = 1 + (tree.greed_exp || 0) * 0.03;
 
   const sanctum = state.sanctumLevels || {};
   const sAtk = sanctum.atk_aura || 0;

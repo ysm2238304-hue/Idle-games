@@ -1,3 +1,4 @@
+import { UniversalTooltip } from './UniversalTooltip.js?v=232';
 import { TOWN_SPLASHES } from '../data/towns/splashes.js?v=99';
 import { CLASSES } from '../data/classes.js?v=99';
 import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=99';
@@ -13,7 +14,7 @@ import { getEnhanceRate, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEV
 import { MONSTER_TEMPLATES, STAGE_ZONES, ZONE_POOLS, getZoneName, getStageLabel, getSubStage, getChapterIdx } from '../data/monsters.js?v=99';
 import { CLASS_BUILD_INFO, SKILL_TREE_NODES, getTreeSpentPoints, isNodeBlockedByMutex, isNodeUnlocked } from '../data/skillTree.js?v=99';
 import { calcItemPower, getSalvageReward } from '../logic/lootGen.js?v=99';
-import { formatNum, getExpToNext, getUpgradeCost, calcRebirthCrystals } from '../logic/statCalc.js?v=99';
+import { formatNum, getExpToNext, getUpgradeCost, calcRebirthCrystals } from '../logic/statCalc.js?v=232';
 
 const STAT_LABELS = {
   atkFlat: '攻擊力',
@@ -458,74 +459,28 @@ export class DashboardUI {
   }
 
   showCompareTooltip(e, item, isEquipped, state) {
-    const tt = document.getElementById('diablo-tooltip');
-    if (!tt || !item) return;
-    const r = RARITIES[item.rarity];
-    const eq = state.equipment[item.slot];
-    const pwr = calcItemPower(item);
-    const eqPwr = calcItemPower(eq);
-
-    const reqKey = item.classReq || 'all';
-    const reqInfo = CLASS_REQ_LABELS[reqKey] || CLASS_REQ_LABELS.all;
-    const canWear = reqKey === 'all' || reqKey === (state.classId || 'warrior');
-    const affixesHtml = (item.affixes || []).map((a) =>
-      `<div class="tt-affix">+ ${a.label} ${a.value}${a.unit}</div>`
-    ).join('');
-
-    let diffHtml = '';
-    if (!isEquipped) {
-      const myMap = this.collectItemStatMap(item);
-      const eqMap = this.collectItemStatMap(eq);
-      const keys = new Set([...Object.keys(myMap), ...Object.keys(eqMap)]);
-      const lines = [];
-      const pDiff = pwr - eqPwr;
-      if (pDiff !== 0) {
-        lines.push(`<div class="${pDiff > 0 ? 'tt-up' : 'tt-down'}">${pDiff > 0 ? '▲' : '▼'} 戰力 ${pDiff > 0 ? '+' : ''}${pDiff}</div>`);
-      }
-      keys.forEach((k) => {
-        const d = Math.round(((myMap[k] || 0) - (eqMap[k] || 0)) * 10) / 10;
-        if (d !== 0) {
-          lines.push(`<div class="${d > 0 ? 'tt-up' : 'tt-down'}">${d > 0 ? '▲' : '▼'} ${STAT_LABELS[k] || k} ${d > 0 ? '+' : ''}${d}</div>`);
-        }
-      });
-      diffHtml = `<div class="tt-diff">與目前裝備對比：${lines.join('') || '<div style="color:#94a3b8">屬性相同</div>'}</div>`;
-    }
-
-    tt.innerHTML = `
-      <div class="tt-title" style="color:${r.color}">[${r.label}] ${item.name}${item.upgradeLevel ? ` +${item.upgradeLevel}` : ''}</div>
-      <div class="tt-meta">${item.subType || EQUIP_SLOTS[item.slot].label} • ${item.level} 級 • 戰力 ${pwr} <span style="color:${canWear ? reqInfo.color : '#ef4444'};font-weight:700;">[${reqInfo.label}]</span></div>
-      <div class="tt-affix" style="color:#fde68a;">基礎：${STAT_LABELS[item.baseStat.key] || item.baseStat.key} +${item.baseStat.value}</div>
-      ${affixesHtml}
-      ${item.legendaryEffect ? `<div style="color:#fb923c;margin-top:4px;font-size:11px;">★ ${item.legendaryEffect.name}：${item.legendaryEffect.desc}</div>` : ''}${(item.rarity === 'set' && item.setId && SET_DEFINITIONS[item.setId]) ? `<div style="color:#4ade80;margin-top:4px;font-size:11px;">❖ 套裝【${SET_DEFINITIONS[item.setId].name}】專屬詞條 (2/4件啟動)</div>` : ''}
-      ${diffHtml}
-    `;
-    tt.style.borderColor = r.border;
-    tt.classList.remove('hidden');
-    this.moveCompareTooltip(e);
+    if (!item) return;
+    UniversalTooltip.showItem(e, item, isEquipped, state);
   }
 
   moveCompareTooltip(e) {
-    const tt = document.getElementById('diablo-tooltip');
-    if (!tt || tt.classList.contains('hidden')) return;
-    const x = Math.min(window.innerWidth - 280, e.clientX + 16);
-    const y = Math.min(window.innerHeight - tt.offsetHeight - 16, Math.max(12, e.clientY - 20));
-    tt.style.left = `${x}px`;
-    tt.style.top = `${y}px`;
+    UniversalTooltip.move(e);
   }
 
   hideCompareTooltip() {
+    UniversalTooltip.hide();
     document.getElementById('diablo-tooltip')?.classList.add('hidden');
   }
 
   bindHotbarTooltips() {
     document.querySelectorAll('[data-tip]').forEach((el) => {
       el.addEventListener('mouseenter', (e) => {
-        const tt = document.getElementById('diablo-tooltip');
-        if (!tt) return;
-        tt.innerHTML = `<div style="color:#fde68a;font-weight:700;">${el.dataset.tip}</div>`;
-        tt.style.borderColor = '#c89b3c';
-        tt.classList.remove('hidden');
-        this.moveCompareTooltip(e);
+        UniversalTooltip.showRich(e, {
+          title: el.dataset.tip,
+          emoji: '✦',
+          color: '#fde68a',
+          lines: [el.dataset.tipDesc || '點擊開啟或切換對應功能介面。'],
+        });
       });
       el.addEventListener('mousemove', (e) => this.moveCompareTooltip(e));
       el.addEventListener('mouseleave', () => this.hideCompareTooltip());
@@ -654,7 +609,7 @@ export class DashboardUI {
           const eqRec = (state.pets || []).find((p) => p.petId === state.equippedPetId);
           const box = document.createElement('div');
           box.className = 'doll-slot';
-          box.title = eqPet ? `${eqPet.name}：${eqPet.desc}（點擊管理寵物）` : '尚未出戰寵物（點擊開啟寵物欄）';
+          if (eqPet) { box.onmouseenter = (e) => UniversalTooltip.showPet(e, eqPet, eqRec, state); box.onmousemove = (e) => UniversalTooltip.move(e); box.onmouseleave = () => UniversalTooltip.hide(); }
           if (eqPet) {
             const r = getPetRarityMeta(eqPet.rarity);
             const sch = PET_SCHOOLS[eqPet.school];
@@ -1024,6 +979,23 @@ export class DashboardUI {
     const codex = getPetCodexInfo(pets, state.petCodex);
     const pickR = getPetPickupRadius(eqPet, eqUpg);
     const activeSub = this._petPanelTab || 'owned';
+    if (!box._v232PetTipBound) {
+      box._v232PetTipBound = true;
+      box.addEventListener('mouseover', (e) => {
+        const card = e.target?.closest?.('[data-pet-id]');
+        if (!card) return;
+        const pid = card.dataset.petId;
+        const def = getPetDef(pid);
+        if (!def) return;
+        const stNow = window.__IDLE_ARPG_BRIDGE__?.getState?.() || state;
+        const rec = (stNow.pets || []).find((p) => p.petId === pid);
+        UniversalTooltip.showPet(e, def, rec, stNow);
+      });
+      box.addEventListener('mouseout', (e) => {
+        const card = e.target?.closest?.('[data-pet-id]');
+        if (card && (!e.relatedTarget || !card.contains(e.relatedTarget))) UniversalTooltip.hide();
+      });
+    }
 
     box.innerHTML = `
       <div style="padding:10px;border-radius:8px;background:rgba(18,14,18,0.92);border:1px solid ${eqRar ? eqRar.border : '#64748b'};margin-bottom:8px;">

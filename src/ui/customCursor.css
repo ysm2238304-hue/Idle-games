@@ -1,0 +1,354 @@
+/* =====================================================================
+   v232: 遊戲專用暗黑奇幻游標系統 + 全域懸停雙欄比較樣式
+   ===================================================================== */
+
+/* 1. 全域預設暗黑鎏金鐵手套游標 */
+html,
+body,
+#game-container,
+#game-container canvas {
+  cursor: url('../../assets/ui/cursor_default.png?v=232') 2 2, auto !important;
+}
+
+/* 2. 互動發光游標：按鈕、連結、裝備格、技能格、寵物卡、倉庫格、任務、分頁 */
+a,
+button,
+[role="button"],
+input[type="checkbox"],
+input[type="radio"],
+select,
+label,
+.inv-cell,
+.doll-slot,
+.skill-btn,
+.dock-btn,
+.dock-skill-slot,
+.v232-vslot,
+.v232-dep-slot,
+.v223-tab-btn,
+.starmap-node,
+.npc-card,
+.pet-card,
+.skill-node,
+.res-pill-sm,
+.diablo-exp-bar,
+.gothic-exp-bar,
+[data-ut-type],
+[data-tip],
+.clickable {
+  cursor: url('../../assets/ui/cursor_pointer.png?v=232') 2 2, pointer !important;
+}
+
+/* 3. 戰鬥血刃游標（滑鼠移至戰場怪物或鎖定目標時） */
+body.cursor-attack,
+#game-container.cursor-attack,
+#game-container.cursor-attack canvas {
+  cursor: url('../../assets/ui/cursor_attack.png?v=232') 2 2, crosshair !important;
+}
+
+/* 4. 拖曳鐵手套游標（HUD 版面自由拖曳模式） */
+body.hud-edit-mode,
+body.hud-edit-mode *,
+.is-dragging,
+.hud-draggable-active {
+  cursor: url('../../assets/ui/cursor_grab.png?v=232') 16 16, grab !important;
+}
+
+/* 輸入框維持文字游標方便打字 */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="search"],
+textarea {
+  cursor: text !important;
+}
+
+/* =====================================================================
+   全域哥德風懸停提示框 + 雙欄裝備並排比較 (#universal-tooltip)
+   ===================================================================== */
+#universal-tooltip {
+  position: fixed;
+  z-index: 99999;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: min(620px, calc(100vw - 24px));
+  transition: opacity 0.08s ease;
+}
+#universal-tooltip.hidden {
+  display: none !important;
+}
+
+.ut-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.ut-pane {
+  width: 286px;
+  max-width: calc(100vw - 32px);
+  padding: 13px 15px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(20, 15, 13, 0.97) 0%, rgba(11, 9, 10, 0.98) 100%);
+  border: 2px solid #c89b3c;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.92), inset 0 0 18px rgba(200, 155, 60, 0.14);
+  color: #e2e8f0;
+  font-size: 12px;
+  line-height: 1.48;
+  position: relative;
+}
+.ut-pane.is-equipped-pane {
+  opacity: 0.94;
+  border-color: rgba(148, 163, 184, 0.65);
+  background: linear-gradient(180deg, rgba(15, 18, 24, 0.96) 0%, rgba(9, 11, 15, 0.98) 100%);
+}
+
+.ut-badge-tag {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+  background: rgba(200, 155, 60, 0.18);
+  border: 1px solid rgba(200, 155, 60, 0.5);
+  color: #fde68a;
+}
+.ut-pane.is-equipped-pane .ut-badge-tag {
+  background: rgba(100, 116, 139, 0.25);
+  border-color: rgba(148, 163, 184, 0.45);
+  color: #cbd5e1;
+}
+
+.ut-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 8px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid rgba(200, 155, 60, 0.28);
+}
+.ut-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 7px;
+  object-fit: contain;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1.5px solid rgba(200, 155, 60, 0.55);
+  padding: 3px;
+  flex-shrink: 0;
+}
+.ut-icon-emoji {
+  width: 42px;
+  height: 42px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  background: rgba(0, 0, 0, 0.55);
+  border: 1.5px solid rgba(200, 155, 60, 0.55);
+  flex-shrink: 0;
+}
+.ut-title {
+  font-size: 14px;
+  font-weight: 900;
+  line-height: 1.25;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+}
+.ut-sub {
+  font-size: 11px;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.ut-base-stat {
+  color: #fde68a;
+  font-weight: 800;
+  font-size: 12.5px;
+  margin-bottom: 5px;
+}
+.ut-affix {
+  color: #93c5fd;
+  font-size: 11.8px;
+  margin: 2px 0;
+}
+.ut-legendary {
+  margin-top: 7px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: rgba(251, 146, 60, 0.12);
+  border: 1px solid rgba(251, 146, 60, 0.35);
+  color: #fdba74;
+  font-size: 11.2px;
+}
+.ut-set {
+  margin-top: 7px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: rgba(34, 197, 94, 0.11);
+  border: 1px solid rgba(34, 197, 94, 0.35);
+  color: #86efac;
+  font-size: 11.2px;
+}
+.ut-desc {
+  color: #cbd5e1;
+  font-size: 11.8px;
+  margin: 4px 0;
+}
+.ut-footer {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed rgba(148, 163, 184, 0.25);
+  color: #94a3b8;
+  font-size: 10.8px;
+}
+
+/* 底部替換屬性變化彙整條 */
+.ut-diff-bar {
+  padding: 9px 14px;
+  border-radius: 9px;
+  background: linear-gradient(180deg, rgba(16, 13, 12, 0.97), rgba(10, 8, 9, 0.98));
+  border: 1.5px solid rgba(200, 155, 60, 0.65);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.88);
+  font-size: 11.8px;
+}
+.ut-diff-title {
+  font-size: 11px;
+  font-weight: 800;
+  color: #fde68a;
+  margin-bottom: 5px;
+  letter-spacing: 0.4px;
+}
+.ut-diff-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px 14px;
+}
+.ut-up {
+  color: #4ade80;
+  font-weight: 800;
+}
+.ut-down {
+  color: #f87171;
+  font-weight: 800;
+}
+.ut-eq {
+  color: #94a3b8;
+}
+
+/* =====================================================================
+   v232: 倉庫 24 格暗黑小圖示網格 + 底部背包小圖示存入列
+   ===================================================================== */
+.v232-vault-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+  margin: 6px 0 8px;
+}
+.v232-vslot {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  min-height: 68px;
+  border-radius: 8px;
+  background: radial-gradient(circle at 50% 42%, rgba(28, 22, 18, 0.92), rgba(10, 8, 9, 0.96));
+  border: 2px solid rgba(120, 96, 62, 0.42);
+  box-shadow: inset 0 0 12px rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px;
+  overflow: hidden;
+  transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease;
+}
+.v232-vslot.is-empty {
+  border-style: dashed;
+  border-color: rgba(148, 163, 184, 0.22);
+  background: rgba(9, 10, 14, 0.55);
+  color: rgba(148, 163, 184, 0.35);
+  font-size: 11px;
+  font-weight: 700;
+}
+.v232-vslot.is-filled:hover {
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 0 18px rgba(250, 204, 21, 0.45), inset 0 0 12px rgba(255, 255, 255, 0.12);
+  z-index: 3;
+}
+.v232-vslot-img {
+  width: 78%;
+  height: 78%;
+  object-fit: contain;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.9));
+  pointer-events: none;
+}
+.v232-vslot-upg {
+  position: absolute;
+  top: 3px;
+  left: 4px;
+  font-size: 10px;
+  font-weight: 900;
+  color: #fde047;
+  background: rgba(0, 0, 0, 0.72);
+  padding: 0 4px;
+  border-radius: 3px;
+  line-height: 1.3;
+  pointer-events: none;
+}
+.v232-vslot-lvl {
+  position: absolute;
+  bottom: 3px;
+  right: 4px;
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #e2e8f0;
+  background: rgba(0, 0, 0, 0.72);
+  padding: 0 4px;
+  border-radius: 3px;
+  line-height: 1.3;
+  pointer-events: none;
+}
+.v232-vslot-delta {
+  position: absolute;
+  top: 3px;
+  right: 4px;
+  font-size: 11px;
+  font-weight: 900;
+  text-shadow: 0 1px 3px #000;
+  pointer-events: none;
+}
+.v232-vslot-delta.up { color: #4ade80; }
+.v232-vslot-delta.down { color: #f87171; }
+
+.v232-dep-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.v232-dep-slot {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 7px;
+  background: radial-gradient(circle at 50% 42%, rgba(28, 22, 18, 0.92), rgba(10, 8, 9, 0.96));
+  border: 2px solid rgba(148, 163, 184, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+.v232-dep-slot:hover {
+  transform: translateY(-2px) scale(1.06);
+  box-shadow: 0 0 14px rgba(250, 204, 21, 0.45);
+  z-index: 3;
+}
+.v232-dep-slot img {
+  width: 82%;
+  height: 82%;
+  object-fit: contain;
+  pointer-events: none;
+}

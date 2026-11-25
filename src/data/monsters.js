@@ -345,7 +345,7 @@ export function spawnSingleMonster(stage, forceBoss = false) {
 function buildMonster(tpl, stage, scaleFactor, idx, forceAggressive = null) {
   const diffMult = (1 + (stage - 1) * 0.28) * Math.pow(1.032, stage - 1);
   const atkScale = (1 + (stage - 1) * 0.20) * Math.pow(1.022, stage - 1);
-  const expScale = (1 + (stage - 1) * 0.30) * Math.pow(1.028, stage - 1);
+  const expScale = (1 + (stage - 1) * 0.18) * Math.pow(1.018, stage - 1);
   const goldScale = (1 + (stage - 1) * 0.26) * Math.pow(1.024, stage - 1);
 
   const isAggressive = forceAggressive !== null ? forceAggressive : (tpl.isBoss ? true : Math.random() < 0.55);
@@ -354,7 +354,7 @@ function buildMonster(tpl, stage, scaleFactor, idx, forceAggressive = null) {
   const baseHp = 48 * diffMult;
   const baseAtk = 6.5 * atkScale;
   const baseGold = 8 * goldScale;
-  const baseExp = 14 * expScale * aggroExpBonus;
+  const baseExp = 3.2 * expScale * aggroExpBonus;
 
   return {
     uid: `m_${Date.now()}_${idx}_${Math.random().toString(36).slice(2, 6)}`,
@@ -432,4 +432,23 @@ export function createStageEncounters(stage) {
   }
 
   return spawns;
+}
+
+
+// v232: 關卡建議等級與等級差經驗衰減／越級加成（防止低等圖無限刷等，鼓勵挑戰高難度）
+export function getStageRecommendedLevel(stage) {
+  return Math.max(1, Math.round((stage || 1) * 0.95));
+}
+
+export function calcLevelGapExpMult(playerLevel, stage) {
+  const lv = Math.max(1, Number(playerLevel) || 1);
+  const rec = getStageRecommendedLevel(stage);
+  const diff = lv - rec;
+  if (diff > 5) {
+    return Math.max(0.10, Number((1 - (diff - 5) * 0.09).toFixed(3)));
+  }
+  if (diff <= -3) {
+    return Math.min(1.40, Number((1 + Math.abs(diff + 2) * 0.05).toFixed(3)));
+  }
+  return 1.0;
 }

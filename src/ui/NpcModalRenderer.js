@@ -9,6 +9,9 @@
  */
 
 import { NpcStageEngine } from './NpcStageEngine.js?v=204';
+import { RARITIES } from '../data/items.js?v=99';
+import { calcItemPower } from '../logic/lootGen.js?v=99';
+import { UniversalTooltip, resolveItemIconUniversal } from './UniversalTooltip.js?v=232';
 
 let activeStageEngine = null;
 let activeDummyTimer = null;
@@ -16,6 +19,7 @@ let activeBountyTab = 'hunt';
 let activeVaultTab = 0;
 
 export function destroyActiveNpcStage() {
+  UniversalTooltip.hide();
   if (activeStageEngine) {
     activeStageEngine.destroy();
     activeStageEngine = null;
@@ -686,19 +690,23 @@ function buildWorkspaceHtml(ui, action, data, ctx, deps, st, chIdx, chapter) {
           return `<button type="button" class="v223-tab-btn ${activeVaultTab === idx ? 'is-active' : ''}" data-vtab="${idx}">${tn} <small style="opacity:.8;">(${cnt}/24)</small></button>`;
         }).join('')}
       </div>
-      <div class="v223-vault-grid">
+      <div class="v232-vault-grid">
         ${Array.from({ length: 24 }, (_, slotIdx) => {
           const it = curItems[slotIdx];
           if (!it) {
-            return `<div class="v223-vslot is-empty"><span>#${slotIdx + 1}</span></div>`;
+            return `<div class="v232-vslot is-empty"><span>#${slotIdx + 1}</span></div>`;
           }
-          const col = rarColor[it.rarity] || '#cbd5e1';
-          const upg = it.upgradeLevel ? `+${it.upgradeLevel}` : '';
+          const rMeta = RARITIES[it.rarity] || { border: rarColor[it.rarity] || '#cbd5e1', bg: 'rgba(18,14,14,0.9)' };
+          const upg = it.upgradeLevel ? `<span class="v232-vslot-upg">+${it.upgradeLevel}</span>` : '';
+          const eqSlot = st.equipment?.[it.slot];
+          const pDiff = calcItemPower(it) - calcItemPower(eqSlot);
+          const deltaBadge = pDiff > 0 ? '<span class="v232-vslot-delta up">▲</span>' : (pDiff < 0 ? '<span class="v232-vslot-delta down">▼</span>' : '');
           return `
-            <button type="button" class="v223-vslot is-filled" data-vault-out-tab="${slotIdx}" style="border-color:${col};" title="點擊取出【${it.name}】至背包（戰力 ${it.powerScore || 0}）">
-              <span class="v223-vslot-name" style="color:${col};">${it.name}</span>
-              <span class="v223-vslot-sub">${upg ? `${upg} ` : ''}戰力 ${it.powerScore || 0}</span>
-              <span class="v223-vslot-act">取出</span>
+            <button type="button" class="v232-vslot is-filled" data-vault-out-tab="${slotIdx}" style="border-color:${rMeta.border};background:${rMeta.bg};">
+              <img class="v232-vslot-img" src="${resolveItemIconUniversal(it)}" alt="${it.name}" />
+              ${upg}
+              ${deltaBadge}
+              <span class="v232-vslot-lvl">Lv.${it.level || 1}</span>
             </button>
           `;
         }).join('')}
@@ -715,11 +723,12 @@ function buildWorkspaceHtml(ui, action, data, ctx, deps, st, chIdx, chapter) {
       </div>
       <div class="v223-bag-deposit-box">
         <div style="font-size:12px;font-weight:800;color:#fde68a;margin-bottom:6px;">🎒 目前背包裝備（點擊一鍵存入「${VAULT_TAB_NAMES[activeVaultTab]}」）：</div>
-        <div class="npc-chip-list">
+        <div class="v232-dep-grid">
           ${invItems.length
             ? invItems.map((it) => {
-                const col = rarColor[it.rarity] || '#e2e8f0';
-                return `<button type="button" data-vault-in-tab="${it.uid}" class="npc-btn-secondary" style="border-color:${col};color:${col};">存入：${it.name}${it.upgradeLevel ? ` +${it.upgradeLevel}` : ''}</button>`;
+                const rMeta = RARITIES[it.rarity] || { border: rarColor[it.rarity] || '#e2e8f0', bg: 'rgba(18,14,14,0.9)' };
+                const upg = it.upgradeLevel ? `<span class="v232-vslot-upg">+${it.upgradeLevel}</span>` : '';
+                return `<button type="button" data-vault-in-tab="${it.uid}" class="v232-dep-slot" style="border-color:${rMeta.border};background:${rMeta.bg};"><img src="${resolveItemIconUniversal(it)}" alt="${it.name}" />${upg}</button>`;
               }).join('')
             : '<span style="font-size:12px;color:#94a3b8;">目前背包內沒有可存入的裝備。</span>'}
         </div>
@@ -1009,17 +1018,35 @@ function bindWorkspaceEvents(ui, action, data, ctx, deps, st, chIdx, bodyEl, mod
     bodyEl.querySelectorAll('button[data-vtab]').forEach((b) => {
       b.addEventListener('click', () => { activeVaultTab = Number(b.dataset.vtab) || 0; reopen(); });
     });
+    const _vTabs = Array.isArray(st.vaultTabs) ? st.vaultTabs : [Array.isArray(st.vaultItems) ? st.vaultItems : [], [], [], []];
+    const _vCur = _vTabs[activeVaultTab] || [];
     bodyEl.querySelectorAll('button[data-vault-out-tab]').forEach((b) => {
+      const idx = Number(b.dataset.vaultOutTab);
+      const it = _vCur[idx];
+      if (it) {
+        b.addEventListener('mouseenter', (ev) => UniversalTooltip.showItem(ev, it, false, st));
+        b.addEventListener('mousemove', (ev) => UniversalTooltip.move(ev));
+        b.addEventListener('mouseleave', () => UniversalTooltip.hide());
+      }
       b.addEventListener('click', () => {
-        if (window.__IDLE_ARPG_BRIDGE__?.vaultWithdrawFromTab?.(activeVaultTab, Number(b.dataset.vaultOutTab))) {
+        UniversalTooltip.hide();
+        if (window.__IDLE_ARPG_BRIDGE__?.vaultWithdrawFromTab?.(activeVaultTab, idx)) {
           say('已從金庫取出裝備至背包。', 'success');
           setTimeout(reopen, 200);
         }
       });
     });
     bodyEl.querySelectorAll('button[data-vault-in-tab]').forEach((b) => {
+      const uid = b.dataset.vaultInTab;
+      const it = (st.inventory || []).find((x) => x && x.uid === uid);
+      if (it) {
+        b.addEventListener('mouseenter', (ev) => UniversalTooltip.showItem(ev, it, false, st));
+        b.addEventListener('mousemove', (ev) => UniversalTooltip.move(ev));
+        b.addEventListener('mouseleave', () => UniversalTooltip.hide());
+      }
       b.addEventListener('click', () => {
-        if (window.__IDLE_ARPG_BRIDGE__?.vaultDepositToTab?.(activeVaultTab, b.dataset.vaultInTab)) {
+        UniversalTooltip.hide();
+        if (window.__IDLE_ARPG_BRIDGE__?.vaultDepositToTab?.(activeVaultTab, uid)) {
           say('已鎖入分頁金庫！', 'success');
           setTimeout(reopen, 200);
         }

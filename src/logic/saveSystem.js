@@ -1,4 +1,4 @@
-import { createWaveSquad } from '../data/monsters.js?v=99';
+import {createWaveSquad, calcLevelGapExpMult } from '../data/monsters.js?v=232';
 import { generateLoot } from './lootGen.js?v=99';
 
 const SAVE_KEY = 'desk_diablo_idle_save_v1';
@@ -152,7 +152,8 @@ export function calcOfflineProgress(state, computedStats) {
   if (estKills <= 0) return null;
 
   const goldEarned = Math.round(estKills * sampleMob.gold * (1 + computedStats.goldFind / 100));
-  const expEarned = Math.round(estKills * sampleMob.exp * (computedStats.expMult || 1));
+  const gapMult = calcLevelGapExpMult(state.level || 1, state.stage || 1);
+  const expEarned = Math.round(estKills * sampleMob.exp * (computedStats.expMult || 1) * 0.45 * gapMult);
   const itemsFound = [];
   const rollCount = Math.min(6, Math.floor(estKills / 6));
   for (let i = 0; i < rollCount; i++) {
