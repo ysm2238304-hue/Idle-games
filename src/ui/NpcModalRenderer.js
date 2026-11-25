@@ -12,6 +12,8 @@ import { NpcStageEngine } from './NpcStageEngine.js?v=204';
 
 let activeStageEngine = null;
 let activeDummyTimer = null;
+let activeBountyTab = 'hunt';
+let activeVaultTab = 0;
 
 export function destroyActiveNpcStage() {
   if (activeStageEngine) {
@@ -28,13 +30,13 @@ function ensureNpcModalCss() {
   if (typeof document === 'undefined') return;
   const old = document.getElementById('npc-modal-v2-css');
   if (old) {
-    if (!old.href.includes('v=204')) old.href = './src/ui/npcModal.css?v=204';
+    if (!old.href.includes('v=204')) old.href = './src/ui/npcModal.css?v=223';
     return;
   }
   const link = document.createElement('link');
   link.id = 'npc-modal-v2-css';
   link.rel = 'stylesheet';
-  link.href = './src/ui/npcModal.css?v=204';
+  link.href = './src/ui/npcModal.css?v=223';
   document.head.appendChild(link);
 }
 
@@ -162,7 +164,8 @@ export function renderTownFacilityModal(ui, action, data, ctx, deps = {}) {
   const closeBtn = document.getElementById('btn-close-town-modal');
   if (!modal || !titleEl || !bodyEl) return;
 
-  const st = ui.getState();
+  const _rawSt = ui.getState?.() || {};
+  const st = Object.keys(_rawSt).length ? _rawSt : (window.__IDLE_ARPG_BRIDGE__?.getState?.() || {});
   const getChapterIdx = deps.getChapterIdx || ((s) => Math.min(9, Math.floor((Math.max(1, s) - 1) / 10)));
   const chIdx = data?.chapterIdx ?? getChapterIdx(st.stage || 1);
   const chapter = Math.max(1, Math.min(10, Number(chIdx) + 1));
@@ -468,29 +471,76 @@ function buildWorkspaceHtml(ui, action, data, ctx, deps, st, chIdx, chapter) {
     const kills = bp.kills ?? st.kills ?? 0;
     const bossKills = bp.bossKills ?? 0;
     const claimed = bp.claimed || {};
-    const quests = BOUNTIES_BY_CH[chapter] || BOUNTIES_BY_CH[1];
+    const lv = st.level || 1;
+    const maxStage = st.maxStageReached || st.stage || 1;
+    const todayKey = new Date().toISOString().slice(0, 10);
+    const hasTownBuff = Object.entries(st.potionBuffs || {}).some(([k, v]) => k.endsWith('Until') && v > Date.now());
+    const chBase = (chapter - 1) * 10 + 1;
+    const chMult = Math.pow(1.45, chapter - 1);
+
+    const QUEST_TABS = [
+      { id: 'hunt',   label: '⚔️ 討伐懸賞', sub: '獎勵：金幣・粉塵・稀有裝備箱' },
+      { id: 'boss',   label: '💀 首領通緝', sub: '獎勵：技能點・保護石・傳說裝備箱' },
+      { id: 'growth', label: '🏆 成長試煉', sub: '獎勵：魂晶・寵物精華' },
+      { id: 'daily',  label: '☀️ 每日任務', sub: '獎勵：藥水禮盒・寵物精華（每日重置）' },
+    ];
+
+    const ALL_QUESTS = {
+      hunt: [
+        { id: `ch${chapter}_q1`, catLabel: '討伐懸賞', tag: '清怪懸賞', cls: '', title: `第 ${chapter} 章前線清剿`, desc: `於深淵戰場累計擊殺魔物`, cur: kills, req: Math.round(30 * Math.pow(2.1, chapter - 1)), rewardTags: [`💰 ${fmtNum(Math.round(600 * chMult))} 金`, `✨ ${Math.round(25 * chMult)} 粉塵`, '📦 稀有裝備箱'], rewards: { gold: Math.round(600 * chMult), dust: Math.round(25 * chMult), rareBox: true, stageHint: chBase } },
+        { id: `ch${chapter}_q3`, catLabel: '討伐懸賞', tag: '百戰試煉', cls: 'is-trial', title: `第 ${chapter} 章哨兵百戰`, desc: `持續掃蕩魔物群達成里程碑`, cur: kills, req: Math.round(120 * Math.pow(1.9, chapter - 1)), rewardTags: [`💰 ${fmtNum(Math.round(2400 * chMult))} 金`, `✨ ${Math.round(80 * chMult)} 粉塵`, '📦 稀有裝備箱'], rewards: { gold: Math.round(2400 * chMult), dust: Math.round(80 * chMult), rareBox: true, stageHint: chBase + 4 } },
+      ],
+      boss: [
+        { id: `ch${chapter}_q2`, catLabel: '首領通緝', tag: '首領通緝', cls: 'is-elite', title: `討伐第 ${chapter} 章首領`, desc: `擊破精英小王或章節首領`, cur: bossKills, req: Math.max(2, chapter * 2), rewardTags: ['📘 +1 技能點', '🛡️ 保護石 ×1'], rewards: { sp: 1, protectStones: 1 } },
+        { id: `ch${chapter}_boss_pro`, catLabel: '首領通緝', tag: '弒王懸賞', cls: 'is-elite', title: `第 ${chapter} 章極限弒王`, desc: `累計擊破更多區域首領`, cur: bossKills, req: Math.max(5, chapter * 5), rewardTags: ['🛡️ 保護石 ×2', '🌟 傳說裝備箱'], rewards: { protectStones: 2, legendaryBox: true, stageHint: chBase + 9 } },
+      ],
+      growth: [
+        { id: 'grow_lv10', catLabel: '成長試煉', tag: '等級里程碑', cls: '', title: '初階覺醒：角色達 Lv.15', desc: '鍛鍊職業等級突破 15 級', cur: lv, req: 15, rewardTags: ['🔮 魂晶 ×2', '🐾 寵物精華 ×30'], rewards: { crystals: 2, petEssence: 30 } },
+        { id: 'grow_lv30', catLabel: '成長試煉', tag: '高階覺醒', cls: 'is-trial', title: '深淵宗師：角色達 Lv.30', desc: '鍛鍊職業等級突破 30 級', cur: lv, req: 30, rewardTags: ['🔮 魂晶 ×5', '🐾 寵物精華 ×60'], rewards: { crystals: 5, petEssence: 60 } },
+        { id: 'grow_st20', catLabel: '成長試煉', tag: '征途推進', cls: '', title: '遠征突破：解鎖第 2-10 關', desc: '推進主線關卡至第 20 關', cur: maxStage, req: 20, rewardTags: ['🔮 魂晶 ×4', '🐾 寵物精華 ×50'], rewards: { crystals: 4, petEssence: 50 } },
+      ],
+      daily: [
+        { id: `daily_kill_${todayKey}`, catLabel: '每日任務', tag: '今日清剿', cls: '', title: '每日例行巡邏（擊殺 50 隻）', desc: '每日登入並達成基礎擊殺門檻', cur: Math.min(kills, 50), req: 50, rewardTags: ['🧪 經驗+尋寶藥水禮盒', '🐾 寵物精華 ×20'], rewards: { potionBundle: true, petEssence: 20 } },
+        { id: `daily_boss_${todayKey}`, catLabel: '每日任務', tag: '今日討伐', cls: 'is-elite', title: '每日首領巡查（擊破 1 隻首領）', desc: '每日至少擊破 1 隻首領', cur: Math.min(bossKills, 1), req: 1, rewardTags: ['🧪 經驗+尋寶藥水禮盒', '🐾 寵物精華 ×35'], rewards: { potionBundle: true, petEssence: 35 } },
+        { id: `daily_bless_${todayKey}`, catLabel: '每日任務', tag: '主城祈福', cls: 'is-trial', title: '點燃主城祝福地標', desc: '於任一主城點燃烽火台／噴泉獲得祝福', cur: hasTownBuff ? 1 : 0, req: 1, rewardTags: ['🐾 寵物精華 ×25', '✨ 粉塵 ×40'], rewards: { petEssence: 25, dust: 40 } },
+      ],
+    };
+
+    window.__v223ActiveQuestMap = {};
+    Object.values(ALL_QUESTS).flat().forEach((q) => { window.__v223ActiveQuestMap[q.id] = q; });
+
+    const curList = ALL_QUESTS[activeBountyTab] || ALL_QUESTS.hunt;
+    const curTabMeta = QUEST_TABS.find((t) => t.id === activeBountyTab) || QUEST_TABS[0];
+
     return `
       <div class="npc-sec-head">
-        <div class="npc-sec-title">第 ${chapter} 章實木通緝告示板</div>
-        <span style="font-size:12px;color:#cbd5e1;">累計擊殺：<b>${fmtNum(kills)}</b> ｜ 首領：<b>${fmtNum(bossKills)}</b></span>
+        <div class="npc-sec-title">第 ${chapter} 章實木懸賞告示板</div>
+        <span style="font-size:12px;color:#cbd5e1;">累計擊殺：<b>${fmtNum(kills)}</b> ｜ 首領：<b>${fmtNum(bossKills)}</b> ｜ 等級：<b>Lv.${lv}</b></span>
       </div>
-      <div class="bounty-board">
-        ${quests.map((q) => {
-          const cur = q.type === 'boss' ? bossKills : kills;
+      <div class="v223-tab-row">
+        ${QUEST_TABS.map((t) => {
+          const readyCnt = (ALL_QUESTS[t.id] || []).filter((q) => q.cur >= q.req && !claimed[q.id]).length;
+          return `<button type="button" class="v223-tab-btn ${activeBountyTab === t.id ? 'is-active' : ''}" data-qtab="${t.id}">${t.label}${readyCnt ? ` <span class="v223-tab-dot">${readyCnt}</span>` : ''}</button>`;
+        }).join('')}
+      </div>
+      <div class="v223-tab-hint">🎁 本類專屬獎勵方向：<b>${curTabMeta.sub}</b></div>
+      <div class="bounty-board v223-bounty-grid">
+        ${curList.map((q) => {
           const isClaimed = !!claimed[q.id];
-          const pct = Math.min(100, Math.floor((cur / Math.max(1, q.req)) * 100));
-          const ready = cur >= q.req && !isClaimed;
+          const pct = Math.min(100, Math.floor((q.cur / Math.max(1, q.req)) * 100));
+          const ready = q.cur >= q.req && !isClaimed;
           return `
-            <div class="wanted-poster ${q.cls}">
+            <div class="wanted-poster ${q.cls} ${isClaimed ? 'is-claimed-poster' : ''}">
               <div>
                 <div class="poster-pin"></div>
                 <div style="font-size:10.5px;font-weight:900;color:var(--npc-accent);text-align:center;margin-bottom:4px;">【${q.tag}】</div>
                 <div class="npc-card-title" style="text-align:center;">${q.title}</div>
-                <div class="npc-card-desc" style="text-align:center;margin:6px 0;">賞金：${q.reward}</div>
-                <div class="npc-progress-track"><div class="npc-progress-fill" style="width:${pct}%"></div></div>
-                <div style="font-size:11px;color:#94a3b8;text-align:center;margin-top:4px;">${fmtNum(cur)} / ${fmtNum(q.req)}（${pct}%）</div>
+                <div class="npc-card-desc" style="text-align:center;margin:4px 0 8px;">${q.desc}</div>
+                <div class="v223-reward-pills">${q.rewardTags.map((rt) => `<span class="v223-rpill">${rt}</span>`).join('')}</div>
+                <div class="npc-progress-track" style="margin-top:8px;"><div class="npc-progress-fill" style="width:${pct}%"></div></div>
+                <div style="font-size:11px;color:#cbd5e1;text-align:center;margin-top:4px;">${fmtNum(Math.min(q.cur, q.req))} / ${fmtNum(q.req)}（${pct}%）</div>
               </div>
-              ${isClaimed ? `<div class="npc-btn-claimed">${SVG.check}<span>已結案領賞</span></div>` : costBtnHtml(`data-bounty="${q.id}"`, ready ? '蓋章領取賞金' : '懸賞進行中', `${pct}%`, ready)}
+              ${isClaimed ? `<div class="npc-btn-claimed">${SVG.check}<span>已完成並領獎</span></div>` : costBtnHtml(`data-bounty-v223="${q.id}"`, ready ? '立即領取獎勵' : '任務進行中', `${pct}%`, ready)}
             </div>
           `;
         }).join('')}
@@ -584,15 +634,44 @@ function buildWorkspaceHtml(ui, action, data, ctx, deps, st, chIdx, chapter) {
   }
 
   if (action === 'modal_vault') {
-    const vaultItems = st.vaultItems || [];
+    const VAULT_TAB_NAMES = ['頁 1・裝備庫', '頁 2・傳說套裝', '頁 3・備用庫', '頁 4・雜項庫'];
+    const tabs = Array.isArray(st.vaultTabs)
+      ? st.vaultTabs
+      : [Array.isArray(st.vaultItems) ? st.vaultItems : [], [], [], []];
+    const curItems = tabs[activeVaultTab] || [];
     const rules = st.vaultRules || {};
-    const invItems = (st.inventory || []).filter((it) => it && ['legendary', 'rare', 'set'].includes(it.rarity)).slice(0, 8);
+    const invItems = (st.inventory || []).filter(Boolean).slice(0, 24);
+    const rarColor = { common: '#cbd5e1', magic: '#60a5fa', rare: '#facc15', legendary: '#fb923c', set: '#4ade80' };
+
     return `
       <div class="npc-sec-head">
-        <div class="npc-sec-title">重型金庫鎖定門（${vaultItems.length} / 6）</div>
+        <div class="npc-sec-title">冒險者金庫・分頁倉庫（本頁 ${curItems.length} / 24 格）</div>
         <button id="btn-vault-bag" class="npc-btn-secondary"><span>開啟完整背包 (B)</span>${SVG.arrow}</button>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div class="v223-tab-row">
+        ${VAULT_TAB_NAMES.map((tn, idx) => {
+          const cnt = (tabs[idx] || []).length;
+          return `<button type="button" class="v223-tab-btn ${activeVaultTab === idx ? 'is-active' : ''}" data-vtab="${idx}">${tn} <small style="opacity:.8;">(${cnt}/24)</small></button>`;
+        }).join('')}
+      </div>
+      <div class="v223-vault-grid">
+        ${Array.from({ length: 24 }, (_, slotIdx) => {
+          const it = curItems[slotIdx];
+          if (!it) {
+            return `<div class="v223-vslot is-empty"><span>#${slotIdx + 1}</span></div>`;
+          }
+          const col = rarColor[it.rarity] || '#cbd5e1';
+          const upg = it.upgradeLevel ? `+${it.upgradeLevel}` : '';
+          return `
+            <button type="button" class="v223-vslot is-filled" data-vault-out-tab="${slotIdx}" style="border-color:${col};" title="點擊取出【${it.name}】至背包（戰力 ${it.powerScore || 0}）">
+              <span class="v223-vslot-name" style="color:${col};">${it.name}</span>
+              <span class="v223-vslot-sub">${upg ? `${upg} ` : ''}戰力 ${it.powerScore || 0}</span>
+              <span class="v223-vslot-act">取出</span>
+            </button>
+          `;
+        }).join('')}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;">
         <button id="btn-rule-cls" class="npc-btn-toggle ${rules.keepClassReq ? 'is-active' : ''}" style="justify-content:space-between;">
           <span>${SVG.lock} 自動鎖定本職業專屬裝</span>
           <span>${rules.keepClassReq ? '已開啟' : '未啟用'}</span>
@@ -602,20 +681,16 @@ function buildWorkspaceHtml(ui, action, data, ctx, deps, st, chIdx, chapter) {
           <span>${rules.keepDoubleCrit ? '已開啟' : '未啟用'}</span>
         </button>
       </div>
-      <div class="vault-door-grid">
-        ${[0, 1, 2, 3, 4, 5].map((slotIdx) => {
-          const it = vaultItems[slotIdx];
-          return `
-            <div class="vault-safe-slot ${it ? 'is-occupied' : ''}">
-              <div class="npc-card-title" style="font-size:12.5px;">${it ? it.name : `重型金庫格 #${slotIdx + 1}`}</div>
-              <div class="npc-card-desc" style="font-size:11px;">${it ? `等級 ${it.level || 1} ｜ 鎖定防誤拆` : '空置密碼格'}</div>
-              ${it ? `<button data-vault-out="${slotIdx}" class="npc-btn-secondary" style="margin-top:auto;">取出至背包</button>` : ''}
-            </div>
-          `;
-        }).join('')}
-      </div>
-      <div class="npc-chip-list">
-        ${invItems.length ? invItems.map((it) => `<button data-vault-in="${it.uid}" class="npc-btn-secondary">鎖入：${it.name}</button>`).join('') : '<span style="font-size:12px;color:#94a3b8;">背包內暫無稀有以上裝備可存入。</span>'}
+      <div class="v223-bag-deposit-box">
+        <div style="font-size:12px;font-weight:800;color:#fde68a;margin-bottom:6px;">🎒 目前背包裝備（點擊一鍵存入「${VAULT_TAB_NAMES[activeVaultTab]}」）：</div>
+        <div class="npc-chip-list">
+          ${invItems.length
+            ? invItems.map((it) => {
+                const col = rarColor[it.rarity] || '#e2e8f0';
+                return `<button type="button" data-vault-in-tab="${it.uid}" class="npc-btn-secondary" style="border-color:${col};color:${col};">存入：${it.name}${it.upgradeLevel ? ` +${it.upgradeLevel}` : ''}</button>`;
+              }).join('')
+            : '<span style="font-size:12px;color:#94a3b8;">目前背包內沒有可存入的裝備。</span>'}
+        </div>
       </div>
     `;
   }
@@ -726,18 +801,20 @@ function buildWorkspaceHtml(ui, action, data, ctx, deps, st, chIdx, chapter) {
     const claimed = !!st[gift.key];
     return `
       <div class="npc-sec-head"><div class="npc-sec-title">第 ${chapter} 章限定・封蠟補給禮盒</div></div>
-      <div class="chapter-gift-box">
+      <div class="chapter-gift-box ${claimed ? 'is-gift-claimed' : ''}">
         <div style="display:flex;align-items:center;gap:12px;">
           ${SVG.chestHigh}
           <div>
-            <div class="npc-card-title" style="font-size:15px;color:#fef3c7;">${gift.title}</div>
+            <div class="npc-card-title" style="font-size:15px;color:${claimed ? '#94a3b8' : '#fef3c7'};">${gift.title}</div>
             <div class="npc-chip-list" style="margin-top:6px;">
-              ${gift.rewards.map((r) => `<span class="npc-item-pill is-selected">${r}</span>`).join('')}
+              ${gift.rewards.map((r) => `<span class="npc-item-pill ${claimed ? '' : 'is-selected'}">${r}</span>`).join('')}
             </div>
           </div>
         </div>
         <div class="landmark-tip-bar">主城地標攻略：${gift.tip}</div>
-        ${claimed ? `<div class="npc-btn-claimed">${SVG.check}<span>已拆封並領取此章節禮盒</span></div>` : costBtnHtml(`id="${gift.btn}"`, '拆開蠟封領取補給', '章節限定 1 次', true)}
+        ${claimed
+          ? `<button type="button" class="v223-gift-claimed-btn" disabled>${SVG.check} <span>已領取本章節補給（不可重複領取）</span></button>`
+          : costBtnHtml(`id="${gift.btn}"`, '拆開蠟封領取補給', '章節限定 1 次', true)}
       </div>
     `;
   }
@@ -806,8 +883,17 @@ function bindWorkspaceEvents(ui, action, data, ctx, deps, st, chIdx, bodyEl, mod
     bodyEl.querySelector('#btn-portal-map')?.addEventListener('click', () => closeAnd(() => ctx?.onOpenWorldMap?.()));
     bodyEl.querySelectorAll('button[data-tp-ch]').forEach((b) => b.addEventListener('click', () => closeAnd(() => ctx?.onTeleportTown?.(Number(b.dataset.tpCh)))));
   } else if (action === 'modal_bounty') {
-    bodyEl.querySelectorAll('button[data-bounty]').forEach((btn) => {
-      btn.addEventListener('click', () => { ctx?.onClaimBounty?.(btn.dataset.bounty); say('通緝賞金已核發！', 'success'); setTimeout(reopen, 260); });
+    bodyEl.querySelectorAll('button[data-qtab]').forEach((btn) => {
+      btn.addEventListener('click', () => { activeBountyTab = btn.dataset.qtab || 'hunt'; reopen(); });
+    });
+    bodyEl.querySelectorAll('button[data-bounty-v223]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const q = window.__v223ActiveQuestMap?.[btn.dataset.bountyV223];
+        if (q && window.__IDLE_ARPG_BRIDGE__?.claimCategorizedQuest?.(q)) {
+          say('賞金與專屬獎勵已核發！', 'success');
+          setTimeout(reopen, 220);
+        }
+      });
     });
   } else if (action === 'modal_tavern') {
     const feastCost = (chIdx + 1) * 350;
@@ -870,8 +956,25 @@ function bindWorkspaceEvents(ui, action, data, ctx, deps, st, chIdx, bodyEl, mod
     });
   } else if (action === 'modal_vault') {
     bodyEl.querySelector('#btn-vault-bag')?.addEventListener('click', () => closeAnd(() => ctx?.onOpenDrawer?.('bag')));
-    bodyEl.querySelectorAll('button[data-vault-out]').forEach((b) => b.addEventListener('click', () => { ctx?.onVaultWithdraw?.(Number(b.dataset.vaultOut)); say('已從金庫取出裝備。', 'success'); setTimeout(reopen, 240); }));
-    bodyEl.querySelectorAll('button[data-vault-in]').forEach((b) => b.addEventListener('click', () => { ctx?.onVaultDeposit?.(b.dataset.vaultIn); say('已鎖入重型金庫！', 'success'); setTimeout(reopen, 240); }));
+    bodyEl.querySelectorAll('button[data-vtab]').forEach((b) => {
+      b.addEventListener('click', () => { activeVaultTab = Number(b.dataset.vtab) || 0; reopen(); });
+    });
+    bodyEl.querySelectorAll('button[data-vault-out-tab]').forEach((b) => {
+      b.addEventListener('click', () => {
+        if (window.__IDLE_ARPG_BRIDGE__?.vaultWithdrawFromTab?.(activeVaultTab, Number(b.dataset.vaultOutTab))) {
+          say('已從金庫取出裝備至背包。', 'success');
+          setTimeout(reopen, 200);
+        }
+      });
+    });
+    bodyEl.querySelectorAll('button[data-vault-in-tab]').forEach((b) => {
+      b.addEventListener('click', () => {
+        if (window.__IDLE_ARPG_BRIDGE__?.vaultDepositToTab?.(activeVaultTab, b.dataset.vaultInTab)) {
+          say('已鎖入分頁金庫！', 'success');
+          setTimeout(reopen, 200);
+        }
+      });
+    });
     bodyEl.querySelector('#btn-rule-cls')?.addEventListener('click', () => { ctx?.onToggleVaultRule?.('keepClassReq'); setTimeout(reopen, 200); });
     bodyEl.querySelector('#btn-rule-crit')?.addEventListener('click', () => { ctx?.onToggleVaultRule?.('keepDoubleCrit'); setTimeout(reopen, 200); });
   } else if (action === 'modal_sanctum') {

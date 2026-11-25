@@ -1,0 +1,368 @@
+/* worldMap25d.css (v222) - 滿視窗暗黑四風格 2.5D 世界大地圖 */
+#worldmap-25d-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 950;
+  background: #07060a;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  user-select: none;
+  font-family: 'Noto Sans TC', sans-serif;
+}
+
+#worldmap-25d-overlay.hidden {
+  display: none !important;
+}
+
+.wm25-topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 22px;
+  background: linear-gradient(180deg, rgba(8, 7, 12, 0.92) 0%, rgba(8, 7, 12, 0.45) 70%, rgba(8, 7, 12, 0) 100%);
+  pointer-events: none;
+}
+
+.wm25-topbar > * {
+  pointer-events: auto;
+}
+
+.wm25-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wm25-title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 900;
+  color: #fde68a;
+  letter-spacing: 1.5px;
+  text-shadow: 0 2px 12px #000, 0 0 18px rgba(245, 158, 11, 0.4);
+}
+
+.wm25-back-btn {
+  padding: 7px 14px;
+  border-radius: 9px;
+  border: 1.5px solid rgba(250, 204, 21, 0.65);
+  background: linear-gradient(135deg, rgba(120, 53, 15, 0.9), rgba(69, 26, 3, 0.95));
+  color: #fef08a;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.65);
+}
+
+.wm25-back-btn:hover { filter: brightness(1.15); }
+.wm25-back-btn.hidden { display: none; }
+
+.wm25-top-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wm25-tool-btn {
+  padding: 7px 13px;
+  border-radius: 8px;
+  border: 1px solid rgba(200, 155, 60, 0.5);
+  background: rgba(16, 13, 22, 0.9);
+  color: #f8fafc;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.wm25-tool-btn:hover {
+  border-color: #fde047;
+  color: #fde68a;
+}
+
+.wm25-viewport {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  cursor: grab;
+  background: radial-gradient(circle at 50% 50%, #15121d 0%, #050508 100%);
+}
+
+.wm25-viewport:active {
+  cursor: grabbing;
+}
+
+.wm25-stage {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(100vw, calc(100vh * 1.7917));
+  height: min(100vh, calc(100vw / 1.7917));
+  transform-origin: center center;
+  transition: transform 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+.wm25-stage.is-dragging {
+  transition: none !important;
+}
+
+.wm25-bg-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  border-radius: 4px;
+  box-shadow: 0 0 80px rgba(0, 0, 0, 0.95);
+}
+
+.wm25-vignette {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at 50% 50%, transparent 58%, rgba(4, 4, 8, 0.72) 100%);
+}
+
+/* 10 大區域總覽領土標記 */
+.wm25-region-pin {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  background: linear-gradient(160deg, rgba(18, 14, 24, 0.92), rgba(9, 8, 14, 0.94));
+  border: 1.5px solid rgba(200, 155, 60, 0.72);
+  border-radius: 11px;
+  padding: 6px 12px;
+  cursor: pointer;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.8), 0 0 14px rgba(200, 155, 60, 0.2);
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.wm25-region-pin:hover {
+  transform: translate(-50%, -54%) scale(1.08);
+  border-color: #fde047;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.9), 0 0 24px rgba(250, 204, 21, 0.55);
+  z-index: 9;
+}
+
+.wm25-region-pin.is-current {
+  border-color: #4ade80;
+  box-shadow: 0 0 20px rgba(74, 222, 128, 0.5);
+}
+
+.wm25-rp-ch {
+  font-size: 10.5px;
+  font-weight: 900;
+  color: #f59e0b;
+  letter-spacing: 0.8px;
+}
+
+.wm25-rp-name {
+  font-size: 13.5px;
+  font-weight: 900;
+  color: #fef3c7;
+  white-space: nowrap;
+}
+
+.wm25-rp-sub {
+  font-size: 10.5px;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+/* 進入區域後：10 個真實地形關卡節點 + 主城傳送門 */
+.wm25-trail-svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 7;
+}
+
+.wm25-stage-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.16s ease;
+}
+
+.wm25-stage-node:hover {
+  transform: translate(-50%, -56%) scale(1.16);
+  z-index: 14;
+}
+
+.wm25-node-orb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 900;
+  color: #fff;
+  background: radial-gradient(circle at 35% 30%, #f59e0b, #78350f);
+  border: 2px solid #fef08a;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.8), 0 3px 8px #000;
+}
+
+.wm25-stage-node.is-miniboss .wm25-node-orb {
+  width: 26px;
+  height: 26px;
+  background: radial-gradient(circle at 35% 30%, #fb923c, #9a3412);
+  border-color: #fed7aa;
+  box-shadow: 0 0 16px rgba(249, 115, 22, 0.9);
+}
+
+.wm25-stage-node.is-boss .wm25-node-orb {
+  width: 30px;
+  height: 30px;
+  font-size: 13px;
+  background: radial-gradient(circle at 35% 30%, #ef4444, #7f1d1d);
+  border-color: #fde047;
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.95);
+}
+
+.wm25-stage-node.is-town .wm25-node-orb {
+  width: 26px;
+  height: 26px;
+  background: radial-gradient(circle at 35% 30%, #38bdf8, #0c4a6e);
+  border-color: #bae6fd;
+  box-shadow: 0 0 18px rgba(56, 189, 248, 0.95);
+}
+
+.wm25-stage-node.is-selected .wm25-node-orb {
+  box-shadow: 0 0 0 3px #fff, 0 0 22px #fde047;
+}
+
+.wm25-node-lbl {
+  font-size: 9px;
+  font-weight: 900;
+  color: #fef3c7;
+  background: rgba(8, 7, 12, 0.88);
+  border: 1px solid rgba(200, 155, 60, 0.55);
+  border-radius: 5px;
+  padding: 1px 5px;
+  white-space: nowrap;
+  text-shadow: 0 1px 2px #000;
+}
+
+/* 右下浮動暗黑羊皮紙關卡詳情卡 */
+.wm25-detail-card {
+  position: absolute;
+  right: 22px;
+  bottom: 22px;
+  z-index: 22;
+  width: 340px;
+  border-radius: 14px;
+  background: linear-gradient(165deg, rgba(20, 15, 26, 0.96), rgba(10, 8, 14, 0.97));
+  border: 1.5px solid rgba(212, 169, 86, 0.65);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(254, 240, 138, 0.16);
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wm25-detail-card.hidden {
+  display: none;
+}
+
+.wm25-dc-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.wm25-dc-badge {
+  font-size: 11px;
+  font-weight: 900;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(245, 158, 11, 0.22);
+  color: #fde047;
+  border: 1px solid rgba(245, 158, 11, 0.45);
+}
+
+.wm25-dc-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 900;
+  color: #fef3c7;
+}
+
+.wm25-dc-meta {
+  font-size: 12.5px;
+  color: #cbd5e1;
+  line-height: 1.55;
+}
+
+.wm25-dc-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.wm25-enter-btn {
+  flex: 1;
+  padding: 10px 14px;
+  border-radius: 9px;
+  border: 1.5px solid #fde047;
+  background: linear-gradient(135deg, #d97706, #b45309);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(217, 119, 6, 0.45);
+}
+
+.wm25-enter-btn:hover { filter: brightness(1.12); }
+
+.wm25-town-btn {
+  padding: 10px 12px;
+  border-radius: 9px;
+  border: 1px solid rgba(56, 189, 248, 0.6);
+  background: rgba(12, 74, 110, 0.55);
+  color: #bae6fd;
+  font-size: 12.5px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.wm25-town-btn:hover { background: rgba(14, 116, 144, 0.75); }
+
+.wm25-hint {
+  position: absolute;
+  left: 22px;
+  bottom: 18px;
+  z-index: 20;
+  font-size: 12px;
+  color: #cbd5e1;
+  background: rgba(10, 8, 15, 0.82);
+  border: 1px solid rgba(200, 155, 60, 0.35);
+  border-radius: 8px;
+  padding: 6px 12px;
+  pointer-events: none;
+}

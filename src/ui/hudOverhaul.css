@@ -800,3 +800,160 @@
   height: 15px !important;
   border-radius: 999px !important;
 }
+
+
+/* ===== 9. v222：哥德鍛鐵整塊新 UI 圖套用（零色塊、精準槽位貼合） ===== */
+#diablo-hud.floating-altar.v222-gothic-hud {
+  position: fixed !important;
+  left: 50% !important;
+  bottom: 10px !important;
+  transform: translateX(-50%) !important;
+  width: 672px !important;
+  height: 246px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  display: block !important;
+  pointer-events: none !important;
+  z-index: 41 !important;
+}
+
+@media (max-width: 1440px) {
+  #diablo-hud.floating-altar.v222-gothic-hud {
+    width: 600px !important;
+    height: 220px !important;
+  }
+}
+
+.v222-gothic-hud .gothic-hud-frame-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  z-index: 3;
+  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.88));
+  user-select: none;
+}
+
+/* 左側雙色血魔靈球：精準對位鍛鐵圓框鏤空 (left 6.54%, top 19.41%, w 22.36%, h 61.17%) */
+.v222-gothic-hud .gothic-orb-well {
+  position: absolute;
+  left: 6.35%;
+  top: 19.0%;
+  width: 22.8%;
+  height: 62.0%;
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.v222-gothic-hud .dual-orb-sphere {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 50% !important;
+}
+
+.v222-gothic-hud .dual-read-hp span,
+.v222-gothic-hud .dual-read-mp span {
+  font-size: 12px !important;
+}
+
+.v222-gothic-hud .dual-read-hp small,
+.v222-gothic-hud .dual-read-mp small {
+  font-size: 10px !important;
+}
+
+/* 5 顆技能與藥水按鈕：精準嵌入 5 個鍛鐵方框凹槽 */
+.v222-gothic-hud .gothic-slots-overlay {
+  position: absolute;
+  left: 38.7%;
+  top: 38.0%;
+  width: 46.3%;
+  height: 24.8%;
+  z-index: 4;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  pointer-events: auto;
+}
+
+.v222-gothic-hud .gothic-hotbar {
+  width: 100% !important;
+  height: 100% !important;
+  display: grid !important;
+  grid-template-columns: repeat(5, 1fr) !important;
+  gap: 5.8% !important;
+  align-items: center !important;
+}
+
+.v222-gothic-hud .gothic-hotbar .mmo-slot {
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  border-radius: 5px !important;
+  border: 1px solid rgba(212, 169, 86, 0.35) !important;
+  background: rgba(12, 10, 16, 0.72) !important;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.85) !important;
+}
+
+.v222-gothic-hud .gothic-hotbar .mmo-slot:hover {
+  border-color: #fde047 !important;
+  box-shadow: 0 0 14px rgba(250, 204, 21, 0.45) !important;
+}
+
+/* 下方暗金凹槽經驗條 */
+.v222-gothic-hud .gothic-exp-bar {
+  position: absolute !important;
+  left: 38.9% !important;
+  top: 74.2% !important;
+  width: 46.0% !important;
+  height: 15px !important;
+  z-index: 4 !important;
+  border-radius: 999px !important;
+  background: rgba(8, 7, 12, 0.88) !important;
+  border: 1px solid rgba(200, 155, 60, 0.55) !important;
+  pointer-events: auto !important;
+}
+
+.v222-gothic-hud .gothic-exp-bar .diablo-exp-text {
+  font-size: 10.5px !important;
+  font-weight: 800 !important;
+}
+
+/* 上方 BUFF 圖示列（自然浮於鍛鐵翼樑上方） */
+.v222-gothic-hud .hud-altar-buffs {
+  position: absolute !important;
+  left: 38.7% !important;
+  bottom: 76% !important;
+  padding-left: 0 !important;
+  z-index: 5 !important;
+  pointer-events: auto !important;
+}
+
+/* 下緣精簡暗金功能銘牌 */
+.v222-gothic-hud .gothic-status-strip {
+  position: absolute !important;
+  left: 38.7% !important;
+  top: 84.5% !important;
+  width: 46.5% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  gap: 5px !important;
+  z-index: 5 !important;
+  pointer-events: auto !important;
+}
+
+.v222-gothic-hud .gothic-status-strip .afk-pill,
+.v222-gothic-hud .gothic-status-strip .strip-btn {
+  font-size: 10.5px !important;
+  padding: 2px 8px !important;
+  border-radius: 6px !important;
+  background: linear-gradient(180deg, rgba(28, 22, 34, 0.94), rgba(14, 11, 18, 0.96)) !important;
+  border: 1px solid rgba(200, 155, 60, 0.48) !important;
+}

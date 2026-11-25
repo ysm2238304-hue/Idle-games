@@ -300,3 +300,176 @@
   .npc-canvas-wrap { height: 185px; }
   .npc-work-col { overflow-y: visible; }
 }
+
+
+/* ===== v223：分類任務頁籤 + 24格分頁倉庫 + 補給包反灰鎖定 ===== */
+.v223-tab-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.v223-tab-btn {
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(200, 155, 60, 0.35);
+  background: rgba(18, 15, 26, 0.88);
+  color: #cbd5e1;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.v223-tab-btn.is-active {
+  background: linear-gradient(135deg, rgba(180, 83, 9, 0.82), rgba(120, 53, 15, 0.92));
+  border-color: #fde047;
+  color: #fef08a;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.35);
+}
+
+.v223-tab-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.v223-tab-hint {
+  font-size: 12px;
+  color: #e2e8f0;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin-bottom: 10px;
+}
+
+.v223-reward-pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+}
+
+.v223-rpill {
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: rgba(250, 204, 21, 0.14);
+  border: 1px solid rgba(250, 204, 21, 0.38);
+  color: #fde68a;
+}
+
+.wanted-poster.is-claimed-poster {
+  opacity: 0.62;
+  filter: grayscale(0.45);
+}
+
+/* 4 分頁 x 24 格倉庫網格 (6x4) */
+.v223-vault-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.v223-vslot {
+  min-height: 62px;
+  border-radius: 8px;
+  padding: 5px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  text-align: center;
+}
+
+.v223-vslot.is-empty {
+  background: rgba(12, 10, 18, 0.65);
+  border: 1px dashed rgba(148, 163, 184, 0.24);
+  color: rgba(148, 163, 184, 0.4);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.v223-vslot.is-filled {
+  background: linear-gradient(160deg, rgba(30, 24, 42, 0.92), rgba(14, 11, 20, 0.96));
+  border: 1.5px solid #f59e0b;
+  cursor: pointer;
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+
+.v223-vslot.is-filled:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+}
+
+.v223-vslot-name {
+  font-size: 10.5px;
+  font-weight: 900;
+  line-height: 1.2;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.v223-vslot-sub {
+  font-size: 9.5px;
+  color: #94a3b8;
+}
+
+.v223-vslot-act {
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #fde68a;
+  background: rgba(245, 158, 11, 0.2);
+  border-radius: 4px;
+  padding: 0 5px;
+}
+
+.v223-bag-deposit-box {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 9px;
+  background: rgba(12, 10, 18, 0.72);
+  border: 1px solid rgba(200, 155, 60, 0.28);
+  max-height: 120px;
+  overflow-y: auto;
+}
+
+/* 補給包領取後反灰鎖定 */
+.chapter-gift-box.is-gift-claimed {
+  opacity: 0.68;
+  filter: grayscale(0.65);
+  border-color: rgba(148, 163, 184, 0.35) !important;
+}
+
+.v223-gift-claimed-btn {
+  width: 100%;
+  padding: 11px 16px;
+  border-radius: 10px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(51, 65, 85, 0.55);
+  color: #94a3b8;
+  font-size: 13.5px;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  cursor: not-allowed;
+}

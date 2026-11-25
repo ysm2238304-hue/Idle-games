@@ -22,7 +22,7 @@ import {
 } from './auth/firebase.js?v=218';
 import { BattleScene } from './scenes/BattleScene.js?v=217';
 import { TownScene } from './scenes/TownScene.js?v=217';
-import { TOWN_SPLASHES } from './data/towns/splashes.js?v=221';
+import { TOWN_SPLASHES } from './data/towns/splashes.js?v=223';
 import { DashboardUI } from './ui/DashboardUI.js?v=221';
 import { TownBgmEngine } from './audio/TownBgmEngine.js?v=99';
 import { BattleSfxEngine } from './audio/BattleSfxEngine.js?v=99';
@@ -177,6 +177,7 @@ document.getElementById('btn-exit-tower')?.addEventListener('click', () => {
 document.getElementById('btn-lobby-settings')?.addEventListener('click', () => hudSettings.openModal());
 const heroShowcase = new HeroSkillShowcase();
 const ui = new DashboardUI({
+  getState: () => gameState,
   onSelectClass: (classId) => {
     switchStateToClass(classId, gameState);
     selectedLobbyClass = classId;
@@ -737,6 +738,82 @@ function initPhaserGame() {
     addLog: (msg, type, cat) => ui.addLog(msg, type, cat),
     refreshUI: () => { refreshStatsAndUI(); persistAll(true); },
     openWorldMap: () => ui.openWorldMapModal(gameState),
+    jumpStage: (stNum) => ui.handlers?.onJumpStage?.(stNum),
+    enterChapterTown: (chIdx) => {
+      if (isInTown && townScene?.townData?.chapterIdx === chIdx) return;
+      if (isInTown) { isInTown = false; }
+      enterTown(Math.max(0, Math.min(9, chIdx)), true);
+    },
+    claimCategorizedQuest: (q) => {
+      if (!q || !q.id) return false;
+      if (!gameState.bountyProgress) gameState.bountyProgress = { bossKills: 0, claimed: {} };
+      if (!gameState.bountyProgress.claimed) gameState.bountyProgress.claimed = {};
+      if (gameState.bountyProgress.claimed[q.id]) return false;
+      gameState.bountyProgress.claimed[q.id] = true;
+
+      const r = q.rewards || {};
+      const parts = [];
+      if (r.gold) { gameState.gold = (gameState.gold || 0) + r.gold; parts.push(`${r.gold.toLocaleString()} 金幣`); }
+      if (r.dust) { gameState.dust = (gameState.dust || 0) + r.dust; parts.push(`${r.dust} 粉塵`); }
+      if (r.sp) { gameState.skillPoints = (gameState.skillPoints || 0) + r.sp; parts.push(`+${r.sp} 技能點`); }
+      if (r.protectStones) { gameState.protectStones = (gameState.protectStones || 0) + r.protectStones; parts.push(`${r.protectStones} 保護石`); }
+      if (r.crystals) { gameState.soulCrystals = (gameState.soulCrystals || 0) + r.crystals; parts.push(`${r.crystals} 魂晶`); }
+      if (r.petEssence) { gameState.petEssence = (gameState.petEssence || 0) + r.petEssence; parts.push(`${r.petEssence} 寵物精華`); }
+      if (r.rareBox) {
+        handleLootDrop(generateLoot(Math.max(r.stageHint || 1, gameState.maxStageReached || 1), true, 160, false, gameState.classId));
+        parts.push('稀有裝備箱');
+      }
+      if (r.legendaryBox) {
+        handleLootDrop(generateLoot(Math.max(r.stageHint || 5, gameState.maxStageReached || 5), true, 380, false, gameState.classId));
+        parts.push('傳說裝備箱');
+      }
+      if (r.potionBundle) {
+        if (!gameState.potionBuffs) gameState.potionBuffs = {};
+        const nowTs = Date.now();
+        gameState.potionBuffs.expUntil = Math.max(nowTs, gameState.potionBuffs.expUntil || 0) + 120000;
+        gameState.potionBuffs.mfUntil = Math.max(nowTs, gameState.potionBuffs.mfUntil || 0) + 120000;
+        parts.push('經驗+尋寶藥水禮盒(120秒)');
+      }
+      ui.addLog(`📜 完成【${q.catLabel || '任務'}】「${q.title}」：獲得 ${parts.join(' + ')}！`, 'victory');
+      refreshStatsAndUI();
+      persistAll(true);
+      return true;
+    },
+    vaultDepositToTab: (tabIdx, uid) => {
+      const t = Math.max(0, Math.min(3, Number(tabIdx) || 0));
+      if (!Array.isArray(gameState.vaultTabs)) {
+        gameState.vaultTabs = [Array.isArray(gameState.vaultItems) ? [...gameState.vaultItems] : [], [], [], []];
+      }
+      while (gameState.vaultTabs.length < 4) gameState.vaultTabs.push([]);
+      if (gameState.vaultTabs[t].length >= 24) {
+        ui.addLog(`⚠️ 第 ${t + 1} 頁倉庫已滿（上限 24 格），請切換其他分頁。`, 'warn');
+        return false;
+      }
+      const idx = (gameState.inventory || []).findIndex((it) => it && it.uid === uid);
+      if (idx === -1) return false;
+      const [item] = gameState.inventory.splice(idx, 1);
+      gameState.vaultTabs[t].push(item);
+      gameState.vaultItems = gameState.vaultTabs[0];
+      ui.addLog(`🏦 已將【${item.name}】存入倉庫第 ${t + 1} 頁。`, 'system');
+      refreshStatsAndUI();
+      persistAll(true);
+      return true;
+    },
+    vaultWithdrawFromTab: (tabIdx, slotIdx) => {
+      const t = Math.max(0, Math.min(3, Number(tabIdx) || 0));
+      if (!Array.isArray(gameState.vaultTabs) || !gameState.vaultTabs[t]?.[slotIdx]) return false;
+      if ((gameState.inventory || []).length >= 60) {
+        ui.addLog('⚠️ 背包已滿（60 格），請先清理背包再取出。', 'warn');
+        return false;
+      }
+      const [item] = gameState.vaultTabs[t].splice(slotIdx, 1);
+      gameState.inventory.unshift(item);
+      gameState.vaultItems = gameState.vaultTabs[0];
+      ui.addLog(`🎒 已從倉庫第 ${t + 1} 頁取出【${item.name}】。`, 'system');
+      refreshStatsAndUI();
+      persistAll(true);
+      return true;
+    },
     claimBounty: (qid, rewardGold = 1000, rewardType = 'gear', stageHint = 1) => {
       if (!gameState.bountyProgress) gameState.bountyProgress = { bossKills: 0, claimed: {} };
       if (gameState.bountyProgress.claimed[qid]) return false;
