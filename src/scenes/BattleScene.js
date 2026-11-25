@@ -11,6 +11,7 @@ import { RARITIES } from '../data/items.js?v=99';
 import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta, getPetPickupRadius, getPetCodexInfo } from '../data/pets.js?v=99';
 import { createStageEncounters, spawnSingleMonster, getChapterIdx, getStageLabel, ZONE_OBSTACLES } from '../data/monsters.js?v=232';
 import { formatNum } from '../logic/statCalc.js?v=240';
+import { MageVfxDirector } from '../vfx/MageVfxDirector.js?v=247';
 
 const MAP_W = 4096;
 const MAP_H = 2304;
@@ -184,6 +185,7 @@ export class BattleScene extends Phaser.Scene {
     for (const sk of DARK_MAGE_SEQS) {
       this.load.spritesheet(sk, `./assets/fx/${sk}.png?v=246`, { frameWidth: 320, frameHeight: 320 });
     }
+    MageVfxDirector.preload(this);
   }
 
   getHeroAtlasKey(cid) {
@@ -257,6 +259,8 @@ export class BattleScene extends Phaser.Scene {
     this.generateFxTextures();
     this.createClassAnims();
     this.registerMageSeqAnims();
+    this.mageVfx = new MageVfxDirector(this);
+    this.mageVfx.registerAnims();
 
     const initZone = this.getZoneIdx();
     this.bgImage = this.add.image(MAP_W / 2, MAP_H / 2, `map_zone_${initZone}`)
@@ -2342,18 +2346,20 @@ export class BattleScene extends Phaser.Scene {
         if (m.hp > 0 && m.sprite && Phaser.Math.Distance.Between(cx, cy, m.sprite.x, m.sprite.y) <= rad) {
           m.sprite.setTint(tintHex);
           this.time.delayedCall(110, () => m.sprite && m.sprite.active && m.sprite.clearTint());
-          if (forceC && sparkBudget > 0) {
+          if (sparkBudget > 0) {
             sparkBudget--;
-            this.playDarkSeqAnim(hitSeq, m.sprite.x, m.sprite.y - 6, 0.36, 18, 18);
+            this.mageVfx?.spawnDebrisBurst(m.sprite.x, m.sprite.y, elem, forceC ? 7 : 4);
           }
         }
       });
       _aoe(cx, cy, rad, mul * _d4Mult, col, pre, stList, forceC);
     };
+    const mv = this.mageVfx;
     if (skillId === 'm_fire_bolt') {
       this.registerEnlightenment('fire');
-      this.launchVfxProjectile('vfx_m_fire_bolt', _hx, _hy - 14, _tx, _ty - 10, 0.52, 180, () => {
-        this.playDarkSeqAnim('anim_m_fireball_blast', _tx, _ty - 8, 0.54, 15, 14);
+      mv.launchProjectile('proj_m_fire_bolt', _hx, _hy - 14, _tx, _ty - 10, 0.56, 185, 'fire', () => {
+        mv.playSeq16('seq16_m_fireball_blast', _tx, _ty - 8, 0.72, 22, 14);
+        mv.spawnDebrisBurst(_tx, _ty, 'fire', 5);
         _aoeD4(_tx, _ty, 215, (148 + skillLvl * 22) / 100, '#fb923c', '🔥', ['burn']);
       });
       this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 22);
@@ -2361,8 +2367,9 @@ export class BattleScene extends Phaser.Scene {
     }
     if (skillId === 'm_frost_bolt') {
       this.registerEnlightenment('frost');
-      this.launchVfxProjectile('vfx_m_ice_shards', _hx, _hy - 14, _tx, _ty - 10, 0.48, 180, () => {
-        this.playDarkSeqAnim('anim_m_frost_nova', _tx, _ty - 8, 0.52, 16, 14);
+      mv.launchProjectile('proj_m_ice_lance', _hx, _hy - 14, _tx, _ty - 10, 0.52, 180, 'frost', () => {
+        mv.playSeq16('seq16_m_frost_nova', _tx, _ty - 8, 0.68, 22, 14);
+        mv.spawnDebrisBurst(_tx, _ty, 'frost', 5);
         _aoeD4(_tx, _ty, 215, (142 + skillLvl * 22) / 100, '#7dd3fc', '❄️', ['freeze']);
       });
       this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 22);
@@ -2370,7 +2377,8 @@ export class BattleScene extends Phaser.Scene {
     }
     if (skillId === 'm_arc_lash') {
       this.registerEnlightenment('shock');
-      this.playDarkSeqAnim('anim_m_lightning_strike', _tx, _ty - 10, 0.68, 16, 16);
+      mv.playSeq16('seq16_m_lightning_strike', _tx, _ty - 12, 0.88, 24, 16);
+      mv.spawnGroundDecal('shock', _tx, _ty, 0.55, 1100);
       this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 20);
       this.slotCdTimers = this.slotCdTimers.map((t) => t + 420);
       _aoeD4(_tx, _ty, 235, (158 + skillLvl * 24) / 100, '#c084fc', '⚡', ['shock']);
@@ -2379,7 +2387,7 @@ export class BattleScene extends Phaser.Scene {
     }
     if (skillId === 'm_spark') {
       this.registerEnlightenment('shock');
-      this.playDarkSeqAnim('anim_m_ball_lightning', _tx, _ty - 8, 0.62, 14, 14);
+      this.playDarkSeqAnim('anim_m_ball_lightning', _tx, _ty - 8, 0.64, 14, 14);
       this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 20);
       _aoeD4(_tx, _ty, 225, (152 + skillLvl * 22) / 100, '#60a5fa', '✦', ['shock']);
       if (Math.random() < 0.65) this.spawnCracklingOrb(_tx, _ty);
@@ -2387,8 +2395,10 @@ export class BattleScene extends Phaser.Scene {
     }
     if (skillId === 'm_fireball') {
       this.registerEnlightenment('fire');
-      this.launchVfxProjectile('vfx_m_fire_bolt', _hx, _hy - 14, _tx, _ty - 10, 0.7, 200, () => {
-        this.playDarkSeqAnim('anim_m_fireball_blast', _tx, _ty - 10, 1.08, 12, 16);
+      mv.launchProjectile('proj_m_fireball', _hx, _hy - 14, _tx, _ty - 10, 0.64, 210, 'fire', () => {
+        mv.spawnGroundDecal('fire', _tx, _ty, 0.78, 1750);
+        mv.playSeq16('seq16_m_fireball_blast', _tx, _ty - 10, 1.32, 20, 16);
+        mv.spawnDebrisBurst(_tx, _ty, 'fire', 9);
         _aoeD4(_tx, _ty, 265, (250 + skillLvl * 38) / 100, '#fb923c', '🔥火球 ', ['burn']);
       });
       return;
@@ -2396,10 +2406,11 @@ export class BattleScene extends Phaser.Scene {
     if (skillId === 'm_ice_shards') {
       this.registerEnlightenment('frost');
       for (let w = 0; w < 3; w++) {
-        this.time.delayedCall(w * 150, () => {
+        this.time.delayedCall(w * 145, () => {
           const ox = _tx + Phaser.Math.Between(-24, 24), oy = _ty + Phaser.Math.Between(-18, 18);
-          this.launchVfxProjectile('vfx_m_ice_shards', _hx, _hy - 12, ox, oy, 0.62, 180, () => {
-            this.playDarkSeqAnim('anim_m_frost_nova', ox, oy - 6, 0.56, 16, 14);
+          mv.launchProjectile('proj_m_ice_lance', _hx, _hy - 12, ox, oy, 0.56, 175, 'frost', () => {
+            mv.playSeq16('seq16_m_frost_nova', ox, oy - 6, 0.72, 24, 14);
+            mv.spawnDebrisBurst(ox, oy, 'frost', 5);
             _aoeD4(_tx, _ty, 235, (86 + skillLvl * 13) / 100, '#38bdf8', '🧊冰片 ', ['freeze', 'vulnerable']);
           });
         });
@@ -2408,24 +2419,20 @@ export class BattleScene extends Phaser.Scene {
     }
     if (skillId === 'm_frozen_orb') {
       this.registerEnlightenment('frost');
-      const mx1 = (_hx + _tx) * 0.5, my1 = (_hy + _ty) * 0.5;
-      this.playDarkSeqAnim('anim_m_frozen_orb', _tx, _ty - 10, 1.12, 9, 18);
-      this.time.delayedCall(260, () => {
-        _aoeD4(mx1, my1, 250, (95 + skillLvl * 14) / 100, '#7dd3fc', '❄️冰球途傷 ', ['freeze']);
-      });
-      this.time.delayedCall(620, () => {
-        _aoeD4(_tx, _ty, 275, (105 + skillLvl * 15) / 100, '#38bdf8', '❄️冰封球 ', ['freeze', 'vulnerable']);
-      });
-      this.time.delayedCall(920, () => {
-        this.playDarkSeqAnim('anim_m_frost_nova', _tx, _ty - 6, 1.05, 11, 16);
-        _aoeD4(_tx, _ty, 315, (150 + skillLvl * 20) / 100, '#38bdf8', '💥冰球碎裂 ', ['freeze', 'vulnerable'], true);
-      });
+      mv.launchFrozenOrb(
+        _hx, _hy, _tx, _ty,
+        (mx, my) => _aoeD4(mx, my, 250, (98 + skillLvl * 14) / 100, '#7dd3fc', '❄️冰球途傷 ', ['freeze']),
+        () => {
+          _aoeD4(_tx, _ty, 315, (165 + skillLvl * 22) / 100, '#38bdf8', '💥冰球碎裂 ', ['freeze', 'vulnerable'], true);
+        }
+      );
       return;
     }
     if (skillId === 'm_flame_shield') {
       this.registerEnlightenment('fire');
       this.activateHeroBarrier(Math.round(this.playerMaxHp * 0.38), 5500, 'vfx_m_flame_shield');
-      this.playDarkSeqAnim('anim_m_inferno', _hx, _hy - 8, 0.92, 11, 16);
+      mv.spawnGroundDecal('fire', _hx, _hy, 0.72, 1400);
+      mv.playSeq16('seq16_m_inferno', _hx, _hy - 12, 1.05, 20, 16);
       this.healHero(Math.round(this.playerMaxHp * ((22 + skillLvl * 2) / 100)));
       _aoeD4(_hx, _hy, 265, (175 + skillLvl * 26) / 100, '#fb923c', '🔥烈焰護盾 ', ['burn']);
       return;
@@ -2433,7 +2440,8 @@ export class BattleScene extends Phaser.Scene {
     if (skillId === 'm_ice_armor') {
       this.registerEnlightenment('frost');
       this.activateHeroBarrier(Math.round(this.playerMaxHp * 0.45), 6500, 'vfx_m_ice_armor');
-      this.playDarkSeqAnim('anim_m_frost_nova', _hx, _hy - 8, 0.88, 11, 16);
+      mv.spawnGroundDecal('frost', _hx, _hy, 0.72, 1400);
+      mv.playSeq16('seq16_m_frost_nova', _hx, _hy - 8, 1.02, 20, 16);
       this.healHero(Math.round(this.playerMaxHp * ((24 + skillLvl * 2) / 100)));
       this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 30);
       _aoeD4(_hx, _hy, 265, (158 + skillLvl * 24) / 100, '#38bdf8', '🧊寒冰護甲 ', ['freeze']);
@@ -2441,8 +2449,9 @@ export class BattleScene extends Phaser.Scene {
     }
     if (skillId === 'm_arcane_blink') {
       this.registerEnlightenment('shock');
-      this.playDarkSeqAnim('anim_m_lightning_strike', _hx, _hy - 8, 0.72, 16, 14);
-      this.playDarkSeqAnim('anim_m_lightning_strike', _tx, _ty - 10, 1.05, 13, 18);
+      mv.playSeq16('seq16_m_lightning_strike', _hx, _hy - 10, 0.85, 24, 14);
+      mv.spawnGroundDecal('shock', _tx, _ty, 0.78, 1500);
+      mv.playSeq16('seq16_m_lightning_strike', _tx, _ty - 14, 1.25, 22, 18);
       this.slotCdTimers = this.slotCdTimers.map((t) => t + 1000);
       _aoeD4(_tx, _ty, 265, (215 + skillLvl * 32) / 100, '#60a5fa', '⚡傳送閃現 ', ['shock', 'vulnerable']);
       this.spawnCracklingOrb(_tx, _ty);
@@ -2450,15 +2459,18 @@ export class BattleScene extends Phaser.Scene {
     }
     if (skillId === 'm_flame_hydra') {
       this.registerEnlightenment('fire');
-      this.spawnMageConjuration('hydra', _tx + Phaser.Math.Between(-35, 35), _ty + Phaser.Math.Between(-25, 25), skillLvl, 10000);
-      this.playDarkSeqAnim('anim_m_fireball_blast', _tx, _ty - 8, 0.82, 13, 12);
+      const hx2 = _tx + Phaser.Math.Between(-35, 35), hy2 = _ty + Phaser.Math.Between(-25, 25);
+      this.spawnMageConjuration('hydra', hx2, hy2, skillLvl, 10000);
+      mv.spawnGroundDecal('fire', hx2, hy2, 0.65, 2400);
+      mv.playSeq16('seq16_m_fireball_blast', hx2, hy2 - 8, 0.92, 22, 12);
       _aoeD4(_tx, _ty, 250, (125 + skillLvl * 20) / 100, '#fb923c', '🐍多頭火蛇 ', ['burn']);
       return;
     }
     if (skillId === 'm_ice_blades') {
       this.registerEnlightenment('frost');
       this.spawnMageConjuration('ice_blades', _tx, _ty, skillLvl, 8000);
-      this.playDarkSeqAnim('anim_m_frost_nova', _tx, _ty - 8, 0.76, 14, 12);
+      mv.spawnGroundDecal('frost', _tx, _ty, 0.62, 1500);
+      mv.playSeq16('seq16_m_frost_nova', _tx, _ty - 8, 0.92, 22, 12);
       this.slotCdTimers = this.slotCdTimers.map((t) => t + 500);
       _aoeD4(_tx, _ty, 245, (115 + skillLvl * 16) / 100, '#7dd3fc', '⚔️寒冰之刃 ', ['freeze', 'vulnerable']);
       return;
@@ -2466,7 +2478,8 @@ export class BattleScene extends Phaser.Scene {
     if (skillId === 'm_lightning_spear') {
       this.registerEnlightenment('shock');
       this.spawnMageConjuration('lightning_spear', _tx, _ty, skillLvl, 7500);
-      this.playDarkSeqAnim('anim_m_lightning_strike', _tx, _ty - 10, 0.92, 14, 16);
+      mv.spawnGroundDecal('shock', _tx, _ty, 0.68, 1500);
+      mv.playSeq16('seq16_m_lightning_strike', _tx, _ty - 14, 1.15, 22, 16);
       _aoeD4(_tx, _ty, 250, (160 + skillLvl * 26) / 100, '#facc15', '⚡閃電長矛 ', ['shock'], true);
       this.spawnCracklingOrb(_tx, _ty);
       return;
@@ -2474,13 +2487,15 @@ export class BattleScene extends Phaser.Scene {
     if (skillId === 'm_familiar') {
       this.registerEnlightenment(['fire', 'frost', 'shock'][Math.floor(Math.random() * 3)]);
       this.spawnMageConjuration('familiar', _hx + Phaser.Math.Between(-45, 45), _hy - 26, skillLvl, 9500);
-      this.playDarkSeqAnim('anim_m_supernova', _tx, _ty - 10, 0.78, 12, 14);
+      mv.spawnGroundDecal('void', _tx, _ty, 0.68, 1500);
+      this.playDarkSeqAnim('anim_m_supernova', _tx, _ty - 10, 0.82, 12, 14);
       _aoeD4(_tx, _ty, 260, (130 + skillLvl * 18) / 100, '#fde047', '🔮元素使魔 ', ['burn', 'freeze', 'shock']);
       return;
     }
     if (skillId === 'm_firewall') {
       this.registerEnlightenment('fire');
-      this.playDarkSeqAnim('anim_m_firewall', _tx, _ty - 6, 1.18, 6, -8);
+      mv.spawnGroundDecal('fire', _tx, _ty, 1.05, 2200);
+      this.playDarkSeqAnim('anim_m_firewall', _tx, _ty - 6, 1.22, 6, -6);
       for (let w = 0; w < 4; w++) {
         this.time.delayedCall(w * 320, () => {
           _aoeD4(_tx, _ty, 285, (124 + skillLvl * 22) / 100, '#ef4444', '🔥烈焰火牆 ', ['burn']);
@@ -2493,7 +2508,7 @@ export class BattleScene extends Phaser.Scene {
       for (let w = 0; w < 3; w++) {
         this.time.delayedCall(w * 250, () => {
           const ox = _tx + Phaser.Math.Between(-42, 42), oy = _ty + Phaser.Math.Between(-30, 30);
-          this.playDarkSeqAnim('anim_m_ball_lightning', ox, oy - 8, 0.88, 11, 14);
+          this.playDarkSeqAnim('anim_m_ball_lightning', ox, oy - 8, 0.92, 12, 14);
           _aoeD4(ox, oy, 245, (112 + skillLvl * 18) / 100, '#a78bfa', '⚡球狀閃電 ', ['shock']);
         });
       }
@@ -2502,7 +2517,8 @@ export class BattleScene extends Phaser.Scene {
     }
     if (skillId === 'm_blizzard_field') {
       this.registerEnlightenment('frost');
-      this.playDarkSeqAnim('anim_m_blizzard', _tx, _ty - 10, 1.25, 6, 18);
+      mv.spawnGroundDecal('frost', _tx, _ty, 1.15, 2300);
+      mv.playSeq16('seq16_m_blizzard', _tx, _ty - 14, 1.55, 13, 18);
       for (let w = 0; w < 4; w++) {
         this.time.delayedCall(w * 300, () => {
           _aoeD4(_tx, _ty, 295, (116 + skillLvl * 20) / 100, '#7dd3fc', '❄️暴風雪 ', ['freeze']);
@@ -2513,7 +2529,8 @@ export class BattleScene extends Phaser.Scene {
     if (skillId === 'm_inferno') {
       this.registerEnlightenment('fire');
       this.playerMp = this.playerMaxMp;
-      this.playDarkSeqAnim('anim_m_inferno', _tx, _ty - 14, 1.42, 6, 20);
+      mv.spawnGroundDecal('fire', _tx, _ty, 1.28, 2500);
+      mv.playSeq16('seq16_m_inferno', _tx, _ty - 18, 1.65, 13, 20);
       for (let w = 0; w < 5; w++) {
         this.time.delayedCall(w * 280, () => {
           _aoeD4(_tx, _ty, 360, (182 + skillLvl * 30) / 100, '#fb923c', '🐍煉獄巨蛇 ', ['burn', 'vulnerable'], true);
@@ -2526,10 +2543,14 @@ export class BattleScene extends Phaser.Scene {
       this.activateHeroBarrier(Math.round(this.playerMaxHp * 0.65), 6000, 'vfx_m_ice_armor');
       this.healHero(Math.round(this.playerMaxHp * 0.35));
       this.slotCdTimers = this.slotCdTimers.map((t) => t + 4500);
-      this.playDarkSeqAnim('anim_m_blizzard', _hx, _hy - 12, 1.35, 7, 18);
+      mv.spawnGroundDecal('frost', _hx, _hy, 1.25, 2200);
+      mv.playSeq16('seq16_m_blizzard', _hx, _hy - 14, 1.62, 14, 18);
       for (let w = 0; w < 4; w++) {
         this.time.delayedCall(w * 260, () => {
-          if (w === 3) this.playDarkSeqAnim('anim_m_frost_nova', _hx, _hy - 8, 1.38, 10, 20);
+          if (w === 3) {
+            mv.playSeq16('seq16_m_frost_nova', _hx, _hy - 10, 1.62, 18, 20);
+            mv.spawnDebrisBurst(_hx, _hy, 'frost', 12);
+          }
           _aoeD4(_hx, _hy, 365, (122 + skillLvl * 18) / 100, '#38bdf8', '❄️深度凍結 ', ['freeze', 'vulnerable'], true);
         });
       }
@@ -2537,14 +2558,16 @@ export class BattleScene extends Phaser.Scene {
     }
     if (skillId === 'm_unstable_currents') {
       this.registerEnlightenment('shock');
-      this.playDarkSeqAnim('anim_m_ball_lightning', _hx, _hy - 12, 1.15, 10, 18);
+      mv.spawnGroundDecal('shock', _hx, _hy, 1.15, 2200);
+      this.playDarkSeqAnim('anim_m_ball_lightning', _hx, _hy - 12, 1.18, 11, 18);
       this.spawnMageConjuration('lightning_spear', _tx, _ty, skillLvl, 7000);
       this.spawnCracklingOrb(_tx - 30, _ty);
       this.spawnCracklingOrb(_tx + 30, _ty);
       for (let w = 0; w < 5; w++) {
         this.time.delayedCall(w * 240, () => {
           const ox = _tx + Phaser.Math.Between(-85, 85), oy = _ty + Phaser.Math.Between(-55, 55);
-          this.playDarkSeqAnim(w % 2 === 0 ? 'anim_m_lightning_strike' : 'anim_m_ball_lightning', ox, oy - 12, 1.08, 13, 18);
+          if (w % 2 === 0) mv.playSeq16('seq16_m_lightning_strike', ox, oy - 16, 1.32, 22, 18);
+          else this.playDarkSeqAnim('anim_m_ball_lightning', ox, oy - 10, 1.05, 13, 18);
           _aoeD4(ox, oy, 345, (176 + skillLvl * 30) / 100, '#c084fc', '⚡不穩電流 ', ['shock', 'vulnerable'], true);
         });
       }
@@ -2554,12 +2577,13 @@ export class BattleScene extends Phaser.Scene {
       this.registerEnlightenment('fire');
       this.registerEnlightenment('frost');
       this.registerEnlightenment('shock');
-      this.playDarkSeqAnim('anim_m_supernova', _tx, _ty - 12, 1.35, 8, 20);
+      mv.spawnGroundDecal('void', _tx, _ty, 1.25, 2400);
+      this.playDarkSeqAnim('anim_m_supernova', _tx, _ty - 12, 1.38, 8, 20);
       for (let w = 0; w < 4; w++) {
         this.time.delayedCall(w * 270, () => {
-          if (w === 1) this.playDarkSeqAnim('anim_m_meteor', _tx, _ty - 10, 1.15, 10, 18);
-          if (w === 2) this.playDarkSeqAnim('anim_m_frost_nova', _tx, _ty - 10, 1.15, 11, 18);
-          if (w === 3) this.playDarkSeqAnim('anim_m_lightning_strike', _tx, _ty - 10, 1.15, 13, 18);
+          if (w === 1) mv.playSeq16('seq16_m_meteor', _tx, _ty - 14, 1.45, 18, 18);
+          if (w === 2) mv.playSeq16('seq16_m_frost_nova', _tx, _ty - 10, 1.45, 20, 18);
+          if (w === 3) mv.playSeq16('seq16_m_lightning_strike', _tx, _ty - 16, 1.45, 22, 18);
           _aoeD4(_tx, _ty, 365, (185 + skillLvl * 32) / 100, '#e879f9', '🌀元素天災 ', ['burn', 'freeze', 'shock'], true);
         });
       }
@@ -2570,21 +2594,27 @@ export class BattleScene extends Phaser.Scene {
       this.registerEnlightenment('frost');
       this.registerEnlightenment('shock');
       this.playerMp = this.playerMaxMp;
-      this.playDarkSeqAnim('anim_m_supernova', _tx, _ty - 12, 1.48, 8, 22);
+      mv.spawnGroundDecal('void', _tx, _ty, 1.35, 2500);
+      this.playDarkSeqAnim('anim_m_supernova', _tx, _ty - 12, 1.52, 8, 22);
+      mv.spawnDebrisBurst(_tx, _ty, 'shock', 12);
       _aoeD4(_tx, _ty, 390, (410 + skillLvl * 60) / 100, '#fde047', '🌟星界超新星 ', ['vulnerable', 'curse'], true);
       return;
     }
     if (skillId === 'meteor') {
       this.registerEnlightenment('fire');
-      this.playDarkSeqAnim('anim_m_meteor', _tx, _ty - 12, 1.32, 8, 18);
-      this.time.delayedCall(340, () => {
+      mv.playSeq16('seq16_m_meteor', _tx, _ty - 14, 1.58, 16, 18);
+      this.time.delayedCall(320, () => {
+        mv.spawnGroundDecal('fire', _tx, _ty, 1.15, 2200);
+        mv.spawnDebrisBurst(_tx, _ty, 'fire', 12);
         _aoeD4(_tx, _ty, 300, (290 + skillLvl * 42) / 100, '#fb923c', '☄️隕石 ', ['burn', 'vulnerable'], true);
       });
       return;
     }
     if (skillId === 'frost_nova') {
       this.registerEnlightenment('frost');
-      this.playDarkSeqAnim('anim_m_frost_nova', _hx, _hy - 8, 1.24, 10, 18);
+      mv.spawnGroundDecal('frost', _hx, _hy, 1.05, 1900);
+      mv.playSeq16('seq16_m_frost_nova', _hx, _hy - 8, 1.48, 20, 18);
+      mv.spawnDebrisBurst(_hx, _hy, 'frost', 10);
       _aoeD4(_hx, _hy, 290, (195 + skillLvl * 28) / 100, '#38bdf8', '❄️冰霜新星 ', ['freeze', 'vulnerable']);
       return;
     }
@@ -2596,19 +2626,21 @@ export class BattleScene extends Phaser.Scene {
       if (targets.length > 0) {
         targets.forEach((m, idx) => {
           this.time.delayedCall(idx * 65, () => {
-            this.playDarkSeqAnim('anim_m_lightning_strike', m.sprite.x, m.sprite.y - 10, 0.78, 15, 16);
+            mv.playSeq16('seq16_m_lightning_strike', m.sprite.x, m.sprite.y - 14, 0.96, 24, 16);
           });
         });
       } else {
-        this.playDarkSeqAnim('anim_m_lightning_strike', _tx, _ty - 10, 0.92, 14, 16);
+        mv.playSeq16('seq16_m_lightning_strike', _tx, _ty - 14, 1.12, 22, 16);
       }
+      mv.spawnGroundDecal('shock', _tx, _ty, 0.78, 1500);
       _aoeD4(_tx, _ty, 280, (210 + skillLvl * 32) / 100, '#a78bfa', '⚡連鎖閃電 ', ['shock']);
       if (Math.random() < 0.65) this.spawnCracklingOrb(_tx, _ty);
       return;
     }
     if (skillId === 'black_hole') {
       this.registerEnlightenment('shock');
-      this.playDarkSeqAnim('anim_m_supernova', _tx, _ty - 10, 1.28, 8, 16);
+      mv.spawnGroundDecal('void', _tx, _ty, 1.15, 2200);
+      this.playDarkSeqAnim('anim_m_supernova', _tx, _ty - 10, 1.32, 8, 16);
       _aoeD4(_tx, _ty, 310, (240 + skillLvl * 36) / 100, '#c084fc', '🕳️黑洞 ', ['vulnerable', 'curse'], true);
       return;
     }
@@ -4195,18 +4227,18 @@ export class BattleScene extends Phaser.Scene {
             this.tweens.add({ targets: c.sprite, scaleX: c.sprite.scaleX * 1.18, scaleY: c.sprite.scaleY * 1.18, duration: 90, yoyo: true });
           }
           if (c.type === 'hydra') {
-            this.launchVfxProjectile('vfx_m_fire_bolt', c.x, c.y - 24, tgt.sprite.x, tgt.sprite.y - 8, 0.42, 160, () => {
+            this.mageVfx?.launchProjectile('proj_m_fire_bolt', c.x, c.y - 24, tgt.sprite.x, tgt.sprite.y - 8, 0.42, 160, 'fire', () => {
               if (tgt.hp > 0) {
-                this.playDarkSeqAnim('anim_m_fireball_blast', tgt.sprite.x, tgt.sprite.y - 6, 0.44, 16, 14);
+                this.mageVfx?.playSeq16('seq16_m_fireball_blast', tgt.sprite.x, tgt.sprite.y - 6, 0.58, 22, 14);
                 this.damageMonster(tgt, baseDmg, false, false, '#fb923c', '🐍火蛇 ', true);
               }
             });
           } else if (c.type === 'ice_blades') {
-            this.playDarkSeqAnim('anim_m_frost_nova', tgt.sprite.x, tgt.sprite.y - 6, 0.46, 16, 14);
+            this.mageVfx?.playSeq16('seq16_m_frost_nova', tgt.sprite.x, tgt.sprite.y - 6, 0.58, 22, 14);
             this.slotCdTimers = this.slotCdTimers.map((t) => t + 380);
             this.damageMonster(tgt, baseDmg, false, false, '#7dd3fc', '⚔️冰刃 ', true);
           } else if (c.type === 'lightning_spear') {
-            this.playDarkSeqAnim('anim_m_lightning_strike', tgt.sprite.x, tgt.sprite.y - 8, 0.56, 16, 16);
+            this.mageVfx?.playSeq16('seq16_m_lightning_strike', tgt.sprite.x, tgt.sprite.y - 10, 0.72, 24, 16);
             this.damageMonster(tgt, Math.round(baseDmg * 1.15), true, false, '#facc15', '⚡雷矛 ', true);
           } else if (c.type === 'familiar') {
             this.playDarkSeqAnim('anim_m_ball_lightning', tgt.sprite.x, tgt.sprite.y - 6, 0.44, 15, 14);
@@ -4538,7 +4570,7 @@ export class BattleScene extends Phaser.Scene {
     if (curState?.classId === 'mage') {
       const enchants = curState?.classMechanic?.mage?.enchants || [];
       if (enchants.includes('m_fireball')) {
-        this.playDarkSeqAnim('anim_m_fireball_blast', m.sprite.x, m.sprite.y - 8, 0.85, 14, 16);
+        this.mageVfx?.playSeq16('seq16_m_fireball_blast', m.sprite.x, m.sprite.y - 8, 1.02, 22, 16); this.mageVfx?.spawnDebrisBurst(m.sprite.x, m.sprite.y, 'fire', 6);
         const fbDmg = Math.round(stats.atk * 1.05 * this.getMageD4LiveMult());
         this.monsters
           .filter((t) => t.hp > 0 && t !== m && Phaser.Math.Distance.Between(m.sprite.x, m.sprite.y, t.sprite.x, t.sprite.y) <= 215)
@@ -4546,7 +4578,7 @@ export class BattleScene extends Phaser.Scene {
       }
       const isFrozen = (m._statuses?.freeze || 0) > this.time.now || (m.chilledUntil || 0) > this.time.now;
       if (curState?.activeKeystone?.mage === 'mk_shatter_frost' && isFrozen) {
-        this.playDarkSeqAnim('anim_m_frost_nova', m.sprite.x, m.sprite.y - 8, 0.85, 13, 16);
+        this.mageVfx?.playSeq16('seq16_m_frost_nova', m.sprite.x, m.sprite.y - 8, 1.02, 22, 16); this.mageVfx?.spawnDebrisBurst(m.sprite.x, m.sprite.y, 'frost', 6);
         const shDmg = Math.round(stats.atk * 1.35 * this.getMageD4LiveMult());
         this.monsters
           .filter((t) => t.hp > 0 && t !== m && Phaser.Math.Distance.Between(m.sprite.x, m.sprite.y, t.sprite.x, t.sprite.y) <= 230)
