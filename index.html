@@ -16,7 +16,7 @@
   <link id="worldmap-25d-v222-css" rel="stylesheet" href="./src/ui/worldMap25d.css?v=222" />
   <link id="gothic-ui-theme-v225-css" rel="stylesheet" href="./src/ui/gothicUiTheme.css?v=225" />
   <link id="custom-cursor-v232-css" rel="stylesheet" href="./src/ui/customCursor.css?v=232" />
-  <link id="skill-spec-v233-css" rel="stylesheet" href="./src/ui/skillSpec.css?v=241" />
+  <link id="skill-spec-v233-css" rel="stylesheet" href="./src/ui/skillSpec.css?v=243" />
   <link id="class-mech-v234-css" rel="stylesheet" href="./src/ui/classMechanic.css?v=234" />
   <link id="endgame-v237-css" rel="stylesheet" href="./src/ui/endgameModal.css?v=237" />
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
@@ -329,139 +329,136 @@
         </div>
       </aside>
 
-      <!-- 底部中央：懸浮雙球暗黑 MMORPG 祭壇 -->
-      <footer id="diablo-hud" class="floating-altar v222-gothic-hud">
-        <!-- 1. BUFF 圖示列（浮於鍛鐵翼樑正上方） -->
-        <div id="hud-altar-buffs" class="hud-altar-buffs" title="目前生效的主城祝福與藥水增益"></div>
+      <!-- v243 底部 HUD 拆分：5 個獨立可拖曳／縮放／開關模組 -->
 
-        <!-- 2. 左側雙色血魔靈球（置於鍛鐵圓框鏤空正後方） -->
-        <div class="gothic-orb-well" id="orb-dual-wrap">
-          <div class="dual-orb-sphere">
-            <div class="dual-half dual-half-hp" id="orb-hp" title="生命值 (HP)">
-              <div class="orb-liquid orb-hp-liquid" id="orb-hp-fill"></div>
+      <!-- 模組 1：增益 Buff 圖示列 -->
+      <section id="hud-buff-bar" class="v243-hud-module" title="目前生效的主城祝福、藥水與流派增益（可在排版模式獨立移動）">
+        <div id="hud-altar-buffs" class="hud-altar-buffs"></div>
+      </section>
+
+      <!-- 模組 2：流派預設與 3 顆鍛鐵專精徽章列 -->
+      <section id="hud-build-bar" class="v243-hud-module">
+        <div id="v241-mage-preset-row" class="v241-preset-row">
+          <button type="button" class="v241-preset-pill" data-preset="frost_orb" title="一鍵套用：永冬冰封球流（6 招＋雙附魔＋碎裂冰霜）">❄️ 冰封球</button>
+          <button type="button" class="v241-preset-pill" data-preset="fire_hydra" title="一鍵套用：煉獄火蛇火牆（6 招＋雙附魔＋劇烈燃燒）">🔥 火蛇火牆</button>
+          <button type="button" class="v241-preset-pill" data-preset="storm_arc" title="一鍵套用：不穩電流電花（6 招＋雙附魔＋維爾精通）">⚡ 不穩電流</button>
+          <button type="button" class="v241-preset-pill" data-preset="enlighten" title="一鍵套用：啟蒙三系召喚（6 招＋雙附魔＋啟蒙）">🔮 啟蒙三系</button>
+        </div>
+        <span id="v241-class-strip-label" style="display:none;font-size:11px;color:#d6c39b;font-weight:700;letter-spacing:0.5px;">⚔️ 6 格流派技能列（右鍵快換）</span>
+        <div class="v241-medallion-group">
+          <button type="button" id="btn-open-skill-spec" class="v241-iron-medallion" title="開啟暗黑 4 階技能專精樹與 6 格配置">⚡</button>
+          <button type="button" id="btn-open-class-mech" class="v241-iron-medallion" title="開啟本職業專屬機制（法師雙附魔槽／武器庫／專精／誓約／亡者之書／調毒）">⚔️</button>
+          <button type="button" id="btn-open-endgame" class="v241-iron-medallion" title="開啟傳奇威能法典刻印與 Lv.50 深淵巔峰盤＆雕紋">👑</button>
+        </div>
+      </section>
+
+      <!-- 模組 3：獨立血魔雙球核心 -->
+      <section id="hud-orb-vital" class="v243-hud-module">
+        <div class="dual-orb-sphere" id="orb-dual-wrap">
+          <div class="dual-half dual-half-hp" id="orb-hp" title="生命值 (HP)">
+            <div class="orb-liquid orb-hp-liquid" id="orb-hp-fill"></div>
+          </div>
+          <div class="dual-half dual-half-mp" id="orb-mp" title="魔力 / 職業能量">
+            <div class="orb-liquid orb-mp-liquid" id="orb-mp-fill"></div>
+          </div>
+          <div class="dual-meridian"></div>
+          <div class="dual-orb-gloss"></div>
+          <div class="dual-orb-readout">
+            <div class="dual-read-hp">
+              <span id="orb-hp-text">240/240</span>
+              <small>生命</small>
             </div>
-            <div class="dual-half dual-half-mp" id="orb-mp" title="魔力 / 職業能量">
-              <div class="orb-liquid orb-mp-liquid" id="orb-mp-fill"></div>
-            </div>
-            <div class="dual-meridian"></div>
-            <div class="dual-orb-gloss"></div>
-            <div class="dual-orb-readout">
-              <div class="dual-read-hp">
-                <span id="orb-hp-text">240/240</span>
-                <small>生命</small>
-              </div>
-              <div class="dual-read-mp">
-                <span id="orb-mp-text">100/100</span>
-                <small id="orb-mp-label">魔力</small>
-              </div>
+            <div class="dual-read-mp">
+              <span id="orb-mp-text">100/100</span>
+              <small id="orb-mp-label">魔力</small>
             </div>
           </div>
         </div>
+      </section>
 
-        <!-- 3. 暗黑四哥德鍛鐵雕花框架本體 PNG（去背覆蓋層） -->
-        <img class="gothic-hud-frame-img" src="./assets/ui/hud_altar_gothic_v241.png?v=241" alt="" draggable="false" />
+      <!-- 模組 4：獨立單排 8 槽流派技能列（[H]＋[1][2][3][4][E][R]＋[T]） -->
+      <section id="hud-skill-hotbar" class="v243-hud-module">
+        <div class="mmo-hotbar v243-hotbar-grid">
+          <button id="btn-potion" class="mmo-slot mmo-potion" data-tip="生命藥水 [H]：立即回復 45% 最大生命（每 12 秒或過關補充）">
+            <span class="mmo-hotkey">H</span>
+            <img class="mmo-ui-img" src="./assets/ui/ui_potion.png" alt="藥水" />
+            <span class="mmo-badge-br" id="potion-count">3</span>
+          </button>
 
-        <!-- 4. 精準嵌於 5 個鍛鐵凹槽內的技能與藥水按鈕 -->
-        <!-- 3.5 上方暗黑流派銘條＋3顆鍛鐵圓徽章（零大色塊、零重疊） -->
-        <div class="v241-build-strip">
-          <div id="v241-mage-preset-row" class="v241-preset-row">
-            <button type="button" class="v241-preset-pill" data-preset="frost_orb" title="一鍵套用：永冬冰封球流（6 招＋雙附魔＋碎裂冰霜）">❄️ 冰封球</button>
-            <button type="button" class="v241-preset-pill" data-preset="fire_hydra" title="一鍵套用：煉獄火蛇火牆（6 招＋雙附魔＋劇烈燃燒）">🔥 火蛇火牆</button>
-            <button type="button" class="v241-preset-pill" data-preset="storm_arc" title="一鍵套用：不穩電流電花（6 招＋雙附魔＋維爾精通）">⚡ 不穩電流</button>
-            <button type="button" class="v241-preset-pill" data-preset="enlighten" title="一鍵套用：啟蒙三系召喚（6 招＋雙附魔＋啟蒙）">🔮 啟蒙三系</button>
-          </div>
-          <span id="v241-class-strip-label" style="display:none;font-size:11px;color:#d6c39b;font-weight:700;letter-spacing:0.5px;">⚔️ 6 格流派技能列（右鍵快換）</span>
-          <div class="v241-medallion-group">
-            <button type="button" id="btn-open-skill-spec" class="v241-iron-medallion" title="開啟暗黑 4 階技能專精樹與 6 格配置">⚡</button>
-            <button type="button" id="btn-open-class-mech" class="v241-iron-medallion" title="開啟本職業專屬機制（法師雙附魔槽／武器庫／專精／誓約／亡者之書／調毒）">⚔️</button>
-            <button type="button" id="btn-open-endgame" class="v241-iron-medallion" title="開啟傳奇威能法典刻印與 Lv.50 深淵巔峰盤＆雕紋">👑</button>
-          </div>
+          <button id="skill-slot-0" class="mmo-slot mmo-skill" data-slot="0" title="基礎技能槽 [1 / 空白]（右鍵快速換招）">
+            <span class="mmo-hotkey">1</span>
+            <img class="sk-slot-img hidden" src="" alt="" />
+            <span class="mmo-empty-plus">+</span>
+            <div class="mmo-cd-curtain"></div>
+            <span class="mmo-cd-sec"></span>
+            <span class="mmo-mp-cost"></span>
+          </button>
+
+          <button id="skill-slot-1" class="mmo-slot mmo-skill" data-slot="1" title="核心輸出槽 [2]（右鍵快速換招）">
+            <span class="mmo-hotkey">2</span>
+            <img class="sk-slot-img hidden" src="" alt="" />
+            <span class="mmo-empty-plus">+</span>
+            <div class="mmo-cd-curtain"></div>
+            <span class="mmo-cd-sec"></span>
+            <span class="mmo-mp-cost"></span>
+          </button>
+
+          <button id="skill-slot-2" class="mmo-slot mmo-skill" data-slot="2" title="防禦護盾槽 [3]（右鍵快速換招）">
+            <span class="mmo-hotkey">3</span>
+            <img class="sk-slot-img hidden" src="" alt="" />
+            <span class="mmo-empty-plus">+</span>
+            <div class="mmo-cd-curtain"></div>
+            <span class="mmo-cd-sec"></span>
+            <span class="mmo-mp-cost"></span>
+          </button>
+
+          <button id="skill-slot-3" class="mmo-slot mmo-skill" data-slot="3" title="位移控場槽 [4]（右鍵快速換招）">
+            <span class="mmo-hotkey">4</span>
+            <img class="sk-slot-img hidden" src="" alt="" />
+            <span class="mmo-empty-plus">+</span>
+            <div class="mmo-cd-curtain"></div>
+            <span class="mmo-cd-sec"></span>
+            <span class="mmo-mp-cost"></span>
+          </button>
+
+          <button id="skill-slot-4" class="mmo-slot mmo-skill" data-slot="4" title="召喚／領域槽 [E]（右鍵快速換招）">
+            <span class="mmo-hotkey">E</span>
+            <img class="sk-slot-img hidden" src="" alt="" />
+            <span class="mmo-empty-plus">+</span>
+            <div class="mmo-cd-curtain"></div>
+            <span class="mmo-cd-sec"></span>
+            <span class="mmo-mp-cost"></span>
+          </button>
+
+          <button id="skill-slot-5" class="mmo-slot mmo-skill is-ultimate" data-slot="5" title="終極大招槽 [R]（右鍵快速換招）">
+            <span class="mmo-hotkey">R</span>
+            <img class="sk-slot-img hidden" src="" alt="" />
+            <span class="mmo-empty-plus">+</span>
+            <div class="mmo-cd-curtain"></div>
+            <span class="mmo-cd-sec"></span>
+            <span class="mmo-mp-cost"></span>
+          </button>
+
+          <button id="btn-toggle-auto" class="mmo-slot mmo-auto active" data-tip="自動狩獵／手動控制切換 [T]（可隨時移動介入）">
+            <span class="mmo-hotkey">T</span>
+            <img class="mmo-ui-img" src="./assets/ui/ui_auto.png" alt="自動" />
+            <span class="mmo-badge-br" id="auto-mode-label">自動</span>
+          </button>
         </div>
+      </section>
 
-        <!-- 4. 精準嵌於 8 個鍛鐵凹槽內的統一單排技能列：[H]藥水 + [1][2][3][4][E][R]六大流派槽 + [T]自動 -->
-        <div id="altar-center" class="gothic-slots-overlay">
-          <div class="mmo-hotbar gothic-hotbar">
-            <button id="btn-potion" class="mmo-slot mmo-potion" data-tip="生命藥水 [H]：立即回復 45% 最大生命（每 12 秒或過關補充）">
-              <span class="mmo-hotkey">H</span>
-              <img class="mmo-ui-img" src="./assets/ui/ui_potion.png" alt="藥水" />
-              <span class="mmo-badge-br" id="potion-count">3</span>
-            </button>
-
-            <button id="skill-slot-0" class="mmo-slot mmo-skill" data-slot="0" title="基礎技能槽 [1 / 空白]（右鍵快速換招）">
-              <span class="mmo-hotkey">1</span>
-              <img class="sk-slot-img hidden" src="" alt="" />
-              <span class="mmo-empty-plus">+</span>
-              <div class="mmo-cd-curtain"></div>
-              <span class="mmo-cd-sec"></span>
-              <span class="mmo-mp-cost"></span>
-            </button>
-
-            <button id="skill-slot-1" class="mmo-slot mmo-skill" data-slot="1" title="核心輸出槽 [2]（右鍵快速換招）">
-              <span class="mmo-hotkey">2</span>
-              <img class="sk-slot-img hidden" src="" alt="" />
-              <span class="mmo-empty-plus">+</span>
-              <div class="mmo-cd-curtain"></div>
-              <span class="mmo-cd-sec"></span>
-              <span class="mmo-mp-cost"></span>
-            </button>
-
-            <button id="skill-slot-2" class="mmo-slot mmo-skill" data-slot="2" title="防禦護盾槽 [3]（右鍵快速換招）">
-              <span class="mmo-hotkey">3</span>
-              <img class="sk-slot-img hidden" src="" alt="" />
-              <span class="mmo-empty-plus">+</span>
-              <div class="mmo-cd-curtain"></div>
-              <span class="mmo-cd-sec"></span>
-              <span class="mmo-mp-cost"></span>
-            </button>
-
-            <button id="skill-slot-3" class="mmo-slot mmo-skill" data-slot="3" title="位移控場槽 [4]（右鍵快速換招）">
-              <span class="mmo-hotkey">4</span>
-              <img class="sk-slot-img hidden" src="" alt="" />
-              <span class="mmo-empty-plus">+</span>
-              <div class="mmo-cd-curtain"></div>
-              <span class="mmo-cd-sec"></span>
-              <span class="mmo-mp-cost"></span>
-            </button>
-
-            <button id="skill-slot-4" class="mmo-slot mmo-skill" data-slot="4" title="召喚／領域槽 [E]（右鍵快速換招）">
-              <span class="mmo-hotkey">E</span>
-              <img class="sk-slot-img hidden" src="" alt="" />
-              <span class="mmo-empty-plus">+</span>
-              <div class="mmo-cd-curtain"></div>
-              <span class="mmo-cd-sec"></span>
-              <span class="mmo-mp-cost"></span>
-            </button>
-
-            <button id="skill-slot-5" class="mmo-slot mmo-skill is-ultimate" data-slot="5" title="終極大招槽 [R]（右鍵快速換招）">
-              <span class="mmo-hotkey">R</span>
-              <img class="sk-slot-img hidden" src="" alt="" />
-              <span class="mmo-empty-plus">+</span>
-              <div class="mmo-cd-curtain"></div>
-              <span class="mmo-cd-sec"></span>
-              <span class="mmo-mp-cost"></span>
-            </button>
-
-            <button id="btn-toggle-auto" class="mmo-slot mmo-auto active" data-tip="自動狩獵／手動控制切換 [T]（可隨時移動介入）">
-              <span class="mmo-hotkey">T</span>
-              <img class="mmo-ui-img" src="./assets/ui/ui_auto.png" alt="自動" />
-              <span class="mmo-badge-br" id="auto-mode-label">自動</span>
-            </button>
-          </div>
-        </div>
-
-        <!-- 5. 嵌於下方暗金凹槽的經驗條 -->
-        <div class="diablo-exp-bar gothic-exp-bar" id="diablo-exp-bar" title="經驗值進度">
+      <!-- 模組 5：獨立經驗條與快捷操作列 -->
+      <section id="hud-exp-utility" class="v243-hud-module">
+        <div class="diablo-exp-bar" id="diablo-exp-bar" title="經驗值進度">
           <div class="diablo-exp-fill" id="diablo-exp-fill"></div>
           <span class="diablo-exp-text" id="diablo-exp-text">等級 1 • 經驗 0 / 90 (0%)</span>
         </div>
-
-        <!-- 6. 精簡暗金功能銘牌（貼於鍛鐵框架下緣） -->
-        <div class="mmo-status-strip gothic-status-strip">
+        <div class="mmo-status-strip">
           <span id="hud-afk-pill" class="afk-pill active">★ 自動狩獵中</span>
           <button id="btn-quick-salvage" class="strip-btn" title="一鍵分解低階裝備 [Q]">🧹 一鍵分解 [Q]</button>
           <button id="btn-power-save" class="strip-btn" title="開啟暗黑掛機省電幕布 [Z]">🌙 省電掛機 [Z]</button>
         </div>
-      </footer>
+      </section>
     </main>
   </section>
 
@@ -620,6 +617,6 @@
     </div>
   </div>
 
-  <script type="module" src="./src/main.js?v=242b"></script>
+  <script type="module" src="./src/main.js?v=244"></script>
 </body>
 </html>

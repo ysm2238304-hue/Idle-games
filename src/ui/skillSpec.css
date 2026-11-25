@@ -635,3 +635,174 @@
   top: -80px !important;
   left: 31.5% !important;
 }
+
+
+/* =====================================================================
+   v243: 底部 HUD 拆分為 5 個獨立可拖曳／縮放／開關模組＋大廳流派精簡分頁
+   ===================================================================== */
+.v243-hud-module {
+  position: fixed !important;
+  pointer-events: auto !important;
+  z-index: 32;
+  user-select: none;
+}
+
+/* 1. 獨立血魔雙球核心 */
+#hud-orb-vital {
+  bottom: 14px;
+  left: calc(50% - 318px);
+  width: 118px;
+  height: 118px;
+  border-radius: 50%;
+  padding: 5px;
+  background: radial-gradient(circle at 35% 28%, #3c3024, #14100d 72%, #070506);
+  border: 2.5px solid #b88c46;
+  box-shadow:
+    0 0 0 2px rgba(24, 18, 14, 0.95),
+    0 6px 22px rgba(0, 0, 0, 0.88),
+    inset 0 0 12px rgba(250, 204, 21, 0.22);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#hud-orb-vital .dual-orb-sphere {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 50% !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+/* 2. 獨立單排 8 槽技能列（[H] + [1][2][3][4][E][R] + [T]） */
+#hud-skill-hotbar {
+  bottom: 68px;
+  left: calc(50% + 52px);
+  width: 486px;
+  max-width: 92vw;
+  padding: 6px 8px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(22, 18, 16, 0.94), rgba(10, 8, 9, 0.97));
+  border: 1.5px solid rgba(186, 146, 74, 0.72);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.88), inset 0 1px 0 rgba(254, 240, 138, 0.16);
+}
+#hud-skill-hotbar .v243-hotbar-grid {
+  display: grid !important;
+  grid-template-columns: repeat(8, 1fr) !important;
+  gap: 6px !important;
+  width: 100% !important;
+  align-items: center !important;
+}
+#hud-skill-hotbar .v243-hotbar-grid .mmo-slot {
+  width: 100% !important;
+  aspect-ratio: 1 / 1 !important;
+  height: auto !important;
+  min-width: 0 !important;
+}
+#hud-skill-hotbar .v243-hotbar-grid .mmo-slot.is-ultimate {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.55) !important;
+}
+
+/* 3. 獨立經驗條與下方 3 顆操作銘牌 */
+#hud-exp-utility {
+  bottom: 8px;
+  left: calc(50% + 52px);
+  width: 486px;
+  max-width: 92vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+#hud-exp-utility .diablo-exp-bar {
+  position: relative !important;
+  inset: auto !important;
+  width: 100% !important;
+  height: 18px !important;
+  margin: 0 !important;
+}
+#hud-exp-utility .mmo-status-strip {
+  position: relative !important;
+  inset: auto !important;
+  margin: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 8px !important;
+}
+
+/* 4. 獨立流派預設與 3 顆鍛鐵小圓徽章列 */
+#hud-build-bar {
+  bottom: 144px;
+  left: calc(50% + 52px);
+  width: 486px;
+  max-width: 92vw;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: linear-gradient(180deg, rgba(18, 15, 14, 0.92), rgba(9, 8, 9, 0.96));
+  border: 1px solid rgba(186, 146, 74, 0.58);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.85);
+}
+
+/* 5. 獨立增益 Buff 圖示列（徹底與流派條分離，零重疊） */
+#hud-buff-bar {
+  bottom: 188px;
+  left: calc(50% + 52px);
+  min-width: 180px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 6px;
+}
+#hud-buff-bar #hud-altar-buffs {
+  position: static !important;
+  inset: auto !important;
+  transform: none !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  flex-wrap: nowrap !important;
+}
+
+/* 創角職業預覽：主要流派分頁條＋精簡 3 招代表技 */
+.v243-arch-tabs {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+.v243-arch-tab {
+  flex: 1 1 0;
+  min-width: 96px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 800;
+  background: rgba(20, 17, 16, 0.92);
+  border: 1px solid rgba(186, 146, 74, 0.38);
+  color: #cbd5e1;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.v243-arch-tab:hover {
+  border-color: rgba(250, 204, 21, 0.72);
+  color: #fef3c7;
+}
+.v243-arch-tab.active {
+  background: linear-gradient(180deg, rgba(120, 53, 15, 0.75), rgba(45, 22, 12, 0.95));
+  border-color: #facc15;
+  color: #fef08a;
+  box-shadow: 0 0 10px rgba(250, 204, 21, 0.32);
+}
+.v243-arch-skill-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 8px !important;
+}

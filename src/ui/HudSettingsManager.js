@@ -9,7 +9,11 @@ const PANEL_META = {
   'hud-top-right':         { label: '右上羅盤小地圖',       origin: 'top right' },
   'hud-combo-box':         { label: '連斬計數器',           origin: 'top right' },
   'hud-bottom-left':       { label: '多頻道聊天室',         origin: 'bottom left' },
-  'diablo-hud':            { label: '底部哥德雙球技能列',   origin: 'bottom center' },
+  'hud-orb-vital':         { label: '血魔雙球核心',         origin: 'bottom center' },
+  'hud-skill-hotbar':      { label: '六格流派技能列',       origin: 'bottom center' },
+  'hud-exp-utility':       { label: '經驗條與快捷列',       origin: 'bottom center' },
+  'hud-build-bar':         { label: '流派預設與專精鈕',     origin: 'bottom center' },
+  'hud-buff-bar':          { label: '增益 Buff 圖示列',     origin: 'bottom center' },
   'hud-bottom-right-dock': { label: '右下角功能指令列',     origin: 'bottom right' },
 };
 
@@ -20,9 +24,12 @@ export const RESERVED_MOVE_KEYS = new Set([
 
 export const DEFAULT_KEYBINDS = {
   potion: 'KeyH',
-  skill0: 'Space',
-  skill1: 'KeyE',
-  skill2: 'KeyR',
+  skill0: 'Digit1',
+  skill1: 'Digit2',
+  skill2: 'Digit3',
+  skill3: 'Digit4',
+  skill4: 'KeyE',
+  skill5: 'KeyR',
   autoHunt: 'KeyT',
   quickSalvage: 'KeyQ',
   townToggle: 'KeyG',
@@ -45,7 +52,17 @@ export const DEFAULT_KEYBINDS = {
 };
 
 function sanitizeKeybinds(raw) {
-  const merged = { ...DEFAULT_KEYBINDS, ...(raw || {}) };
+  const src = raw ? { ...raw } : {};
+  // v243: 自動將舊版 3 格預設（Space/E/R）遷移為 6 格單排熱鍵（1/2/3/4/E/R），避免重複顯示 E/R
+  if (src.skill0 === 'Space' && src.skill1 === 'KeyE' && src.skill2 === 'KeyR' && !src.skill3) {
+    src.skill0 = 'Digit1';
+    src.skill1 = 'Digit2';
+    src.skill2 = 'Digit3';
+    src.skill3 = 'Digit4';
+    src.skill4 = 'KeyE';
+    src.skill5 = 'KeyR';
+  }
+  const merged = { ...DEFAULT_KEYBINDS, ...src };
   for (const [k, v] of Object.entries(merged)) {
     if (!v || RESERVED_MOVE_KEYS.has(v)) {
       merged[k] = DEFAULT_KEYBINDS[k];
@@ -56,9 +73,12 @@ function sanitizeKeybinds(raw) {
 
 const KEYBIND_META = [
   { id: 'potion', label: '使用生命藥水', group: '戰鬥操作' },
-  { id: 'skill0', label: '核心技能槽 1', group: '戰鬥操作' },
-  { id: 'skill1', label: '核心技能槽 2', group: '戰鬥操作' },
-  { id: 'skill2', label: '核心技能槽 3', group: '戰鬥操作' },
+  { id: 'skill0', label: '技能槽 1（基礎）', group: '戰鬥操作' },
+  { id: 'skill1', label: '技能槽 2（核心）', group: '戰鬥操作' },
+  { id: 'skill2', label: '技能槽 3（防禦）', group: '戰鬥操作' },
+  { id: 'skill3', label: '技能槽 4（位移控場）', group: '戰鬥操作' },
+  { id: 'skill4', label: '技能槽 5（召喚領域）', group: '戰鬥操作' },
+  { id: 'skill5', label: '技能槽 6（終極大招）', group: '戰鬥操作' },
   { id: 'autoHunt', label: '自動狩獵切換', group: '戰鬥操作' },
   { id: 'quickSalvage', label: '一鍵分解裝備', group: '戰鬥操作' },
   { id: 'townToggle', label: '返回主城 / 出城戰鬥', group: '戰鬥操作' },
@@ -317,7 +337,8 @@ export class HudSettingsManager {
     const meta = PANEL_META[id];
     if (!el || !p || !meta) return;
     const totalScale = +(p.scale * (this.settings.ui.globalScale || 1)).toFixed(3);
-    const baseTx = id === 'hud-top-center' || id === 'diablo-hud' ? 'translateX(-50%) ' : '';
+    const centered = id === 'hud-top-center' || id === 'hud-orb-vital' || id === 'hud-skill-hotbar' || id === 'hud-exp-utility' || id === 'hud-build-bar' || id === 'hud-buff-bar';
+    const baseTx = centered ? 'translateX(-50%) ' : '';
     el.style.transformOrigin = meta.origin;
     el.style.transform = `${baseTx}translate(${p.dx}px, ${p.dy}px) scale(${totalScale})`;
     el.classList.toggle('hud-panel-hidden', !p.visible && !this.settings.ui.editMode);
@@ -338,6 +359,9 @@ export class HudSettingsManager {
     setHotbar('#skill-slot-0', 'skill0');
     setHotbar('#skill-slot-1', 'skill1');
     setHotbar('#skill-slot-2', 'skill2');
+    setHotbar('#skill-slot-3', 'skill3');
+    setHotbar('#skill-slot-4', 'skill4');
+    setHotbar('#skill-slot-5', 'skill5');
     setHotbar('#btn-toggle-auto', 'autoHunt');
 
     const qBtn = document.getElementById('btn-quick-salvage');

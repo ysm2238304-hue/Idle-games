@@ -20,7 +20,7 @@ import {
   loadCloudSave,
   saveCloudData,
 } from './auth/firebase.js?v=218';
-import { BattleScene } from './scenes/BattleScene.js?v=242b';
+import { BattleScene } from './scenes/BattleScene.js?v=244';
 import { TownScene } from './scenes/TownScene.js?v=227';
 import { TOWN_SPLASHES } from './data/towns/splashes.js?v=229';
 import { DashboardUI } from './ui/DashboardUI.js?v=241';
@@ -31,7 +31,7 @@ import { MAGE_D4_PRESETS } from './logic/classMechanics.js?v=241';
 import { EndgameModal } from './ui/EndgameModal.js?v=237';
 import { TownBgmEngine } from './audio/TownBgmEngine.js?v=99';
 import { BattleSfxEngine } from './audio/BattleSfxEngine.js?v=99';
-import { HudSettingsManager } from './ui/HudSettingsManager.js?v=227';
+import { HudSettingsManager } from './ui/HudSettingsManager.js?v=243';
 import { ShopModal } from './ui/ShopModal.js?v=99';
 import { AchievementTowerModal } from './ui/AchievementTowerModal.js?v=99';
 import { ACHIEVEMENTS } from './data/achievements.js?v=99';
@@ -2065,6 +2065,47 @@ function renderWelcomeClasses() {
   const barNames = ['攻擊破壞', '生存護甲', '攻速機動', '奧義爆發'];
   const rawSk = CLASS_SKILLS_MAP[cls.id] || {};
   const clsSkills = Array.isArray(rawSk) ? rawSk : Object.values(rawSk);
+  const LOBBY_ARCHETYPES = {
+    mage: [
+      { name: '❄️ 永冬冰封', ids: ['m_frozen_orb', 'frost_nova', 'm_deep_freeze'] },
+      { name: '🔥 煉獄火蛇', ids: ['m_fireball', 'm_flame_hydra', 'm_inferno'] },
+      { name: '⚡ 風暴雷電', ids: ['chain_lightning', 'm_ball_lightning', 'm_unstable_currents'] },
+    ],
+    ranger: [
+      { name: '🏹 穿心彈幕', ids: ['volley', 'arrowrain', 'phantombow'] },
+      { name: '☠️ 劇毒陷阱', ids: ['r_venom_pierce', 'caltrops', 'death_mark'] },
+      { name: '🌑 暗影分身', ids: ['shadowstep', 'r_shadow_imbue', 'shadow_clones'] },
+    ],
+    warrior: [
+      { name: '🌪️ 旋風裂地', ids: ['whirlwind', 'earthquake', 'warcry'] },
+      { name: '🩸 浴血狂戰', ids: ['bleed_slash', 'charge', 'ancients'] },
+    ],
+    paladin: [
+      { name: '🔨 祝福神錘', ids: ['hammer', 'consecration', 'judgment'] },
+      { name: '🛡️ 聖盾審判', ids: ['aegis', 'holy_storm', 'heaven_fury'] },
+    ],
+    necro: [
+      { name: '💀 亡靈大軍', ids: ['skeleton', 'golem', 'frenzy'] },
+      { name: '🩸 鮮血屍爆', ids: ['corpse_explode', 'bone_spear', 'blood_curse'] },
+    ],
+    assassin: [
+      { name: '🌑 暗影連斬', ids: ['shadow_dash', 'flurry', 'execute'] },
+      { name: '☠️ 淬毒忍鏢', ids: ['kunai', 'venom_blade', 'smoke_bomb'] },
+    ],
+  };
+  const archDefs = LOBBY_ARCHETYPES[cls.id] || [{ name: '⚔️ 核心流派', ids: clsSkills.slice(0, 3).map((s) => s.id) }];
+  const resolvedArchs = archDefs.map((a, aIdx) => {
+    const picked = [];
+    a.ids.forEach((sid) => {
+      const foundIdx = clsSkills.findIndex((s) => s.id === sid);
+      if (foundIdx !== -1 && !picked.includes(foundIdx)) picked.push(foundIdx);
+    });
+    for (let k = 0; picked.length < Math.min(3, clsSkills.length) && k < clsSkills.length; k++) {
+      const cand = (aIdx * 3 + k) % clsSkills.length;
+      if (!picked.includes(cand)) picked.push(cand);
+    }
+    return { name: a.name, indices: picked };
+  });
 
   welcomeClassStage.innerHTML = `
     <div class="theater-arena-col">
@@ -2072,8 +2113,14 @@ function renderWelcomeClasses() {
         <canvas id="preview-skill-canvas" width="520" height="292"></canvas>
         <div id="showcase-active-pill" class="theater-cast-pill">⚔️ 演武中</div>
       </div>
-      <div class="theater-skill-grid">
-        ${clsSkills.map((sk, idx) => `<button type="button" class="showcase-sk-btn ${idx === 0 ? 'active' : ''}" data-sk-idx="${idx}">${sk.icon ? `<img class="sk-btn-ico" src="${sk.icon}" alt="" />` : ''}<span>${sk.name}</span></button>`).join('')}
+      <div class="v243-arch-tabs">
+        ${resolvedArchs.map((a, i) => `<button type="button" class="v243-arch-tab ${i === 0 ? 'active' : ''}" data-arch-idx="${i}">${a.name}</button>`).join('')}
+      </div>
+      <div id="v243-arch-skill-grid" class="theater-skill-grid v243-arch-skill-grid">
+        ${resolvedArchs[0].indices.map((idx, pos) => {
+          const sk = clsSkills[idx];
+          return `<button type="button" class="showcase-sk-btn ${pos === 0 ? 'active' : ''}" data-sk-idx="${idx}">${sk.icon ? `<img class="sk-btn-ico" src="${sk.icon}" alt="" />` : ''}<span>${sk.name}</span></button>`;
+        }).join('')}
       </div>
     </div>
 
@@ -2101,10 +2148,32 @@ function renderWelcomeClasses() {
   const scCanvas = document.getElementById('preview-skill-canvas');
   const scDyn = document.getElementById('stage-skill-dynamic');
   const scPill = document.getElementById('showcase-active-pill');
-  const scBtns = welcomeClassStage.querySelectorAll('.showcase-sk-btn');
+  const getScBtns = () => welcomeClassStage.querySelectorAll('.showcase-sk-btn');
+  const bindScBtns = () => {
+    getScBtns().forEach((b) => {
+      b.onclick = () => heroShowcase.triggerSkill(Number(b.dataset.skIdx));
+    });
+  };
+  welcomeClassStage.querySelectorAll('.v243-arch-tab').forEach((tb) => {
+    tb.onclick = () => {
+      const aIdx = Number(tb.dataset.archIdx);
+      const arch = resolvedArchs[aIdx];
+      if (!arch) return;
+      welcomeClassStage.querySelectorAll('.v243-arch-tab').forEach((x) => x.classList.toggle('active', x === tb));
+      const grid = document.getElementById('v243-arch-skill-grid');
+      if (grid) {
+        grid.innerHTML = arch.indices.map((idx, pos) => {
+          const sk = clsSkills[idx];
+          return `<button type="button" class="showcase-sk-btn ${pos === 0 ? 'active' : ''}" data-sk-idx="${idx}">${sk.icon ? `<img class="sk-btn-ico" src="${sk.icon}" alt="" />` : ''}<span>${sk.name}</span></button>`;
+        }).join('');
+        bindScBtns();
+      }
+      if (arch.indices.length > 0) heroShowcase.triggerSkill(arch.indices[0]);
+    };
+  });
   try {
     heroShowcase.attach(scCanvas, cls.id, (idx, sk) => {
-      scBtns.forEach((b) => b.classList.toggle('active', Number(b.dataset.skIdx) === idx));
+      getScBtns().forEach((b) => b.classList.toggle('active', Number(b.dataset.skIdx) === idx));
       if (scPill && sk) scPill.textContent = `⚔️ 正在演武：【${sk.name}】`;
       if (scDyn && sk) {
         const cdSec = sk.cooldownMs ? (sk.cooldownMs / 1000).toFixed(1) + 's' : '-';
@@ -2122,9 +2191,10 @@ function renderWelcomeClasses() {
       }
     });
   } catch (err) { console.warn('Showcase err:', err); }
-  scBtns.forEach((b) => {
-    b.onclick = () => heroShowcase.triggerSkill(Number(b.dataset.skIdx));
-  });
+  bindScBtns();
+  if (resolvedArchs[0]?.indices?.length > 0) {
+    try { heroShowcase.triggerSkill(resolvedArchs[0].indices[0]); } catch (e) {}
+  }
 }
 
 function enterWelcomeClassStep(userLabel) {
@@ -2334,22 +2404,22 @@ window.addEventListener('keydown', (e) => {
   if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
 
   const kb = hudSettings.getKeybinds();
-  if (e.code === 'Digit1' || e.code === kb.skill0) {
+  if (e.code === kb.skill0 || e.code === 'Space') {
     e.preventDefault();
     battleScene?.castSkillSlot(0, true);
-  } else if (e.code === 'Digit2') {
+  } else if (e.code === kb.skill1) {
     e.preventDefault();
     battleScene?.castSkillSlot(1, true);
-  } else if (e.code === 'Digit3') {
+  } else if (e.code === kb.skill2) {
     e.preventDefault();
     battleScene?.castSkillSlot(2, true);
-  } else if (e.code === 'Digit4') {
+  } else if (e.code === kb.skill3) {
     e.preventDefault();
     battleScene?.castSkillSlot(3, true);
-  } else if (e.code === 'KeyE' || e.code === kb.skill1) {
+  } else if (e.code === kb.skill4) {
     e.preventDefault();
     battleScene?.castSkillSlot(4, true);
-  } else if (e.code === 'KeyR' || e.code === kb.skill2) {
+  } else if (e.code === kb.skill5) {
     e.preventDefault();
     battleScene?.castSkillSlot(5, true);
   } else if (e.code === kb.autoHunt) {

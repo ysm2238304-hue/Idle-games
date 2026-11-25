@@ -11,6 +11,7 @@ import { RARITIES } from '../data/items.js?v=99';
 import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta, getPetPickupRadius, getPetCodexInfo } from '../data/pets.js?v=99';
 import { createStageEncounters, spawnSingleMonster, getChapterIdx, getStageLabel, ZONE_OBSTACLES } from '../data/monsters.js?v=232';
 import { formatNum } from '../logic/statCalc.js?v=240';
+import { ThreeVfxOverlay } from '../vfx/ThreeVfxOverlay.js?v=244';
 
 const MAP_W = 4096;
 const MAP_H = 2304;
@@ -253,6 +254,8 @@ export class BattleScene extends Phaser.Scene {
 
     this.cameras.main.setBounds(0, 0, MAP_W, MAP_H);
     this.createHero();
+    // v244: 啟動 Three.js + GLSL Shader 3D 動態特效覆蓋層
+    if (!this.threeVfx) this.threeVfx = new ThreeVfxOverlay(this);
 
     this.keys = this.input.keyboard.addKeys({
       w: Phaser.Input.Keyboard.KeyCodes.W,
@@ -646,6 +649,7 @@ export class BattleScene extends Phaser.Scene {
 
   setPaused(paused) {
     this.isPaused = paused;
+    if (this.threeVfx) this.threeVfx.setVisible(!paused);
   }
 
   getSlotSkillInfo(slotIdx) {
@@ -1015,6 +1019,7 @@ export class BattleScene extends Phaser.Scene {
       }
     }
     this.updateMageBattlefieldEntities(delta);
+    if (this.threeVfx) this.threeVfx.render(delta);
     const stForMp = this.getStats();
     const dtSec = delta / 1000;
     this.playerMaxMp = stForMp.maxMp || 100;
@@ -2322,11 +2327,17 @@ export class BattleScene extends Phaser.Scene {
     };
     const _d4Mult = this.getMageD4LiveMult();
     const _aoeD4 = (cx, cy, rad, mul, col, pre, stList = [], forceC = false) => _aoe(cx, cy, rad, mul * _d4Mult, col, pre, stList, forceC);
+    const _fx3d = (name, opts, fallbackKey = null, fbX = _tx, fbY = _ty, fbScale = 0.9, fbDur = 360) => {
+      if (this.threeVfx?.playMageSkill(name, opts)) return true;
+      if (fallbackKey) this.playAdditiveVfx(fallbackKey, fbX, fbY - 10, fbScale, fbDur);
+      return false;
+    };
 
     if (skillId === 'm_fire_bolt') {
       this.registerEnlightenment('fire');
-      this.launchVfxProjectile('vfx_m_fire_bolt', _hx, _hy - 14, _tx, _ty - 10, 0.55, 210, () => {
-        this.playAdditiveVfx('vfx_m_fireball_blast', _tx, _ty - 10, 0.52, 260);
+      const used3d = _fx3d('fire_bolt', { sx: _hx, sy: _hy, tx: _tx, ty: _ty, scale: 1.0, duration: 210 });
+      this.time.delayedCall(200, () => {
+        _fx3d('fireball_blast', { tx: _tx, ty: _ty, scale: 0.58, duration: 300 }, used3d ? null : 'vfx_m_fireball_blast', _tx, _ty, 0.52, 260);
         _aoeD4(_tx, _ty, 215, (148 + skillLvl * 22) / 100, '#fb923c', '🔥', ['burn']);
       });
       this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 22);
@@ -2334,8 +2345,9 @@ export class BattleScene extends Phaser.Scene {
     }
     if (skillId === 'm_frost_bolt') {
       this.registerEnlightenment('frost');
-      this.launchVfxProjectile('vfx_m_ice_shards', _hx, _hy - 14, _tx, _ty - 10, 0.48, 200, () => {
-        this.playAdditiveVfx('vfx_m_shatter_burst', _tx, _ty - 10, 0.52, 260);
+      const used3d = _fx3d('frost_bolt', { sx: _hx, sy: _hy, tx: _tx, ty: _ty, scale: 1.0, duration: 200 });
+      this.time.delayedCall(190, () => {
+        _fx3d('shatter_burst', { tx: _tx, ty: _ty, scale: 0.62, duration: 300 }, used3d ? null : 'vfx_m_shatter_burst', _tx, _ty, 0.52, 260);
         _aoeD4(_tx, _ty, 215, (142 + skillLvl * 22) / 100, '#7dd3fc', '❄️', ['freeze']);
       });
       this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 22);
@@ -2343,7 +2355,7 @@ export class BattleScene extends Phaser.Scene {
     }
     if (skillId === 'm_arc_lash') {
       this.registerEnlightenment('shock');
-      this.playAdditiveVfx('vfx_m_lightning_spear', _tx, _ty - 10, 0.72, 280);
+      _fx3d('arc_lash', { sx: _hx, sy: _hy, tx: _tx, ty: _ty, scale: 1.25, duration: 280 }, 'vfx_m_lightning_spear', _tx, _ty, 0.72, 280);
       this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 20);
       this.slotCdTimers = this.slotCdTimers.map((t) => t + 420);
       _aoeD4(_tx, _ty, 235, (158 + skillLvl * 24) / 100, '#c084fc', '⚡', ['shock']);
@@ -2352,7 +2364,7 @@ export class BattleScene extends Phaser.Scene {
     }
     if (skillId === 'm_spark') {
       this.registerEnlightenment('shock');
-      this.playAdditiveVfx('vfx_m_crackling_orb', _tx, _ty - 8, 0.68, 280);
+      _fx3d('lightning_bolt', { sx: _hx, sy: _hy, tx: _tx, ty: _ty, scale: 0.95, duration: 260 }, 'vfx_m_crackling_orb', _tx, _ty, 0.68, 280);
       this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 20);
       _aoeD4(_tx, _ty, 225, (152 + skillLvl * 22) / 100, '#60a5fa', '✦', ['shock']);
       if (Math.random() < 0.65) this.spawnCracklingOrb(_tx, _ty);
@@ -2360,9 +2372,9 @@ export class BattleScene extends Phaser.Scene {
     }
     if (skillId === 'm_fireball') {
       this.registerEnlightenment('fire');
-      this.launchVfxProjectile('vfx_m_fire_bolt', _hx, _hy - 14, _tx, _ty - 10, 0.72, 220, () => {
-        this.playAdditiveVfx('vfx_m_fireball_blast', _tx, _ty - 10, 1.12, 420);
-        this.playAdditiveVfx('vfx_m_fire_enchant_nova', _tx, _ty - 10, 0.76, 320);
+      const used3d = _fx3d('fireball_proj', { sx: _hx, sy: _hy, tx: _tx, ty: _ty, scale: 1.15, duration: 220 });
+      this.time.delayedCall(210, () => {
+        _fx3d('fireball_blast', { tx: _tx, ty: _ty, scale: 1.22, duration: 480 }, used3d ? null : 'vfx_m_fireball_blast', _tx, _ty, 1.12, 420);
         _aoeD4(_tx, _ty, 265, (250 + skillLvl * 38) / 100, '#fb923c', '🔥火球 ', ['burn']);
       });
       return;
@@ -2371,8 +2383,10 @@ export class BattleScene extends Phaser.Scene {
       this.registerEnlightenment('frost');
       for (let w = 0; w < 3; w++) {
         this.time.delayedCall(w * 140, () => {
-          this.launchVfxProjectile('vfx_m_ice_shards', _hx, _hy - 12, _tx + Phaser.Math.Between(-24, 24), _ty + Phaser.Math.Between(-18, 18), 0.65, 190, () => {
-            this.playAdditiveVfx('vfx_m_shatter_burst', _tx, _ty - 10, 0.66, 260);
+          const ox = _tx + Phaser.Math.Between(-24, 24), oy = _ty + Phaser.Math.Between(-18, 18);
+          const used3d = _fx3d('ice_shards', { sx: _hx, sy: _hy, tx: ox, ty: oy, scale: 1.0, duration: 190 });
+          this.time.delayedCall(180, () => {
+            _fx3d('shatter_burst', { tx: ox, ty: oy, scale: 0.68, duration: 280 }, used3d ? null : 'vfx_m_shatter_burst', ox, oy, 0.66, 260);
             _aoeD4(_tx, _ty, 235, (86 + skillLvl * 13) / 100, '#38bdf8', '🧊冰片 ', ['freeze', 'vulnerable']);
           });
         });
@@ -2381,25 +2395,17 @@ export class BattleScene extends Phaser.Scene {
     }
     if (skillId === 'm_frozen_orb') {
       this.registerEnlightenment('frost');
-      // 暗黑 4 冰封球：旋轉飛行的結晶冰球，沿途噴射冰箭，終點二段碎裂爆破！
-      const orb = this.textures.exists('vfx_m_frozen_orb')
-        ? this.add.image(_hx, _hy - 14, 'vfx_m_frozen_orb').setBlendMode(Phaser.BlendModes.ADD).setScale(0.72).setDepth(4420)
-        : null;
       const mx1 = (_hx + _tx) * 0.5, my1 = (_hy + _ty) * 0.5;
-      if (orb) {
-        this.tweens.add({ targets: orb, x: _tx, y: _ty - 10, angle: 540, scale: 0.92, duration: 640, ease: 'Sine.easeOut', onComplete: () => orb.destroy() });
-      }
+      _fx3d('frozen_orb', { sx: _hx, sy: _hy, tx: _tx, ty: _ty, scale: 1.15, duration: 640 }, 'vfx_m_frozen_orb', _tx, _ty, 0.92, 420);
       this.time.delayedCall(220, () => {
-        this.playAdditiveVfx('vfx_m_ice_shards', mx1, my1 - 8, 0.72, 280);
+        _fx3d('ice_shards', { sx: mx1, sy: my1, tx: _tx, ty: _ty, scale: 0.85, duration: 180 });
         _aoeD4(mx1, my1, 250, (95 + skillLvl * 14) / 100, '#7dd3fc', '❄️冰球途傷 ', ['freeze']);
       });
       this.time.delayedCall(440, () => {
-        this.playAdditiveVfx('vfx_m_frozen_orb', _tx, _ty - 10, 0.96, 340);
         _aoeD4(_tx, _ty, 275, (105 + skillLvl * 15) / 100, '#38bdf8', '❄️冰封球 ', ['freeze', 'vulnerable']);
       });
       this.time.delayedCall(640, () => {
-        this.playAdditiveVfx('vfx_m_shatter_burst', _tx, _ty - 10, 1.24, 440);
-        this.playAdditiveVfx('vfx_m_frost_nova', _tx, _ty - 10, 0.88, 360);
+        _fx3d('frost_nova', { tx: _tx, ty: _ty, scale: 1.15, duration: 480 }, 'vfx_m_shatter_burst', _tx, _ty, 1.24, 440);
         _aoeD4(_tx, _ty, 305, (145 + skillLvl * 20) / 100, '#38bdf8', '💥冰球碎裂 ', ['freeze', 'vulnerable'], true);
       });
       return;
@@ -2407,7 +2413,7 @@ export class BattleScene extends Phaser.Scene {
     if (skillId === 'm_flame_shield') {
       this.registerEnlightenment('fire');
       this.activateHeroBarrier(Math.round(this.playerMaxHp * 0.38), 5500, 'vfx_m_flame_shield');
-      this.playAdditiveVfx('vfx_m_flame_shield', _hx, _hy - 10, 1.15, 520);
+      _fx3d('fireball_blast', { tx: _hx, ty: _hy, scale: 1.12, duration: 460 }, 'vfx_m_flame_shield', _hx, _hy, 1.15, 520);
       this.healHero(Math.round(this.playerMaxHp * ((22 + skillLvl * 2) / 100)));
       _aoeD4(_hx, _hy, 265, (175 + skillLvl * 26) / 100, '#fb923c', '🔥烈焰護盾 ', ['burn']);
       return;
@@ -2415,7 +2421,7 @@ export class BattleScene extends Phaser.Scene {
     if (skillId === 'm_ice_armor') {
       this.registerEnlightenment('frost');
       this.activateHeroBarrier(Math.round(this.playerMaxHp * 0.45), 6500, 'vfx_m_ice_armor');
-      this.playAdditiveVfx('vfx_m_ice_armor', _hx, _hy - 10, 1.12, 520);
+      _fx3d('frost_nova', { tx: _hx, ty: _hy, scale: 0.92, duration: 420 }, 'vfx_m_ice_armor', _hx, _hy, 1.12, 520);
       this.healHero(Math.round(this.playerMaxHp * ((24 + skillLvl * 2) / 100)));
       this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 30);
       _aoeD4(_hx, _hy, 265, (158 + skillLvl * 24) / 100, '#38bdf8', '🧊寒冰護甲 ', ['freeze']);
@@ -2423,8 +2429,8 @@ export class BattleScene extends Phaser.Scene {
     }
     if (skillId === 'm_arcane_blink') {
       this.registerEnlightenment('shock');
-      this.playAdditiveVfx('vfx_m_crackling_orb', _hx, _hy - 10, 0.72, 260);
-      this.playAdditiveVfx('vfx_m_lightning_spear', _tx, _ty - 10, 1.05, 380);
+      _fx3d('arcane_blink', { tx: _hx, ty: _hy, scale: 0.9, duration: 300 });
+      _fx3d('arcane_blink', { tx: _tx, ty: _ty, scale: 1.15, duration: 360 }, 'vfx_m_lightning_spear', _tx, _ty, 1.05, 380);
       this.slotCdTimers = this.slotCdTimers.map((t) => t + 1000);
       _aoeD4(_tx, _ty, 265, (215 + skillLvl * 32) / 100, '#60a5fa', '⚡傳送閃現 ', ['shock', 'vulnerable']);
       this.spawnCracklingOrb(_tx, _ty);
@@ -2433,14 +2439,14 @@ export class BattleScene extends Phaser.Scene {
     if (skillId === 'm_flame_hydra') {
       this.registerEnlightenment('fire');
       this.spawnMageConjuration('hydra', _tx + Phaser.Math.Between(-35, 35), _ty + Phaser.Math.Between(-25, 25), skillLvl, 10000);
-      this.playAdditiveVfx('vfx_m_fireball_blast', _tx, _ty - 12, 0.85, 340);
+      _fx3d('fireball_blast', { tx: _tx, ty: _ty, scale: 0.88, duration: 380 }, 'vfx_m_fireball_blast', _tx, _ty, 0.85, 340);
       _aoeD4(_tx, _ty, 250, (125 + skillLvl * 20) / 100, '#fb923c', '🐍多頭火蛇 ', ['burn']);
       return;
     }
     if (skillId === 'm_ice_blades') {
       this.registerEnlightenment('frost');
       this.spawnMageConjuration('ice_blades', _tx, _ty, skillLvl, 8000);
-      this.playAdditiveVfx('vfx_m_ice_blades', _tx, _ty - 10, 0.88, 360);
+      _fx3d('shatter_burst', { tx: _tx, ty: _ty, scale: 0.88, duration: 360 }, 'vfx_m_ice_blades', _tx, _ty, 0.88, 360);
       this.slotCdTimers = this.slotCdTimers.map((t) => t + 500);
       _aoeD4(_tx, _ty, 245, (115 + skillLvl * 16) / 100, '#7dd3fc', '⚔️寒冰之刃 ', ['freeze', 'vulnerable']);
       return;
@@ -2448,7 +2454,7 @@ export class BattleScene extends Phaser.Scene {
     if (skillId === 'm_lightning_spear') {
       this.registerEnlightenment('shock');
       this.spawnMageConjuration('lightning_spear', _tx, _ty, skillLvl, 7500);
-      this.playAdditiveVfx('vfx_m_lightning_spear', _tx, _ty - 12, 1.0, 360);
+      _fx3d('lightning_bolt', { sx: _hx, sy: _hy, tx: _tx, ty: _ty, scale: 1.15, duration: 340 }, 'vfx_m_lightning_spear', _tx, _ty, 1.0, 360);
       _aoeD4(_tx, _ty, 250, (160 + skillLvl * 26) / 100, '#facc15', '⚡閃電長矛 ', ['shock'], true);
       this.spawnCracklingOrb(_tx, _ty);
       return;
@@ -2456,15 +2462,15 @@ export class BattleScene extends Phaser.Scene {
     if (skillId === 'm_familiar') {
       this.registerEnlightenment(['fire', 'frost', 'shock'][Math.floor(Math.random() * 3)]);
       this.spawnMageConjuration('familiar', _hx + Phaser.Math.Between(-45, 45), _hy - 26, skillLvl, 9500);
-      this.playAdditiveVfx('vfx_m_enlightenment_nova', _tx, _ty - 12, 0.82, 380);
+      _fx3d('enlightenment_nova', { tx: _tx, ty: _ty, scale: 0.72, duration: 480 }, 'vfx_m_enlightenment_nova', _tx, _ty, 0.82, 380);
       _aoeD4(_tx, _ty, 260, (130 + skillLvl * 18) / 100, '#fde047', '🔮元素使魔 ', ['burn', 'freeze', 'shock']);
       return;
     }
     if (skillId === 'm_firewall') {
       this.registerEnlightenment('fire');
+      _fx3d('firewall', { tx: _tx, ty: _ty, scale: 1.15, duration: 1350 }, 'vfx_m_firewall', _tx, _ty, 1.18, 480);
       for (let w = 0; w < 4; w++) {
         this.time.delayedCall(w * 300, () => {
-          this.playAdditiveVfx('vfx_m_firewall', _tx, _ty, 1.18, 480);
           _aoeD4(_tx, _ty, 285, (124 + skillLvl * 22) / 100, '#ef4444', '🔥烈焰火牆 ', ['burn']);
         });
       }
@@ -2475,7 +2481,7 @@ export class BattleScene extends Phaser.Scene {
       for (let w = 0; w < 3; w++) {
         this.time.delayedCall(w * 240, () => {
           const ox = _tx + Phaser.Math.Between(-42, 42), oy = _ty + Phaser.Math.Between(-30, 30);
-          this.playAdditiveVfx('vfx_m_ball_lightning', ox, oy - 8, 0.92, 400);
+          _fx3d('ball_lightning', { tx: ox, ty: oy, scale: 1.1, duration: 540 }, 'vfx_m_ball_lightning', ox, oy, 0.92, 400);
           _aoeD4(ox, oy, 245, (112 + skillLvl * 18) / 100, '#a78bfa', '⚡球狀閃電 ', ['shock']);
         });
       }
@@ -2484,9 +2490,9 @@ export class BattleScene extends Phaser.Scene {
     }
     if (skillId === 'm_blizzard_field') {
       this.registerEnlightenment('frost');
+      _fx3d('blizzard_field', { tx: _tx, ty: _ty, scale: 1.15, duration: 1300 }, 'vfx_m_blizzard_field', _tx, _ty, 1.12, 460);
       for (let w = 0; w < 4; w++) {
         this.time.delayedCall(w * 280, () => {
-          this.playAdditiveVfx('vfx_m_blizzard_field', _tx + Phaser.Math.Between(-38, 38), _ty + Phaser.Math.Between(-24, 24), 1.12, 460);
           _aoeD4(_tx, _ty, 295, (116 + skillLvl * 20) / 100, '#7dd3fc', '❄️暴風雪 ', ['freeze']);
         });
       }
@@ -2495,11 +2501,9 @@ export class BattleScene extends Phaser.Scene {
     if (skillId === 'm_inferno') {
       this.registerEnlightenment('fire');
       this.playerMp = this.playerMaxMp;
-      this.playAdditiveVfx('vfx_m_inferno_serpent', _tx, _ty - 14, 1.48, 720);
+      _fx3d('inferno_serpent', { tx: _tx, ty: _ty, scale: 1.25, duration: 1450 }, 'vfx_m_inferno_serpent', _tx, _ty, 1.48, 720);
       for (let w = 0; w < 5; w++) {
         this.time.delayedCall(w * 260, () => {
-          this.playAdditiveVfx('vfx_m_inferno_serpent', _tx, _ty - 14, 1.32, 460);
-          this.playAdditiveVfx('vfx_m_fireball_blast', _tx + Phaser.Math.Between(-40, 40), _ty + Phaser.Math.Between(-28, 28), 0.78, 320);
           _aoeD4(_tx, _ty, 360, (182 + skillLvl * 30) / 100, '#fb923c', '🐍煉獄巨蛇 ', ['burn', 'vulnerable'], true);
         });
       }
@@ -2510,10 +2514,10 @@ export class BattleScene extends Phaser.Scene {
       this.activateHeroBarrier(Math.round(this.playerMaxHp * 0.65), 6000, 'vfx_m_ice_armor');
       this.healHero(Math.round(this.playerMaxHp * 0.35));
       this.slotCdTimers = this.slotCdTimers.map((t) => t + 4500);
-      this.playAdditiveVfx('vfx_m_deep_freeze', _hx, _hy - 16, 1.35, 760);
+      _fx3d('deep_freeze', { tx: _hx, ty: _hy, scale: 1.25, duration: 1150 }, 'vfx_m_deep_freeze', _hx, _hy, 1.35, 760);
       for (let w = 0; w < 4; w++) {
         this.time.delayedCall(w * 250, () => {
-          this.playAdditiveVfx(w === 3 ? 'vfx_m_shatter_burst' : 'vfx_m_frost_nova', _hx, _hy - 12, 1.32, 460);
+          if (w === 3) _fx3d('frost_nova', { tx: _hx, ty: _hy, scale: 1.4, duration: 540 });
           _aoeD4(_hx, _hy, 365, (122 + skillLvl * 18) / 100, '#38bdf8', '❄️深度凍結 ', ['freeze', 'vulnerable'], true);
         });
       }
@@ -2521,14 +2525,14 @@ export class BattleScene extends Phaser.Scene {
     }
     if (skillId === 'm_unstable_currents') {
       this.registerEnlightenment('shock');
-      this.playAdditiveVfx('vfx_m_enlightenment_nova', _hx, _hy - 12, 1.28, 560);
+      _fx3d('enlightenment_nova', { tx: _hx, ty: _hy, scale: 1.05, duration: 720 }, 'vfx_m_enlightenment_nova', _hx, _hy, 1.28, 560);
       this.spawnMageConjuration('lightning_spear', _tx, _ty, skillLvl, 7000);
       this.spawnCracklingOrb(_tx - 30, _ty);
       this.spawnCracklingOrb(_tx + 30, _ty);
       for (let w = 0; w < 5; w++) {
         this.time.delayedCall(w * 230, () => {
           const ox = _tx + Phaser.Math.Between(-85, 85), oy = _ty + Phaser.Math.Between(-55, 55);
-          this.playAdditiveVfx(w % 2 === 0 ? 'vfx_m_ball_lightning' : 'vfx_m_lightning_spear', ox, oy - 14, 1.18, 420);
+          _fx3d(w % 2 === 0 ? 'thunder_pillar' : 'ball_lightning', { tx: ox, ty: oy, scale: 1.15, duration: 420 }, 'vfx_m_lightning_spear', ox, oy, 1.18, 420);
           _aoeD4(ox, oy, 345, (176 + skillLvl * 30) / 100, '#c084fc', '⚡不穩電流 ', ['shock', 'vulnerable'], true);
         });
       }
@@ -2538,9 +2542,12 @@ export class BattleScene extends Phaser.Scene {
       this.registerEnlightenment('fire');
       this.registerEnlightenment('frost');
       this.registerEnlightenment('shock');
+      _fx3d('elemental_cataclysm', { tx: _tx, ty: _ty, scale: 1.25, duration: 1200 }, 'vfx_m_enlightenment_nova', _tx, _ty, 1.32, 520);
       for (let w = 0; w < 4; w++) {
         this.time.delayedCall(w * 270, () => {
-          this.playAdditiveVfx(w % 2 === 0 ? 'vfx_m_enlightenment_nova' : 'vfx_m_meteor_impact', _tx, _ty - 10, 1.32, 520);
+          if (w === 1) _fx3d('meteor_impact', { tx: _tx, ty: _ty, scale: 1.0, duration: 600 });
+          if (w === 2) _fx3d('frost_nova', { tx: _tx, ty: _ty, scale: 1.15, duration: 460 });
+          if (w === 3) _fx3d('thunder_pillar', { tx: _tx, ty: _ty, scale: 1.25, duration: 380 });
           _aoeD4(_tx, _ty, 365, (185 + skillLvl * 32) / 100, '#e879f9', '🌀元素天災 ', ['burn', 'freeze', 'shock'], true);
         });
       }
@@ -2551,31 +2558,46 @@ export class BattleScene extends Phaser.Scene {
       this.registerEnlightenment('frost');
       this.registerEnlightenment('shock');
       this.playerMp = this.playerMaxMp;
-      this.playAdditiveVfx('vfx_m_enlightenment_nova', _tx, _ty - 14, 1.48, 680);
-      this.playAdditiveVfx('vfx_m_supernova_core', _tx, _ty - 14, 1.32, 580);
+      _fx3d('astral_supernova', { tx: _tx, ty: _ty, scale: 1.35, duration: 960 }, 'vfx_m_enlightenment_nova', _tx, _ty, 1.48, 680);
       _aoeD4(_tx, _ty, 390, (410 + skillLvl * 60) / 100, '#fde047', '🌟星界超新星 ', ['vulnerable', 'curse'], true);
       return;
     }
     if (skillId === 'meteor') {
       this.registerEnlightenment('fire');
-      this.playAdditiveVfx('vfx_m_meteor_impact', _tx, _ty - 10, 1.35, 560);
-      this.playAdditiveVfx('vfx_m_fireball_blast', _tx, _ty - 12, 0.96, 400);
-      _aoeD4(_tx, _ty, 300, (290 + skillLvl * 42) / 100, '#fb923c', '☄️隕石 ', ['burn', 'vulnerable'], true);
+      _fx3d('meteor_impact', { tx: _tx, ty: _ty, scale: 1.25, duration: 780 }, 'vfx_m_meteor_impact', _tx, _ty, 1.35, 560);
+      this.time.delayedCall(220, () => {
+        _aoeD4(_tx, _ty, 300, (290 + skillLvl * 42) / 100, '#fb923c', '☄️隕石 ', ['burn', 'vulnerable'], true);
+      });
       return;
     }
     if (skillId === 'frost_nova') {
       this.registerEnlightenment('frost');
-      this.playAdditiveVfx('vfx_m_frost_nova', _hx, _hy - 10, 1.25, 480);
-      this.playAdditiveVfx('vfx_m_shatter_burst', _hx, _hy - 10, 0.92, 380);
+      _fx3d('frost_nova', { tx: _hx, ty: _hy, scale: 1.25, duration: 520 }, 'vfx_m_frost_nova', _hx, _hy, 1.25, 480);
       _aoeD4(_hx, _hy, 290, (195 + skillLvl * 28) / 100, '#38bdf8', '❄️冰霜新星 ', ['freeze', 'vulnerable']);
       return;
     }
     if (skillId === 'chain_lightning') {
       this.registerEnlightenment('shock');
-      this.playAdditiveVfx('vfx_m_lightning_spear', _tx, _ty - 10, 0.96, 340);
-      this.playAdditiveVfx('vfx_m_crackling_orb', _tx, _ty - 10, 0.72, 300);
+      const targets = this.monsters
+        .filter((m) => m.hp > 0 && Phaser.Math.Distance.Between(_tx, _ty, m.sprite.x, m.sprite.y) <= 340)
+        .slice(0, 4);
+      let px = _hx, py = _hy;
+      if (targets.length > 0) {
+        targets.forEach((m) => {
+          _fx3d('lightning_bolt', { sx: px, sy: py, tx: m.sprite.x, ty: m.sprite.y, scale: 1.05, duration: 300 });
+          px = m.sprite.x; py = m.sprite.y;
+        });
+      } else {
+        _fx3d('lightning_bolt', { sx: _hx, sy: _hy, tx: _tx, ty: _ty, scale: 1.05, duration: 300 }, 'vfx_m_lightning_spear', _tx, _ty, 0.96, 340);
+      }
       _aoeD4(_tx, _ty, 280, (210 + skillLvl * 32) / 100, '#a78bfa', '⚡連鎖閃電 ', ['shock']);
       if (Math.random() < 0.65) this.spawnCracklingOrb(_tx, _ty);
+      return;
+    }
+    if (skillId === 'black_hole') {
+      this.registerEnlightenment('shock');
+      _fx3d('black_hole', { tx: _tx, ty: _ty, scale: 1.2, duration: 1100 });
+      _aoeD4(_tx, _ty, 310, (240 + skillLvl * 36) / 100, '#c084fc', '🕳️黑洞 ', ['vulnerable', 'curse'], true);
       return;
     }
     const alive = this.monsters.filter((m) => m.hp > 0);
@@ -3968,7 +3990,7 @@ export class BattleScene extends Phaser.Scene {
       this.enlightenmentUntil = now + 8000;
       this.playerMp = this.playerMaxMp;
       if (this.hero) {
-        this.playAdditiveVfx('vfx_m_enlightenment_nova', this.hero.x, this.hero.y - 14, 1.42, 680);
+        if (!this.threeVfx?.playMageSkill('enlightenment_nova', { tx: this.hero.x, ty: this.hero.y, scale: 1.25, duration: 820 })) this.playAdditiveVfx('vfx_m_enlightenment_nova', this.hero.x, this.hero.y - 14, 1.42, 680);
         this.spawnFloatingText(this.hero.x, this.hero.y - 96, '✨ 啟蒙爆發 (+45%傷害)', '#fde047', 16);
         const st = this.getStats();
         const dmg = Math.round(st.atk * 2.4);
@@ -4061,9 +4083,13 @@ export class BattleScene extends Phaser.Scene {
         this.heroBarrierSprite = null;
         this.heroBarrierHp = 0;
       } else {
-        this.heroBarrierSprite.setPosition(this.hero.x, this.hero.y - 10);
-        this.heroBarrierSprite.setAngle((this.heroBarrierSprite.angle + dtSec * 42) % 360);
-        this.heroBarrierSprite.setScale(0.54 + Math.sin(now * 0.008) * 0.04);
+        const used3dBar = this.threeVfx?.syncPersistent('hero_barrier', this.heroBarrierKey === 'vfx_m_flame_shield' ? 'barrier_fire' : 'barrier_ice', this.hero.x, this.hero.y - 14, 1.0);
+        this.heroBarrierSprite.setVisible(!used3dBar);
+        if (!used3dBar) {
+          this.heroBarrierSprite.setPosition(this.hero.x, this.hero.y - 10);
+          this.heroBarrierSprite.setAngle((this.heroBarrierSprite.angle + dtSec * 42) % 360);
+          this.heroBarrierSprite.setScale(0.54 + Math.sin(now * 0.008) * 0.04);
+        }
       }
     }
 
@@ -4102,8 +4128,10 @@ export class BattleScene extends Phaser.Scene {
           c.x = this.hero.x + Math.cos(c.phase * 0.7) * 62;
           c.y = this.hero.y - 24 + Math.sin(c.phase * 0.7) * 34;
         }
+        const used3dConj = this.threeVfx?.syncPersistent(`conj_${c.type}_${i}`, `conj_${c.type}`, c.x, c.y + Math.sin(c.phase) * 4, 1.0, c.sprite?.rotation || 0);
         if (c.sprite) {
-          c.sprite.setPosition(c.x, c.y + Math.sin(c.phase) * 4);
+          c.sprite.setVisible(!used3dConj);
+          if (!used3dConj) c.sprite.setPosition(c.x, c.y + Math.sin(c.phase) * 4);
         }
         c.atkCd -= delta;
         if (c.atkCd <= 0 && tgt && tgt.sprite && tgt.hp > 0) {
@@ -4148,8 +4176,12 @@ export class BattleScene extends Phaser.Scene {
           orb.x += Math.cos(ang) * 320 * dtSec;
           orb.y += Math.sin(ang) * 320 * dtSec;
         }
-        orb.sprite.setPosition(orb.x, orb.y + Math.sin(orb.phase) * 4);
-        orb.sprite.setScale(0.26 + Math.sin(orb.phase) * 0.04);
+        const used3dOrb = this.threeVfx?.syncPersistent(`crack_orb_${i}`, 'crackling_orb', orb.x, orb.y + Math.sin(orb.phase) * 4, 1.0);
+        orb.sprite.setVisible(!used3dOrb);
+        if (!used3dOrb) {
+          orb.sprite.setPosition(orb.x, orb.y + Math.sin(orb.phase) * 4);
+          orb.sprite.setScale(0.26 + Math.sin(orb.phase) * 0.04);
+        }
         if (dist <= 44) {
           orb.sprite.destroy();
           this.cracklingOrbs.splice(i, 1);
@@ -4452,7 +4484,7 @@ export class BattleScene extends Phaser.Scene {
     if (curState?.classId === 'mage') {
       const enchants = curState?.classMechanic?.mage?.enchants || [];
       if (enchants.includes('m_fireball')) {
-        this.playAdditiveVfx('vfx_m_fire_enchant_nova', m.sprite.x, m.sprite.y - 10, 0.96, 380);
+        if (!this.threeVfx?.playMageSkill('fire_enchant_nova', { tx: m.sprite.x, ty: m.sprite.y, scale: 0.95, duration: 420 })) this.playAdditiveVfx('vfx_m_fire_enchant_nova', m.sprite.x, m.sprite.y - 10, 0.96, 380);
         const fbDmg = Math.round(stats.atk * 1.05 * this.getMageD4LiveMult());
         this.monsters
           .filter((t) => t.hp > 0 && t !== m && Phaser.Math.Distance.Between(m.sprite.x, m.sprite.y, t.sprite.x, t.sprite.y) <= 215)
@@ -4460,7 +4492,7 @@ export class BattleScene extends Phaser.Scene {
       }
       const isFrozen = (m._statuses?.freeze || 0) > this.time.now || (m.chilledUntil || 0) > this.time.now;
       if (curState?.activeKeystone?.mage === 'mk_shatter_frost' && isFrozen) {
-        this.playAdditiveVfx('vfx_m_shatter_burst', m.sprite.x, m.sprite.y - 10, 1.05, 400);
+        if (!this.threeVfx?.playMageSkill('shatter_burst', { tx: m.sprite.x, ty: m.sprite.y, scale: 1.0, duration: 420 })) this.playAdditiveVfx('vfx_m_shatter_burst', m.sprite.x, m.sprite.y - 10, 1.05, 400);
         const shDmg = Math.round(stats.atk * 1.35 * this.getMageD4LiveMult());
         this.monsters
           .filter((t) => t.hp > 0 && t !== m && Phaser.Math.Distance.Between(m.sprite.x, m.sprite.y, t.sprite.x, t.sprite.y) <= 230)
