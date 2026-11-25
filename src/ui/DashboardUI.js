@@ -1,4 +1,7 @@
-import { UniversalTooltip } from './UniversalTooltip.js?v=232';
+import { TEMPERING_MANUALS } from '../data/items.js?v=240';
+import { temperItem } from '../logic/lootGen.js?v=240';
+import { SKILL_BUILD_SPECS, KEYSTONE_PASSIVES, getActiveKeystone } from '../logic/buildEngine.js?v=236';
+import { UniversalTooltip } from './UniversalTooltip.js?v=240';
 import { TOWN_SPLASHES } from '../data/towns/splashes.js?v=99';
 import { CLASSES } from '../data/classes.js?v=99';
 import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=235';
@@ -7,14 +10,14 @@ import { MAGE_SKILLS } from '../data/mageSkills.js?v=236';
 import { PALADIN_SKILLS } from '../data/paladinSkills.js?v=235';
 import { NECRO_SKILLS } from '../data/necroSkills.js?v=236';
 import { ASSASSIN_SKILLS } from '../data/assassinSkills.js?v=235';
-import { EQUIP_SLOTS, CLASS_REQ_LABELS, RARITIES, BASE_ITEMS, SET_DEFINITIONS } from '../data/items.js?v=99';
+import { EQUIP_SLOTS, CLASS_REQ_LABELS, RARITIES, BASE_ITEMS, SET_DEFINITIONS } from '../data/items.js?v=240';
 import { PET_CATALOG, PET_SCHOOLS, getPetDef, getPetRarityMeta, getPetPickupRadius, getPetCodexInfo } from '../data/pets.js?v=99';
 import { getClaimableAchievementCount } from '../data/achievements.js?v=99';
 import { getEnhanceRate, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEVEL } from '../logic/enhanceSystem.js?v=99';
 import { MONSTER_TEMPLATES, STAGE_ZONES, ZONE_POOLS, getZoneName, getStageLabel, getSubStage, getChapterIdx } from '../data/monsters.js?v=99';
 import { CLASS_BUILD_INFO, SKILL_TREE_NODES, getTreeSpentPoints, isNodeBlockedByMutex, isNodeUnlocked } from '../data/skillTree.js?v=99';
-import { calcItemPower, getSalvageReward } from '../logic/lootGen.js?v=99';
-import { formatNum, getExpToNext, getUpgradeCost, calcRebirthCrystals } from '../logic/statCalc.js?v=237';
+import { calcItemPower, getSalvageReward } from '../logic/lootGen.js?v=240';
+import { formatNum, getExpToNext, getUpgradeCost, calcRebirthCrystals } from '../logic/statCalc.js?v=240';
 
 const STAT_LABELS = {
   atkFlat: '攻擊力',
@@ -487,8 +490,79 @@ export class DashboardUI {
     });
   }
 
+  openQuickSwapPopover(slotIdx, anchorEl, state) {
+    let pop = document.getElementById('v238-quick-swap-pop');
+    if (!pop) {
+      pop = document.createElement('div');
+      pop.id = 'v238-quick-swap-pop';
+      document.body.appendChild(pop);
+    }
+    const cid = state.classId || 'warrior';
+    const book = cid === 'warrior' ? WARRIOR_SKILLS : (cid === 'ranger' ? RANGER_SKILLS : (cid === 'paladin' ? PALADIN_SKILLS : (cid === 'necro' ? NECRO_SKILLS : (cid === 'assassin' ? ASSASSIN_SKILLS : MAGE_SKILLS))));
+    const skills = Object.values(book);
+    if (!state.equippedSkillsByClass) state.equippedSkillsByClass = {};
+    if (!Array.isArray(state.equippedSkillsByClass[cid])) state.equippedSkillsByClass[cid] = [];
+    while (state.equippedSkillsByClass[cid].length < 5) state.equippedSkillsByClass[cid].push(null);
+    const eq5 = state.equippedSkillsByClass[cid];
+    const keyNames = ['空白', 'E', 'R', '1', '2'];
+
+    pop.innerHTML = `
+      <div class="v238-qs-head">
+        <span>⇄ 快速替換技能・槽位 ${slotIdx + 1} [${keyNames[slotIdx] || ''}]</span>
+        <button type="button" class="v238-st-mini-btn" id="v238-qs-close">✕</button>
+      </div>
+      <div class="v238-qs-grid">
+        ${skills.map((sk) => {
+          const isCur = eq5[slotIdx] === sk.id;
+          return `
+            <button type="button" class="v238-qs-item ${isCur ? 'is-cur' : ''}" data-qs-sk="${sk.id}">
+              <img src="${sk.icon}" alt="" />
+              <span class="v238-qs-name">${sk.name}</span>
+            </button>
+          `;
+        }).join('')}
+      </div>
+    `;
+    pop.classList.remove('hidden');
+
+    const rect = anchorEl.getBoundingClientRect();
+    const popW = 344;
+    const left = Math.min(window.innerWidth - popW - 12, Math.max(12, rect.left + rect.width / 2 - popW / 2));
+    const top = Math.max(12, rect.top - pop.offsetHeight - 12);
+    pop.style.left = `${Math.round(left)}px`;
+    pop.style.top = `${Math.round(top)}px`;
+
+    const closePop = () => {
+      pop.classList.add('hidden');
+      UniversalTooltip.hide();
+      document.removeEventListener('mousedown', onOutside);
+    };
+    const onOutside = (ev) => {
+      if (!pop.contains(ev.target)) closePop();
+    };
+    setTimeout(() => document.addEventListener('mousedown', onOutside), 10);
+    pop.querySelector('#v238-qs-close')?.addEventListener('click', closePop);
+
+    pop.querySelectorAll('[data-qs-sk]').forEach((b) => {
+      const sk = book[b.dataset.qsSk];
+      const lvl = Math.max(1, (state.skillTree || {})[sk?.treeNodeId] || 1);
+      b.addEventListener('mouseenter', (ev) => UniversalTooltip.showSkill(ev, sk, lvl, '左鍵點擊立即裝備至此技能槽'));
+      b.addEventListener('mousemove', (ev) => UniversalTooltip.move(ev));
+      b.addEventListener('mouseleave', () => UniversalTooltip.hide());
+      b.addEventListener('click', () => {
+        const prev = eq5.indexOf(sk.id);
+        if (prev >= 0 && prev !== slotIdx) eq5[prev] = eq5[slotIdx];
+        eq5[slotIdx] = sk.id;
+        closePop();
+        this.renderDockSkillSlots(state);
+        this.renderSkillTree(state);
+        window.__IDLE_ARPG_BRIDGE__?.saveNow?.();
+      });
+    });
+  }
+
   renderDockSkillSlots(state) {
-    const keyLabels = ['Space', 'E', 'R'];
+    const keyLabels = ['空白', 'E', 'R', '1', '2'];
     const cid = state.classId || 'warrior';
     const book = cid === 'warrior' ? WARRIOR_SKILLS : (cid === 'ranger' ? RANGER_SKILLS : (cid === 'paladin' ? PALADIN_SKILLS : (cid === 'necro' ? NECRO_SKILLS : (cid === 'assassin' ? ASSASSIN_SKILLS : MAGE_SKILLS))));
     const eqList = state.equippedSkillsByClass?.[cid] || [];
@@ -499,46 +573,39 @@ export class DashboardUI {
       const iconEl = btn.querySelector('.sk-slot-img');
       const plusEl = btn.querySelector('.mmo-empty-plus');
       const mpEl = btn.querySelector('.mmo-mp-cost');
+      const skId = eqList[i];
+      const sk = skId ? book[skId] : null;
+      const lvl = sk ? Math.max(1, (state.skillTree || {})[sk.treeNodeId] || 1) : 0;
 
-      const sid = eqList[i];
-      const sk = sid ? book[sid] : null;
-      const lvl = sk ? (state.skillTree?.[sk.treeNodeId] || 0) : 0;
+      // 任何技能槽右鍵都能開啟 16 招快換選單
+      btn.oncontextmenu = (ev) => {
+        ev.preventDefault();
+        this.openQuickSwapPopover(i, btn, state);
+      };
+
       if (sk && lvl > 0) {
-        const mpCost = (sid === 'bladestorm' || sid === 'phantombow' || sid === 'void_beam') ? 26 : 18;
-        iconEl.src = sk.icon;
-        iconEl.classList.remove('hidden');
+        if (iconEl) { iconEl.src = sk.icon; iconEl.classList.remove('hidden'); }
         if (plusEl) plusEl.classList.add('hidden');
+        const mpCost = sk.mpCost || 18;
         if (mpEl) mpEl.textContent = `${mpCost}`;
         btn.disabled = false;
-        btn.onmouseenter = (e) => {
-          const tt = document.getElementById('diablo-tooltip');
-          if (!tt) return;
-          tt.innerHTML = `
-            <div class="tt-title" style="color:#fde047">${sk.name} [${keyLabels[i]}]</div>
-            <div class="tt-meta">等級 ${lvl} • 冷卻 ${(sk.cooldownMs / 1000).toFixed(1)}s • 消耗 ${mpCost} ${cid === 'warrior' ? '能量' : (cid === 'ranger' ? '精力' : 'MP')}</div>
-            <div class="tt-affix">${sk.getDetail(lvl)}</div>
-          `;
-          tt.style.borderColor = '#e0a63b';
-          tt.classList.remove('hidden');
-          this.moveCompareTooltip(e);
-        };
-        btn.onmousemove = (e) => this.moveCompareTooltip(e);
-        btn.onmouseleave = () => this.hideCompareTooltip();
+        btn.onmouseenter = (e) => UniversalTooltip.showSkill(e, sk, lvl, `熱鍵 [${keyLabels[i]}] • 右鍵快速替換其他技能`);
+        btn.onmousemove = (e) => UniversalTooltip.move(e);
+        btn.onmouseleave = () => UniversalTooltip.hide();
       } else {
-        iconEl.classList.add('hidden');
+        if (iconEl) iconEl.classList.add('hidden');
         if (plusEl) plusEl.classList.remove('hidden');
         if (mpEl) mpEl.textContent = '';
-        btn.disabled = true;
-        btn.onmouseenter = (e) => {
-          const tt = document.getElementById('diablo-tooltip');
-          if (!tt) return;
-          tt.innerHTML = `<div style="color:#94a3b8;">空技能槽 [${keyLabels[i]}]：請至「⚡ 技能頁 [6]」裝備技能</div>`;
-          tt.style.borderColor = '#475569';
-          tt.classList.remove('hidden');
-          this.moveCompareTooltip(e);
-        };
-        btn.onmousemove = (e) => this.moveCompareTooltip(e);
-        btn.onmouseleave = () => this.hideCompareTooltip();
+        btn.disabled = false;
+        btn.onclick = () => this.openQuickSwapPopover(i, btn, state);
+        btn.onmouseenter = (e) => UniversalTooltip.showRich(e, {
+          title: `空技能槽 [${keyLabels[i]}]`,
+          emoji: '⚡',
+          color: '#fde68a',
+          lines: ['左鍵或右鍵點擊立即從本職業 16 招技能中挑選裝備！'],
+        });
+        btn.onmousemove = (e) => UniversalTooltip.move(e);
+        btn.onmouseleave = () => UniversalTooltip.hide();
       }
     }
   }
@@ -590,12 +657,13 @@ export class DashboardUI {
       const layout = [
         { type: 'slot', id: 'weapon' },
         { type: 'slot', id: 'helm' },
-        { type: 'slot', id: 'amulet' },
+        { type: 'slot', id: 'offhand' },
         { type: 'slot', id: 'armor' },
         { type: 'crest' },
-        { type: 'slot', id: 'ring' },
-        { type: 'empty' },
+        { type: 'slot', id: 'gloves' },
+        { type: 'slot', id: 'amulet' },
         { type: 'slot', id: 'boots' },
+        { type: 'slot', id: 'ring' },
         { type: 'pet' },
       ];
       layout.forEach((cell) => {
@@ -795,6 +863,27 @@ export class DashboardUI {
       </div>
     `;
 
+        // v239: 在裝備檢視器底部注入「⚒️ 鐵匠流派淬火鍛造」操作列
+    const tWrap = document.createElement('div');
+    tWrap.style.cssText = 'margin-top:8px;padding-top:7px;border-top:1px dashed rgba(94,234,212,0.35);';
+    const remT = Math.max(0, 5 - (item.temperCount || 0));
+    tWrap.innerHTML = `
+      <div style="font-size:11px;font-weight:800;color:#5eead4;margin-bottom:5px;">⚒️ 鐵匠流派淬火（剩餘 ${remT}/5 次 • 45 粉塵）</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px;">
+        ${Object.values(TEMPERING_MANUALS).map((m) => `<button type="button" class="btn-ghost-sm" data-temper-man="${m.id}" ${remT > 0 && (state.dust || 0) >= m.dustCost ? '' : 'disabled style="opacity:0.45;"'}>${m.name}</button>`).join('')}
+      </div>
+    `;
+    box.appendChild(tWrap);
+    tWrap.querySelectorAll('[data-temper-man]').forEach((tb) => {
+      tb.onclick = () => {
+        const res = temperItem(item, tb.dataset.temperMan);
+        if (!res.ok) return;
+        state.dust = Math.max(0, (state.dust || 0) - res.dustCost);
+        this.renderItemInspector(item, isEquipped, state);
+        window.__IDLE_ARPG_BRIDGE__?.saveNow?.();
+      };
+    });
+
     document.getElementById('insp-equip')?.addEventListener('click', () => this.handlers.onEquipItem(item.uid));
     document.getElementById('insp-upgrade')?.addEventListener('click', () => this.handlers.onUpgradeItem(item.uid, isEquipped, upgCost));
     document.getElementById('insp-salvage')?.addEventListener('click', () => this.handlers.onSalvageItem(item.uid));
@@ -831,114 +920,157 @@ export class DashboardUI {
     if (!box) return;
     const sp = state.skillPoints || 0;
     const tree = state.skillTree || {};
-    const curTreeId = this.activeSkillTreeTab || state.classId || 'warrior';
-    const meta = CLASS_BUILD_INFO[curTreeId] || CLASS_BUILD_INFO.warrior;
-    const spentHere = getTreeSpentPoints(curTreeId, tree);
-    const nodes = SKILL_TREE_NODES.filter((n) => n.tree === curTreeId);
+    const cid = state.classId || 'warrior';
+    const cls = CLASSES[cid] || { name: cid, color: '#fde68a' };
+    const book = cid === 'warrior' ? WARRIOR_SKILLS : (cid === 'ranger' ? RANGER_SKILLS : (cid === 'paladin' ? PALADIN_SKILLS : (cid === 'necro' ? NECRO_SKILLS : (cid === 'assassin' ? ASSASSIN_SKILLS : MAGE_SKILLS))));
+    const skills = Object.values(book);
+    if (!state.equippedSkillsByClass) state.equippedSkillsByClass = {};
+    if (!Array.isArray(state.equippedSkillsByClass[cid])) state.equippedSkillsByClass[cid] = [];
+    while (state.equippedSkillsByClass[cid].length < 5) state.equippedSkillsByClass[cid].push(null);
+    const eq5 = state.equippedSkillsByClass[cid];
 
-    const tabsHtml = Object.entries(CLASS_BUILD_INFO).map(([tid, info]) => `
-      <button class="d4-tab-btn ${tid === curTreeId ? 'active' : ''}" data-tree-tab="${tid}">
-        ${info.name}
-      </button>
-    `).join('');
+    // 依暗黑 4 五大階層自動分組 16 招技能
+    const TIERS = [
+      { id: 'primer',    label: 'T1 基礎產能與起手技', match: (r) => r === 'primer' || r === 'buff' },
+      { id: 'core',      label: 'T2 流派核心輸出技',   match: (r) => r === 'core' },
+      { id: 'defensive', label: 'T3 防禦、位移與控場', match: (r) => r === 'defensive' },
+      { id: 'tactical',  label: 'T4 精通、領域與召喚', match: (r) => r === 'tactical' },
+      { id: 'ultimate',  label: 'T5 終極毀滅大招',     match: (r) => r === 'ultimate' },
+    ];
+    const used = new Set();
+    const grouped = TIERS.map((t) => {
+      const list = skills.filter((sk) => {
+        if (used.has(sk.id)) return false;
+        const role = SKILL_BUILD_SPECS[sk.id]?.role || 'core';
+        if (t.match(role)) { used.add(sk.id); return true; }
+        return false;
+      });
+      return { ...t, list };
+    });
+    const leftover = skills.filter((sk) => !used.has(sk.id));
+    if (leftover.length) grouped[1].list.push(...leftover);
 
-    const tierLines = curTreeId === 'shared'
-      ? [{ y: 4, pts: 0, label: 'T1' }, { y: 28, pts: 0, label: 'T2' }, { y: 52, pts: 0, label: 'T3' }, { y: 76, pts: 0, label: 'T4' }]
-      : [
-          { y: 2, pts: 0, label: 'T1 核心' },
-          { y: 17, pts: 3, label: 'T2 雙流派 (需3點)' },
-          { y: 33, pts: 7, label: 'T3 互斥改造 (需7點)' },
-          { y: 49, pts: 12, label: 'T4 進階戰技 (需12點)' },
-          { y: 66, pts: 17, label: 'T5 終極奧義 (需17點)' },
-          { y: 83, pts: 22, label: 'T6 關鍵被動 (需22點)' },
-        ];
-
-    const tiersHtml = tierLines.map((tl) => {
-      const open = spentHere >= tl.pts;
-      return `<div class="d4-tier-line" style="top:${tl.y}%;"><span class="d4-tier-tag ${open ? 'open' : ''}">${open ? '✓' : '🔒'} ${tl.label}</span></div>`;
-    }).join('');
-
-    const nodeMap = Object.fromEntries(nodes.map((n) => [n.id, n]));
-    const linesSvg = nodes.filter((n) => n.req && nodeMap[n.req.id]).map((n) => {
-      const p = nodeMap[n.req.id];
-      const active = (tree[n.id] || 0) > 0;
-      const unlocked = isNodeUnlocked(n, tree);
-      const stroke = active ? meta.color : (unlocked ? '#fde047' : '#334155');
-      const dash = active ? '' : 'stroke-dasharray="1.6 1.2"';
-      return `<line x1="${p.x}" y1="${p.y}" x2="${n.x}" y2="${n.y}" stroke="${stroke}" stroke-width="${active ? '0.85' : '0.45'}" ${dash} opacity="${active ? '0.95' : '0.65'}" />`;
-    }).join('');
+    const ksList = KEYSTONE_PASSIVES[cid] || [];
+    const curKs = getActiveKeystone(state, cid);
 
     box.innerHTML = `
-      <div class="tree-header-bar">
-        <span>可用技能點：<strong style="color:#fde047;font-size:15px;">${sp}</strong>（升級+1／首領+1）｜ 本星圖投入：<strong>${spentHere}</strong></span>
-        <button id="btn-reset-tree" class="btn-ghost">洗點重置</button>
-      </div>
-      <div class="d4-tree-tabs">${tabsHtml}</div>
-      <div class="d4-build-legend">
-        <span style="color:${meta.buildA.color}">◀ ${meta.buildA.name}</span>
-        <span style="color:#94a3b8">點擊節點升級・◆為互斥二選一</span>
-        <span style="color:${meta.buildB.color}">${meta.buildB.name} ▶</span>
-      </div>
-      <div class="d4-tree-canvas" id="d4-tree-canvas">
-        ${tiersHtml}
-        <svg class="d4-tree-svg" viewBox="0 0 100 100" preserveAspectRatio="none">${linesSvg}</svg>
+      <div class="v238-st-board">
+        <div class="v238-st-topbar">
+          <div>
+            <div style="font-size:14.5px;font-weight:900;color:${cls.color || '#fde68a'};">✦ 【${cls.name}】深淵星盤技能樹（共 ${skills.length} 招主動＋4 關鍵被動）</div>
+            <div style="font-size:11.5px;color:#cbd5e1;margin-top:2px;">可用技能點：<b style="color:#4ade80;font-size:14px;">${sp}</b> ｜ 滑鼠移上預覽詳細數值 • 點「+1」升級解鎖 Lv.2/4/6/8 專精 • 點「裝」快速換招</div>
+          </div>
+          <div style="display:flex;gap:6px;">
+            <button type="button" class="v238-st-mini-btn" id="v238-open-spec-from-tree">⚡ 4 階專精分支</button>
+            <button type="button" class="v238-st-mini-btn" id="v238-reset-tree-btn">洗點重置</button>
+          </div>
+        </div>
+
+        ${grouped.map((g) => g.list.length ? `
+          <div class="v238-st-tier">
+            <div class="v238-st-tier-lbl"><span>${g.label}</span><span style="opacity:.75;">${g.list.length} 招</span></div>
+            <div class="v238-st-row">
+              ${g.list.map((sk) => {
+                const lv = Math.max(1, Number(tree[sk.treeNodeId] || 1));
+                const eqIdx = eq5.indexOf(sk.id);
+                return `
+                  <div class="v238-st-node ${eqIdx >= 0 ? 'is-equipped' : ''}" data-st-sk="${sk.id}">
+                    ${eqIdx >= 0 ? `<span class="v238-st-slotbadge">槽${eqIdx + 1}</span>` : ''}
+                    <span class="v238-st-lv">Lv.${lv}</span>
+                    <img src="${sk.icon}" alt="${sk.name}" />
+                    <div class="v238-st-name">${sk.name}</div>
+                    <div class="v238-st-acts">
+                      <button type="button" class="v238-st-mini-btn" data-st-up="${sk.treeNodeId}" ${sp > 0 && lv < 10 ? '' : 'disabled style="opacity:0.4;"'}>+1</button>
+                      <button type="button" class="v238-st-mini-btn" data-st-eq="${sk.id}">裝</button>
+                    </div>
+                  </div>
+                `;
+              }).join('')}
+            </div>
+          </div>
+        ` : '').join('')}
+
+        ${ksList.length ? `
+          <div class="v238-st-tier" style="border-color:rgba(244,63,94,0.45);">
+            <div class="v238-st-tier-lbl" style="color:#fda4af;"><span>💎 T6 終局關鍵被動（4 選 1）</span><span>啟用：${curKs?.name || ''}</span></div>
+            <div class="v238-st-row">
+              ${ksList.map((ks) => `
+                <button type="button" class="v238-st-node ${curKs?.id === ks.id ? 'is-equipped' : ''}" data-st-ks="${ks.id}">
+                  <img src="${ks.icon}" style="border-color:${ks.color};" alt="${ks.name}" />
+                  <div class="v238-st-name" style="color:${ks.color};">${ks.name}</div>
+                  <div style="font-size:9px;color:#94a3b8;">${ks.badge}${curKs?.id === ks.id ? ' ✓' : ''}</div>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
       </div>
     `;
 
-    const canvas = document.getElementById('d4-tree-canvas');
-    nodes.forEach((node) => {
-      const cur = tree[node.id] || 0;
-      const blocked = isNodeBlockedByMutex(node, tree);
-      const unlocked = isNodeUnlocked(node, tree);
-      const maxed = cur >= node.maxLvl;
-      const btn = document.createElement('button');
-      let clsState = cur > 0 ? 'invested' : (blocked ? 'mutex-blocked' : (unlocked ? 'available' : 'locked'));
-      btn.className = `d4-node shape-${node.shape || 'circle'} ${clsState}`;
-      btn.style.left = `${node.x}%`;
-      btn.style.top = `${node.y}%`;
-      if (node.archetype === 'A' && cur > 0) btn.style.borderColor = meta.buildA.color;
-      if (node.archetype === 'B' && cur > 0) btn.style.borderColor = meta.buildB.color;
+    box.querySelector('#v238-open-spec-from-tree')?.addEventListener('click', () => window.__SKILL_SPEC_MODAL__?.open?.());
+    box.querySelector('#v238-reset-tree-btn')?.addEventListener('click', () => this.handlers.onResetSkillTree?.());
 
-      const glyph = node.icon
-        ? `<img src="${node.icon}" alt="${node.name}" />`
-        : `<span class="d4-node-inner" style="font-size:${node.kind === 'keystone' ? '18px' : '13px'};">${node.kind === 'keystone' ? '👑' : (node.kind === 'mod' ? '◆' : '✦')}</span>`;
-      btn.innerHTML = `${glyph}<span class="d4-node-lvl">${cur}/${node.maxLvl}</span>`;
-
-      btn.onclick = () => {
-        if (!unlocked || maxed || sp <= 0) return;
-        this.hideCompareTooltip();
-        this.handlers.onUpgradeSkillNode(node.id);
-      };
-      btn.onmouseenter = (e) => {
-        const tt = document.getElementById('diablo-tooltip');
-        if (!tt) return;
-        const gateTxt = (node.reqPoints || 0) > 0 ? `需星圖投入 ${node.reqPoints} 點（目前 ${spentHere}）` : '無點數門檻';
-        const stateTxt = blocked
-          ? '<span style="color:#f87171;">已選擇另一條互斥分支</span>'
-          : (maxed ? '<span style="color:#4ade80;">已滿級</span>' : (unlocked ? '<span style="color:#fde047;">可點擊升級 (+1)</span>' : '<span style="color:#94a3b8;">尚未達成前置條件</span>'));
-        tt.innerHTML = `
-          <div class="tt-title" style="color:#fde68a">${node.name} (${cur}/${node.maxLvl})</div>
-          <div class="tt-meta">第 ${node.tier} 階 • ${gateTxt}</div>
-          <div class="tt-affix">${node.desc}</div>
-          <div style="margin-top:5px;font-size:11px;font-weight:700;">${stateTxt}</div>
-        `;
-        tt.style.borderColor = cur > 0 ? meta.color : '#c89b3c';
-        tt.classList.remove('hidden');
-        this.moveCompareTooltip(e);
-      };
-      btn.onmousemove = (e) => this.moveCompareTooltip(e);
-      btn.onmouseleave = () => this.hideCompareTooltip();
-      canvas.appendChild(btn);
+    box.querySelectorAll('[data-st-sk]').forEach((node) => {
+      const sk = book[node.dataset.stSk];
+      const lv = Math.max(1, Number(tree[sk?.treeNodeId] || 1));
+      node.addEventListener('mouseenter', (ev) => UniversalTooltip.showSkill(ev, sk, lv, '點擊「+1」升級；點擊「裝」選擇快捷槽位'));
+      node.addEventListener('mousemove', (ev) => UniversalTooltip.move(ev));
+      node.addEventListener('mouseleave', () => UniversalTooltip.hide());
     });
 
-    box.querySelectorAll('[data-tree-tab]').forEach((tb) => {
-      tb.onclick = () => {
-        this.activeSkillTreeTab = tb.dataset.treeTab;
+    box.querySelectorAll('[data-st-up]').forEach((b) => {
+      b.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        const nid = b.dataset.stUp;
+        if ((state.skillPoints || 0) <= 0) return;
+        if (!state.skillTree) state.skillTree = {};
+        const cur = Math.max(1, Number(state.skillTree[nid] || 1));
+        if (cur >= 10) return;
+        state.skillTree[nid] = cur + 1;
+        state.skillPoints -= 1;
         this.renderSkillTree(state);
-      };
+        this.renderDockSkillSlots(state);
+        window.__IDLE_ARPG_BRIDGE__?.saveNow?.();
+      });
     });
-    document.getElementById('btn-reset-tree')?.addEventListener('click', () => {
-      this.handlers.onResetSkillTree();
+
+    box.querySelectorAll('[data-st-eq]').forEach((b) => {
+      b.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        const skId = b.dataset.stEq;
+        // 自動找空槽，若全滿則開啟槽 1 快換或輪替裝備
+        let targetSlot = eq5.findIndex((x) => !x);
+        if (targetSlot < 0) {
+          this.openQuickSwapPopover(0, b, state);
+          return;
+        }
+        const prev = eq5.indexOf(skId);
+        if (prev >= 0) eq5[prev] = null;
+        eq5[targetSlot] = skId;
+        this.renderDockSkillSlots(state);
+        this.renderSkillTree(state);
+        window.__IDLE_ARPG_BRIDGE__?.saveNow?.();
+      });
+    });
+
+    box.querySelectorAll('[data-st-ks]').forEach((b) => {
+      const ks = ksList.find((x) => x.id === b.dataset.stKs);
+      b.addEventListener('mouseenter', (ev) => UniversalTooltip.showRich(ev, {
+        title: `💎 ${ks.name} [${ks.badge}]`,
+        subtitle: '終局關鍵被動（同時僅能啟用 1 個）',
+        icon: ks.icon,
+        color: ks.color,
+        lines: [ks.desc],
+        footer: '左鍵點擊立即切換啟用此關鍵被動',
+      }));
+      b.addEventListener('mousemove', (ev) => UniversalTooltip.move(ev));
+      b.addEventListener('mouseleave', () => UniversalTooltip.hide());
+      b.addEventListener('click', () => {
+        if (!state.activeKeystone) state.activeKeystone = {};
+        state.activeKeystone[cid] = ks.id;
+        this.renderSkillTree(state);
+        window.__IDLE_ARPG_BRIDGE__?.saveNow?.();
+      });
     });
   }
 

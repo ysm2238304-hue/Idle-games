@@ -1,4 +1,4 @@
-import { EQUIP_SLOTS, RARITIES, BASE_ITEMS, AFFIX_POOL, LEGENDARY_EFFECTS, SET_DEFINITIONS } from '../data/items.js?v=99';
+import { EQUIP_SLOTS, RARITIES, BASE_ITEMS, AFFIX_POOL, LEGENDARY_EFFECTS, SET_DEFINITIONS, CLASS_ARCHETYPE_SETS, TEMPERING_MANUALS, MYTHIC_UNIQUES } from '../data/items.js?v=240';
 
 let itemUidCounter = Date.now();
 
@@ -16,16 +16,16 @@ function getChapterNum(stage = 1) {
 
 // 10 章逐章掉率與稀有度權重表（硬核耐玩低掉率）
 const CHAPTER_LOOT_TABLE = {
-  1:  { mobMin: 0.30, mobMax: 0.60, boss: 6,  chBoss: 25,  wC: 86, wM: 14,   wR: 0,    wL: 0,    wS: 0,    bossR: 2,  chBossR: 10, bossL: 0,   chBossL: 0,    bossS: 0,   chBossS: 0   },
-  2:  { mobMin: 0.45, mobMax: 0.90, boss: 8,  chBoss: 32,  wC: 78, wM: 20,   wR: 2.0,  wL: 0,    wS: 0,    bossR: 5,  chBossR: 16, bossL: 0,   chBossL: 0,    bossS: 0,   chBossS: 0   },
-  3:  { mobMin: 0.60, mobMax: 1.20, boss: 10, chBoss: 40,  wC: 70, wM: 26,   wR: 4.0,  wL: 0,    wS: 0,    bossR: 8,  chBossR: 24, bossL: 0.2, chBossL: 1.0,  bossS: 0,   chBossS: 0   },
-  4:  { mobMin: 0.80, mobMax: 1.60, boss: 12, chBoss: 48,  wC: 63, wM: 31,   wR: 5.85, wL: 0.15, wS: 0,    bossR: 13, chBossR: 30, bossL: 0.7, chBossL: 2.2,  bossS: 0,   chBossS: 0   },
-  5:  { mobMin: 1.00, mobMax: 2.00, boss: 14, chBoss: 55,  wC: 56, wM: 35.6, wR: 8.0,  wL: 0.3,  wS: 0.08, bossR: 17, chBossR: 34, bossL: 1.3, chBossL: 3.5,  bossS: 0.4, chBossS: 1.0 },
-  6:  { mobMin: 1.25, mobMax: 2.50, boss: 17, chBoss: 65,  wC: 49, wM: 40.2, wR: 10.0, wL: 0.6,  wS: 0.20, bossR: 21, chBossR: 38, bossL: 2.1, chBossL: 4.6,  bossS: 0.8, chBossS: 1.8 },
-  7:  { mobMin: 1.50, mobMax: 3.00, boss: 20, chBoss: 75,  wC: 42, wM: 42.6, wR: 14.0, wL: 1.0,  wS: 0.40, bossR: 25, chBossR: 40, bossL: 3.2, chBossL: 7.2,  bossS: 1.3, chBossS: 3.2 },
-  8:  { mobMin: 1.80, mobMax: 3.60, boss: 23, chBoss: 85,  wC: 36, wM: 43.8, wR: 18.0, wL: 1.5,  wS: 0.70, bossR: 29, chBossR: 42, bossL: 4.6, chBossL: 10.0, bossS: 1.8, chBossS: 4.5 },
-  9:  { mobMin: 2.10, mobMax: 4.20, boss: 26, chBoss: 92,  wC: 30, wM: 44.8, wR: 22.0, wL: 2.2,  wS: 1.00, bossR: 33, chBossR: 44, bossL: 6.2, chBossL: 13.5, bossS: 2.5, chBossS: 6.2 },
-  10: { mobMin: 2.50, mobMax: 5.00, boss: 30, chBoss: 100, wC: 24, wM: 46.0, wR: 25.8, wL: 2.8,  wS: 1.40, bossR: 36, chBossR: 46, bossL: 8.0, chBossL: 17.5, bossS: 3.2, chBossS: 8.0 },
+  1:  { mobMin: 0.6, mobMax: 1.2, boss: 10, chBoss: 45, wC: 85, wM: 15,   wR: 0,    wL: 0,    wS: 0,    bossR: 2,  chBossR: 12, bossL: 0,   chBossL: 0,    bossS: 0,   chBossS: 0   },
+  2:  { mobMin: 0.9, mobMax: 1.8, boss: 14, chBoss: 60, wC: 76, wM: 22,   wR: 2.0,  wL: 0,    wS: 0,    bossR: 5,  chBossR: 18, bossL: 0,   chBossL: 0,    bossS: 0,   chBossS: 0   },
+  3:  { mobMin: 1.2, mobMax: 2.4, boss: 18, chBoss: 75, wC: 69, wM: 27,   wR: 4.0,  wL: 0,    wS: 0,    bossR: 9,  chBossR: 26, bossL: 0.3, chBossL: 1.2,  bossS: 0,   chBossS: 0   },
+  4:  { mobMin: 1.6, mobMax: 3.2, boss: 22, chBoss: 85, wC: 62, wM: 31.8, wR: 6.0,  wL: 0.15, wS: 0,    bossR: 14, chBossR: 32, bossL: 0.8, chBossL: 2.5,  bossS: 0,   chBossS: 0   },
+  5:  { mobMin: 2.0, mobMax: 4.0, boss: 26, chBoss: 100,wC: 55, wM: 36.6, wR: 8.0,  wL: 0.3,  wS: 0.08, bossR: 18, chBossR: 36, bossL: 1.5, chBossL: 3.8,  bossS: 0.5, chBossS: 1.2 },
+  6:  { mobMin: 2.5, mobMax: 5.0, boss: 30, chBoss: 100,wC: 48, wM: 41.2, wR: 10.0, wL: 0.6,  wS: 0.20, bossR: 22, chBossR: 40, bossL: 2.4, chBossL: 5.0,  bossS: 0.9, chBossS: 2.0 },
+  7:  { mobMin: 3.0, mobMax: 6.0, boss: 35, chBoss: 100,wC: 41, wM: 43.6, wR: 14.0, wL: 1.0,  wS: 0.40, bossR: 26, chBossR: 42, bossL: 3.5, chBossL: 8.0,  bossS: 1.4, chBossS: 3.5 },
+  8:  { mobMin: 3.6, mobMax: 7.2, boss: 40, chBoss: 100,wC: 35, wM: 44.8, wR: 18.0, wL: 1.5,  wS: 0.70, bossR: 30, chBossR: 44, bossL: 5.0, chBossL: 11.0, bossS: 2.0, chBossS: 5.0 },
+  9:  { mobMin: 4.2, mobMax: 8.5, boss: 45, chBoss: 100,wC: 29, wM: 45.8, wR: 22.0, wL: 2.2,  wS: 1.00, bossR: 34, chBossR: 46, bossL: 6.8, chBossL: 15.0, bossS: 2.8, chBossS: 7.0 },
+  10: { mobMin: 5.0, mobMax: 10.0,boss: 50, chBoss: 100,wC: 23, wM: 47.0, wR: 25.8, wL: 2.8,  wS: 1.40, bossR: 38, chBossR: 48, bossL: 8.5, chBossL: 19.0, bossS: 3.6, chBossS: 9.0 },
 };
 
 const CLASS_AFFIX_PREF = {
@@ -127,6 +127,42 @@ function sortAffixesByClassAndZone(affixes, playerClassId, stage) {
 }
 
 export function generateLoot(stage, isBoss = false, magicFindPct = 0, guaranteed = false, playerClassId = 'warrior') {
+  // v240: 第 5 章（Stage 41+）起首領與高難度關卡極低機率掉落「神話暗金（Mythic Unique）」
+  if (stage >= 41) {
+    const mfBonus = 1 + Math.min(2.5, (magicFindPct || 0) / 150);
+    const mythicChance = (isBoss ? 0.018 : 0.0018) * mfBonus;
+    if (Math.random() < mythicChance) {
+      const pool = MYTHIC_UNIQUES.filter((m) => m.classReq === 'all' || m.classReq === playerClassId);
+      const mTpl = pool[Math.floor(Math.random() * pool.length)] || MYTHIC_UNIQUES[0];
+      const baseVal = Math.round((28 + stage * 4.5) * 3.1);
+      const baseKey = mTpl.slot === 'weapon' || mTpl.slot === 'gloves' || mTpl.slot === 'offhand' ? 'atk' : (mTpl.slot === 'armor' || mTpl.slot === 'helm' ? 'armor' : 'maxHp');
+      const affixes = [
+        { key: 'critRate', label: '暴擊率', value: Number((6 + Math.random() * 6).toFixed(1)), unit: '%', isGreater: true },
+        { key: 'critDmg',  label: '暴擊傷害', value: Math.round(35 + stage * 0.6), unit: '%', isGreater: true },
+        { key: 'atk',      label: '攻擊力', value: Math.round(24 + stage * 3.2), unit: '', isGreater: Math.random() < 0.6 },
+        { key: 'maxHp',    label: '生命上限', value: Math.round(120 + stage * 18), unit: '', isGreater: false },
+      ];
+      return {
+        uid: `myth_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        mythicId: mTpl.id,
+        name: mTpl.name,
+        slot: mTpl.slot,
+        subType: `神話・${EQUIP_SLOTS[mTpl.slot]?.label || ''}`,
+        rarity: 'mythic',
+        level: stage,
+        classReq: mTpl.classReq,
+        icon: mTpl.icon,
+        baseStat: { key: baseKey, value: baseVal },
+        affixes,
+        greaterCount: affixes.filter((a) => a.isGreater).length,
+        temperedAffixes: [],
+        temperCount: 0,
+        mythicEffect: mTpl.mythicEffect,
+        mythicStats: mTpl.stats,
+        upgradeLevel: 0,
+      };
+    }
+  }
   const ch = getChapterNum(stage);
   const cfg = CHAPTER_LOOT_TABLE[ch];
   const isChapterBoss = isBoss && (stage % 10 === 0);
@@ -184,12 +220,28 @@ export function generateLoot(stage, isBoss = false, magicFindPct = 0, guaranteed
   let setId = null, setName = null;
   if (rarityId === 'set') {
     const targetCls = (itemCls && itemCls !== 'all') ? itemCls : playerClassId;
-    const setKey = SET_DEFINITIONS[`set_${targetCls}`] ? `set_${targetCls}` : 'set_abyss';
+    const _archPool = CLASS_ARCHETYPE_SETS[targetCls] || [`set_${targetCls}`];
+    const setKey = _archPool[Math.floor(Math.random() * _archPool.length)] || 'set_abyss';
     setId = setKey;
     setName = SET_DEFINITIONS[setKey].name;
   }
   const prefixLabel = rarityId === 'set' ? '套裝・' : (rarityId === 'legendary' ? '遠古・' : (rarityId === 'rare' ? '精良・' : ''));
+  // v239: 太古大詞綴 ★（第 4 章 / Stage 31+ 傳奇、套裝、神話有機率骰出 1~3 條 ×1.5 倍大詞綴）
+  let greaterCount = 0;
+  if (stage >= 31 && (rarityId === 'legendary' || rarityId === 'set' || rarityId === 'mythic')) {
+    affixes.forEach((af) => {
+      const chance = rarityId === 'mythic' ? 0.45 : (stage >= 61 ? 0.28 : 0.18);
+      if (greaterCount < 3 && Math.random() < chance) {
+        af.isGreater = true;
+        af.value = Math.round(af.value * 1.5 * 10) / 10;
+        greaterCount += 1;
+      }
+    });
+  }
   const item = {
+    greaterCount,
+    temperedAffixes: [],
+    temperCount: 0,
     uid: `item_${++itemUidCounter}_${Math.random().toString(36).slice(2, 6)}`,
     name: `${prefixLabel}${baseTpl.name}`,
     icon: baseTpl.icon,
@@ -310,7 +362,8 @@ export function generateBlackMarketItem(stage, playerClassId = 'warrior', forceR
   let setId = null, setName = null;
   if (rarityId === 'set') {
     const targetCls = (itemCls && itemCls !== 'all') ? itemCls : playerClassId;
-    const setKey = SET_DEFINITIONS[`set_${targetCls}`] ? `set_${targetCls}` : 'set_abyss';
+    const _archPool = CLASS_ARCHETYPE_SETS[targetCls] || [`set_${targetCls}`];
+    const setKey = _archPool[Math.floor(Math.random() * _archPool.length)] || 'set_abyss';
     setId = setKey;
     setName = SET_DEFINITIONS[setKey].name;
   }
@@ -333,4 +386,25 @@ export function generateBlackMarketItem(stage, playerClassId = 'warrior', forceR
   };
   item.powerScore = calcItemPower(item);
   return item;
+}
+
+
+// v239: 鐵匠流派淬火鍛造（最多淬火 5 次，每次自選定手冊賦予 2 條專屬流派詞綴）
+export function temperItem(item, manualId) {
+  if (!item) return { ok: false, msg: '請先選擇裝備' };
+  const manual = TEMPERING_MANUALS[manualId];
+  if (!manual) return { ok: false, msg: '未知的淬火手冊' };
+  const used = Number(item.temperCount || 0);
+  if (used >= 5) return { ok: false, msg: '此裝備已達淬火上限（5/5 次）' };
+  const pool = [...manual.pool];
+  const rolled = [];
+  for (let i = 0; i < 2 && pool.length > 0; i++) {
+    const idx = Math.floor(Math.random() * pool.length);
+    const tpl = pool.splice(idx, 1)[0];
+    const val = Math.round((tpl.min + Math.random() * (tpl.max - tpl.min)) * 10) / 10;
+    rolled.push({ key: tpl.key, label: tpl.label, value: val, unit: tpl.unit, isTempered: true });
+  }
+  item.temperedAffixes = rolled;
+  item.temperCount = used + 1;
+  return { ok: true, dustCost: manual.dustCost, rolled, remain: 5 - item.temperCount };
 }

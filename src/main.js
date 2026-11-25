@@ -6,11 +6,11 @@ import { MAGE_SKILLS } from './data/mageSkills.js?v=236';
 import { PALADIN_SKILLS } from './data/paladinSkills.js?v=235';
 import { NECRO_SKILLS } from './data/necroSkills.js?v=236';
 import { ASSASSIN_SKILLS } from './data/assassinSkills.js?v=235';
-import { RARITIES } from './data/items.js?v=99';
+import { RARITIES } from './data/items.js?v=240';
 import { PET_CATALOG, rollPetDrop, getPetDef } from './data/pets.js?v=99';
 import { SKILL_TREE_NODES, isNodeUnlocked } from './data/skillTree.js?v=99';
-import { generateLoot, calcItemPower, getSalvageReward, rerollItemAffixes, generateBlackMarketItem } from './logic/lootGen.js?v=99';
-import { recalcPlayerStats, getExpToNext, getUpgradeCost, calcRebirthCrystals, formatNum } from './logic/statCalc.js?v=237';
+import { generateLoot, calcItemPower, getSalvageReward, rerollItemAffixes, generateBlackMarketItem } from './logic/lootGen.js?v=240';
+import { recalcPlayerStats, getExpToNext, getUpgradeCost, calcRebirthCrystals, formatNum } from './logic/statCalc.js?v=240';
 import { createInitialState, loadGame, saveGame, calcOfflineProgress } from './logic/saveSystem.js?v=232';
 import {
   initCloudAuth,
@@ -23,8 +23,8 @@ import {
 import { BattleScene } from './scenes/BattleScene.js?v=237';
 import { TownScene } from './scenes/TownScene.js?v=227';
 import { TOWN_SPLASHES } from './data/towns/splashes.js?v=229';
-import { DashboardUI } from './ui/DashboardUI.js?v=236';
-import { UniversalTooltip } from './ui/UniversalTooltip.js?v=232';
+import { DashboardUI } from './ui/DashboardUI.js?v=240';
+import { UniversalTooltip } from './ui/UniversalTooltip.js?v=240';
 import { SkillSpecModal } from './ui/SkillSpecModal.js?v=236';
 import { ClassMechanicModal } from './ui/ClassMechanicModal.js?v=234';
 import { EndgameModal } from './ui/EndgameModal.js?v=237';
@@ -798,7 +798,7 @@ function grantExp(amount, opts = {}) {
 
 function handleLootDrop(item) {
   if (!item) return null;
-  if (gameState.autoSalvage[item.rarity] || gameState.inventory.length >= 60) {
+  if (item.rarity !== 'mythic' && (gameState.autoSalvage[item.rarity] || gameState.inventory.length >= 60)) {
     const rew = getSalvageReward(item);
     gameState.gold += rew.gold;
     gameState.dust += rew.dust;
@@ -811,6 +811,7 @@ function handleLootDrop(item) {
     ui.markBagUpgradeDot();
   }
   const r = RARITIES[item.rarity];
+  if (item.rarity === 'mythic') { ui.addLog(`🌌 【神話暗金降臨】獲得終局神裝「${item.name}」（太古★×${item.greaterCount || 2}）！`, 'victory'); }
   if (item.rarity === 'legendary' || item.rarity === 'rare') {
     ui.addLog(`✨ 掉落 [${r.label}] ${item.name} (戰力 ${item.powerScore})！`, 'victory');
   }
@@ -2469,12 +2470,7 @@ if (typeof document !== 'undefined') {
   });
   window.__SKILL_SPEC_MODAL__ = skillSpecModal;
   document.getElementById('btn-open-skill-spec')?.addEventListener('click', () => skillSpecModal.open());
-  for (let i = 0; i < 5; i++) {
-    document.getElementById(`skill-slot-${i}`)?.addEventListener('contextmenu', (ev) => {
-      ev.preventDefault();
-      skillSpecModal.open();
-    });
-  }
+  // v238: 技能槽右鍵交由 DashboardUI 開啟 16 招快換選單
 }
 
 
@@ -2507,4 +2503,9 @@ if (typeof document !== 'undefined') {
   });
   window.__ENDGAME_MODAL__ = endgameModal;
   document.getElementById('btn-open-endgame')?.addEventListener('click', () => endgameModal.open());
+}
+
+// v238: 暴露 saveNow 供技能樹與快換選單即時存檔重算
+if (typeof window !== 'undefined' && window.__IDLE_ARPG_BRIDGE__) {
+  window.__IDLE_ARPG_BRIDGE__.saveNow = () => { try { refreshStatsAndUI(); persistAll(); } catch (e) {} };
 }

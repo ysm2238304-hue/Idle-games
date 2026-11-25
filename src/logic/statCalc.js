@@ -2,7 +2,7 @@ import { calcEndgameBonuses } from './endgameSystems.js?v=237';
 import { getActiveKeystone } from './buildEngine.js?v=236';
 import { getClassMechanicStatBonuses } from './classMechanics.js?v=234';
 import { CLASSES } from '../data/classes.js?v=99';
-import { SET_DEFINITIONS } from '../data/items.js?v=99';
+import { SET_DEFINITIONS } from '../data/items.js?v=240';
 
 export function formatNum(num) {
   const n = Math.floor(num);
@@ -364,6 +364,33 @@ export function recalcPlayerStats(state) {
   }
   // v237: 注入傳奇威能法典（3槽倍率）＋ 深淵巔峰盤 ＋ 雕紋共鳴加成
   const eg = calcEndgameBonuses(state);
+  // v239: 結算 8 部位裝備的淬火詞綴與 18 套流派套裝額外乘區
+  const _eqObj = state?.equipment || {};
+  const _setCnt = {};
+  Object.values(_eqObj).forEach((it) => {
+    if (!it) return;
+    if (it.rarity === 'set' && it.setId) _setCnt[it.setId] = (_setCnt[it.setId] || 0) + 1;
+    if (it.rarity === 'mythic' && it.mythicStats) {
+      Object.entries(it.mythicStats).forEach(([k, v]) => {
+        if (k === 'critDmgMult2x' && v) eg.critDmgMult2x = true;
+        else if (typeof v === 'number' && typeof eg[k] === 'number') eg[k] += v;
+      });
+    }
+    (it.temperedAffixes || []).forEach((tf) => {
+      if (typeof eg[tf.key] === 'number') eg[tf.key] += tf.value;
+    });
+  });
+  Object.entries(_setCnt).forEach(([sid, cnt]) => {
+    const sDef = SET_DEFINITIONS[sid];
+    if (!sDef || !sDef.bonuses) return;
+    [2, 4].forEach((req) => {
+      if (cnt >= req && sDef.bonuses[req]) {
+        Object.entries(sDef.bonuses[req]).forEach(([k, v]) => {
+          if (typeof v === 'number' && typeof eg[k] === 'number') eg[k] += v;
+        });
+      }
+    });
+  });
   cm.maxHpPct += eg.maxHpPct || 0;
   cm.maxMpPct += eg.maxMpPct || 0;
   cm.mpRegenPct += eg.mpRegenPct || 0;
@@ -381,7 +408,7 @@ export function recalcPlayerStats(state) {
   const finalMpRegen = Number((mpRegenPerSec * (1 + (cm.mpRegenPct || 0) / 100)).toFixed(2));
   const finalArmor = Math.round(armor * (1 + (cm.armorPct || 0) / 100));
   const finalCritRate = Math.min(95, Number((critRate + (cm.critRate || 0)).toFixed(1)));
-  const finalCritDmg = Math.round(critDmg + (cm.critDmg || 0));
+  const finalCritDmg = Math.round((critDmg + (cm.critDmg || 0)) * (eg.critDmgMult2x ? 2.0 : 1.0));
   const finalLifesteal = Number((lifesteal + (cm.lifesteal || 0)).toFixed(1));
   const finalAtkInterval = Math.max(160, Math.round(atkIntervalMs / (1 + (cm.atkSpeedPct || 0) / 100)));
   const finalSkillDmgMult = Number((skillDmgMult * (1 + (cm.skillDmgPct || 0) / 100)).toFixed(3));

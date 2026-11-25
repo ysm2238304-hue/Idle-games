@@ -279,3 +279,255 @@
   border: 1px solid rgba(168, 85, 247, 0.35);
   font-size: 11px;
 }
+
+
+/* =====================================================================
+   v238: 修復圖二 HUD 擠壓與去色塊 + 快捷列一鍵換招 + 圖一純圖暗黑星盤技能樹
+   ===================================================================== */
+
+/* 1. 將 BUFF 圖示列上移拉開，徹底避免與新增技能槽重疊 */
+#hud-altar-buffs,
+.hud-altar-buffs {
+  top: -94px !important;
+  left: 24% !important;
+  transform: none !important;
+  z-index: 30 !important;
+  gap: 6px !important;
+}
+
+/* 2. 輔助技能槽 [1]/[2] 與 3 個暗黑金屬微章整齊對齊於祭壇上方右側，全面去除彩色色塊 */
+.v233-aux-skill-bar {
+  top: -46px !important;
+  left: 59% !important;
+  transform: translateX(-50%) !important;
+  gap: 6px !important;
+  padding: 3px 8px !important;
+  border-radius: 8px !important;
+  background: linear-gradient(180deg, rgba(16, 13, 12, 0.88), rgba(9, 7, 8, 0.94)) !important;
+  border: 1.5px solid rgba(180, 140, 72, 0.55) !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.88) !important;
+}
+
+.v233-aux-slot {
+  width: 38px !important;
+  height: 38px !important;
+  border-radius: 6px !important;
+  border: 1.5px solid rgba(196, 154, 78, 0.82) !important;
+  background: radial-gradient(circle at 50% 35%, rgba(28, 22, 18, 0.96), rgba(10, 8, 9, 0.98)) !important;
+}
+.v233-aux-slot.is-ultimate {
+  border-color: rgba(220, 76, 76, 0.88) !important;
+}
+
+/* 三顆功能入口改為暗黑鍛鐵鎏金無色塊微章（徹底與暗黑四主祭壇融為一體） */
+.v233-spec-open-btn,
+.v234-mech-open-btn,
+.v237-endgame-open-btn {
+  padding: 5px 9px !important;
+  border-radius: 5px !important;
+  background: linear-gradient(180deg, rgba(36, 29, 25, 0.96) 0%, rgba(16, 13, 13, 0.98) 100%) !important;
+  border: 1.5px solid rgba(186, 146, 74, 0.72) !important;
+  color: #e9d5a1 !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  box-shadow: inset 0 1px 0 rgba(255, 224, 150, 0.16), 0 3px 8px rgba(0, 0, 0, 0.85) !important;
+  text-shadow: 0 1px 3px #000 !important;
+}
+.v233-spec-open-btn:hover,
+.v234-mech-open-btn:hover,
+.v237-endgame-open-btn:hover {
+  border-color: #fde047 !important;
+  color: #fef9c3 !important;
+  box-shadow: 0 0 12px rgba(234, 179, 8, 0.45), inset 0 0 8px rgba(251, 191, 36, 0.16) !important;
+}
+
+/* 3. 快捷列右鍵一鍵快換技能浮動面板 (#v238-quick-swap-pop) */
+#v238-quick-swap-pop {
+  position: fixed;
+  z-index: 98000;
+  width: 344px;
+  padding: 12px;
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(22, 16, 14, 0.98), rgba(10, 8, 9, 0.99));
+  border: 2px solid #c89b3c;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.96), inset 0 0 18px rgba(200, 155, 60, 0.14);
+}
+#v238-quick-swap-pop.hidden {
+  display: none !important;
+}
+.v238-qs-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid rgba(200, 155, 60, 0.3);
+  font-size: 12.5px;
+  font-weight: 900;
+  color: #fde68a;
+}
+.v238-qs-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 7px;
+}
+.v238-qs-item {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 6px 4px;
+  border-radius: 7px;
+  background: rgba(18, 14, 15, 0.94);
+  border: 1.5px solid rgba(148, 163, 184, 0.25);
+  color: #e2e8f0;
+  transition: border-color 0.12s ease, transform 0.12s ease;
+}
+.v238-qs-item:hover {
+  border-color: #fde047;
+  transform: translateY(-2px);
+}
+.v238-qs-item.is-cur {
+  border-color: #4ade80;
+  background: rgba(20, 83, 45, 0.34);
+}
+.v238-qs-item img {
+  width: 42px;
+  height: 42px;
+  border-radius: 6px;
+  border: 1px solid rgba(200, 155, 60, 0.65);
+  object-fit: cover;
+}
+.v238-qs-name {
+  font-size: 10px;
+  font-weight: 800;
+  color: #fef3c7;
+  text-align: center;
+  line-height: 1.15;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 4. 圖一「深淵技能樹」全面去色塊 → 純圖暗黑星盤浮雕石板 */
+#drawer-skill-tree,
+#skill-tree-container {
+  background: transparent !important;
+  border-color: rgba(196, 154, 78, 0.55) !important;
+}
+.v238-st-board {
+  background: linear-gradient(180deg, rgba(10, 9, 10, 0.38), rgba(8, 7, 9, 0.62)),
+              url('../../assets/ui/bg_skill_starboard.jpg?v=238') center / cover no-repeat !important;
+  border: 2px solid rgba(196, 154, 78, 0.62);
+  border-radius: 10px;
+  padding: 14px;
+  box-shadow: inset 0 0 36px rgba(0, 0, 0, 0.85);
+}
+.v238-st-topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid rgba(196, 154, 78, 0.35);
+}
+.v238-st-tier {
+  margin-bottom: 12px;
+  padding: 10px 10px 12px;
+  border-radius: 8px;
+  background: rgba(8, 7, 9, 0.52);
+  border: 1px solid rgba(196, 154, 78, 0.24);
+}
+.v238-st-tier-lbl {
+  font-size: 11.5px;
+  font-weight: 900;
+  color: #e9c97b;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: space-between;
+}
+.v238-st-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.v238-st-node {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 7px 5px;
+  border-radius: 8px;
+  background: rgba(12, 10, 11, 0.84);
+  border: 1.5px solid rgba(168, 134, 72, 0.45);
+  transition: transform 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
+}
+.v238-st-node:hover {
+  transform: translateY(-2px);
+  border-color: #fde047;
+  box-shadow: 0 0 14px rgba(250, 204, 21, 0.38);
+}
+.v238-st-node.is-equipped {
+  border-color: #4ade80;
+  box-shadow: 0 0 12px rgba(74, 222, 128, 0.28);
+}
+.v238-st-node img {
+  width: 46px;
+  height: 46px;
+  border-radius: 6px;
+  border: 1.5px solid rgba(200, 155, 60, 0.72);
+  object-fit: cover;
+}
+.v238-st-lv {
+  position: absolute;
+  top: 4px;
+  right: 5px;
+  font-size: 9.5px;
+  font-weight: 900;
+  padding: 0 4px;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.84);
+  color: #fde047;
+}
+.v238-st-slotbadge {
+  position: absolute;
+  top: 4px;
+  left: 5px;
+  font-size: 9px;
+  font-weight: 900;
+  padding: 0 4px;
+  border-radius: 3px;
+  background: rgba(20, 83, 45, 0.92);
+  color: #86efac;
+}
+.v238-st-name {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #fef3c7;
+  text-align: center;
+  line-height: 1.15;
+}
+.v238-st-acts {
+  display: flex;
+  gap: 4px;
+  margin-top: 2px;
+}
+.v238-st-mini-btn {
+  font-size: 9.5px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(42, 32, 24, 0.95);
+  border: 1px solid rgba(196, 154, 78, 0.65);
+  color: #fde68a;
+}
+.v238-st-mini-btn:hover {
+  background: rgba(120, 53, 15, 0.9);
+  border-color: #fde047;
+}

@@ -8,10 +8,11 @@
  * 5. 經驗條懸停即時顯示 EXP/hr 與預估升級剩餘時間
  */
 
-import { RARITIES, EQUIP_SLOTS, BASE_ITEMS, SET_DEFINITIONS } from '../data/items.js?v=99';
+import { RARITIES, EQUIP_SLOTS, BASE_ITEMS, SET_DEFINITIONS } from '../data/items.js?v=240';
 import { getPetDef, getPetRarityMeta, PET_SCHOOLS } from '../data/pets.js?v=99';
-import { calcItemPower } from '../logic/lootGen.js?v=99';
-import { getExpToNext, formatNum } from '../logic/statCalc.js?v=232';
+import { calcItemPower } from '../logic/lootGen.js?v=240';
+import { getExpToNext, formatNum } from '../logic/statCalc.js?v=240';
+import { SKILL_BUILD_SPECS, STATUS_META, getSkillSpecChoice } from '../logic/buildEngine.js?v=236';
 
 const STAT_LABELS = {
   atk: '攻擊力',
@@ -200,14 +201,27 @@ class UniversalTooltipEngine {
 
     const affixesHtml = (item.affixes || []).map((a) => {
       const scaled = Math.round(a.value * upgMult * 10) / 10;
+      if (a.isGreater) {
+        return `<div class="ut-affix" style="color:#fde047;font-weight:900;">★ [太古] ${a.label || STAT_LABELS[a.key] || a.key} +${scaled}${a.unit || ''}</div>`;
+      }
       return `<div class="ut-affix">◆ ${a.label || STAT_LABELS[a.key] || a.key} +${scaled}${a.unit || ''}</div>`;
-    }).join('');
+    }).join('') + (item.temperedAffixes || []).map((t) =>
+      `<div class="ut-affix" style="color:#5eead4;font-weight:800;">⚒️ ${t.label} +${t.value}${t.unit || ''}</div>`
+    ).join('');
 
+    const mythHtml = item.mythicEffect
+      ? `<div class="ut-legendary" style="background:rgba(225,29,72,0.22);border-color:#fb7185;color:#fecdd3;">🌌 <b>[神話暗金] ${item.mythicEffect.name}</b>：${item.mythicEffect.desc}</div>`
+      : '';
     const legHtml = item.legendaryEffect
       ? `<div class="ut-legendary">★ <b>${item.legendaryEffect.name}</b>：${item.legendaryEffect.desc}</div>`
       : '';
     const setHtml = (item.rarity === 'set' && item.setId && SET_DEFINITIONS[item.setId])
-      ? `<div class="ut-set">❖ 套裝【${SET_DEFINITIONS[item.setId].name}】（集齊 2 / 4 件啟動額外特效）</div>`
+      ? (() => {
+          const sd = SET_DEFINITIONS[item.setId];
+          const b2 = sd.bonuses?.[2]?.desc || '';
+          const b4 = sd.bonuses?.[4]?.desc || '';
+          return `<div class="ut-set">❖ 套裝【${sd.name}】${b2 ? `<div style="margin-top:2px;">${b2}</div>` : ''}${b4 ? `<div>${b4}</div>` : ''}</div>`;
+        })()
       : '';
 
     return `
@@ -223,6 +237,7 @@ class UniversalTooltipEngine {
         </div>
         ${item.baseStat ? `<div class="ut-base-stat">主屬性：${STAT_LABELS[baseKey] || baseKey} +${formatNum(baseVal)}${baseUnit}</div>` : ''}
         ${affixesHtml || '<div class="ut-sub">無額外附加詞綴</div>'}
+        ${mythHtml}
         ${legHtml}
         ${setHtml}
       </div>
@@ -318,22 +333,53 @@ class UniversalTooltipEngine {
 
   showSkill(e, skill, level = 1, extra = '') {
     if (!skill) return;
+    const st = this.getStateFn();
     const el = this.ensureEl();
-    const cd = skill.cdMs ? `${(skill.cdMs / 1000).toFixed(1)} 秒` : (skill.cd ? `${skill.cd} 秒` : '被動／無冷卻');
-    const mp = skill.mpCost ? `${skill.mpCost} 魔力` : '無消耗';
-    const dmgPct = skill.dmgMult ? `${Math.round(skill.dmgMult * 100)}% 攻擊傷害` : '';
+    const lv = Math.max(1, Number(level) || 1);
+    const cdMs = skill.cooldownMs || skill.cdMs || 0;
+    const cd = cdMs ? `${(cdMs / 1000).toFixed(1)} 秒` : (skill.cd ? `${skill.cd} 秒` : '被動／無冷卻');
+    const mp = skill.mpCost ? `${skill.mpCost}` : '18';
+    const spec = SKILL_BUILD_SPECS[skill.id];
+    const tagsHtml = spec ? [
+      ...(spec.tags || []).map((t) => `<span style="font-size:10px;padding:1px 5px;border-radius:3px;background:rgba(148,163,184,0.2);color:#e2e8f0;margin-right:4px;">${t}</span>`),
+      ...(spec.applies || []).map((k) => {
+        const m = STATUS_META[k];
+        return m ? `<span style="font-size:10px;padding:1px 5px;border-radius:3px;background:rgba(251,146,60,0.2);color:${m.color};border:1px solid ${m.color}55;margin-right:4px;">${m.icon}${m.label}</span>` : '';
+      }),
+    ].join('') : '';
+
+    const curDetail = typeof skill.getDetail === 'function' ? skill.getDetail(lv) : '';
+    const nextDetail = typeof skill.getDetail === 'function' ? skill.getDetail(lv + 1) : '';
+    let specSummary = '';
+    if (spec && st) {
+      const ch = getSkillSpecChoice(st, st.classId, skill.id);
+      const t4Node = (spec.t4 || []).find((x) => x.id === ch.t4);
+      const t6Node = ch.t6 ? (spec.t6 || []).find((x) => x.id === ch.t6) : null;
+      const lines = [];
+      if (lv >= 2 && spec.t2) lines.push(`Lv.2 質變：${spec.t2.name}`);
+      if (lv >= 4 && t4Node) lines.push(`Lv.4 分歧：${t4Node.name}`);
+      if (lv >= 6 && t6Node) lines.push(`Lv.6 轉化：${t6Node.name}`);
+      if (lv >= 8 && spec.t8) lines.push(`Lv.8 幸運：${spec.t8.name}`);
+      if (lines.length) {
+        specSummary = `<div class="ut-legendary">⚡ 已啟用專精：${lines.join(' ｜ ')}</div>`;
+      }
+    }
+
     el.innerHTML = `
-      <div class="ut-pane" style="border-color:#c89b3c;">
-        <div class="ut-badge-tag">職業技能詳情</div>
+      <div class="ut-pane" style="border-color:#c89b3c;width:310px;">
+        <div class="ut-badge-tag">暗黑職業技能預覽</div>
         <div class="ut-head">
           ${skill.icon ? `<img class="ut-icon" src="${skill.icon}" alt="" />` : `<div class="ut-icon-emoji">⚔️</div>`}
           <div>
-            <div class="ut-title" style="color:#fde68a;">${skill.name || '未知技能'}${level > 0 ? ` Lv.${level}` : ''}</div>
-            <div class="ut-sub">冷卻：${cd} • 消耗：${mp}</div>
+            <div class="ut-title" style="color:#fde68a;">${skill.name || '未知技能'} <span style="color:#4ade80;font-size:12px;">Lv.${lv}</span></div>
+            <div class="ut-sub">冷卻：${cd} • 消耗：${mp} 能量</div>
+            ${tagsHtml ? `<div style="margin-top:4px;display:flex;flex-wrap:wrap;gap:2px;">${tagsHtml}</div>` : ''}
           </div>
         </div>
-        ${dmgPct ? `<div class="ut-base-stat">當前威力：${dmgPct}</div>` : ''}
         <div class="ut-desc">${skill.desc || ''}</div>
+        ${curDetail ? `<div class="ut-base-stat" style="margin-top:6px;">目前效果：${curDetail}</div>` : ''}
+        ${nextDetail ? `<div class="ut-affix" style="color:#86efac;">下一級 (Lv.${lv + 1})：${nextDetail}</div>` : ''}
+        ${specSummary}
         ${extra ? `<div class="ut-footer">${extra}</div>` : ''}
       </div>
     `;

@@ -5,6 +5,8 @@ export const EQUIP_SLOTS = {
   boots:  { id: 'boots',  label: '戰靴', icon: '🥾' },
   ring:   { id: 'ring',   label: '戒指', icon: '💍' },
   amulet: { id: 'amulet', label: '護符', icon: '📿' },
+  gloves: { id: 'gloves', label: '手套', icon: '🧤' },
+  offhand:{ id: 'offhand',label: '副手', icon: '🔰' },
 };
 
 export const CLASS_REQ_LABELS = {
@@ -23,6 +25,7 @@ export const RARITIES = {
   rare:      { id: 'rare',      label: '稀有', color: '#facc15', border: '#ca8a04', bg: 'rgba(250,204,21,0.14)',  affixes: [3, 4], mult: 1.55, beam: 0xfacc15 },
   legendary: { id: 'legendary', label: '傳奇', color: '#fb923c', border: '#ea580c', bg: 'rgba(251,146,60,0.18)',  affixes: [4, 4], mult: 2.0,  beam: 0xf97316 },
   set:       { id: 'set',       label: '套裝', color: '#22c55e', border: '#16a34a', bg: 'rgba(34,197,94,0.18)',   affixes: [4, 4], mult: 2.25, beam: 0x22c55e },
+  mythic:    { id: 'mythic',    label: '神話暗金', color: '#fb7185', border: '#e11d48', bg: 'rgba(225,29,72,0.24)', affixes: [4, 4], mult: 3.10, beam: 0xf43f5e },
 };
 
 // 共 102 種分職業與多子類裝備：武器(30) + 頭盔(18) + 胸甲(18) + 戰靴(18) + 戒指(9) + 護符(9)
@@ -254,6 +257,26 @@ export const BASE_ITEMS = {
     { name: '紫影短刃護符',   baseStat: 'hpFlat', baseVal: 138, classReq: 'assassin', subType: '刃符', icon: './assets/items/c_a_amulet2.png' },
     { name: '虛空魔眼晶墜',   baseStat: 'hpFlat', baseVal: 162, classReq: 'assassin', subType: '魔眼', icon: './assets/items/c_a_voideye.png' },
   ],
+  gloves: [
+    { name: '鐵甲戰手套', baseStat: 'atkFlat', baseVal: 8,  classReq: 'warrior',  subType: '重甲手套', icon: './assets/items/gloves_0.png?v=239' },
+    { name: '暗影獵手套', baseStat: 'atkFlat', baseVal: 8,  classReq: 'ranger',   subType: '獵人手套', icon: './assets/items/gloves_1.png?v=239' },
+    { name: '奧術絲絨手套', baseStat: 'atkFlat', baseVal: 9, classReq: 'mage',    subType: '法師手套', icon: './assets/items/gloves_2.png?v=239' },
+    { name: '冥界白骨手套', baseStat: 'atkFlat', baseVal: 9, classReq: 'necro',   subType: '死靈手套', icon: './assets/items/gloves_3.png?v=239' },
+    { name: '聖殿鎏金手套', baseStat: 'armorFlat', baseVal: 16, classReq: 'paladin', subType: '聖光手套', icon: './assets/items/gloves_4.png?v=239' },
+    { name: '劇毒影殺手套', baseStat: 'atkFlat', baseVal: 10, classReq: 'assassin', subType: '毒牙手套', icon: './assets/items/gloves_5.png?v=239' },
+  ],
+  offhand: [
+    { name: '狂戰雙持副斧', baseStat: 'atkFlat', baseVal: 12, classReq: 'warrior',  subType: '副手戰斧', icon: './assets/items/offhand_0.png?v=239' },
+    { name: '暗影精靈箭袋', baseStat: 'atkFlat', baseVal: 11, classReq: 'ranger',   subType: '箭袋',     icon: './assets/items/offhand_1.png?v=239' },
+    { name: '星界奧術法珠', baseStat: 'atkFlat', baseVal: 13, classReq: 'mage',     subType: '法珠',     icon: './assets/items/offhand_2.png?v=239' },
+    { name: '聖殿神聖塔盾', baseStat: 'armorFlat', baseVal: 26, classReq: 'paladin', subType: '聖盾',    icon: './assets/items/offhand_3.png?v=239' },
+    { name: '冥界白骨法匣', baseStat: 'atkFlat', baseVal: 12, classReq: 'necro',    subType: '骨匣',     icon: './assets/items/offhand_4.png?v=239' },
+    { name: '影殺劇毒副刃', baseStat: 'atkFlat', baseVal: 12, classReq: 'assassin', subType: '副手刃',   icon: './assets/items/offhand_5.png?v=239' },
+    { name: '熔岩黑曜巨盾', baseStat: 'armorFlat', baseVal: 32, classReq: 'all',     subType: '巨盾',    icon: './assets/items/offhand_6.png?v=239' },
+    { name: '深淵星光法典', baseStat: 'atkFlat', baseVal: 16, classReq: 'all',      subType: '法典',     icon: './assets/items/offhand_7.png?v=239' },
+    { name: '血煞骨骸聖杯', baseStat: 'hpFlat', baseVal: 95,  classReq: 'all',      subType: '聖杯',     icon: './assets/items/offhand_8.png?v=239' },
+    { name: '虛空獵魔連弩匣', baseStat: 'atkFlat', baseVal: 15, classReq: 'ranger', subType: '連弩匣',   icon: './assets/items/offhand_9.png?v=239' },
+  ]
 };
 
 // 11 通用詞條 + 12 職業專屬詞條 = 23 種詞條
@@ -525,4 +548,83 @@ export const SET_DEFINITIONS = {
     bonus2: { atkPct: 15, hpPct: 15, magicFind: 35 },
     bonus4: { skillDmgPct: 35, expMultPct: 35, goldFind: 35 },
   },
+  // v239: 全 6 職業 × 3 大流派 ＝ 18 套專屬套裝
+  set_w_blood:     { id: 'set_w_blood',     name: '血河霸主套裝',   icon: './assets/items/set_w_blood.png?v=239',  bonuses: { 2: { bleedDmgPct: 55, lifesteal: 6, desc: '(2) 流血傷 +55%、吸血 +6%' }, 4: { skillDmgPct: 45, critDmg: 60, desc: '(4) 全技能傷 +45%、暴傷 +60%，大出血倍率大增' } } },
+  set_w_lava:      { id: 'set_w_lava',      name: '熔岩泰坦套裝',   icon: './assets/items/set_w_lava.png?v=239',   bonuses: { 2: { skillDmgPct: 40, maxHpPct: 20, desc: '(2) 大地火傷 +40%、生命 +20%' }, 4: { overpowerPct: 18, atkPct: 30, desc: '(4) 壓制率 +18%、攻擊 +30%' } } },
+  set_w_god:       { id: 'set_w_god',       name: '不滅戰神套裝',   icon: './assets/items/set_w_god.png?v=239',    bonuses: { 2: { atkSpeedPct: 22, maxMpPct: 35, desc: '(2) 攻速 +22%、能量上限 +35%' }, 4: { critRate: 14, skillDmgPct: 42, desc: '(4) 暴擊 +14%、技能傷 +42%' } } },
+  set_r_night:     { id: 'set_r_night',     name: '永夜獵手套裝',   icon: './assets/items/set_r_night.png?v=239',  bonuses: { 2: { skillDmgPct: 40, critRate: 10, desc: '(2) 暗影技傷 +40%、暴擊 +10%' }, 4: { critDmg: 75, atkPct: 25, desc: '(4) 暴傷 +75%、攻擊 +25%' } } },
+  set_r_venom:     { id: 'set_r_venom',     name: '腐蝕毒師套裝',   icon: './assets/items/set_r_venom.png?v=239',  bonuses: { 2: { poisonDmgPct: 60, luckyPct: 10, desc: '(2) 毒傷 +60%、幸運率 +10%' }, 4: { skillDmgPct: 48, atkSpeedPct: 18, desc: '(4) 毒爆傷 +48%、攻速 +18%' } } },
+  set_r_gale:      { id: 'set_r_gale',      name: '疾風神射套裝',   icon: './assets/items/set_r_gale.png?v=239',   bonuses: { 2: { atkSpeedPct: 25, critRate: 10, desc: '(2) 攻速 +25%、暴擊 +10%' }, 4: { skillDmgPct: 45, luckyPct: 14, desc: '(4) 連射傷 +45%、幸運率 +14%' } } },
+  set_m_winter:    { id: 'set_m_winter',    name: '永冬女皇套裝',   icon: './assets/items/set_m_winter.png?v=239', bonuses: { 2: { chillDmgPct: 50, critRate: 12, desc: '(2) 冰傷 +50%、暴擊 +12%' }, 4: { skillDmgPct: 50, critDmg: 65, desc: '(4) 超導冰爆傷 +50%、暴傷 +65%' } } },
+  set_m_hydra:     { id: 'set_m_hydra',     name: '煉獄火蛇套裝',   icon: './assets/items/set_m_hydra.png?v=239',  bonuses: { 2: { skillDmgPct: 42, mpRegenPct: 35, desc: '(2) 火焰技傷 +42%、回魔 +35%' }, 4: { atkPct: 32, critDmg: 65, desc: '(4) 攻擊 +32%、暴傷 +65%' } } },
+  set_m_storm:     { id: 'set_m_storm', icon: './assets/items/set_m_storm.png?v=240',     name: '星界雷主套裝',   bonuses: { 2: { luckyPct: 16, mpRegenPct: 45, desc: '(2) 幸運率 +16%、回魔 +45%' }, 4: { skillDmgPct: 52, atkSpeedPct: 20, desc: '(4) 雷奧技傷 +52%、施法速 +20%' } } },
+  set_p_hammer:    { id: 'set_p_hammer', icon: './assets/items/set_p_hammer.png?v=240',    name: '迴旋聖鎚套裝',   bonuses: { 2: { holyDmgPct: 45, atkSpeedPct: 18, desc: '(2) 聖光傷 +45%、攻速 +18%' }, 4: { skillDmgPct: 46, critRate: 12, desc: '(4) 聖鎚連擊傷 +46%、暴擊 +12%' } } },
+  set_p_verdict:   { id: 'set_p_verdict', icon: './assets/items/set_p_verdict.png?v=240',   name: '天罰裁決套裝',   bonuses: { 2: { critDmg: 65, skillDmgPct: 32, desc: '(2) 暴傷 +65%、技能傷 +32%' }, 4: { overpowerPct: 16, atkPct: 30, desc: '(4) 壓制率 +16%、攻擊 +30%' } } },
+  set_p_thorns:    { id: 'set_p_thorns', icon: './assets/items/set_p_thorns.png?v=240',    name: '不朽荊棘套裝',   bonuses: { 2: { armorPct: 50, maxHpPct: 30, desc: '(2) 護甲 +50%、生命 +30%' }, 4: { armorToAtkPct: 140, skillDmgPct: 35, desc: '(4) 140% 護甲轉攻擊、技能傷 +35%' } } },
+  set_n_overlord:  { id: 'set_n_overlord', icon: './assets/items/set_n_overlord.png?v=240',  name: '冥界統帥套裝',   bonuses: { 2: { summonDmgPct: 55, atkSpeedPct: 20, desc: '(2) 亡靈技傷 +55%、攻速 +20%' }, 4: { skillDmgPct: 48, critRate: 14, desc: '(4) 全技傷 +48%、暴擊 +14%' } } },
+  set_n_bone:      { id: 'set_n_bone', icon: './assets/items/set_n_bone.png?v=240',      name: '白骨暴君套裝',   bonuses: { 2: { critRate: 15, critDmg: 80, desc: '(2) 暴擊 +15%、暴傷 +80%' }, 4: { overpowerPct: 20, skillDmgPct: 45, desc: '(4) 壓制率 +20%、白骨傷 +45%' } } },
+  set_n_plague:    { id: 'set_n_plague', icon: './assets/items/set_n_plague.png?v=240',    name: '血海瘟疫套裝',   bonuses: { 2: { lifesteal: 10, poisonDmgPct: 55, desc: '(2) 吸血 +10%、毒血傷 +55%' }, 4: { skillDmgPct: 50, maxHpPct: 25, desc: '(4) 屍爆血傷 +50%、生命 +25%' } } },
+  set_a_shadow:    { id: 'set_a_shadow', icon: './assets/items/set_a_shadow.png?v=240',    name: '千面影王套裝',   bonuses: { 2: { skillDmgPct: 45, atkSpeedPct: 20, desc: '(2) 暗影傷 +45%、攻速 +20%' }, 4: { critDmg: 75, luckyPct: 14, desc: '(4) 暴傷 +75%、幸運率 +14%' } } },
+  set_a_venom:     { id: 'set_a_venom', icon: './assets/items/set_a_venom.png?v=240',     name: '蝕骨毒尊套裝',   bonuses: { 2: { poisonDmgPct: 65, luckyPct: 14, desc: '(2) 雙毒傷 +65%、幸運率 +14%' }, 4: { skillDmgPct: 52, critRate: 12, desc: '(4) 毒爆傷 +52%、暴擊 +12%' } } },
+  set_a_bloodmoon: { id: 'set_a_bloodmoon', icon: './assets/items/set_a_bloodmoon.png?v=240', name: '血月處決套裝',   bonuses: { 2: { critRate: 16, critDmg: 90, desc: '(2) 暴擊 +16%、暴傷 +90%' }, 4: { overpowerPct: 18, atkPct: 28, desc: '(4) 壓制率 +18%、攻擊 +28%' } } }
 };
+
+export const CLASS_ARCHETYPE_SETS = {
+  warrior:  ['set_w_blood', 'set_w_lava', 'set_w_god'],
+  ranger:   ['set_r_night', 'set_r_venom', 'set_r_gale'],
+  mage:     ['set_m_winter', 'set_m_hydra', 'set_m_storm'],
+  paladin:  ['set_p_hammer', 'set_p_verdict', 'set_p_thorns'],
+  necro:    ['set_n_overlord', 'set_n_bone', 'set_n_plague'],
+  assassin: ['set_a_shadow', 'set_a_venom', 'set_a_bloodmoon'],
+};
+
+export const TEMPERING_MANUALS = {
+  offense:  { id: 'offense',  name: '流派進攻手冊', dustCost: 45, pool: [
+    { key: 'skillDmgPct', label: '淬火・全技能傷害', min: 12, max: 26, unit: '%' },
+    { key: 'critDmg',     label: '淬火・暴擊傷害',   min: 18, max: 42, unit: '%' },
+    { key: 'atkPct',      label: '淬火・攻擊力加成', min: 8,  max: 18, unit: '%' },
+  ]},
+  reaction: { id: 'reaction', name: '複合反應手冊', dustCost: 45, pool: [
+    { key: 'overpowerPct', label: '淬火・壓制觸發率', min: 4, max: 9, unit: '%' },
+    { key: 'luckyPct',     label: '淬火・幸運一擊率', min: 4, max: 10, unit: '%' },
+    { key: 'critRate',     label: '淬火・暴擊率',     min: 3, max: 7, unit: '%' },
+  ]},
+  defense:  { id: 'defense',  name: '鐵壁生存手冊', dustCost: 45, pool: [
+    { key: 'armorPct',     label: '淬火・護甲強化',   min: 14, max: 28, unit: '%' },
+    { key: 'maxHpPct',     label: '淬火・生命強化',   min: 12, max: 24, unit: '%' },
+    { key: 'lifesteal',    label: '淬火・攻擊吸血',   min: 2,  max: 5,  unit: '%' },
+  ]},
+  haste:    { id: 'haste',    name: '極速循環手冊', dustCost: 45, pool: [
+    { key: 'atkSpeedPct',  label: '淬火・攻擊速度',   min: 8,  max: 18, unit: '%' },
+    { key: 'mpRegenPct',   label: '淬火・資源回復',   min: 15, max: 32, unit: '%' },
+    { key: 'maxMpPct',     label: '淬火・資源上限',   min: 12, max: 25, unit: '%' },
+  ]},
+};
+
+
+// v239: 自動補齊 18 套新套裝的 bonus2Desc / bonus4Desc 相容屬性
+Object.values(SET_DEFINITIONS).forEach((sd) => {
+  if (sd && sd.bonuses) {
+    if (!sd.bonus2Desc && sd.bonuses[2]?.desc) sd.bonus2Desc = sd.bonuses[2].desc;
+    if (!sd.bonus4Desc && sd.bonuses[4]?.desc) sd.bonus4Desc = sd.bonuses[4].desc;
+  }
+});
+
+
+// v240: 14 件終局追夢「神話暗金（Mythic Unique）」固定特效神裝
+export const MYTHIC_UNIQUES = [
+  { id: 'mythic_shako',            name: '諧角之冠・軍帽',     slot: 'helm',    classReq: 'all',      icon: './assets/items/mythic_shako.png?v=240',            stats: { skillDmgPct: 55, maxHpPct: 28, armorPct: 25 },                     mythicEffect: { name: '全技能 +4・不朽減傷', desc: '全主動技能威力大幅飛躍（等效 +4 級）、減傷 +20%、冷卻縮減 +18%。' } },
+  { id: 'mythic_starless',         name: '無星夜空之戒',       slot: 'ring',    classReq: 'all',      icon: './assets/items/mythic_starless.png?v=240',         stats: { skillDmgPct: 70, critRate: 12, mpRegenPct: 50 },                   mythicEffect: { name: '星界無限連發', desc: '每次施法疊加耗能減免與增傷，常駐全技能傷害 +70%、回魔 +50%。' } },
+  { id: 'mythic_grandfather',      name: '祖父・深淵巨劍',     slot: 'weapon',  classReq: 'all',      icon: './assets/items/mythic_grandfather.png?v=240',      stats: { atkPct: 45, maxHpPct: 25, critDmgMult2x: true },                   mythicEffect: { name: '傳奇暴傷翻倍', desc: '最終暴擊傷害直接 ×2.0 倍，基礎攻擊力 +45%！' } },
+  { id: 'mythic_tyrael',           name: '泰瑞爾的聖威鎧',     slot: 'armor',   classReq: 'all',      icon: './assets/items/mythic_tyrael.png?v=240',           stats: { maxHpPct: 45, armorPct: 45, skillDmgPct: 35 },                     mythicEffect: { name: '天界聖威光箭', desc: '最大生命與護甲 +45%，滿血狀態全技能傷害額外 +35%。' } },
+  { id: 'mythic_andariel',         name: '安達莉爾的劇毒面容', slot: 'helm',    classReq: 'all',      icon: './assets/items/mythic_andariel.png?v=240',         stats: { lifesteal: 15, atkSpeedPct: 30, luckyPct: 16 },                    mythicEffect: { name: '劇毒新星汲取', desc: '吸血 +15%、攻速 +30%、幸運一擊率 +16%，高頻觸發毒爆。' } },
+  { id: 'mythic_doombringer',      name: '末日使者・暗影魔劍', slot: 'weapon',  classReq: 'all',      icon: './assets/items/mythic_doombringer.png?v=240',      stats: { maxHpPct: 38, atkPct: 38, luckyPct: 14 },                          mythicEffect: { name: '末日暗影衝擊', desc: '攻擊與最大生命 +38%，幸運一擊率 +14% 並壓制周圍敵人。' } },
+  { id: 'mythic_bloodlord_gloves', name: '鮮血領主戰手套',     slot: 'gloves',  classReq: 'warrior',  icon: './assets/items/mythic_bloodlord_gloves.png?v=240', stats: { skillDmgPct: 60, overpowerPct: 22, lifesteal: 10 },                mythicEffect: { name: '血河壓制主宰', desc: '狂戰核心技傷 +60%、壓制率 +22%、吸血 +10%，大出血質變。' } },
+  { id: 'mythic_void_quiver',      name: '虛空追獵者箭袋',     slot: 'offhand', classReq: 'ranger',   icon: './assets/items/mythic_void_quiver.png?v=240',      stats: { critDmg: 95, atkSpeedPct: 25, luckyPct: 14 },                      mythicEffect: { name: '虛空貫穿箭雨', desc: '暴擊傷害 +95%、攻速 +25%，暗影與劇毒射擊全面貫穿。' } },
+  { id: 'mythic_talrasha_orb',     name: '塔拉夏的虹彩法珠',   slot: 'offhand', classReq: 'mage',     icon: './assets/items/mythic_talrasha_orb.png?v=240',     stats: { skillDmgPct: 85, mpRegenPct: 45, maxMpPct: 45 },                   mythicEffect: { name: '虹彩元素共鳴', desc: '多系元素疊加最高 +85% 全技能傷、魔力上限與回魔 +45%。' } },
+  { id: 'mythic_seraph_shield',    name: '熾天使壁壘聖盾',     slot: 'offhand', classReq: 'paladin',  icon: './assets/items/mythic_seraph_shield.png?v=240',    stats: { armorPct: 65, armorToAtkPct: 200, maxHpPct: 30 },                  mythicEffect: { name: '天界壁壘懲戒', desc: '護甲 +65%，將 200% 護甲值直接轉化為神聖攻擊力！' } },
+  { id: 'mythic_blackriver_urn',   name: '黑河冥界骨匣',       slot: 'offhand', classReq: 'necro',    icon: './assets/items/mythic_blackriver_urn.png?v=240',   stats: { skillDmgPct: 85, maxMpPct: 50, critRate: 14 },                     mythicEffect: { name: '黑河連環殉爆', desc: '屍爆與白骨技傷 +85%、暴擊率 +14%、魂能上限 +50%。' } },
+  { id: 'mythic_bloodmoon_fang',   name: '血月影牙副手刃',     slot: 'offhand', classReq: 'assassin', icon: './assets/items/mythic_bloodmoon_fang.png?v=240',   stats: { critDmg: 90, atkSpeedPct: 28, luckyPct: 15 },                      mythicEffect: { name: '血月雙毒絕殺', desc: '暴傷 +90%、攻速 +28%、雙毒化合與終極技全面加速。' } },
+  { id: 'mythic_flickerstep',      name: '閃電行者瞬影靴',     slot: 'boots',   classReq: 'all',      icon: './assets/items/mythic_flickerstep.png?v=240',      stats: { critRate: 18, atkSpeedPct: 24, luckyPct: 12 },                     mythicEffect: { name: '閃電疾步爆擊', desc: '暴擊率 +18%、攻速 +24%、幸運一擊率 +12%，位移後爆發翻倍。' } },
+  { id: 'mythic_abyss_heart',      name: '深淵之心護符',       slot: 'amulet',  classReq: 'all',      icon: './assets/items/mythic_abyss_heart.png?v=240',      stats: { skillDmgPct: 65, overpowerPct: 16, luckyPct: 16 },                 mythicEffect: { name: '深淵反應主宰', desc: '全技能與複合異常反應傷害 +65%、壓制率與幸運率各 +16%。' } },
+];
