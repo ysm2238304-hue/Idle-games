@@ -20,7 +20,7 @@ import {
   loadCloudSave,
   saveCloudData,
 } from './auth/firebase.js?v=218';
-import { BattleScene } from './scenes/BattleScene.js?v=245';
+import { BattleScene } from './scenes/BattleScene.js?v=246';
 import { TownScene } from './scenes/TownScene.js?v=227';
 import { TOWN_SPLASHES } from './data/towns/splashes.js?v=229';
 import { DashboardUI } from './ui/DashboardUI.js?v=241';
