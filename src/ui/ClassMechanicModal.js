@@ -4,7 +4,7 @@
  */
 
 import { CLASSES } from '../data/classes.js?v=99';
-import { CLASS_MECHANIC_DEFS, getClassMechanicConfig } from '../logic/classMechanics.js?v=234';
+import { CLASS_MECHANIC_DEFS, getClassMechanicConfig } from '../logic/classMechanics.js?v=241';
 
 export class ClassMechanicModal {
   constructor({ getState, onChanged }) {

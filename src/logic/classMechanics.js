@@ -37,16 +37,30 @@ export const CLASS_MECHANIC_DEFS = {
     title: '奧術雙附魔槽（Enchantment Slots）',
     subtitle: '將任意 2 招已掌握的秘法師主動技拖入附魔槽，轉化為常駐被動自動觸發！',
     type: 'dual_enchant',
-    defaultSlots: ['meteor', 'frost_nova'],
+    defaultSlots: ['m_fireball', 'm_frozen_orb'],
     enchants: {
-      meteor:          { name: '深淵隕石附魔', color: '#fb923c', desc: '幸運一擊／暴擊 18% 機率於目標處免費天降烈焰隕石（180% 傷＋灼燒）。' },
-      frost_nova:      { name: '寒冰新星附魔', color: '#38bdf8', desc: '每 5.5 秒自動在目標處引爆免費寒冰新星（135% 傷＋凍結＋易傷）。' },
-      chain_lightning: { name: '閃電鏈附魔',   color: '#facc15', desc: '每施放 2 次技能自動釋放免費連鎖電弧（150% 傷＋感電）。' },
-      arcane_orb:      { name: '星界奧球附魔', color: '#a78bfa', desc: '暴擊時 25% 機率追加星界奧球爆發（120% 傷＋易傷）。' },
-      black_hole:      { name: '黑洞奇點附魔', color: '#c084fc', desc: '每 8 秒於怪群自動觸發暗影奇點坍縮（165% 傷＋詛咒）。' },
-      icicle_rain:     { name: '極寒冰錐附魔', color: '#7dd3fc', desc: '攻擊凍結目標 30% 機率額外降下極寒冰錐（115% 傷）。' },
-      void_beam:       { name: '虛空星爆附魔', color: '#e879f9', desc: '命中時 15% 機率貫穿虛空光束（175% 傷＋詛咒）。' },
-      mana_overload:   { name: '魔力超載附魔', color: '#60a5fa', desc: '常駐魔力回復 +45%、技能傷害 +18%、幸運一擊率 +8%。' },
+      m_fire_bolt:         { name: '烈焰箭附魔',   color: '#fb923c', desc: '【經典】所有技能直接附帶 4.5 秒【灼燒】，讓冰／雷法免費吃滿燃燒暴傷！' },
+      m_frost_bolt:        { name: '冰霜箭附魔',   color: '#7dd3fc', desc: '所有技能額外附加冰冷【凍結】效果，加速硬凍結。' },
+      m_arc_lash:          { name: '電弧鞭附魔',   color: '#a78bfa', desc: '施放冷卻技時自動電暈周圍並縮短全技能 CD 0.5s。' },
+      m_spark:             { name: '星界飛彈附魔', color: '#60a5fa', desc: '擊殺或暴擊 25% 機率在地面生成【爆裂電花】回魔並劈雷。' },
+      m_fireball:          { name: '烈焰火球附魔', color: '#ef4444', desc: '【清屏神技】敵人死亡／暴擊 25% 直接原地炸出 165% 烈焰火球連鎖清屏！' },
+      m_ice_shards:        { name: '寒冰裂片附魔', color: '#38bdf8', desc: '【冰流神技】敵人處於凍結時，自動從空中齊射免費寒冰裂片處決！' },
+      chain_lightning:     { name: '連鎖閃電附魔', color: '#facc15', desc: '每施放 2 次技能自動釋放免費連鎖閃電（150% 傷＋感電）。' },
+      m_frozen_orb:        { name: '冰封球附魔',   color: '#38bdf8', desc: '【暗黑 4 頂級】施放任何非基礎技 35% 機率免費擲出一顆冰封球！' },
+      m_flame_shield:      { name: '烈焰護盾附魔', color: '#fb923c', desc: '生命危急時自動觸發無敵烈焰護盾並瞬間回復 40% 最大生命！' },
+      m_ice_armor:         { name: '寒冰護甲附魔', color: '#7dd3fc', desc: '護甲 +25%、回魔 +25%，受擊高機率反凍敵群。' },
+      m_arcane_blink:      { name: '傳送術附魔',   color: '#818cf8', desc: '攻速 +18%，技能命中附帶雷電衝擊與【感電】。' },
+      frost_nova:          { name: '寒冰新星附魔', color: '#38bdf8', desc: '每 5.5 秒自動在目標處引爆免費寒冰新星（凍結＋易傷）。' },
+      m_flame_hydra:       { name: '三頭火蛇附魔', color: '#f97316', desc: '消耗魔力自動召喚免費火蛇協戰，常駐【召喚精通】+15% 全傷！' },
+      m_ice_blades:        { name: '寒冰之刃附魔', color: '#38bdf8', desc: '施放冷卻技自動召喚免費寒冰之刃，持續縮短全技能 CD！' },
+      m_lightning_spear:   { name: '閃電長矛附魔', color: '#facc15', desc: '拾取電花或暴擊 25% 機率免費召喚追蹤閃電長矛！' },
+      m_familiar:          { name: '元素魔寵附魔', color: '#fde047', desc: '常駐元素魔寵輪轉三系，全技能傷害 +22%、幸運一擊率 +10%。' },
+      meteor:              { name: '深淵隕石附魔', color: '#fb923c', desc: '幸運一擊／暴擊 20% 機率天降免費深淵隕石（185% 傷＋灼燒）。' },
+      m_firewall:          { name: '烈焰火牆附魔', color: '#ef4444', desc: '命中灼燒目標 25% 機率在敵人腳下自動展開免費烈焰火牆！' },
+      m_blizzard_field:    { name: '暴風雪附魔',   color: '#7dd3fc', desc: '每 6 秒自動在戰場降下免費極寒暴風雪持續凍結敵群。' },
+      m_ball_lightning:    { name: '球狀閃電附魔', color: '#60a5fa', desc: '暴擊 25% 機率在目標處生成免費球狀閃電持續電擊！' },
+      black_hole:          { name: '黑洞奇點附魔', color: '#c084fc', desc: '每 8 秒於怪群自動觸發暗影奇點坍縮（165% 傷＋詛咒）。' },
+      arcane_orb:          { name: '星界奧球附魔', color: '#a78bfa', desc: '暴擊 25% 機率追加貫穿星界奧球（130% 傷＋易傷）。' },
     },
   },
   paladin: {
@@ -184,3 +198,12 @@ export function getClassMechanicStatBonuses(state) {
 
   return b;
 }
+
+
+// v241: 暗黑 4 秘法師四大流派「一鍵套用推薦配招（6 招＋雙附魔＋關鍵被動）」
+export const MAGE_D4_PRESETS = [
+  { id: 'frost_orb', name: '❄️ 永冬冰封球流', color: '#38bdf8', skills: ['m_frost_bolt', 'm_frozen_orb', 'm_ice_armor', 'frost_nova', 'm_ice_blades', 'm_deep_freeze'], enchants: ['m_frozen_orb', 'm_ice_shards'], keystone: 'mk_shatter_frost' },
+  { id: 'fire_hydra',name: '🔥 煉獄火蛇火牆', color: '#fb923c', skills: ['m_fire_bolt', 'm_fireball', 'm_flame_shield', 'm_arcane_blink', 'm_flame_hydra', 'm_inferno'], enchants: ['m_fireball', 'm_firewall'], keystone: 'mk_combustion' },
+  { id: 'storm_arc', name: '⚡ 不穩電流電花', color: '#a78bfa', skills: ['m_arc_lash', 'chain_lightning', 'm_ice_armor', 'm_arcane_blink', 'm_lightning_spear', 'm_unstable_currents'], enchants: ['m_ball_lightning', 'm_lightning_spear'], keystone: 'mk_vyr_mastery' },
+  { id: 'enlighten', name: '🔮 啟蒙三系召喚', color: '#fde047', skills: ['m_spark', 'm_frozen_orb', 'm_flame_shield', 'frost_nova', 'm_familiar', 'm_astral_supernova'], enchants: ['m_fire_bolt', 'm_frozen_orb'], keystone: 'mk_enlightenment' },
+];

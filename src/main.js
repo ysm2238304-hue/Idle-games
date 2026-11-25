@@ -2,7 +2,7 @@ import { CLASSES } from './data/classes.js?v=99';
 import { getStageLabel, getSubStage, getChapterIdx, calcLevelGapExpMult } from './data/monsters.js?v=232';
 import { WARRIOR_SKILLS } from './data/warriorSkills.js?v=235';
 import { RANGER_SKILLS } from './data/rangerSkills.js?v=236';
-import { MAGE_SKILLS } from './data/mageSkills.js?v=236';
+import { MAGE_SKILLS } from './data/mageSkills.js?v=241';
 import { PALADIN_SKILLS } from './data/paladinSkills.js?v=235';
 import { NECRO_SKILLS } from './data/necroSkills.js?v=236';
 import { ASSASSIN_SKILLS } from './data/assassinSkills.js?v=235';
@@ -20,13 +20,14 @@ import {
   loadCloudSave,
   saveCloudData,
 } from './auth/firebase.js?v=218';
-import { BattleScene } from './scenes/BattleScene.js?v=237';
+import { BattleScene } from './scenes/BattleScene.js?v=242';
 import { TownScene } from './scenes/TownScene.js?v=227';
 import { TOWN_SPLASHES } from './data/towns/splashes.js?v=229';
-import { DashboardUI } from './ui/DashboardUI.js?v=240';
+import { DashboardUI } from './ui/DashboardUI.js?v=241';
 import { UniversalTooltip } from './ui/UniversalTooltip.js?v=240';
-import { SkillSpecModal } from './ui/SkillSpecModal.js?v=236';
-import { ClassMechanicModal } from './ui/ClassMechanicModal.js?v=234';
+import { SkillSpecModal } from './ui/SkillSpecModal.js?v=241';
+import { ClassMechanicModal } from './ui/ClassMechanicModal.js?v=241';
+import { MAGE_D4_PRESETS } from './logic/classMechanics.js?v=241';
 import { EndgameModal } from './ui/EndgameModal.js?v=237';
 import { TownBgmEngine } from './audio/TownBgmEngine.js?v=99';
 import { BattleSfxEngine } from './audio/BattleSfxEngine.js?v=99';
@@ -2322,7 +2323,7 @@ document.getElementById('btn-toggle-auto')?.addEventListener('click', toggleAuto
 document.getElementById('btn-potion')?.addEventListener('click', () => battleScene?.usePotion(true));
 document.getElementById('btn-world-map')?.addEventListener('click', () => ui.openWorldMapModal(gameState));
 document.getElementById('hud-stage-title')?.addEventListener('click', () => ui.openWorldMapModal(gameState));
-[0, 1, 2].forEach((i) => {
+[0, 1, 2, 3, 4, 5].forEach((i) => {
   document.getElementById(`skill-slot-${i}`)?.addEventListener('click', () => battleScene?.castSkillSlot(i, true));
 });
 
@@ -2333,13 +2334,24 @@ window.addEventListener('keydown', (e) => {
   if (['INPUT', 'TEXTAREA'].includes(document.activeElement?.tagName)) return;
 
   const kb = hudSettings.getKeybinds();
-  if (e.code === kb.skill0) {
+  if (e.code === 'Digit1' || e.code === kb.skill0) {
     e.preventDefault();
     battleScene?.castSkillSlot(0, true);
-  } else if (e.code === kb.skill1) {
+  } else if (e.code === 'Digit2') {
+    e.preventDefault();
     battleScene?.castSkillSlot(1, true);
-  } else if (e.code === kb.skill2) {
+  } else if (e.code === 'Digit3') {
+    e.preventDefault();
     battleScene?.castSkillSlot(2, true);
+  } else if (e.code === 'Digit4') {
+    e.preventDefault();
+    battleScene?.castSkillSlot(3, true);
+  } else if (e.code === 'KeyE' || e.code === kb.skill1) {
+    e.preventDefault();
+    battleScene?.castSkillSlot(4, true);
+  } else if (e.code === 'KeyR' || e.code === kb.skill2) {
+    e.preventDefault();
+    battleScene?.castSkillSlot(5, true);
   } else if (e.code === kb.autoHunt) {
     toggleAutoMoveMode();
   } else if (e.code === kb.potion) {
@@ -2390,11 +2402,7 @@ window.addEventListener('keydown', (e) => {
     achTowerModal.close();
     hudSettings.closeModal();
   } else if (!Object.values(kb).includes(e.code)) {
-    if (e.key === '1') ui.activeDrawer === 'gear' ? ui.closeDrawer() : ui.openDrawer('gear');
-    else if (e.key === '2') ui.activeDrawer === 'bag' ? ui.closeDrawer() : ui.openDrawer('bag');
-    else if (e.key === '3') ui.activeDrawer === 'upgrade' ? ui.closeDrawer() : ui.openDrawer('upgrade');
-    else if (e.key === '4') ui.activeDrawer === 'tree' ? ui.closeDrawer() : ui.openDrawer('tree');
-    else if (e.key === '5') ui.activeDrawer === 'rebirth' ? ui.closeDrawer() : ui.openDrawer('rebirth');
+    if (e.key === '5') ui.activeDrawer === 'rebirth' ? ui.closeDrawer() : ui.openDrawer('rebirth');
     else if (e.key === '6') ui.activeDrawer === 'skills' ? ui.closeDrawer() : ui.openDrawer('skills');
   }
 });
@@ -2508,4 +2516,42 @@ if (typeof document !== 'undefined') {
 // v238: 暴露 saveNow 供技能樹與快換選單即時存檔重算
 if (typeof window !== 'undefined' && window.__IDLE_ARPG_BRIDGE__) {
   window.__IDLE_ARPG_BRIDGE__.saveNow = () => { try { refreshStatsAndUI(); persistAll(); } catch (e) {} };
+}
+
+
+// v241: 暗黑 4 秘法師四大流派「一鍵套用 6 招＋雙附魔＋關鍵被動」與銘條同步
+if (typeof document !== 'undefined') {
+  const applyMageD4Preset = (presetId) => {
+    const preset = MAGE_D4_PRESETS.find((p) => p.id === presetId);
+    if (!preset) return;
+    if (gameState.classId !== 'mage') {
+      ui.addLog('ℹ️ 此一鍵流派預設專屬於【秘法師】，請先切換職業為秘法師。', 'system');
+      return;
+    }
+    if (!gameState.equippedSkillsByClass) gameState.equippedSkillsByClass = {};
+    gameState.equippedSkillsByClass.mage = [...preset.skills];
+    if (!gameState.classMechanic) gameState.classMechanic = {};
+    if (!gameState.classMechanic.mage) gameState.classMechanic.mage = { enchants: [] };
+    gameState.classMechanic.mage.enchants = [...preset.enchants];
+    if (!gameState.activeKeystone) gameState.activeKeystone = {};
+    gameState.activeKeystone.mage = preset.keystone;
+    refreshStatsAndUI();
+    persistAll();
+    ui.addLog(`✨ 已一鍵套用秘法師流派【${preset.name}】（6 格配招＋雙附魔槽＋關鍵被動）！`, 'victory');
+  };
+
+  document.querySelectorAll('.v241-preset-pill[data-preset]').forEach((btn) => {
+    btn.addEventListener('click', () => applyMageD4Preset(btn.dataset.preset));
+  });
+
+  const syncV241Strip = () => {
+    const row = document.getElementById('v241-mage-preset-row');
+    const lbl = document.getElementById('v241-class-strip-label');
+    if (!row || !lbl) return;
+    const isMage = gameState?.classId === 'mage';
+    row.style.display = isMage ? 'flex' : 'none';
+    lbl.style.display = isMage ? 'none' : 'inline-flex';
+  };
+  setInterval(syncV241Strip, 600);
+  syncV241Strip();
 }

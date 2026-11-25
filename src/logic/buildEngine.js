@@ -1328,6 +1328,190 @@ export const SKILL_BUILD_SPECS = {
     ],
     { name: '幸運：骨刺飛射', desc: '幸運一擊 28% 機率追加 62% 連攜爆發並回能 15', procChance: 0.28, bonusMult: 0.62, mpRefund: 15 }
   ),
+
+  // ==================== v241 暗黑 4 秘法師新增 14 招專精樹 ====================
+  m_frost_bolt: makeSpec('m_frost_bolt', 'primer', ['基礎', '冰霜', '回魔'], ['freeze'], [],
+    { name: '閃爍冰霜箭', desc: '傷害 +24%，冷卻 -12%', dmgPct: 24, cdPct: 12 },
+    [
+      { id: 'a', name: '易傷冰矢', desc: '附加【易傷】', dmgPct: 22, addStatus: 'vulnerable' },
+      { id: 'b', name: '雷霜冰矢', desc: '附加【感電】爆超導碎冰', dmgPct: 20, addStatus: 'shock', overpowerPct: 10 },
+      { id: 'c', name: '雙發冰箭', desc: '總傷 +28%', dmgPct: 28, luckyPct: 8 },
+    ],
+    [
+      { id: 'a', name: '炎霜箭', desc: '轉化並附加【灼燒】', elem: 'fire', addStatus: 'burn' },
+      { id: 'b', name: '毒霜箭', desc: '轉化並附加【中毒】', elem: 'poison', addStatus: 'poison' },
+    ],
+    { name: '幸運：寒氣湧泉', desc: '幸運一擊 28% 機率追加 62% 連攜爆發並回魔 15', procChance: 0.28, bonusMult: 0.62, mpRefund: 15 }
+  ),
+  m_arc_lash: makeSpec('m_arc_lash', 'primer', ['基礎', '雷電', '減CD'], ['shock'], ['freeze'],
+    { name: '閃爍電弧鞭', desc: '傷害 +24%，冷卻 -12%', dmgPct: 24, cdPct: 12 },
+    [
+      { id: 'a', name: '冰電雙鞭', desc: '附加【凍結】爆超導碎冰', dmgPct: 22, addStatus: 'freeze' },
+      { id: 'b', name: '破甲電鞭', desc: '附加【易傷】＋壓制', dmgPct: 20, addStatus: 'vulnerable', overpowerPct: 10 },
+      { id: 'c', name: '極速電鞭', desc: '總傷 +28%', dmgPct: 28, luckyPct: 8 },
+    ],
+    [
+      { id: 'a', name: '熾炎火鞭', desc: '轉化並附加【灼燒】', elem: 'fire', addStatus: 'burn' },
+      { id: 'b', name: '冥暗電鞭', desc: '轉化並附加【詛咒】', elem: 'shadow', addStatus: 'curse' },
+    ],
+    { name: '幸運：電花回收', desc: '幸運一擊 28% 機率追加 62% 連攜爆發並回魔 15', procChance: 0.28, bonusMult: 0.62, mpRefund: 15 }
+  ),
+  m_spark: makeSpec('m_spark', 'primer', ['基礎', '雷電', '電花'], ['shock'], [],
+    { name: '強化飛彈', desc: '傷害 +24%，冷卻 -12%', dmgPct: 24, cdPct: 12 },
+    [
+      { id: 'a', name: '超導飛彈', desc: '附加【凍結】', dmgPct: 22, addStatus: 'freeze' },
+      { id: 'b', name: '破綻飛彈', desc: '附加【易傷】', dmgPct: 20, addStatus: 'vulnerable', overpowerPct: 10 },
+      { id: 'c', name: '五連飛彈', desc: '總傷 +28%', dmgPct: 28, luckyPct: 8 },
+    ],
+    [
+      { id: 'a', name: '烈焰飛彈', desc: '轉化並附加【灼燒】', elem: 'fire', addStatus: 'burn' },
+      { id: 'b', name: '審判飛彈', desc: '轉化並附加【定罪】', elem: 'holy', addStatus: 'conviction' },
+    ],
+    { name: '幸運：高壓電湧', desc: '幸運一擊 28% 機率追加 62% 連攜爆發並回魔 15', procChance: 0.28, bonusMult: 0.62, mpRefund: 15 }
+  ),
+  m_fireball: makeSpec('m_fireball', 'core', ['核心', '烈焰', '爆破'], ['burn'], ['poison'],
+    { name: '毀滅火球', desc: '傷害 +24%，冷卻 -12%', dmgPct: 24, cdPct: 12 },
+    [
+      { id: 'a', name: '煉獄毒球', desc: '附加【中毒】必爆煉獄毒爆', dmgPct: 22, addStatus: 'poison' },
+      { id: 'b', name: '碎甲火球', desc: '附加【易傷】＋壓制', dmgPct: 20, addStatus: 'vulnerable', overpowerPct: 10 },
+      { id: 'c', name: '三彈跳火球', desc: '總傷 +28%', dmgPct: 28, luckyPct: 8 },
+    ],
+    [
+      { id: 'a', name: '極寒冰球', desc: '轉化並附加【凍結】', elem: 'frost', addStatus: 'freeze' },
+      { id: 'b', name: '雷炎爆球', desc: '轉化並附加【感電】', elem: 'lightning', addStatus: 'shock' },
+    ],
+    { name: '幸運：連環爆炎', desc: '幸運一擊 28% 機率追加 62% 連攜爆發並回魔 15', procChance: 0.28, bonusMult: 0.62, mpRefund: 15 }
+  ),
+  m_ice_shards: makeSpec('m_ice_shards', 'core', ['核心', '冰霜', '齊射'], ['freeze', 'vulnerable'], ['shock'],
+    { name: '強效冰裂片', desc: '傷害 +24%，冷卻 -12%', dmgPct: 24, cdPct: 12 },
+    [
+      { id: 'a', name: '超導冰片', desc: '附加【感電】必爆超導碎冰', dmgPct: 22, addStatus: 'shock' },
+      { id: 'b', name: '穿心壓制片', desc: '壓制率 +10%', dmgPct: 20, addStatus: 'vulnerable', overpowerPct: 10 },
+      { id: 'c', name: '七枚齊射', desc: '總傷 +28%', dmgPct: 28, luckyPct: 8 },
+    ],
+    [
+      { id: 'a', name: '灼熱冰片', desc: '轉化並附加【灼燒】', elem: 'fire', addStatus: 'burn' },
+      { id: 'b', name: '毒晶裂片', desc: '轉化並附加【中毒】', elem: 'poison', addStatus: 'poison' },
+    ],
+    { name: '幸運：冰片彈射', desc: '幸運一擊 28% 機率追加 62% 連攜爆發並回魔 15', procChance: 0.28, bonusMult: 0.62, mpRefund: 15 }
+  ),
+  m_frozen_orb: makeSpec('m_frozen_orb', 'core', ['核心', '冰霜', '神技'], ['freeze', 'vulnerable'], ['shock'],
+    { name: '強效冰封球', desc: '傷害 +24%，冷卻 -12%', dmgPct: 24, cdPct: 12 },
+    [
+      { id: 'a', name: '雷暴冰封球', desc: '附加【感電】全場超導碎冰', dmgPct: 22, addStatus: 'shock' },
+      { id: 'b', name: '壓制冰封球', desc: '高壓制爆發', dmgPct: 20, addStatus: 'vulnerable', overpowerPct: 10 },
+      { id: 'c', name: '雙重冰封球', desc: '總傷 +28%', dmgPct: 28, luckyPct: 8 },
+    ],
+    [
+      { id: 'a', name: '冥暗冰封球', desc: '轉化並附加【詛咒】', elem: 'shadow', addStatus: 'curse' },
+      { id: 'b', name: '毒霧冰封球', desc: '轉化並附加【中毒】', elem: 'poison', addStatus: 'poison' },
+    ],
+    { name: '幸運：冰球再爆', desc: '幸運一擊 28% 機率追加 62% 連攜爆發並回魔 15', procChance: 0.28, bonusMult: 0.62, mpRefund: 15 }
+  ),
+  m_flame_shield: makeSpec('m_flame_shield', 'defensive', ['防禦', '烈焰', '無敵'], ['burn'], [],
+    { name: '不滅火盾', desc: '傷害 +24%，冷卻 -12%', dmgPct: 24, cdPct: 12 },
+    [
+      { id: 'a', name: '毒火護盾', desc: '附加【中毒】爆煉獄毒爆', dmgPct: 22, addStatus: 'poison' },
+      { id: 'b', name: '震退破甲盾', desc: '附加【易傷】', dmgPct: 20, addStatus: 'vulnerable', overpowerPct: 10 },
+      { id: 'c', name: '熾熱回血盾', desc: '總傷 +28%', dmgPct: 28, luckyPct: 8 },
+    ],
+    [
+      { id: 'a', name: '雷光火盾', desc: '轉化並附加【感電】', elem: 'lightning', addStatus: 'shock' },
+      { id: 'b', name: '冥火護盾', desc: '轉化並附加【詛咒】', elem: 'shadow', addStatus: 'curse' },
+    ],
+    { name: '幸運：火盾再燃', desc: '幸運一擊 28% 機率追加 62% 連攜爆發並回魔 15', procChance: 0.28, bonusMult: 0.62, mpRefund: 15 }
+  ),
+  m_ice_blades: makeSpec('m_ice_blades', 'tactical', ['召喚', '冰霜', '減CD'], ['freeze', 'vulnerable'], ['shock'],
+    { name: '極速冰刃', desc: '傷害 +24%，冷卻 -12%', dmgPct: 24, cdPct: 12 },
+    [
+      { id: 'a', name: '超導冰刃', desc: '附加【感電】爆超導碎冰', dmgPct: 22, addStatus: 'shock' },
+      { id: 'b', name: '血霜冰刃', desc: '附加【流血】爆大出血', dmgPct: 20, addStatus: 'bleed', overpowerPct: 10 },
+      { id: 'c', name: '三刃齊飛', desc: '總傷 +28%', dmgPct: 28, luckyPct: 8 },
+    ],
+    [
+      { id: 'a', name: '炎霜冰刃', desc: '轉化並附加【灼燒】', elem: 'fire', addStatus: 'burn' },
+      { id: 'b', name: '冥霜冰刃', desc: '轉化並附加【詛咒】', elem: 'shadow', addStatus: 'curse' },
+    ],
+    { name: '幸運：冰刃減CD', desc: '幸運一擊 28% 機率追加 62% 連攜爆發並回魔 15', procChance: 0.28, bonusMult: 0.62, mpRefund: 15 }
+  ),
+  m_lightning_spear: makeSpec('m_lightning_spear', 'tactical', ['召喚', '雷電', '追蹤'], ['shock'], ['freeze'],
+    { name: '極速雷矛', desc: '傷害 +24%，冷卻 -12%', dmgPct: 24, cdPct: 12 },
+    [
+      { id: 'a', name: '超導雷矛', desc: '附加【凍結】爆超導碎冰', dmgPct: 22, addStatus: 'freeze' },
+      { id: 'b', name: '破甲雷矛', desc: '附加【易傷】', dmgPct: 20, addStatus: 'vulnerable', overpowerPct: 10 },
+      { id: 'c', name: '雙雷矛追蹤', desc: '總傷 +28%', dmgPct: 28, luckyPct: 8 },
+    ],
+    [
+      { id: 'a', name: '烈焰雷矛', desc: '轉化並附加【灼燒】', elem: 'fire', addStatus: 'burn' },
+      { id: 'b', name: '聖雷長矛', desc: '轉化並附加【定罪】', elem: 'holy', addStatus: 'conviction' },
+    ],
+    { name: '幸運：雷矛彈跳', desc: '幸運一擊 28% 機率追加 62% 連攜爆發並回魔 15', procChance: 0.28, bonusMult: 0.62, mpRefund: 15 }
+  ),
+  m_familiar: makeSpec('m_familiar', 'tactical', ['召喚', '三系', '啟蒙'], ['burn', 'freeze', 'shock'], [],
+    { name: '共鳴魔寵', desc: '傷害 +24%，冷卻 -12%', dmgPct: 24, cdPct: 12 },
+    [
+      { id: 'a', name: '毒炎魔寵', desc: '附加【中毒】', dmgPct: 22, addStatus: 'poison' },
+      { id: 'b', name: '破甲魔寵', desc: '附加【易傷】', dmgPct: 20, addStatus: 'vulnerable', overpowerPct: 10 },
+      { id: 'c', name: '雙生魔寵', desc: '總傷 +28%', dmgPct: 28, luckyPct: 8 },
+    ],
+    [
+      { id: 'a', name: '審判魔寵', desc: '轉化並附加【定罪】', elem: 'holy', addStatus: 'conviction' },
+      { id: 'b', name: '冥暗魔寵', desc: '轉化並附加【詛咒】', elem: 'shadow', addStatus: 'curse' },
+    ],
+    { name: '幸運：魔寵共鳴', desc: '幸運一擊 28% 機率追加 62% 連攜爆發並回魔 15', procChance: 0.28, bonusMult: 0.62, mpRefund: 15 }
+  ),
+  m_firewall: makeSpec('m_firewall', 'tactical', ['精通', '烈焰', '火海'], ['burn'], ['poison'],
+    { name: '廣域火牆', desc: '傷害 +24%，冷卻 -12%', dmgPct: 24, cdPct: 12 },
+    [
+      { id: 'a', name: '毒焰火牆', desc: '附加【中毒】必爆煉獄毒爆', dmgPct: 22, addStatus: 'poison' },
+      { id: 'b', name: '壓制焦土', desc: '附加【易傷】＋壓制', dmgPct: 20, addStatus: 'vulnerable', overpowerPct: 10 },
+      { id: 'c', name: '雙層火牆', desc: '總傷 +28%', dmgPct: 28, luckyPct: 8 },
+    ],
+    [
+      { id: 'a', name: '冥炎火牆', desc: '轉化並附加【詛咒】', elem: 'shadow', addStatus: 'curse' },
+      { id: 'b', name: '雷炎火牆', desc: '轉化並附加【感電】', elem: 'lightning', addStatus: 'shock' },
+    ],
+    { name: '幸運：焦土延燃', desc: '幸運一擊 28% 機率追加 62% 連攜爆發並回魔 15', procChance: 0.28, bonusMult: 0.62, mpRefund: 15 }
+  ),
+  m_inferno: makeSpec('m_inferno', 'ultimate', ['終極', '烈焰', '免魔'], ['burn', 'vulnerable'], ['poison'],
+    { name: '煉獄巨蟒', desc: '傷害 +24%，冷卻 -12%', dmgPct: 24, cdPct: 12 },
+    [
+      { id: 'a', name: '毒炎巨蛇', desc: '附加【中毒】全場煉獄毒爆', dmgPct: 22, addStatus: 'poison' },
+      { id: 'b', name: '壓制巨蛇', desc: '壓制大幅強化', dmgPct: 20, addStatus: 'vulnerable', overpowerPct: 10 },
+      { id: 'c', name: '永恆煉獄', desc: '總傷 +28%', dmgPct: 28, luckyPct: 8 },
+    ],
+    [
+      { id: 'a', name: '冥界火蛇', desc: '轉化並附加【詛咒】', elem: 'shadow', addStatus: 'curse' },
+      { id: 'b', name: '雷炎巨蛇', desc: '轉化並附加【感電】', elem: 'lightning', addStatus: 'shock' },
+    ],
+    { name: '幸運：煉獄再臨', desc: '幸運一擊 28% 機率追加 62% 連攜爆發並回魔 15', procChance: 0.28, bonusMult: 0.62, mpRefund: 15 }
+  ),
+  m_deep_freeze: makeSpec('m_deep_freeze', 'ultimate', ['終極', '冰霜', '無敵'], ['freeze', 'vulnerable'], ['shock'],
+    { name: '永凍冰棺', desc: '傷害 +24%，冷卻 -12%', dmgPct: 24, cdPct: 12 },
+    [
+      { id: 'a', name: '超導深凍', desc: '附加【感電】全場超導碎冰', dmgPct: 22, addStatus: 'shock' },
+      { id: 'b', name: '壓制碎棺', desc: '高壓制爆發', dmgPct: 20, addStatus: 'vulnerable', overpowerPct: 10 },
+      { id: 'c', name: '零度絕境', desc: '總傷 +28%', dmgPct: 28, luckyPct: 8 },
+    ],
+    [
+      { id: 'a', name: '冥霜深凍', desc: '轉化並附加【詛咒】', elem: 'shadow', addStatus: 'curse' },
+      { id: 'b', name: '血霜深凍', desc: '轉化並附加【流血】', elem: 'blood', addStatus: 'bleed' },
+    ],
+    { name: '幸運：深凍回能', desc: '幸運一擊 28% 機率追加 62% 連攜爆發並回魔 15', procChance: 0.28, bonusMult: 0.62, mpRefund: 15 }
+  ),
+  m_unstable_currents: makeSpec('m_unstable_currents', 'ultimate', ['終極', '雷電', '狂甩'], ['shock', 'vulnerable'], ['freeze'],
+    { name: '天雷超載', desc: '傷害 +24%，冷卻 -12%', dmgPct: 24, cdPct: 12 },
+    [
+      { id: 'a', name: '超導電流', desc: '附加【凍結】全場超導碎冰', dmgPct: 22, addStatus: 'freeze' },
+      { id: 'b', name: '壓制天雷', desc: '壓制大幅強化', dmgPct: 20, addStatus: 'vulnerable', overpowerPct: 10 },
+      { id: 'c', name: '無限電湧', desc: '總傷 +28%', dmgPct: 28, luckyPct: 8 },
+    ],
+    [
+      { id: 'a', name: '烈焰雷暴', desc: '轉化並附加【灼燒】', elem: 'fire', addStatus: 'burn' },
+      { id: 'b', name: '審判雷暴', desc: '轉化並附加【定罪】', elem: 'holy', addStatus: 'conviction' },
+    ],
+    { name: '幸運：電流連劈', desc: '幸運一擊 28% 機率追加 62% 連攜爆發並回魔 15', procChance: 0.28, bonusMult: 0.62, mpRefund: 15 }
+  ),
 };
 
 // 讀取或初始化該角色某招技能的 4 階專精選擇
@@ -1425,7 +1609,7 @@ export function getSmartAutoSlotOrder(equippedSkillIds, monsters, nowT) {
   const hasBossOrPack = (monsters || []).some((m) => m && m.hp > 0 && (m.isBoss || m.isMiniBoss)) || (monsters || []).length >= 4;
 
   const scored = [];
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 6; i++) {
     const id = equippedSkillIds?.[i];
     if (!id) continue;
     const spec = SKILL_BUILD_SPECS[id];
@@ -1472,10 +1656,12 @@ export const KEYSTONE_PASSIVES = {
     { id: 'rk_void_sniper',    name: '虛空死狙', icon: './assets/skills/ks_rk_void_sniper.png?v=236', badge: '變異高危', color: '#a855f7', desc: '【變異】移動速度大幅降低，換取暴擊傷害 +110%、全技能傷害 +55%！' },
   ],
   mage: [
-    { id: 'mk_shatter_frost',   name: '極寒碎裂', icon: './assets/skills/ks_mk_shatter_frost.png?v=236', badge: '冰霜流', color: '#38bdf8', desc: '命中【凍結】目標有 45% 機率碎裂冰爆（135% 傷＋掛感電爆超導碎冰）。' },
-    { id: 'mk_inferno_burn',    name: '煉獄焚城', icon: './assets/skills/ks_mk_inferno_burn.png?v=236', badge: '烈焰流', color: '#fb923c', desc: '火焰與技能傷害 +45%，所有攻擊必附加【灼燒】並降目標防禦。' },
-    { id: 'mk_void_overload',   name: '虛空過載', icon: './assets/skills/ks_mk_void_overload.png?v=236', badge: '雷奧流', color: '#a78bfa', desc: '幸運一擊率 +18%，技能命中 40% 機率免費引爆 130% 奧術超新星。' },
-    { id: 'mk_mana_singularity',name: '魔能奇點', icon: './assets/skills/ks_mk_mana_singularity.png?v=236', badge: '變異高危', color: '#60a5fa', desc: '【變異】最大生命 -45%，換取魔力上限翻倍、回魔 +80%、全技能傷害 +65%！' },
+    { id: 'mk_esu_ferocity',  name: '艾蘇的兇暴', icon: './assets/skills/ks_mk_esu_ferocity.png?v=241', badge: '火暴流', color: '#fb923c', desc: '火焰暴擊傷害 +65%、攻速 +25%，對高血量目標必提暴擊率。' },
+    { id: 'mk_combustion',    name: '燃燒本能',   icon: './assets/skills/ks_mk_combustion.png?v=241',   badge: '焦土流', color: '#ef4444', desc: '燃燒與全技能傷害 +55%，所有攻擊必附加多層【灼燒】並大幅強化火牆與火蛇。' },
+    { id: 'mk_shatter_frost', name: '碎冰連鎖',   icon: './assets/skills/ks_mk_shatter_frost.png?v=241',badge: '冰封流', color: '#38bdf8', desc: '命中【凍結】目標 45% 機率引爆碎冰連鎖（145% 傷＋掛感電炸超導碎冰）。' },
+    { id: 'mk_avalanche',     name: '雪崩',       icon: './assets/skills/ks_mk_avalanche.png?v=241',    badge: '冰核流', color: '#7dd3fc', desc: '幸運一擊率 +18%、魔力回復 +60%，冰霜核心技傷害 +50%。' },
+    { id: 'mk_vyr_mastery',   name: '維爾的精通', icon: './assets/skills/ks_mk_vyr_mastery.png?v=241',  badge: '電花流', color: '#a78bfa', desc: '護甲 +35%、雷電傷害 +50%，暴擊 40% 機率自動觸發高壓爆裂電花連劈！' },
+    { id: 'mk_enlightenment', name: '啟蒙',       icon: './assets/skills/ks_mk_enlightenment.png?v=241',badge: '三系神技',color: '#fde047', desc: '交替施放火／冰／雷疊層，滿層爆發【啟蒙】：全元素傷 +90%、回魔 +100%！' },
   ],
   necro: [
     { id: 'nk_undead_overlord', name: '死靈統御', icon: './assets/skills/ks_nk_undead_overlord.png?v=236', badge: '召喚流', color: '#2dd4bf', desc: '攻速 +25%、暴擊率 +15%、全召喚與技能傷害 +35%。' },

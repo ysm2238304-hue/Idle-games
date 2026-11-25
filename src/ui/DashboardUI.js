@@ -1,12 +1,12 @@
 import { TEMPERING_MANUALS } from '../data/items.js?v=240';
 import { temperItem } from '../logic/lootGen.js?v=240';
-import { SKILL_BUILD_SPECS, KEYSTONE_PASSIVES, getActiveKeystone } from '../logic/buildEngine.js?v=236';
+import { SKILL_BUILD_SPECS, KEYSTONE_PASSIVES, getActiveKeystone } from '../logic/buildEngine.js?v=241';
 import { UniversalTooltip } from './UniversalTooltip.js?v=240';
 import { TOWN_SPLASHES } from '../data/towns/splashes.js?v=99';
 import { CLASSES } from '../data/classes.js?v=99';
 import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=235';
 import { RANGER_SKILLS } from '../data/rangerSkills.js?v=236';
-import { MAGE_SKILLS } from '../data/mageSkills.js?v=236';
+import { MAGE_SKILLS } from '../data/mageSkills.js?v=241';
 import { PALADIN_SKILLS } from '../data/paladinSkills.js?v=235';
 import { NECRO_SKILLS } from '../data/necroSkills.js?v=236';
 import { ASSASSIN_SKILLS } from '../data/assassinSkills.js?v=235';
@@ -502,9 +502,9 @@ export class DashboardUI {
     const skills = Object.values(book);
     if (!state.equippedSkillsByClass) state.equippedSkillsByClass = {};
     if (!Array.isArray(state.equippedSkillsByClass[cid])) state.equippedSkillsByClass[cid] = [];
-    while (state.equippedSkillsByClass[cid].length < 5) state.equippedSkillsByClass[cid].push(null);
+    while (state.equippedSkillsByClass[cid].length < 6) state.equippedSkillsByClass[cid].push(null);
     const eq5 = state.equippedSkillsByClass[cid];
-    const keyNames = ['空白', 'E', 'R', '1', '2'];
+    const keyNames = ['1 基礎', '2 核心', '3 防禦', '4 控場', 'E 召喚', 'R 終極'];
 
     pop.innerHTML = `
       <div class="v238-qs-head">
@@ -562,12 +562,12 @@ export class DashboardUI {
   }
 
   renderDockSkillSlots(state) {
-    const keyLabels = ['空白', 'E', 'R', '1', '2'];
+    const keyLabels = ['1', '2', '3', '4', 'E', 'R'];
     const cid = state.classId || 'warrior';
     const book = cid === 'warrior' ? WARRIOR_SKILLS : (cid === 'ranger' ? RANGER_SKILLS : (cid === 'paladin' ? PALADIN_SKILLS : (cid === 'necro' ? NECRO_SKILLS : (cid === 'assassin' ? ASSASSIN_SKILLS : MAGE_SKILLS))));
     const eqList = state.equippedSkillsByClass?.[cid] || [];
 
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 6; i++) {
       const btn = document.getElementById(`skill-slot-${i}`);
       if (!btn) continue;
       const iconEl = btn.querySelector('.sk-slot-img');
@@ -613,7 +613,7 @@ export class DashboardUI {
   updateSkillProgress(ratios, cdDetails = []) {
     const inTownNow = !!document.getElementById('btn-town-toggle')?.classList?.contains('in-town');
     if (inTownNow) {
-      for (let i = 0; i < 5; i++) {
+      for (let i = 0; i < 6; i++) {
         const slot = document.getElementById(`skill-slot-${i}`);
         if (!slot) continue;
         const cur = slot.querySelector('.mmo-cd-curtain');
@@ -624,7 +624,7 @@ export class DashboardUI {
       }
       return;
     }
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 6; i++) {
       const btn = document.getElementById(`skill-slot-${i}`);
       if (!btn) continue;
       const curtain = btn.querySelector('.mmo-cd-curtain');
@@ -926,7 +926,7 @@ export class DashboardUI {
     const skills = Object.values(book);
     if (!state.equippedSkillsByClass) state.equippedSkillsByClass = {};
     if (!Array.isArray(state.equippedSkillsByClass[cid])) state.equippedSkillsByClass[cid] = [];
-    while (state.equippedSkillsByClass[cid].length < 5) state.equippedSkillsByClass[cid].push(null);
+    while (state.equippedSkillsByClass[cid].length < 6) state.equippedSkillsByClass[cid].push(null);
     const eq5 = state.equippedSkillsByClass[cid];
 
     // 依暗黑 4 五大階層自動分組 16 招技能

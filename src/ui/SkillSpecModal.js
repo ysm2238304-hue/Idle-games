@@ -5,7 +5,7 @@
 
 import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=235';
 import { RANGER_SKILLS } from '../data/rangerSkills.js?v=236';
-import { MAGE_SKILLS } from '../data/mageSkills.js?v=236';
+import { MAGE_SKILLS } from '../data/mageSkills.js?v=241';
 import { PALADIN_SKILLS } from '../data/paladinSkills.js?v=235';
 import { NECRO_SKILLS } from '../data/necroSkills.js?v=236';
 import { ASSASSIN_SKILLS } from '../data/assassinSkills.js?v=235';
@@ -16,7 +16,7 @@ import {
   getSkillSpecChoice,
   KEYSTONE_PASSIVES,
   getActiveKeystone,
-} from '../logic/buildEngine.js?v=236';
+} from '../logic/buildEngine.js?v=241';
 
 const CLASS_SKILL_MAPS = {
   warrior: WARRIOR_SKILLS,
@@ -27,7 +27,7 @@ const CLASS_SKILL_MAPS = {
   assassin: ASSASSIN_SKILLS,
 };
 
-const SLOT_LABELS = ['槽 1 [空白]', '槽 2 [E]', '槽 3 [R]', '槽 4 [Q 戰術]', '槽 5 [F 終極]'];
+const SLOT_LABELS = ['槽 1 [1 基礎]', '槽 2 [2 核心]', '槽 3 [3 防禦]', '槽 4 [4 控場]', '槽 5 [E 召喚]', '槽 6 [R 終極]'];
 
 export class SkillSpecModal {
   constructor({ getState, onChanged }) {
@@ -75,8 +75,8 @@ export class SkillSpecModal {
     if (!st.equippedSkillsByClass) st.equippedSkillsByClass = {};
     let arr = st.equippedSkillsByClass[cid];
     if (!Array.isArray(arr)) arr = [];
-    while (arr.length < 5) arr.push(null);
-    st.equippedSkillsByClass[cid] = arr.slice(0, 5);
+    while (arr.length < 6) arr.push(null);
+    st.equippedSkillsByClass[cid] = arr.slice(0, 6);
     return st.equippedSkillsByClass[cid];
   }
 

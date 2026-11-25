@@ -531,3 +531,107 @@
   background: rgba(120, 53, 15, 0.9);
   border-color: #fde047;
 }
+
+
+/* =====================================================================
+   v241: 統一單排 6 格流派技能列 + 暗黑四 8 槽一體成型鍛鐵框 + 流派微銘條
+   ===================================================================== */
+#diablo-hud.v222-gothic-hud {
+  width: 790px !important;
+  max-width: 96vw !important;
+}
+#diablo-hud.v222-gothic-hud .gothic-hud-frame-img {
+  width: 100% !important;
+  height: auto !important;
+}
+#diablo-hud.v222-gothic-hud .gothic-slots-overlay {
+  left: 31.5% !important;
+  width: 63.5% !important;
+  top: 41% !important;
+  height: 36% !important;
+}
+#diablo-hud.v222-gothic-hud .gothic-hotbar {
+  display: grid !important;
+  grid-template-columns: repeat(8, 1fr) !important;
+  gap: 5px !important;
+  width: 100% !important;
+  align-items: center !important;
+}
+#diablo-hud.v222-gothic-hud .gothic-hotbar .mmo-slot {
+  width: 100% !important;
+  aspect-ratio: 1 / 1 !important;
+  height: auto !important;
+  min-width: 0 !important;
+}
+#diablo-hud.v222-gothic-hud .gothic-hotbar .mmo-slot.is-ultimate {
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.55) !important;
+}
+
+/* 上方極簡暗黑流派銘條＋3顆鍛鐵小圓徽章（零大色塊、零重疊） */
+.v241-build-strip {
+  position: absolute;
+  top: -36px;
+  left: 31.5%;
+  width: 63.5%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: linear-gradient(180deg, rgba(16, 13, 12, 0.88), rgba(8, 7, 8, 0.94));
+  border: 1px solid rgba(186, 146, 74, 0.52);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.85);
+  z-index: 25;
+}
+.v241-preset-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+.v241-preset-pill {
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 7px;
+  border-radius: 4px;
+  background: rgba(28, 22, 19, 0.92);
+  border: 1px solid rgba(186, 146, 74, 0.45);
+  color: #e9d5a1;
+  white-space: nowrap;
+}
+.v241-preset-pill:hover {
+  border-color: #fde047;
+  color: #fef9c3;
+}
+.v241-medallion-group {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.v241-iron-medallion {
+  width: 26px !important;
+  height: 26px !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 13px !important;
+  background: radial-gradient(circle at 35% 30%, rgba(48, 38, 30, 0.96), rgba(14, 11, 11, 0.98)) !important;
+  border: 1.5px solid rgba(196, 154, 78, 0.78) !important;
+  color: #fde68a !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.85) !important;
+}
+.v241-iron-medallion:hover {
+  border-color: #fde047 !important;
+  box-shadow: 0 0 12px rgba(250, 204, 21, 0.6) !important;
+  transform: scale(1.08);
+}
+#hud-altar-buffs,
+.hud-altar-buffs {
+  top: -80px !important;
+  left: 31.5% !important;
+}
