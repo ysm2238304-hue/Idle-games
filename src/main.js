@@ -22,7 +22,7 @@ import {
 } from './auth/firebase.js?v=218';
 import { BattleScene } from './scenes/BattleScene.js?v=217';
 import { TownScene } from './scenes/TownScene.js?v=227';
-import { TOWN_SPLASHES } from './data/towns/splashes.js?v=227';
+import { TOWN_SPLASHES } from './data/towns/splashes.js?v=229';
 import { DashboardUI } from './ui/DashboardUI.js?v=221';
 import { TownBgmEngine } from './audio/TownBgmEngine.js?v=99';
 import { BattleSfxEngine } from './audio/BattleSfxEngine.js?v=99';
@@ -44,6 +44,7 @@ let selectedLobbyClass = gameState.classId || 'warrior';
 let gameStarted = false;
 
 function persistAll(syncCloud = false) {
+  if (gameState?.classId) snapshotHeroToProfile(gameState, gameState.classId);
   saveGame(gameState);
   const user = getCurrentUser();
   if (syncCloud && user) {
@@ -179,12 +180,23 @@ const heroShowcase = new HeroSkillShowcase();
 const ui = new DashboardUI({
   getState: () => gameState,
   onSelectClass: (classId) => {
+    if (classId === gameState.classId) return;
     switchStateToClass(classId, gameState);
     selectedLobbyClass = classId;
     const cls = CLASSES[classId];
-    ui.addLog(`切換職業為【${cls.name} Lv.${gameState.level}】！`, 'system');
+    ui.addLog(`切換角色為【${cls.name} Lv.${gameState.level}】，已傳送至該角色所屬主城！`, 'system');
     refreshStatsAndUI();
-    if (battleScene?.sys?.isActive() || battleScene?.sys?.isSleeping()) battleScene.refreshHeroClass(classId);
+    if (battleScene?.sys?.isActive() || battleScene?.sys?.isSleeping()) {
+      battleScene.refreshHeroClass(classId);
+      battleScene.syncMaxHp();
+    }
+    if (phaserGame) {
+      if (phaserGame.scene.isActive('BattleScene')) phaserGame.scene.sleep('BattleScene');
+      battleScene?.setPaused?.(true);
+      isInTown = false;
+      isRecalling = false;
+      enterTown(Math.min(9, getChapterIdx(gameState.stage)), true);
+    }
     persistAll(true);
   },
 
@@ -649,27 +661,94 @@ function syncActiveClassProgress(st = gameState) {
   cp[curId] = { level: st.level || 1, exp: st.exp || 0 };
 }
 
+const HERO_ISOLATED_KEYS = [
+  'nickname', 'level', 'exp', 'skillPoints', 'skillTree',
+  'soulCrystals', 'rebirthCount', 'gold', 'dust',
+  'stage', 'wave', 'maxStageReached', 'kills', 'upgrades',
+  'equipment', 'inventory', 'vaultTabs', 'vaultItems', 'vaultRules', 'autoSalvage',
+  'equippedPetId', 'pets', 'unlockedPets', 'petEssence', 'protectStones',
+  'bountyProgress', 'acceptedQuests', 'acceptedQuestDefs',
+  'potionBuffs', 'sanctumLevels', 'bestDummyDps',
+  'claimedAchievements', 'activeTitle', 'maxTowerFloor',
+  'guardBlessCdUntil', 'villagerGiftCdUntil',
+  'ch1ScoutGiftClaimed', 'ch2SmugglerGiftClaimed', 'ch3ChroniclerGiftClaimed',
+  'ch4ForgemasterGiftClaimed', 'ch5ContractorGiftClaimed', 'ch6ShamanGiftClaimed',
+  'ch7WitchdoctorGiftClaimed', 'ch8EngineerGiftClaimed', 'ch9PenitentGiftClaimed',
+  'ch10WeaverGiftClaimed',
+];
+
+function deepCloneSafe(val) {
+  if (val === undefined) return undefined;
+  try { return JSON.parse(JSON.stringify(val)); } catch { return val; }
+}
+
+function createFreshHeroProfile(classId, fallbackNick = '') {
+  const base = createInitialState(classId);
+  const prof = {};
+  for (const k of HERO_ISOLATED_KEYS) {
+    if (base[k] !== undefined) prof[k] = deepCloneSafe(base[k]);
+  }
+  prof.nickname = fallbackNick || '';
+  prof.vaultTabs = [[], [], [], []];
+  prof.vaultItems = [];
+  prof.vaultRules = {};
+  prof.unlockedPets = ['pet_c1'];
+  prof.bountyProgress = { bossKills: 0, claimed: {} };
+  prof.acceptedQuests = [];
+  prof.acceptedQuestDefs = {};
+  prof.potionBuffs = {};
+  prof.sanctumLevels = {};
+  prof.bestDummyDps = 0;
+  return prof;
+}
+
+function snapshotHeroToProfile(st, cid) {
+  if (!st.heroProfiles || typeof st.heroProfiles !== 'object') st.heroProfiles = {};
+  const snap = {};
+  for (const k of HERO_ISOLATED_KEYS) {
+    if (st[k] !== undefined) snap[k] = deepCloneSafe(st[k]);
+  }
+  st.heroProfiles[cid] = snap;
+}
+
+function applyProfileToState(st, prof, classId) {
+  const fresh = createFreshHeroProfile(classId, prof?.nickname || st.nickname || '');
+  for (const k of HERO_ISOLATED_KEYS) {
+    if (prof && prof[k] !== undefined) {
+      st[k] = deepCloneSafe(prof[k]);
+    } else if (fresh[k] !== undefined) {
+      st[k] = deepCloneSafe(fresh[k]);
+    } else {
+      delete st[k];
+    }
+  }
+  if (!Array.isArray(st.vaultTabs) || st.vaultTabs.length < 4) {
+    st.vaultTabs = [Array.isArray(st.vaultItems) ? [...st.vaultItems] : [], [], [], []];
+  }
+}
+
 function switchStateToClass(newClassId, st = gameState) {
   const cp = ensureClassProgress(st);
   const oldId = st.classId || 'warrior';
   cp[oldId] = { level: st.level || 1, exp: st.exp || 0 };
-  if (!st.equipmentByClass) st.equipmentByClass = {};
-  if (!st.petByClass) st.petByClass = {};
-  st.equipmentByClass[oldId] = { ...(st.equipment || { weapon: null, helm: null, armor: null, boots: null, ring: null, amulet: null }) };
-  st.petByClass[oldId] = st.equippedPetId || null;
+  snapshotHeroToProfile(st, oldId);
 
   st.classId = newClassId;
-  const next = cp[newClassId] || { level: 1, exp: 0 };
-  st.level = next.level || 1;
-  st.exp = next.exp || 0;
   if (oldId !== newClassId) {
-    st.equipment = st.equipmentByClass[newClassId]
-      ? { weapon: null, helm: null, armor: null, boots: null, ring: null, amulet: null, ...st.equipmentByClass[newClassId] }
-      : { weapon: null, helm: null, armor: null, boots: null, ring: null, amulet: null };
-    if (st.petByClass[newClassId] !== undefined) {
-      st.equippedPetId = st.petByClass[newClassId];
+    const existingProf = st.heroProfiles?.[newClassId];
+    if (existingProf) {
+      applyProfileToState(st, existingProf, newClassId);
+    } else {
+      const fresh = createFreshHeroProfile(newClassId, st.nickname || '');
+      if (cp[newClassId]?.level > 1) {
+        fresh.level = cp[newClassId].level;
+        fresh.exp = cp[newClassId].exp || 0;
+      }
+      st.heroProfiles[newClassId] = fresh;
+      applyProfileToState(st, fresh, newClassId);
     }
   }
+  cp[newClassId] = { level: st.level || 1, exp: st.exp || 0 };
 }
 
 function grantExp(amount) {
@@ -711,8 +790,18 @@ function handleLootDrop(item) {
 
 function initPhaserGame() {
   if (phaserGame) {
-    battleScene?.setPaused(false);
-    requestAnimationFrame(() => phaserGame.scale.refresh());
+    requestAnimationFrame(() => {
+      phaserGame.scale.refresh();
+      if (phaserGame.scene.isActive('BattleScene')) phaserGame.scene.sleep('BattleScene');
+      battleScene?.setPaused?.(true);
+      if (battleScene?.sys?.isActive() || battleScene?.sys?.isSleeping()) {
+        battleScene.refreshHeroClass?.(gameState.classId);
+        battleScene.syncMaxHp?.();
+      }
+      isInTown = false;
+      isRecalling = false;
+      enterTown(Math.min(9, getChapterIdx(gameState.stage)), true);
+    });
     return;
   }
   const stageEl = document.getElementById('phaser-stage');
@@ -1773,10 +1862,12 @@ function enterTown(chapterIdx = 0, instant = false) {
         phaserGame.scene.wake('TownScene', { chapterIdx, callbacks: townCallbacks });
       }
       townScene?.syncHeroAppearance?.();
+      phaserGame.scene.bringToTop('TownScene');
     }
   } else {
     battleScene?.collectAllGroundLoot?.();
     phaserGame.scene.start('TownScene', { chapterIdx, callbacks: townCallbacks });
+    phaserGame.scene.bringToTop('TownScene');
   }
   const btn = document.getElementById('btn-town-toggle');
   if (btn) {

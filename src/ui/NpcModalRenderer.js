@@ -30,13 +30,13 @@ function ensureNpcModalCss() {
   if (typeof document === 'undefined') return;
   const old = document.getElementById('npc-modal-v2-css');
   if (old) {
-    if (!old.href.includes('v=204')) old.href = './src/ui/npcModal.css?v=227';
+    if (!old.href.includes('v=204')) old.href = './src/ui/npcModal.css?v=230';
     return;
   }
   const link = document.createElement('link');
   link.id = 'npc-modal-v2-css';
   link.rel = 'stylesheet';
-  link.href = './src/ui/npcModal.css?v=227';
+  link.href = './src/ui/npcModal.css?v=230';
   document.head.appendChild(link);
 }
 
@@ -223,7 +223,7 @@ export function renderTownFacilityModal(ui, action, data, ctx, deps = {}) {
           <div class="npc-res-chip" title="魂晶">${SVG.crystal}<span>${fmtNum(st.soulCrystals)}</span></div>
         </div>
       </aside>
-      <section class="npc-work-col has-npc-art-bg" id="npc-work-col" style="background-image: linear-gradient(180deg, rgba(10,8,14,0.34) 0%, rgba(10,8,14,0.52) 55%, rgba(8,7,12,0.72) 100%), url('${workBgUrl}');">${workspaceHtml}</section>
+      <section class="npc-work-col has-npc-art-bg" id="npc-work-col" data-action="${action}" style="background-image: linear-gradient(180deg, rgba(10,8,14,0.34) 0%, rgba(10,8,14,0.52) 55%, rgba(8,7,12,0.72) 100%), url('${workBgUrl}');">${workspaceHtml}</section>
     </div>
   `;
 
@@ -452,27 +452,31 @@ function buildWorkspaceHtml(ui, action, data, ctx, deps, st, chIdx, chapter) {
 
   if (action === 'modal_portal') {
     const maxStg = st.maxStageReached || st.maxStage || st.stage || 1;
-    const unlockedCh = Math.min(9, Math.floor((Math.max(1, maxStg) - 1) / 10));
+    const getChIdx = deps.getChapterIdx || ((s) => Math.min(9, Math.floor((Math.max(1, s) - 1) / 10)));
+    const maxCh = Math.min(9, getChIdx(maxStg));
+    const RING_COORDS = [
+      [50.0, 12.5], [64.5, 19.5], [72.0, 35.5], [72.0, 56.5], [64.5, 76.5],
+      [50.0, 86.5], [35.5, 76.5], [28.0, 56.5], [28.0, 35.5], [35.5, 19.5],
+    ];
     return `
-      <div class="npc-sec-head">
-        <div class="npc-sec-title">十界星門星圖航道</div>
-        <div style="display:flex;gap:8px;">
-          <button id="btn-portal-map" class="npc-btn-secondary"><span>開啟世界大地圖</span>${SVG.arrow}</button>
-          <button id="btn-portal-battle" class="npc-btn-primary" style="width:auto;"><span>立即出城進入戰鬥</span></button>
-        </div>
+      <div class="npc-sec-head" style="margin-bottom:6px;">
+        <div class="npc-sec-title">十界星門星象羅盤（點選星環錨點傳送）</div>
+        <button id="btn-portal-map" class="npc-btn-secondary"><span>開啟 2.5D 世界地圖</span>${SVG.arrow}</button>
       </div>
-      <div class="starmap-route">
-        ${CHAPTER_NAMES.map((name, i) => {
-          const isCur = i === chIdx;
-          const isUnlocked = i <= unlockedCh;
-          const cls = isCur ? 'is-current' : (isUnlocked ? '' : 'is-preview');
+      <div class="v229-starmap-dial">
+        <button type="button" id="btn-portal-battle" class="v229-vortex-btn" title="立即踏入星門出城戰鬥">
+          <span>⚔️</span>
+          <b>出城戰鬥</b>
+        </button>
+        ${CHAPTER_NAMES.map((cname, idx) => {
+          const isCur = idx === chIdx;
+          const unlocked = idx <= maxCh;
+          const [px, py] = RING_COORDS[idx];
+          const shortName = cname.split('・')[1] || cname;
           return `
-            <button data-tp-ch="${i}" class="starmap-node ${cls}" ${isCur ? 'disabled' : ''}>
-              <div style="text-align:left;">
-                <div style="font-size:12.5px;font-weight:800;">${name}</div>
-                <div style="font-size:11px;color:#94a3b8;">${isCur ? '星門錨點已鎖定（目前所在）' : (isUnlocked ? '已通關星門節點' : '未通關・可搶先觀光傳送')}</div>
-              </div>
-              <span class="starmap-badge">${isCur ? '所在主城' : (isUnlocked ? '傳送' : '觀光傳送')}</span>
+            <button type="button" class="v229-dial-node ${isCur ? 'is-current' : ''} ${unlocked ? 'is-unlocked' : ''}" data-tp-ch="${idx}" style="left:${px}%;top:${py}%;" title="${cname}（${isCur ? '目前所在' : (unlocked ? '點擊傳送' : '觀光傳送')}）">
+              <span class="v229-dn-num">CH.${idx + 1}</span>
+              <span class="v229-dn-name">${shortName}</span>
             </button>
           `;
         }).join('')}
@@ -557,7 +561,7 @@ function buildWorkspaceHtml(ui, action, data, ctx, deps, st, chIdx, chapter) {
               ${(() => {
                 const acceptedList = Array.isArray(st.acceptedQuests) ? st.acceptedQuests : [];
                 const isAccepted = acceptedList.includes(q.id);
-                if (isClaimed) return `<div class="npc-btn-claimed">${SVG.check}<span>已完成並領獎</span></div>`;
+                if (isClaimed) return `<div class="npc-btn-claimed"><img class="v229-wax-ico" src="./assets/ui/ui_wax_stamp.png?v=229" alt="" /><span>已完成並領獎</span></div>`;
                 if (!isAccepted) return costBtnHtml(`data-accept-quest="${q.id}"`, '📜 接取任務', '追蹤至介面', true);
                 if (ready) {
                   return `<div style="display:flex;gap:6px;width:100%;">

@@ -528,3 +528,377 @@
   background: rgba(185, 28, 28, 0.78);
   color: #fff;
 }
+
+
+/* =====================================================================
+   v229：42張黃金完整版第一批 — 純圖構建 NPC UI（零色塊、實景互動檯面）
+   ===================================================================== */
+
+/* 1. 圓形哥德鍛鐵關閉鈕（取代原本方形「關閉」色塊） */
+#modal-town-facility .modal-header button,
+#btn-close-town-modal {
+  width: 40px !important;
+  height: 40px !important;
+  min-width: 40px !important;
+  padding: 0 !important;
+  font-size: 0 !important;
+  background: url('../../assets/ui/ui_close_btn.png?v=229') center / 100% 100% no-repeat !important;
+  border: none !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.75) !important;
+  transition: transform 0.15s ease, filter 0.15s ease !important;
+}
+#modal-town-facility .modal-header button:hover,
+#btn-close-town-modal:hover {
+  transform: scale(1.1) rotate(8deg) !important;
+  filter: brightness(1.18) drop-shadow(0 0 8px rgba(250, 204, 21, 0.5)) !important;
+}
+
+/* 2. 左側 NPC 羊皮紙對話捲軸（取代黑框色塊） */
+#modal-town-facility .npc-speech-box {
+  background: url('../../assets/ui/ui_npc_scroll.png?v=229') center / 100% 100% no-repeat !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 16px 26px !important;
+  color: #fef3c7 !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95) !important;
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* 3. 左下 3 資源條鍛鐵金屬鑲座（取代 3 顆黑方塊） */
+#modal-town-facility .npc-res-bar {
+  background: url('../../assets/ui/ui_res_bar.png?v=229') center / 100% 100% no-repeat !important;
+  border: none !important;
+  padding: 8px 12px !important;
+  gap: 6px !important;
+}
+#modal-town-facility .npc-res-chip {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 2px 4px !important;
+  justify-content: center !important;
+}
+
+/* 4. 第 1 章主城專屬材質外框與銘牌（零色塊） */
+#modal-town-facility[data-chapter="1"] .modal-card {
+  border: 24px solid transparent !important;
+  border-image-source: url('../../assets/ui/ch1_frame.png?v=229') !important;
+  border-image-slice: 110 120 96 120 !important;
+  border-image-repeat: stretch !important;
+}
+#modal-town-facility[data-chapter="1"] .npc-card {
+  background: url('../../assets/ui/ch1_card.png?v=229') center / 100% 100% no-repeat !important;
+  border: none !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.65) !important;
+  padding: 16px 20px !important;
+}
+
+/* 5. 實木懸賞告示板（modal_bounty）：真撕邊泛黃羊皮紙通緝令，徹底移除外圍黑框 */
+#npc-work-col[data-action="modal_bounty"] .bounty-board {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  padding: 4px 0 !important;
+  gap: 14px !important;
+}
+#npc-work-col[data-action="modal_bounty"] .wanted-poster {
+  background: url('../../assets/ui/plate_bounty_poster.png?v=229') center / 100% 100% no-repeat !important;
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.75) !important;
+  backdrop-filter: none !important;
+  padding: 28px 18px 20px !important;
+}
+#npc-work-col[data-action="modal_bounty"] .poster-pin {
+  display: none !important;
+}
+.v229-wax-ico {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+  vertical-align: middle;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.8));
+}
+
+/* 6. 祕法煉金鍋（modal_alchemy）：實木雕花藥劑陳列龕座 */
+#npc-work-col[data-action="modal_alchemy"] .vial-slot,
+#npc-work-col[data-action="modal_alchemy"] .npc-card {
+  background: url('../../assets/ui/plate_alchemy_alcove.png?v=229') center / 100% 100% no-repeat !important;
+  border: none !important;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.72) !important;
+  backdrop-filter: none !important;
+  padding: 16px 20px !important;
+}
+
+/* 7. 鐵匠鍛造台（modal_blacksmith）：鍛鐵熔爐赤炎銘牌操作板 */
+#npc-work-col[data-action="modal_blacksmith"] .npc-card,
+#npc-work-col[data-action="modal_blacksmith"] .anvil-bench {
+  background: url('../../assets/ui/plate_anvil_plaque.png?v=229') center / 100% 100% no-repeat !important;
+  border: none !important;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.78) !important;
+  backdrop-filter: none !important;
+  padding: 18px 22px !important;
+}
+
+/* 8. 跨章節十界星門星象羅盤（modal_portal）：圓形黃銅星盤＋10 環狀符文錨點＋中央星門漩渦 */
+.v229-starmap-dial {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: 360px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: url('../../assets/ui/plate_portal_compass.jpg?v=229') center / cover no-repeat;
+  box-shadow: inset 0 0 36px rgba(0, 0, 0, 0.85), 0 10px 28px rgba(0, 0, 0, 0.8);
+}
+
+.v229-vortex-btn {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 106px;
+  height: 106px;
+  border-radius: 50%;
+  border: 2px solid rgba(253, 224, 71, 0.78);
+  background: radial-gradient(circle, rgba(168, 85, 247, 0.45) 0%, rgba(15, 10, 28, 0.78) 72%);
+  color: #fef08a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  cursor: pointer;
+  box-shadow: 0 0 26px rgba(168, 85, 247, 0.65), inset 0 0 18px rgba(250, 204, 21, 0.35);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  z-index: 4;
+}
+.v229-vortex-btn span { font-size: 22px; }
+.v229-vortex-btn b { font-size: 13px; letter-spacing: 1px; text-shadow: 0 2px 6px #000; }
+.v229-vortex-btn:hover {
+  transform: translate(-50%, -50%) scale(1.1);
+  box-shadow: 0 0 36px rgba(250, 204, 21, 0.85);
+}
+
+.v229-dial-node {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  min-width: 92px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 50% 30%, rgba(36, 26, 48, 0.92), rgba(12, 9, 18, 0.96));
+  border: 1.5px solid rgba(200, 155, 60, 0.65);
+  color: #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.15;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.85);
+  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+  z-index: 5;
+}
+.v229-dial-node:hover {
+  transform: translate(-50%, -50%) scale(1.12);
+  border-color: #fde047;
+  box-shadow: 0 0 18px rgba(250, 204, 21, 0.72);
+  z-index: 8;
+}
+.v229-dial-node.is-current {
+  border-color: #4ade80;
+  box-shadow: 0 0 20px rgba(74, 222, 128, 0.75);
+}
+.v229-dn-num {
+  font-size: 9.5px;
+  font-weight: 900;
+  color: #fbbf24;
+  letter-spacing: 0.6px;
+}
+.v229-dn-name {
+  font-size: 11px;
+  font-weight: 800;
+  color: #fef3c7;
+  white-space: nowrap;
+}
+
+
+/* =====================================================================
+   v230：42張黃金完整版第二批 — 第2~5章專屬城框與銘牌 + 中4大NPC實景檯面
+   ===================================================================== */
+#modal-town-facility[data-chapter="2"] .modal-card {
+  border: 24px solid transparent !important;
+  border-image-source: url('../../assets/ui/ch2_frame.png?v=230') !important;
+  border-image-slice: 112 122 98 122 !important;
+  border-image-repeat: stretch !important;
+}
+#modal-town-facility[data-chapter="2"] .npc-card {
+  background: url('../../assets/ui/ch2_card.png?v=230') center / 100% 100% no-repeat !important;
+  border: none !important;
+  padding: 16px 20px !important;
+}
+
+#modal-town-facility[data-chapter="3"] .modal-card {
+  border: 24px solid transparent !important;
+  border-image-source: url('../../assets/ui/ch3_frame.png?v=230') !important;
+  border-image-slice: 112 122 98 122 !important;
+  border-image-repeat: stretch !important;
+}
+#modal-town-facility[data-chapter="3"] .npc-card {
+  background: url('../../assets/ui/ch3_card.png?v=230') center / 100% 100% no-repeat !important;
+  border: none !important;
+  padding: 16px 20px !important;
+}
+
+#modal-town-facility[data-chapter="4"] .modal-card {
+  border: 24px solid transparent !important;
+  border-image-source: url('../../assets/ui/ch4_frame.png?v=230') !important;
+  border-image-slice: 112 122 98 122 !important;
+  border-image-repeat: stretch !important;
+}
+#modal-town-facility[data-chapter="4"] .npc-card {
+  background: url('../../assets/ui/ch4_card.png?v=230') center / 100% 100% no-repeat !important;
+  border: none !important;
+  padding: 16px 20px !important;
+}
+
+#modal-town-facility[data-chapter="5"] .modal-card {
+  border: 24px solid transparent !important;
+  border-image-source: url('../../assets/ui/ch5_frame.png?v=230') !important;
+  border-image-slice: 112 122 98 122 !important;
+  border-image-repeat: stretch !important;
+}
+#modal-town-facility[data-chapter="5"] .npc-card {
+  background: url('../../assets/ui/ch5_card.png?v=230') center / 100% 100% no-repeat !important;
+  border: none !important;
+  padding: 16px 20px !important;
+}
+
+/* 中 4 大 NPC 專屬實景互動檯面（金庫 / 魂晶壇 / 黑市 / 演武場） */
+#npc-work-col[data-action="modal_vault"] .v223-bag-deposit-box {
+  background: url('../../assets/ui/plate_vault_locker.png?v=230') center / 100% 100% no-repeat !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  padding: 16px 22px !important;
+}
+
+#npc-work-col[data-action="modal_sanctum"] .sanctum-altar-core,
+#npc-work-col[data-action="modal_sanctum"] .npc-card {
+  background: url('../../assets/ui/plate_sanctum_altar.png?v=230') center / 100% 100% no-repeat !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  padding: 18px 22px !important;
+}
+
+#npc-work-col[data-action="modal_market"] .npc-card,
+#npc-work-col[data-action="modal_market"] .market-chest-card {
+  background: url('../../assets/ui/plate_market_table.png?v=230') center / 100% 100% no-repeat !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  padding: 18px 22px !important;
+}
+
+#npc-work-col[data-action="modal_trainer"] .trainer-arena,
+#npc-work-col[data-action="modal_trainer"] .skill-scroll-card {
+  background: url('../../assets/ui/plate_trainer_scroll.png?v=230') center / 100% 100% no-repeat !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  padding: 18px 20px !important;
+}
+
+
+/* =====================================================================
+   v231：42張黃金完整版最後一批 — 第6~10章專屬城框與銘牌 + 最後4大NPC實景檯面
+   ===================================================================== */
+#modal-town-facility[data-chapter="6"] .modal-card {
+  border: 24px solid transparent !important;
+  border-image-source: url('../../assets/ui/ch6_frame.png?v=231') !important;
+  border-image-slice: 112 122 98 122 !important;
+  border-image-repeat: stretch !important;
+}
+#modal-town-facility[data-chapter="6"] .npc-card {
+  background: url('../../assets/ui/ch6_card.png?v=231') center / 100% 100% no-repeat !important;
+  border: none !important;
+  padding: 16px 20px !important;
+}
+
+#modal-town-facility[data-chapter="7"] .modal-card {
+  border: 24px solid transparent !important;
+  border-image-source: url('../../assets/ui/ch7_frame.png?v=231') !important;
+  border-image-slice: 112 122 98 122 !important;
+  border-image-repeat: stretch !important;
+}
+#modal-town-facility[data-chapter="7"] .npc-card {
+  background: url('../../assets/ui/ch7_card.png?v=231') center / 100% 100% no-repeat !important;
+  border: none !important;
+  padding: 16px 20px !important;
+}
+
+#modal-town-facility[data-chapter="8"] .modal-card {
+  border: 24px solid transparent !important;
+  border-image-source: url('../../assets/ui/ch8_frame.png?v=231') !important;
+  border-image-slice: 112 122 98 122 !important;
+  border-image-repeat: stretch !important;
+}
+#modal-town-facility[data-chapter="8"] .npc-card {
+  background: url('../../assets/ui/ch8_card.png?v=231') center / 100% 100% no-repeat !important;
+  border: none !important;
+  padding: 16px 20px !important;
+}
+
+#modal-town-facility[data-chapter="9"] .modal-card {
+  border: 24px solid transparent !important;
+  border-image-source: url('../../assets/ui/ch9_frame.png?v=231') !important;
+  border-image-slice: 112 122 98 122 !important;
+  border-image-repeat: stretch !important;
+}
+#modal-town-facility[data-chapter="9"] .npc-card {
+  background: url('../../assets/ui/ch9_card.png?v=231') center / 100% 100% no-repeat !important;
+  border: none !important;
+  padding: 16px 20px !important;
+}
+
+#modal-town-facility[data-chapter="10"] .modal-card {
+  border: 24px solid transparent !important;
+  border-image-source: url('../../assets/ui/ch10_frame.png?v=231') !important;
+  border-image-slice: 112 122 98 122 !important;
+  border-image-repeat: stretch !important;
+}
+#modal-town-facility[data-chapter="10"] .npc-card {
+  background: url('../../assets/ui/ch10_card.png?v=231') center / 100% 100% no-repeat !important;
+  border: none !important;
+  padding: 16px 20px !important;
+}
+
+/* 最後 4 大 NPC 專屬實景互動檯面（酒館 / 傳送陣 / 瞭望塔圖鑑 / 封蠟補給與巡邏禮盒） */
+#npc-work-col[data-action="modal_tavern"] .npc-card {
+  background: url('../../assets/ui/plate_tavern_menu.png?v=231') center / 100% 100% no-repeat !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  padding: 18px 22px !important;
+}
+
+#npc-work-col[data-action="modal_waypoint"] .starmap-node {
+  background: url('../../assets/ui/plate_waypoint_slab.png?v=231') center / 100% 100% no-repeat !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  padding: 12px 18px !important;
+}
+
+#npc-work-col[data-action="modal_tower"] .npc-card {
+  background: url('../../assets/ui/plate_tower_journal.png?v=231') center / 100% 100% no-repeat !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  padding: 18px 22px !important;
+}
+
+#npc-work-col .chapter-gift-box {
+  background: url('../../assets/ui/plate_gift_coffer.png?v=231') center / 100% 100% no-repeat !important;
+  border: none !important;
+  backdrop-filter: none !important;
+  padding: 20px 24px !important;
+}
