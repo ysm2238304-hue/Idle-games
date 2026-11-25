@@ -12,7 +12,7 @@
   <link id="welcome-auth-v207-css" rel="stylesheet" href="./src/ui/welcomeAuth.css?v=215" />
   <link id="class-hall-v102-css" rel="stylesheet" href="./src/ui/classHall.css?v=215" />
   <link id="npc-modal-v100-css" rel="stylesheet" href="./src/ui/npcModal.css?v=215" />
-  <link id="hud-overhaul-v217-css" rel="stylesheet" href="./src/ui/hudOverhaul.css?v=220" />
+  <link id="hud-overhaul-v217-css" rel="stylesheet" href="./src/ui/hudOverhaul.css?v=221" />
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
 </head>
 <body>
@@ -318,87 +318,105 @@
       </aside>
 
       <!-- 底部中央：懸浮雙球暗黑 MMORPG 祭壇 -->
-      <footer id="diablo-hud" class="floating-altar">
-        <div class="orb-wrap orb-left" id="orb-hp" title="生命值 (HP)">
-          <div class="orb-ring"></div>
-          <div class="orb-glass">
-            <div class="orb-liquid orb-hp-liquid" id="orb-hp-fill"></div>
-            <div class="orb-wave"></div>
-            <div class="orb-gloss"></div>
-            <div class="orb-readout">
-              <span id="orb-hp-text">240 / 240</span>
-              <small>生命</small>
+      <footer id="diablo-hud" class="floating-altar v221-sculpted-altar">
+        <!-- 左側：紅／藍合一雙色生命魔力靈球（精雕暗金框架） -->
+        <div class="dual-orb-shell" id="orb-dual-wrap">
+          <svg class="dual-orb-crest" viewBox="0 0 132 132" fill="none" aria-hidden="true">
+            <defs>
+              <linearGradient id="goldBevel" x1="0" y1="0" x2="132" y2="132" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#fef08a"/>
+                <stop offset="45%" stop-color="#c89b3c"/>
+                <stop offset="100%" stop-color="#6b4a16"/>
+              </linearGradient>
+            </defs>
+            <circle cx="66" cy="66" r="61" stroke="url(#goldBevel)" stroke-width="3.2"/>
+            <circle cx="66" cy="66" r="55" stroke="rgba(254,240,138,0.28)" stroke-width="1"/>
+            <path d="M66 1 L72 10 L66 15 L60 10 Z" fill="url(#goldBevel)"/>
+            <path d="M66 131 L72 122 L66 117 L60 122 Z" fill="url(#goldBevel)"/>
+            <path d="M1 66 L10 60 L15 66 L10 72 Z" fill="url(#goldBevel)"/>
+            <path d="M131 66 L122 60 L117 66 L122 72 Z" fill="url(#goldBevel)"/>
+          </svg>
+          <div class="dual-orb-sphere">
+            <div class="dual-half dual-half-hp" id="orb-hp" title="生命值 (HP)">
+              <div class="orb-liquid orb-hp-liquid" id="orb-hp-fill"></div>
+            </div>
+            <div class="dual-half dual-half-mp" id="orb-mp" title="魔力 / 職業能量">
+              <div class="orb-liquid orb-mp-liquid" id="orb-mp-fill"></div>
+            </div>
+            <div class="dual-meridian"></div>
+            <div class="dual-orb-gloss"></div>
+            <div class="dual-orb-readout">
+              <div class="dual-read-hp">
+                <span id="orb-hp-text">240/240</span>
+                <small>生命</small>
+              </div>
+              <div class="dual-read-mp">
+                <span id="orb-mp-text">100/100</span>
+                <small id="orb-mp-label">魔力</small>
+              </div>
             </div>
           </div>
         </div>
 
-        <div id="altar-center" class="floating-altar-core">
-          <div class="mmo-hotbar">
-            <button id="btn-potion" class="mmo-slot mmo-potion" data-tip="生命藥水 [H]：立即回復 45% 最大生命（每 12 秒或過關補充）">
-              <span class="mmo-hotkey">H</span>
-              <img class="mmo-ui-img" src="./assets/ui/ui_potion.png" alt="藥水" />
-              <span class="mmo-badge-br" id="potion-count">3</span>
-            </button>
+        <!-- 右側：去方框精雕技能與 BUFF 翼列 -->
+        <div id="altar-center" class="floating-altar-core v221-wing-core">
+          <div id="hud-altar-buffs" class="hud-altar-buffs" title="目前生效的主城祝福與藥水增益"></div>
 
-            <button id="skill-slot-0" class="mmo-slot mmo-skill" data-slot="0">
-              <span class="mmo-hotkey">空白</span>
-              <img class="sk-slot-img hidden" src="" alt="" />
-              <span class="mmo-empty-plus">+</span>
-              <div class="mmo-cd-curtain"></div>
-              <span class="mmo-cd-sec"></span>
-              <span class="mmo-mp-cost"></span>
-            </button>
+          <div class="v221-rail-frame">
+            <div class="mmo-hotbar">
+              <button id="btn-potion" class="mmo-slot mmo-potion" data-tip="生命藥水 [H]：立即回復 45% 最大生命（每 12 秒或過關補充）">
+                <span class="mmo-hotkey">H</span>
+                <img class="mmo-ui-img" src="./assets/ui/ui_potion.png" alt="藥水" />
+                <span class="mmo-badge-br" id="potion-count">3</span>
+              </button>
 
-            <button id="skill-slot-1" class="mmo-slot mmo-skill" data-slot="1">
-              <span class="mmo-hotkey">E</span>
-              <img class="sk-slot-img hidden" src="" alt="" />
-              <span class="mmo-empty-plus">+</span>
-              <div class="mmo-cd-curtain"></div>
-              <span class="mmo-cd-sec"></span>
-              <span class="mmo-mp-cost"></span>
-            </button>
+              <button id="skill-slot-0" class="mmo-slot mmo-skill" data-slot="0">
+                <span class="mmo-hotkey">空白</span>
+                <img class="sk-slot-img hidden" src="" alt="" />
+                <span class="mmo-empty-plus">+</span>
+                <div class="mmo-cd-curtain"></div>
+                <span class="mmo-cd-sec"></span>
+                <span class="mmo-mp-cost"></span>
+              </button>
 
-            <button id="skill-slot-2" class="mmo-slot mmo-skill" data-slot="2">
-              <span class="mmo-hotkey">R</span>
-              <img class="sk-slot-img hidden" src="" alt="" />
-              <span class="mmo-empty-plus">+</span>
-              <div class="mmo-cd-curtain"></div>
-              <span class="mmo-cd-sec"></span>
-              <span class="mmo-mp-cost"></span>
-            </button>
+              <button id="skill-slot-1" class="mmo-slot mmo-skill" data-slot="1">
+                <span class="mmo-hotkey">E</span>
+                <img class="sk-slot-img hidden" src="" alt="" />
+                <span class="mmo-empty-plus">+</span>
+                <div class="mmo-cd-curtain"></div>
+                <span class="mmo-cd-sec"></span>
+                <span class="mmo-mp-cost"></span>
+              </button>
 
-            <button id="btn-toggle-auto" class="mmo-slot mmo-auto active" data-tip="自動狩獵／手動控制切換 [T]（可隨時移動介入）">
-              <span class="mmo-hotkey">T</span>
-              <img class="mmo-ui-img" src="./assets/ui/ui_auto.png" alt="自動" />
-              <span class="mmo-badge-br" id="auto-mode-label">自動</span>
-            </button>
-          </div>
+              <button id="skill-slot-2" class="mmo-slot mmo-skill" data-slot="2">
+                <span class="mmo-hotkey">R</span>
+                <img class="sk-slot-img hidden" src="" alt="" />
+                <span class="mmo-empty-plus">+</span>
+                <div class="mmo-cd-curtain"></div>
+                <span class="mmo-cd-sec"></span>
+                <span class="mmo-mp-cost"></span>
+              </button>
 
-          <div class="mmo-status-strip">
-            <span id="hud-afk-pill" class="afk-pill active">★ 自動狩獵中</span>
-            <button id="btn-quick-salvage" class="strip-btn" title="一鍵分解低階裝備 [Q]">🧹 一鍵分解 [Q]</button>
-            <button id="btn-power-save" class="strip-btn" title="開啟暗黑掛機省電幕布 [Z]">🌙 省電掛機 [Z]</button>
-          </div>
-
-          <div class="diablo-exp-bar" id="diablo-exp-bar" title="經驗值進度 (10 格暗金刻度)">
-            <div class="diablo-exp-fill" id="diablo-exp-fill"></div>
-            <div class="diablo-exp-ticks">
-              <span></span><span></span><span></span><span></span><span></span>
-              <span></span><span></span><span></span><span></span><span></span>
+              <button id="btn-toggle-auto" class="mmo-slot mmo-auto active" data-tip="自動狩獵／手動控制切換 [T]（可隨時移動介入）">
+                <span class="mmo-hotkey">T</span>
+                <img class="mmo-ui-img" src="./assets/ui/ui_auto.png" alt="自動" />
+                <span class="mmo-badge-br" id="auto-mode-label">自動</span>
+              </button>
             </div>
-            <span class="diablo-exp-text" id="diablo-exp-text">等級 1 • 經驗 0 / 90 (0%)</span>
-          </div>
-        </div>
 
-        <div class="orb-wrap orb-right" id="orb-mp" title="魔力值 (MP)">
-          <div class="orb-ring"></div>
-          <div class="orb-glass">
-            <div class="orb-liquid orb-mp-liquid" id="orb-mp-fill"></div>
-            <div class="orb-wave"></div>
-            <div class="orb-gloss"></div>
-            <div class="orb-readout">
-              <span id="orb-mp-text">100 / 100</span>
-              <small id="orb-mp-label">魔力</small>
+            <div class="mmo-status-strip">
+              <span id="hud-afk-pill" class="afk-pill active">★ 自動狩獵中</span>
+              <button id="btn-quick-salvage" class="strip-btn" title="一鍵分解低階裝備 [Q]">🧹 一鍵分解 [Q]</button>
+              <button id="btn-power-save" class="strip-btn" title="開啟暗黑掛機省電幕布 [Z]">🌙 省電掛機 [Z]</button>
+            </div>
+
+            <div class="diablo-exp-bar" id="diablo-exp-bar" title="經驗值進度 (10 格暗金刻度)">
+              <div class="diablo-exp-fill" id="diablo-exp-fill"></div>
+              <div class="diablo-exp-ticks">
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+              </div>
+              <span class="diablo-exp-text" id="diablo-exp-text">等級 1 • 經驗 0 / 90 (0%)</span>
             </div>
           </div>
         </div>
@@ -561,6 +579,6 @@
     </div>
   </div>
 
-  <script type="module" src="./src/main.js?v=220"></script>
+  <script type="module" src="./src/main.js?v=221"></script>
 </body>
 </html>

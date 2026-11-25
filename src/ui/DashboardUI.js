@@ -589,6 +589,19 @@ export class DashboardUI {
   }
 
   updateSkillProgress(ratios, cdDetails = []) {
+    const inTownNow = !!document.getElementById('btn-town-toggle')?.classList?.contains('in-town');
+    if (inTownNow) {
+      for (let i = 0; i < 3; i++) {
+        const slot = document.getElementById(`skill-slot-${i}`);
+        if (!slot) continue;
+        const cur = slot.querySelector('.mmo-cd-curtain');
+        const sec = slot.querySelector('.mmo-cd-sec');
+        if (cur) cur.style.height = '0%';
+        if (sec) sec.textContent = '';
+        slot.classList.remove('on-cd');
+      }
+      return;
+    }
     for (let i = 0; i < 3; i++) {
       const btn = document.getElementById(`skill-slot-${i}`);
       if (!btn) continue;

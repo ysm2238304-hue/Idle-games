@@ -75,7 +75,7 @@ function ensureCss() {
   const link = document.createElement('link');
   link.id = 'hud-overhaul-v217-css';
   link.rel = 'stylesheet';
-  link.href = './src/ui/hudOverhaul.css?v=220';
+  link.href = './src/ui/hudOverhaul.css?v=221';
   document.head.appendChild(link);
 }
 
@@ -210,13 +210,19 @@ function mountQuestPanel() {
     const bp = st.bountyProgress || { bossKills: 0, claimed: {} };
     const quests = QUESTS_BY_CH[ch] || QUESTS_BY_CH[1];
 
-    body.innerHTML = quests.map((q) => {
+    const activeQuests = quests.filter((q) => !bp.claimed?.[q.id]);
+    panel.classList.toggle('is-all-done', activeQuests.length === 0);
+    if (activeQuests.length === 0) {
+      body.innerHTML = '';
+      return;
+    }
+
+    body.innerHTML = activeQuests.map((q) => {
       const cur = q.type === 'boss' ? (bp.bossKills || 0) : (st.kills || 0);
       const pct = Math.min(100, Math.round((cur / q.req) * 100));
-      const done = !!bp.claimed?.[q.id];
-      const ready = !done && cur >= q.req;
+      const ready = cur >= q.req;
       return `
-        <div class="hqp-item ${ready ? 'is-ready' : ''} ${done ? 'is-done' : ''}">
+        <div class="hqp-item ${ready ? 'is-ready' : ''}">
           <div class="hqp-item-top">
             <span class="hqp-item-name"><span class="hqp-tag ${q.cls}">${q.tag}</span>${q.title}</span>
             <span class="hqp-item-prog-txt">${Math.min(cur, q.req)} / ${q.req}</span>
@@ -224,11 +230,9 @@ function mountQuestPanel() {
           <div class="hqp-bar-track"><div class="hqp-bar-fill" style="width:${pct}%"></div></div>
           <div class="hqp-item-bot">
             <span class="hqp-reward">獎勵：${q.reward}</span>
-            ${done
-              ? '<span class="hqp-done-lbl">✓ 已完成</span>'
-              : (ready
-                ? `<button type="button" class="hqp-claim-btn" data-qid="${q.id}" data-gold="${q.gold}" data-rtype="${q.rType}" data-stage="${(ch - 1) * 10 + 1}">領取獎勵</button>`
-                : '<span style="font-size:10.5px;color:#64748b;">進行中</span>')}
+            ${ready
+              ? `<button type="button" class="hqp-claim-btn" data-qid="${q.id}" data-gold="${q.gold}" data-rtype="${q.rType}" data-stage="${(ch - 1) * 10 + 1}">領取獎勵</button>`
+              : '<span style="font-size:10.5px;color:#64748b;">進行中</span>'}
           </div>
         </div>
       `;
@@ -451,10 +455,98 @@ export function initHudOverhaulV217() {
     mountBottomRightDock();
     mountQuestPanel();
     mountMultiChannelChat();
+    mountAltarBuffBar();
+    mountResponsiveDockGuard();
   };
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', run, { once: true });
   } else {
     run();
   }
+}
+
+
+const BUFF_CATALOG = [
+  { key: 'beaconUntil',  icon: '🔥', name: '曙光祝福',   tip: '曙光烽火台：攻擊+15% / 防禦+15% / 掉寶+15%',         col: '#f59e0b' },
+  { key: 'sporeUntil',   icon: '🍄', name: '孢子狂熱',   tip: '螢光孢子噴泉：攻速+20% / 爆擊+15% / 金幣+20%',       col: '#a855f7' },
+  { key: 'soulUntil',    icon: '🕯️', name: '魂火祝福',   tip: '靈魂永恆火盆：攻擊+18% / 爆傷+25% / 掉寶+15%',       col: '#38bdf8' },
+  { key: 'lavaUntil',    icon: '🌋', name: '熔爐狂怒',   tip: '雙頭巨龍熔岩噴泉：攻擊+25% / 爆傷+20% / 技能傷+20%', col: '#f97316' },
+  { key: 'abyssUntil',   icon: '🩸', name: '魔王血契',   tip: '深淵召喚巨陣：攻擊+30% / 爆傷+20% / 掉寶+25%',       col: '#e879f9' },
+  { key: 'auroraUntil',  icon: '❄️', name: '極光祝福',   tip: '永凍極光水晶塔：防禦+25% / 攻速+25% / 減傷+10%',     col: '#22d3ee' },
+  { key: 'emeraldUntil', icon: '🌿', name: '翠玉生機',   tip: '翡翠毒液瀑布池：攻擊+25% / 攻速+25% / 掉寶+30%',     col: '#4ade80' },
+  { key: 'stormUntil',   icon: '⚡', name: '蒼穹雷霆',   tip: '聚雷磁能核心球：攻速+30% / 技能傷+25% / 爆擊+20%',   col: '#facc15' },
+  { key: 'roseUntil',    icon: '🌹', name: '聖血薔薇',   tip: '垂淚聖母血泉：攻擊+35% / 爆傷+25% / 吸血+5%',        col: '#f43f5e' },
+  { key: 'astralUntil',  icon: '🌌', name: '永恆星辰',   tip: '旋轉黑洞星象儀：攻擊+45% / 爆傷+35% / 攻速+30% / 掉寶+40%', col: '#c084fc' },
+  { key: 'expUntil',     icon: '🟡', name: '經驗藥水',   tip: '經驗值 +50%',                                         col: '#facc15' },
+  { key: 'furyUntil',    icon: '🟣', name: '狂暴藥水',   tip: '攻速 +25% / 爆擊 +10%',                               col: '#c084fc' },
+  { key: 'mfUntil',      icon: '🟢', name: '尋寶藥水',   tip: '掉寶率 +40% / 金幣 +30%',                             col: '#4ade80' },
+  { key: 'titanUntil',   icon: '💪', name: '泰坦秘藥',   tip: '攻擊力大幅提升',                                       col: '#fb923c' },
+  { key: 'ironUntil',    icon: '🛡️', name: '鋼鐵秘藥',   tip: '護甲與減傷大幅提升',                                   col: '#94a3b8' },
+  { key: 'sageUntil',    icon: '🌟', name: '先知秘藥',   tip: '冷卻縮減 +18% / 掉寶 +50%',                           col: '#fde047' },
+  { key: 'tavernUntil',  icon: '🍖', name: '酒館飽足',   tip: '冒險者大餐全屬性增益',                                 col: '#fbbf24' },
+  { key: 'guardUntil',   icon: '🏰', name: '衛兵激勵',   tip: '主城守衛祝福增益',                                     col: '#60a5fa' },
+];
+
+function fmtCountdown(sec) {
+  if (sec >= 60) {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}:${String(s).padStart(2, '0')}`;
+  }
+  return `${sec}s`;
+}
+
+function mountAltarBuffBar() {
+  const renderBuffs = () => {
+    const bar = document.getElementById('hud-altar-buffs');
+    const st = window.__IDLE_ARPG_BRIDGE__?.getState?.();
+    if (!bar || !st) return;
+    const buffs = st.potionBuffs || {};
+    const nowTs = Date.now();
+    const active = [];
+    for (const def of BUFF_CATALOG) {
+      const until = buffs[def.key] || 0;
+      if (until > nowTs) {
+        const rem = Math.max(1, Math.ceil((until - nowTs) / 1000));
+        active.push(`
+          <div class="altar-buff-tile" style="--buff-col:${def.col}" title="${def.name}（剩餘 ${fmtCountdown(rem)}）
+${def.tip}">
+            <span class="altar-buff-ico">${def.icon}</span>
+            <span class="altar-buff-sec">${fmtCountdown(rem)}</span>
+          </div>
+        `);
+      }
+    }
+    bar.innerHTML = active.join('');
+    bar.classList.toggle('is-empty', active.length === 0);
+
+    // 同步隱藏左上舊文字 BUFF 條，統一集中於底部祭壇 BUFF 圖示列
+    const oldWrap = document.getElementById('hud-potion-buffs');
+    if (oldWrap) oldWrap.style.display = 'none';
+  };
+  renderBuffs();
+  setInterval(renderBuffs, 500);
+}
+
+function mountResponsiveDockGuard() {
+  const checkOverlap = () => {
+    const altar = document.getElementById('diablo-hud');
+    const dock = document.querySelector('#hud-bottom-right-dock .v80-matrix-dock');
+    if (!altar || !dock) return;
+    dock.classList.remove('is-compact-2row', 'is-ultra-compact');
+    if (dock.classList.contains('is-dock-collapsed')) return;
+
+    const aRect = altar.getBoundingClientRect();
+    const dRect = dock.getBoundingClientRect();
+    if (dRect.left < aRect.right + 16) {
+      dock.classList.add('is-compact-2row');
+      const dRect2 = dock.getBoundingClientRect();
+      if (dRect2.left < aRect.right + 12) {
+        dock.classList.add('is-ultra-compact');
+      }
+    }
+  };
+  window.addEventListener('resize', checkOverlap);
+  setTimeout(checkOverlap, 300);
+  setInterval(checkOverlap, 1500);
 }

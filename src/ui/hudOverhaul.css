@@ -539,3 +539,264 @@
 .chat-badge.world { background: rgba(245, 158, 11, 0.24); color: #fde047; }
 .chat-badge.party { background: rgba(59, 130, 246, 0.25); color: #93c5fd; }
 .chat-badge.whisper { background: rgba(236, 72, 153, 0.25); color: #f9a8d4; }
+
+
+/* ===== 6. v221：任務欄全完成自動隱藏 ===== */
+.hud-quest-panel.is-all-done {
+  display: none !important;
+}
+
+/* ===== 7. v221：右下功能列自動防重疊（換任何螢幕解析度皆不撞底部技能列） ===== */
+#hud-bottom-right-dock .v80-matrix-dock.is-compact-2row .matrix-rows {
+  flex-direction: column !important;
+  align-items: flex-end !important;
+  gap: 5px !important;
+}
+#hud-bottom-right-dock .v80-matrix-dock.is-compact-2row .matrix-row + .matrix-row {
+  padding-left: 0 !important;
+  margin-left: 0 !important;
+  border-left: none !important;
+  padding-top: 4px !important;
+  border-top: 1px solid rgba(200, 155, 60, 0.28) !important;
+}
+#hud-bottom-right-dock .v80-matrix-dock.is-ultra-compact .mmo-micro-btn {
+  width: 34px !important;
+  height: 34px !important;
+  min-width: 34px !important;
+  min-height: 34px !important;
+}
+#hud-bottom-right-dock .v80-matrix-dock.is-ultra-compact .mmo-micro-btn .mmo-ui-img {
+  width: 24px !important;
+  height: 24px !important;
+}
+
+/* ===== 8. v221：重做底部主介面（左單顆紅藍合球 + 去方框精雕框架 + 內建 BUFF 圖示列） ===== */
+#diablo-hud.floating-altar.v221-sculpted-altar {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: flex-end !important;
+  gap: 0 !important;
+  bottom: 12px !important;
+  pointer-events: none;
+}
+
+#diablo-hud.v221-sculpted-altar > * {
+  pointer-events: auto;
+}
+
+/* 左側紅藍合一雙色靈球 */
+.dual-orb-shell {
+  position: relative;
+  width: 118px;
+  height: 118px;
+  flex-shrink: 0;
+  z-index: 4;
+  margin-right: -18px;
+  filter: drop-shadow(0 10px 22px rgba(0, 0, 0, 0.85));
+}
+
+.dual-orb-crest {
+  position: absolute;
+  inset: -6px;
+  width: 130px;
+  height: 130px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.dual-orb-sphere {
+  position: relative;
+  width: 118px;
+  height: 118px;
+  border-radius: 50%;
+  overflow: hidden;
+  display: flex;
+  background: radial-gradient(circle at 50% 42%, #1d1524 0%, #09070d 78%);
+  box-shadow: inset 0 0 22px rgba(0, 0, 0, 0.92), 0 0 18px rgba(200, 155, 60, 0.32);
+}
+
+.dual-half {
+  position: relative;
+  width: 50%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.dual-half .orb-liquid {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  height: 100%;
+  transition: height 0.25s ease;
+}
+
+.dual-half-hp .orb-hp-liquid {
+  background: linear-gradient(180deg, #ff4d5a 0%, #dc2626 42%, #7f1d1d 100%) !important;
+  box-shadow: inset 4px 0 14px rgba(255, 180, 180, 0.35);
+}
+
+.dual-half-mp .orb-mp-liquid {
+  background: linear-gradient(180deg, #38bdf8 0%, #2563eb 42%, #1e1b4b 100%) !important;
+  box-shadow: inset -4px 0 14px rgba(186, 230, 253, 0.35);
+}
+
+.dual-half-mp.orb-warrior .orb-mp-liquid {
+  background: linear-gradient(180deg, #fb923c 0%, #ea580c 48%, #7c2d12 100%) !important;
+}
+.dual-half-mp.orb-ranger .orb-mp-liquid {
+  background: linear-gradient(180deg, #4ade80 0%, #16a34a 48%, #14532d 100%) !important;
+}
+.dual-half-mp.orb-paladin .orb-mp-liquid {
+  background: linear-gradient(180deg, #fde047 0%, #ca8a04 48%, #713f12 100%) !important;
+}
+.dual-half-mp.orb-necro .orb-mp-liquid {
+  background: linear-gradient(180deg, #2dd4bf 0%, #0d9488 48%, #134e4a 100%) !important;
+}
+.dual-half-mp.orb-assassin .orb-mp-liquid {
+  background: linear-gradient(180deg, #c084fc 0%, #7e22ce 48%, #3b0764 100%) !important;
+}
+
+.dual-meridian {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background: linear-gradient(180deg, rgba(254, 240, 138, 0.9), rgba(200, 155, 60, 0.85), rgba(120, 82, 24, 0.9));
+  box-shadow: 0 0 8px rgba(250, 204, 21, 0.65);
+  z-index: 3;
+}
+
+.dual-orb-gloss {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background:
+    radial-gradient(ellipse 56% 32% at 34% 20%, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0) 70%),
+    radial-gradient(circle at 50% 50%, transparent 62%, rgba(0, 0, 0, 0.58) 100%);
+  pointer-events: none;
+  z-index: 4;
+}
+
+.dual-orb-readout {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  z-index: 5;
+  pointer-events: none;
+  padding: 0 4px;
+}
+
+.dual-read-hp,
+.dual-read-mp {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-shadow: 0 1px 4px #000, 0 0 6px rgba(0, 0, 0, 0.95);
+  line-height: 1.15;
+}
+
+.dual-read-hp span,
+.dual-read-mp span {
+  font-size: 10.5px;
+  font-weight: 900;
+  color: #ffffff;
+  letter-spacing: -0.2px;
+}
+
+.dual-read-hp small { font-size: 9px; font-weight: 800; color: #fecaca; }
+.dual-read-mp small { font-size: 9px; font-weight: 800; color: #bae6fd; }
+
+/* 右側精雕技能與 BUFF 翼列（無呆板方塊底色） */
+.v221-wing-core {
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-start !important;
+  gap: 5px !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+/* 內建即時 BUFF 圖示列 */
+.hud-altar-buffs {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding-left: 26px;
+  min-height: 0;
+}
+
+.hud-altar-buffs.is-empty {
+  display: none;
+}
+
+.altar-buff-tile {
+  position: relative;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: radial-gradient(circle at 50% 35%, rgba(36, 28, 44, 0.94), rgba(12, 9, 18, 0.96));
+  border: 1.5px solid var(--buff-col, #f59e0b);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.72), 0 0 10px color-mix(in srgb, var(--buff-col, #f59e0b) 35%, transparent);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: help;
+}
+
+.altar-buff-ico {
+  font-size: 15px;
+  line-height: 1;
+  margin-bottom: 1px;
+}
+
+.altar-buff-sec {
+  font-size: 9px;
+  font-weight: 900;
+  color: #fef08a;
+  line-height: 1;
+  text-shadow: 0 1px 2px #000;
+}
+
+/* 雕刻金屬底座（左右斜切哥德風格，取代死板黑方塊） */
+.v221-rail-frame {
+  position: relative;
+  padding: 9px 18px 9px 28px;
+  background: linear-gradient(180deg, rgba(22, 16, 28, 0.86) 0%, rgba(10, 8, 14, 0.92) 100%);
+  border-top: 2px solid #c89b3c;
+  border-bottom: 2px solid #785622;
+  border-right: 1.5px solid rgba(200, 155, 60, 0.65);
+  border-radius: 0 16px 16px 0;
+  clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.78), inset 0 1px 0 rgba(254, 240, 138, 0.25);
+  backdrop-filter: blur(8px);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.v221-rail-frame .mmo-hotbar {
+  gap: 8px !important;
+}
+
+.v221-rail-frame .mmo-status-strip {
+  gap: 6px !important;
+}
+
+.v221-rail-frame .diablo-exp-bar {
+  height: 15px !important;
+  border-radius: 999px !important;
+}

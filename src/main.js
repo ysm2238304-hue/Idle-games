@@ -7,7 +7,7 @@ import { PALADIN_SKILLS } from './data/paladinSkills.js?v=99';
 import { NECRO_SKILLS } from './data/necroSkills.js?v=99';
 import { ASSASSIN_SKILLS } from './data/assassinSkills.js?v=99';
 import { RARITIES } from './data/items.js?v=99';
-import { PET_CATALOG, rollPetDrop } from './data/pets.js?v=99';
+import { PET_CATALOG, rollPetDrop, getPetDef } from './data/pets.js?v=99';
 import { SKILL_TREE_NODES, isNodeUnlocked } from './data/skillTree.js?v=99';
 import { generateLoot, calcItemPower, getSalvageReward, rerollItemAffixes, generateBlackMarketItem } from './logic/lootGen.js?v=99';
 import { recalcPlayerStats, getExpToNext, getUpgradeCost, calcRebirthCrystals, formatNum } from './logic/statCalc.js?v=99';
@@ -22,8 +22,8 @@ import {
 } from './auth/firebase.js?v=218';
 import { BattleScene } from './scenes/BattleScene.js?v=217';
 import { TownScene } from './scenes/TownScene.js?v=217';
-import { TOWN_SPLASHES } from './data/towns/splashes.js?v=220';
-import { DashboardUI } from './ui/DashboardUI.js?v=219';
+import { TOWN_SPLASHES } from './data/towns/splashes.js?v=221';
+import { DashboardUI } from './ui/DashboardUI.js?v=221';
 import { TownBgmEngine } from './audio/TownBgmEngine.js?v=99';
 import { BattleSfxEngine } from './audio/BattleSfxEngine.js?v=99';
 import { HudSettingsManager } from './ui/HudSettingsManager.js?v=99';
@@ -486,6 +486,136 @@ const ui = new DashboardUI({
     persistAll(true);
   },
 
+  onEquipPet: (petId) => {
+    const cid = gameState.classId || 'warrior';
+    if (!gameState.petByClass) gameState.petByClass = {};
+    if (!petId) {
+      gameState.equippedPetId = null;
+      gameState.petByClass[cid] = null;
+      ui.addLog('🐾 已卸下目前出戰寵物。', 'system');
+    } else {
+      const owned = (gameState.pets || []).some((p) => p.petId === petId);
+      if (!owned) {
+        ui.addLog('⚠️ 尚未持有此寵物，無法出戰。', 'warn');
+        return;
+      }
+      gameState.equippedPetId = petId;
+      gameState.petByClass[cid] = petId;
+      const def = getPetDef(petId);
+      ui.addLog(`🐾 已派遣【${def?.name || petId}】出戰！`, 'victory');
+    }
+    refreshStatsAndUI();
+    persistAll(true);
+  },
+
+  onSummonPet: () => {
+    const cost = 30;
+    if ((gameState.petEssence || 0) < cost) {
+      ui.addLog(`⚠️ 寵物精華不足（需要 ${cost} 精華）。`, 'warn');
+      return;
+    }
+    gameState.petEssence -= cost;
+    const r = Math.random() * 100;
+    const rarity = r < 2.5 ? 'set' : (r < 10 ? 'legendary' : (r < 28 ? 'rare' : (r < 62 ? 'magic' : 'common')));
+    const pool = PET_CATALOG.filter((p) => p.rarity === rarity);
+    const tpl = pool[Math.floor(Math.random() * pool.length)] || PET_CATALOG[0];
+    const newPet = {
+      uid: `pet_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      petId: tpl.id,
+      name: tpl.name,
+      rarity: tpl.rarity,
+      school: tpl.school,
+      emoji: tpl.emoji,
+      upgradeLevel: 0,
+      obtainedAt: Date.now(),
+    };
+    if (!gameState.pets) gameState.pets = [];
+    gameState.pets.unshift(newPet);
+    if (!gameState.unlockedPets) gameState.unlockedPets = [];
+    if (!gameState.unlockedPets.includes(tpl.id)) gameState.unlockedPets.push(tpl.id);
+    if (!gameState.equippedPetId) gameState.equippedPetId = tpl.id;
+    ui.addLog(`✨ 召喚成功！獲得 [${RARITIES[tpl.rarity]?.label || '普通'}] ${tpl.name}！`, 'loot');
+    refreshStatsAndUI();
+    persistAll(true);
+  },
+
+  onEnhancePet: (uid, useProtect = false) => {
+    const pet = (gameState.pets || []).find((p) => p.uid === uid);
+    if (!pet) return;
+    const lv = pet.upgradeLevel || 0;
+    if (lv >= MAX_ENHANCE_LEVEL) {
+      ui.addLog('🐾 此寵物已達強化上限 +10！', 'system');
+      return;
+    }
+    const { gold, essence } = getPetEnhanceCost(pet);
+    if ((gameState.gold || 0) < gold || (gameState.petEssence || 0) < essence) {
+      ui.addLog(`⚠️ 強化材料不足（需要 ${gold.toLocaleString()} 金幣、${essence} 精華）。`, 'warn');
+      return;
+    }
+    let protectedUsed = false;
+    if (useProtect && lv >= 6 && (gameState.protectStones || 0) > 0) {
+      gameState.protectStones -= 1;
+      protectedUsed = true;
+    }
+    gameState.gold -= gold;
+    gameState.petEssence -= essence;
+    const res = rollEnhance(lv, protectedUsed);
+    pet.upgradeLevel = res.nextLevel;
+    if (res.success) {
+      ui.addLog(`⚒️ 寵物強化成功！【${pet.name}】升至 +${pet.upgradeLevel}！`, 'victory');
+    } else if (res.downgraded) {
+      ui.addLog(`💥 寵物強化失敗，【${pet.name}】降至 +${pet.upgradeLevel}。`, 'warn');
+    } else {
+      ui.addLog(`🛡️ 寵物強化失敗，【${pet.name}】維持 +${pet.upgradeLevel}。`, 'system');
+    }
+    refreshStatsAndUI();
+    persistAll(true);
+  },
+
+  onSalvagePet: (uid) => {
+    const idx = (gameState.pets || []).findIndex((p) => p.uid === uid);
+    if (idx === -1) return;
+    const pet = gameState.pets[idx];
+    const essMap = { common: 4, magic: 8, rare: 15, legendary: 30, set: 60 };
+    const gain = (essMap[pet.rarity] || 4) + (pet.upgradeLevel || 0) * 5;
+    gameState.pets.splice(idx, 1);
+    if (gameState.equippedPetId === pet.petId && !gameState.pets.some((p) => p.petId === pet.petId)) {
+      gameState.equippedPetId = null;
+      if (gameState.petByClass) gameState.petByClass[gameState.classId || 'warrior'] = null;
+    }
+    gameState.petEssence = (gameState.petEssence || 0) + gain;
+    ui.addLog(`✨ 分解寵物【${pet.name}】，獲得 +${gain} 寵物精華。`, 'loot');
+    refreshStatsAndUI();
+    persistAll(true);
+  },
+
+  onSalvageDupPets: () => {
+    const pets = gameState.pets || [];
+    const bestById = new Map();
+    pets.forEach((p) => {
+      const cur = bestById.get(p.petId);
+      if (!cur || (p.upgradeLevel || 0) > (cur.upgradeLevel || 0)) bestById.set(p.petId, p);
+    });
+    const keepUids = new Set(Array.from(bestById.values()).map((p) => p.uid));
+    const essMap = { common: 4, magic: 8, rare: 15, legendary: 30, set: 60 };
+    let count = 0;
+    let totalGain = 0;
+    gameState.pets = pets.filter((p) => {
+      if (keepUids.has(p.uid)) return true;
+      count += 1;
+      totalGain += (essMap[p.rarity] || 4) + (p.upgradeLevel || 0) * 5;
+      return false;
+    });
+    if (count === 0) {
+      ui.addLog('🐾 目前沒有重複的寵物可分解。', 'system');
+      return;
+    }
+    gameState.petEssence = (gameState.petEssence || 0) + totalGain;
+    ui.addLog(`🧹 一鍵分解 ${count} 隻重複寵物，獲得 +${totalGain} 寵物精華！`, 'loot');
+    refreshStatsAndUI();
+    persistAll(true);
+  },
+
   onChangeStage: (delta) => {
     const target = Math.max(1, Math.min(100, gameState.stage + delta));
     if (target === gameState.stage) return;
@@ -841,17 +971,33 @@ function enterTown(chapterIdx = 0, instant = false) {
       ui.updateTargetFrameTown?.(data.townTarget || null);
     },
     onTownAction: (action, data) => {
+      const showTownBlessFx = (txt, tint = 0xfde047) => {
+        try {
+          const ts = townScene;
+          if (!ts || !ts.hero) return;
+          const ring = ts.add.image(ts.hero.x, ts.hero.y, 'fx_glow')
+            .setTint(tint).setScale(0.5).setAlpha(0.95).setBlendMode(Phaser.BlendModes.ADD).setDepth(4900);
+          ts.tweens.add({ targets: ring, scale: 3.0, alpha: 0, duration: 750, onComplete: () => ring.destroy() });
+          const ft = ts.add.text(ts.hero.x, ts.hero.y - 96, txt, {
+            fontSize: '18px', fontFamily: 'Noto Sans TC, sans-serif', fontStyle: 'bold',
+            color: '#fef08a', stroke: '#000', strokeThickness: 5,
+          }).setOrigin(0.5).setDepth(4950);
+          ts.tweens.add({ targets: ft, y: ft.y - 46, alpha: 0, duration: 1500, ease: 'Cubic.easeOut', onComplete: () => ft.destroy() });
+        } catch { /* ignore */ }
+      };
       if (action === 'open_waypoint') openTownWaypointUI();
       else if (action === 'exit_battle') exitTownToBattle();
       else if (action === 'gimmick_beacon') {
         if (!gameState.potionBuffs) gameState.potionBuffs = {};
         gameState.potionBuffs.beaconUntil = Date.now() + 300000;
+        showTownBlessFx('🔥 曙光祝福 5:00', 0xf59e0b);
         ui.addLog('🔥 點燃曙光烽火台！獲得 5 分鐘「曙光祝福」（攻擊/防禦/掉寶 +15%）！', 'victory');
         refreshStatsAndUI();
         persistAll();
       } else if (action === 'gimmick_spore_fountain') {
         if (!gameState.potionBuffs) gameState.potionBuffs = {};
         gameState.potionBuffs.sporeUntil = Date.now() + 300000;
+        showTownBlessFx('🍄 孢子狂熱 5:00', 0xa855f7);
         ui.addLog('🍄 觸發螢光孢子噴泉！獲得 5 分鐘「孢子狂熱」（攻速+20% / 爆擊+15% / 金幣+20%）！', 'victory');
         refreshStatsAndUI();
         persistAll();
@@ -862,6 +1008,7 @@ function enterTown(chapterIdx = 0, instant = false) {
       } else if (action === 'gimmick_soul_brazier') {
         if (!gameState.potionBuffs) gameState.potionBuffs = {};
         gameState.potionBuffs.soulUntil = Date.now() + 300000;
+        showTownBlessFx('🕯️ 魂火祝福 5:00', 0x38bdf8);
         ui.addLog('🕯️ 點燃靈魂永恆火盆！獲得 5 分鐘「魂火祝福」（攻擊+18% / 爆傷+25% / 掉寶+15%）！', 'victory');
         refreshStatsAndUI();
         persistAll();
@@ -873,6 +1020,7 @@ function enterTown(chapterIdx = 0, instant = false) {
       } else if (action === 'gimmick_lava_fountain') {
         if (!gameState.potionBuffs) gameState.potionBuffs = {};
         gameState.potionBuffs.lavaUntil = Date.now() + 300000;
+        showTownBlessFx('🌋 熔爐狂怒 5:00', 0xf97316);
         ui.addLog('🌋 觸發雙頭巨龍熔岩噴泉！獲得 5 分鐘「熔爐狂怒」（攻擊+25% / 爆傷+20% / 技能傷+20%）！', 'victory');
         refreshStatsAndUI();
         persistAll();
@@ -884,6 +1032,7 @@ function enterTown(chapterIdx = 0, instant = false) {
       } else if (action === 'gimmick_abyss_sigil') {
         if (!gameState.potionBuffs) gameState.potionBuffs = {};
         gameState.potionBuffs.abyssUntil = Date.now() + 300000;
+        showTownBlessFx('🩸 魔王血契 5:00', 0xe879f9);
         ui.addLog('🩸 啟動深淵召喚巨陣！獲得 5 分鐘「魔王血契」（攻擊+30% / 爆傷+20% / 掉寶+25%）！', 'victory');
         refreshStatsAndUI();
         persistAll();
@@ -895,6 +1044,7 @@ function enterTown(chapterIdx = 0, instant = false) {
       } else if (action === 'gimmick_aurora_spire') {
         if (!gameState.potionBuffs) gameState.potionBuffs = {};
         gameState.potionBuffs.auroraUntil = Date.now() + 300000;
+        showTownBlessFx('❄️ 極光祝福 5:00', 0x22d3ee);
         ui.addLog('❄️ 共鳴永凍極光水晶塔！獲得 5 分鐘「極光祝福」（防禦+25% / 攻速+25% / 減傷+10%）！', 'victory');
         refreshStatsAndUI();
         persistAll();
@@ -906,6 +1056,7 @@ function enterTown(chapterIdx = 0, instant = false) {
       } else if (action === 'gimmick_emerald_waterfall') {
         if (!gameState.potionBuffs) gameState.potionBuffs = {};
         gameState.potionBuffs.emeraldUntil = Date.now() + 300000;
+        showTownBlessFx('🌿 翠玉生機 5:00', 0x4ade80);
         ui.addLog('🌿 共鳴翡翠毒液瀑布池！獲得 5 分鐘「翠玉生機」（攻擊+25% / 攻速+25% / 掉寶+30%）！', 'victory');
         refreshStatsAndUI();
         persistAll();
@@ -917,6 +1068,7 @@ function enterTown(chapterIdx = 0, instant = false) {
       } else if (action === 'gimmick_storm_core') {
         if (!gameState.potionBuffs) gameState.potionBuffs = {};
         gameState.potionBuffs.stormUntil = Date.now() + 300000;
+        showTownBlessFx('⚡ 蒼穹雷霆 5:00', 0xfacc15);
         ui.addLog('⚡ 共鳴聚雷磁能核心球！獲得 5 分鐘「蒼穹雷霆」（攻速+30% / 技能傷+25% / 爆擊+20%）！', 'victory');
         refreshStatsAndUI();
         persistAll();
@@ -928,6 +1080,7 @@ function enterTown(chapterIdx = 0, instant = false) {
       } else if (action === 'gimmick_blood_fountain') {
         if (!gameState.potionBuffs) gameState.potionBuffs = {};
         gameState.potionBuffs.roseUntil = Date.now() + 300000;
+        showTownBlessFx('🌹 聖血薔薇 5:00', 0xf43f5e);
         ui.addLog('🌹 沐浴垂淚聖母血泉！獲得 5 分鐘「聖血薔薇」（攻擊+35% / 爆傷+25% / 吸血+5%）！', 'victory');
         refreshStatsAndUI();
         persistAll();
@@ -939,6 +1092,7 @@ function enterTown(chapterIdx = 0, instant = false) {
       } else if (action === 'gimmick_astral_orrery') {
         if (!gameState.potionBuffs) gameState.potionBuffs = {};
         gameState.potionBuffs.astralUntil = Date.now() + 300000;
+        showTownBlessFx('🌌 永恆星辰 5:00', 0xc084fc);
         ui.addLog('🌌 校準旋轉黑洞星象儀！獲得 5 分鐘「永恆星辰」（攻擊+45% / 爆傷+35% / 攻速+30% / 掉寶+40%）！', 'victory');
         refreshStatsAndUI();
         persistAll();
@@ -1490,6 +1644,7 @@ function enterTown(chapterIdx = 0, instant = false) {
     btn.textContent = '⚔️ 出城戰鬥 (G)';
     btn.classList.add('in-town');
   }
+  ui.updateSkillProgress([0, 0, 0], [0, 0, 0]);
   const wpBtn = document.getElementById('btn-top-waypoint');
     if (wpBtn) { wpBtn.classList.add('in-town'); wpBtn.classList.remove('is-disabled'); }
     const townNames = ["曙光哨站堡壘", "地下菌菇黑市", "守夜人聖骨禮拜堂", "黑曜石熔爐要塞", "緋紅魔獄王庭", "極光冰晶堡", "翠玉樹冠水寨", "蒼穹電弧浮空城", "聖血薔薇修道院", "永恆星辰聖域"];

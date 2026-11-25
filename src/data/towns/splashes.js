@@ -116,14 +116,14 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   queueMicrotask(async () => {
     try {
       const [{ DashboardUI }, { renderTownFacilityModal }, monsters, { initLobbyClassClarity }, { initWelcomeAuthUI }, { initBagSalvageFix }, { initBattleStuckGuard }, { initHudOverhaulV217 }] = await Promise.all([
-        import('../../ui/DashboardUI.js?v=219'),
+        import('../../ui/DashboardUI.js?v=221'),
         import('../../ui/NpcModalRenderer.js?v=204'),
         import('../monsters.js?v=99'),
         import('../../ui/LobbyClassClarity.js?v=213'),
         import('../../ui/WelcomeAuthUI.js?v=218'),
         import('../../ui/BagFixEnhancer.js?v=213'),
         import('../../ui/BattleStuckGuard.js?v=214'),
-        import('../../ui/HudOverhaulV217.js?v=220'),
+        import('../../ui/HudOverhaulV217.js?v=221'),
       ]);
       initLobbyClassClarity();
       initWelcomeAuthUI();
