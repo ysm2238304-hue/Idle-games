@@ -21,12 +21,12 @@ import {
   saveCloudData,
 } from './auth/firebase.js?v=218';
 import { BattleScene } from './scenes/BattleScene.js?v=217';
-import { TownScene } from './scenes/TownScene.js?v=217';
-import { TOWN_SPLASHES } from './data/towns/splashes.js?v=224';
+import { TownScene } from './scenes/TownScene.js?v=227';
+import { TOWN_SPLASHES } from './data/towns/splashes.js?v=227';
 import { DashboardUI } from './ui/DashboardUI.js?v=221';
 import { TownBgmEngine } from './audio/TownBgmEngine.js?v=99';
 import { BattleSfxEngine } from './audio/BattleSfxEngine.js?v=99';
-import { HudSettingsManager } from './ui/HudSettingsManager.js?v=224';
+import { HudSettingsManager } from './ui/HudSettingsManager.js?v=227';
 import { ShopModal } from './ui/ShopModal.js?v=99';
 import { AchievementTowerModal } from './ui/AchievementTowerModal.js?v=99';
 import { ACHIEVEMENTS } from './data/achievements.js?v=99';
@@ -744,12 +744,74 @@ function initPhaserGame() {
       if (isInTown) { isInTown = false; }
       enterTown(Math.max(0, Math.min(9, chIdx)), true);
     },
+    acceptQuest: (q) => {
+      if (!q || !q.id) return false;
+      if (!Array.isArray(gameState.acceptedQuests)) gameState.acceptedQuests = [];
+      if (!gameState.acceptedQuestDefs) gameState.acceptedQuestDefs = {};
+      if (!gameState.acceptedQuests.includes(q.id)) {
+        gameState.acceptedQuests.push(q.id);
+      }
+      const progType = q.id.includes('_q2') || q.id.includes('boss_pro') ? 'boss'
+        : (q.id.startsWith('grow_lv') ? 'level'
+        : (q.id.startsWith('grow_st') ? 'stage'
+        : (q.id.startsWith('daily_bless') ? 'bless'
+        : (q.id.startsWith('daily_kill') ? 'daily_kill'
+        : (q.id.startsWith('daily_boss') ? 'daily_boss' : 'kills')))));
+      gameState.acceptedQuestDefs[q.id] = {
+        id: q.id, catLabel: q.catLabel, tag: q.tag, cls: q.cls, title: q.title,
+        req: q.req, progType, rewardTags: q.rewardTags, rewards: q.rewards,
+      };
+      ui.addLog(`📜 已接取任務「${q.title}」，開始追蹤進度。`, 'system');
+      persistAll(true);
+      return true;
+    },
+    abandonQuest: (qid) => {
+      if (!qid || !Array.isArray(gameState.acceptedQuests)) return false;
+      const before = gameState.acceptedQuests.length;
+      gameState.acceptedQuests = gameState.acceptedQuests.filter((id) => id !== qid);
+      if (gameState.acceptedQuestDefs) delete gameState.acceptedQuestDefs[qid];
+      if (gameState.acceptedQuests.length !== before) {
+        ui.addLog('🗑️ 已放棄該追蹤任務。', 'system');
+        persistAll(true);
+        return true;
+      }
+      return false;
+    },
+    returnToLobby: () => {
+      persistAll(true);
+      gameStarted = false;
+      townBgm.stop();
+      if (battleScene) battleScene.setPaused(true);
+      if (phaserGame?.scene?.isActive('TownScene')) phaserGame.scene.sleep('TownScene');
+      if (phaserGame?.scene?.isActive('BattleScene')) phaserGame.scene.sleep('BattleScene');
+      gameScreen.classList.add('hidden');
+      welcomeAuthStep.classList.add('hidden');
+      welcomeClassStep.classList.remove('hidden');
+      welcomeScreen.classList.remove('hidden');
+      refreshLobbyState?.();
+    },
+    exitGameToAuth: async () => {
+      persistAll(true);
+      townBgm.stop();
+      if (battleScene) battleScene.setPaused(true);
+      if (phaserGame?.scene?.isActive('TownScene')) phaserGame.scene.sleep('TownScene');
+      if (phaserGame?.scene?.isActive('BattleScene')) phaserGame.scene.sleep('BattleScene');
+      try { await signOutGoogle(); } catch { /* ignore */ }
+      gameStarted = false;
+      gameScreen.classList.add('hidden');
+      welcomeClassStep.classList.add('hidden');
+      welcomeAuthStep.classList.remove('hidden');
+      welcomeScreen.classList.remove('hidden');
+    },
     claimCategorizedQuest: (q) => {
       if (!q || !q.id) return false;
       if (!gameState.bountyProgress) gameState.bountyProgress = { bossKills: 0, claimed: {} };
       if (!gameState.bountyProgress.claimed) gameState.bountyProgress.claimed = {};
       if (gameState.bountyProgress.claimed[q.id]) return false;
       gameState.bountyProgress.claimed[q.id] = true;
+      if (Array.isArray(gameState.acceptedQuests)) {
+        gameState.acceptedQuests = gameState.acceptedQuests.filter((id) => id !== q.id);
+      }
 
       const r = q.rewards || {};
       const parts = [];

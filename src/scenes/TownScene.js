@@ -72,6 +72,9 @@ export class TownScene extends Phaser.Scene {
     if (!this.textures.exists(heroAtlas)) {
       this.load.atlas(heroAtlas, `./assets/heroes/atlas_${cid}.png?v=66`, `./assets/heroes/atlas_${cid}.json?v=66`);
     }
+    if (!this.textures.exists('town_waypoint_circle')) {
+      this.load.image('town_waypoint_circle', './assets/ui/town_waypoint_circle.png?v=227');
+    }
     if (!this.textures.exists(td.bgKey)) {
       this.load.image(td.bgKey, td.bgUrl);
     }
@@ -287,26 +290,40 @@ export class TownScene extends Phaser.Scene {
 
     this.cameras.main.startFollow(this.hero, true, 0.14, 0.14);
 
-    // 9.2 主城實體「星門快速傳送陣」魔法陣地標
+    // 9.2 全 10 座主城地面動態「星門傳送魔法陣」（2.5D 透視雙層旋轉法陣 + 章節專屬色）
     const wpX = td.spawn.x + 165;
     const wpY = td.spawn.y - 24;
-    const wpOuter = this.add.image(wpX, wpY, 'fx_glow')
-      .setTint(0x38bdf8).setScale(1.75, 0.72).setAlpha(0.45).setDepth(4);
-    const wpInner = this.add.image(wpX, wpY, 'fx_glow')
-      .setTint(0xe0f2fe).setScale(0.95, 0.42).setAlpha(0.65).setDepth(4);
-    this.tweens.add({ targets: wpOuter, scaleX: 1.95, scaleY: 0.82, alpha: 0.72, duration: 1200, yoyo: true, repeat: -1 });
-    this.tweens.add({ targets: wpInner, angle: 360, duration: 4800, repeat: -1 });
+    const CH_WP_TINTS = [0xfbbf24, 0xa855f7, 0x38bdf8, 0xf97316, 0xe879f9, 0x22d3ee, 0x4ade80, 0xfacc15, 0xf43f5e, 0xc084fc];
+    const chIdxNow = Math.max(0, Math.min(9, td.chapterIdx ?? 0));
+    const wpTint = CH_WP_TINTS[chIdxNow] || 0x38bdf8;
+    const wpTintHex = '#' + wpTint.toString(16).padStart(6, '0');
+
+    const wpAura = this.add.image(wpX, wpY, 'fx_glow')
+      .setTint(wpTint).setScale(2.8, 1.35).setAlpha(0.32).setBlendMode(Phaser.BlendModes.ADD).setDepth(3);
+    this.tweens.add({ targets: wpAura, scaleX: 3.2, scaleY: 1.52, alpha: 0.52, duration: 1500, yoyo: true, repeat: -1 });
+
+    // 2.5D 壓扁容器，讓法陣貼合主城地板透視並平滑旋轉
+    const wpPad = this.add.container(wpX, wpY).setScale(1, 0.54).setDepth(4);
+    const hasCircleTex = this.textures.exists('town_waypoint_circle');
+    const wpOuter = this.add.image(0, 0, hasCircleTex ? 'town_waypoint_circle' : 'fx_glow')
+      .setTint(wpTint).setScale(hasCircleTex ? 0.44 : 1.75).setAlpha(0.92).setBlendMode(Phaser.BlendModes.ADD);
+    const wpInner = this.add.image(0, 0, hasCircleTex ? 'town_waypoint_circle' : 'fx_glow')
+      .setTint(0xf8fafc).setScale(hasCircleTex ? 0.27 : 0.95).setAlpha(0.75).setBlendMode(Phaser.BlendModes.ADD);
+    wpPad.add([wpOuter, wpInner]);
+    this.tweens.add({ targets: wpOuter, angle: 360, duration: 15000, repeat: -1 });
+    this.tweens.add({ targets: wpInner, angle: -360, duration: 9500, repeat: -1 });
+
     this.time.addEvent({
-      delay: 520,
+      delay: 340,
       loop: true,
       callback: () => {
         if (!this.scene.isActive('TownScene')) return;
-        const p = this.add.image(wpX + Phaser.Math.Between(-28, 28), wpY + Phaser.Math.Between(-10, 10), 'fx_glow')
-          .setTint(0x7dd3fc).setScale(0.14).setAlpha(0.8).setDepth(wpY + 2);
-        this.tweens.add({ targets: p, y: p.y - 44, alpha: 0, scale: 0.04, duration: 850, onComplete: () => p.destroy() });
+        const p = this.add.image(wpX + Phaser.Math.Between(-46, 46), wpY + Phaser.Math.Between(-18, 18), 'fx_glow')
+          .setTint(wpTint).setScale(0.16).setAlpha(0.85).setBlendMode(Phaser.BlendModes.ADD).setDepth(wpY + 2);
+        this.tweens.add({ targets: p, y: p.y - 54, alpha: 0, scale: 0.04, duration: 950, onComplete: () => p.destroy() });
       },
     });
-    this.addNameplate(wpX, wpY - 38, '🧭 主城傳送陣', '#38bdf8');
+    this.addNameplate(wpX, wpY - 52, '🧭 主城傳送陣', wpTintHex);
     this.interactables.push({
       id: 'town_waypoint_pad',
       x: wpX,

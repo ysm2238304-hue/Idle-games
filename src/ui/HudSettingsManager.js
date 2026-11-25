@@ -395,7 +395,8 @@ export class HudSettingsManager {
 
     const { master, bgm, muted } = this.settings.audio;
     if (this.townBgm) {
-      this.townBgm.setVolume(master * bgm, muted);
+      const effectiveMuted = !!(muted || this.townBgm.muted);
+      this.townBgm.setVolume(master * bgm, effectiveMuted);
     }
     const bgVid = document.getElementById('welcome-bg-video');
     if (bgVid) bgVid.volume = muted ? 0 : Math.min(1, master * bgm);
@@ -464,6 +465,13 @@ export class HudSettingsManager {
               <button type="button" id="set-btn-reset-ui" class="btn-ghost-sm">↺ 恢復預設</button>
             </div>
           </div>
+          <div class="set-row" style="margin-top:8px;padding-top:10px;border-top:1px solid rgba(200,155,60,0.28);">
+            <div><b>帳號與大廳導覽</b><small>返回選角大廳切換職業，或存檔後登出離開遊戲</small></div>
+            <div class="set-ctrl" style="gap:8px;">
+              <button type="button" id="set-btn-return-lobby" class="btn-gold-sm">🏰 返回選角大廳</button>
+              <button type="button" id="set-btn-exit-game" class="btn-ghost-sm" style="border-color:rgba(248,113,113,0.6)!important;color:#fca5a5!important;">🚪 離開遊戲</button>
+            </div>
+          </div>
         </div>
         <div class="set-section">
           <div class="set-sec-title">各介面框架微調（顯示／獨立縮放）</div>
@@ -489,6 +497,14 @@ export class HudSettingsManager {
       });
       body.querySelector('#set-btn-edit-mode')?.addEventListener('click', () => this.setEditMode(true));
       body.querySelector('#set-btn-reset-ui')?.addEventListener('click', () => this.resetAllPanels());
+      body.querySelector('#set-btn-return-lobby')?.addEventListener('click', () => {
+        this.closeModal();
+        window.__IDLE_ARPG_BRIDGE__?.returnToLobby?.();
+      });
+      body.querySelector('#set-btn-exit-game')?.addEventListener('click', () => {
+        this.closeModal();
+        window.__IDLE_ARPG_BRIDGE__?.exitGameToAuth?.();
+      });
       body.querySelectorAll('[data-panel-vis]').forEach((el) => {
         el.addEventListener('change', (e) => {
           s.ui.panels[e.target.dataset.panelVis].visible = e.target.checked;

@@ -210,7 +210,30 @@ function mountQuestPanel() {
     const bp = st.bountyProgress || { bossKills: 0, claimed: {} };
     const quests = QUESTS_BY_CH[ch] || QUESTS_BY_CH[1];
 
-    const activeQuests = quests.filter((q) => !bp.claimed?.[q.id]);
+    const acceptedIds = Array.isArray(st.acceptedQuests) ? st.acceptedQuests : [];
+    const acceptedMeta = st.acceptedQuestDefs || {};
+    const kills = st.kills || 0;
+    const bossKills = bp.bossKills || 0;
+    const lv = st.level || 1;
+    const maxStg = st.maxStageReached || st.stage || 1;
+    const hasTownBuff = Object.entries(st.potionBuffs || {}).some(([k, v]) => k.endsWith('Until') && v > Date.now());
+
+    const activeQuests = acceptedIds
+      .filter((qid) => !bp.claimed?.[qid])
+      .map((qid) => {
+        const meta = acceptedMeta[qid] || quests.find((x) => x.id === qid);
+        if (!meta) return null;
+        let cur = kills;
+        if (meta.progType === 'boss' || meta.type === 'boss') cur = bossKills;
+        else if (meta.progType === 'level') cur = lv;
+        else if (meta.progType === 'stage') cur = maxStg;
+        else if (meta.progType === 'bless') cur = hasTownBuff ? 1 : 0;
+        else if (meta.progType === 'daily_kill') cur = Math.min(kills, meta.req || 50);
+        else if (meta.progType === 'daily_boss') cur = Math.min(bossKills, meta.req || 1);
+        return { ...meta, cur };
+      })
+      .filter(Boolean);
+
     panel.classList.toggle('is-all-done', activeQuests.length === 0);
     if (activeQuests.length === 0) {
       body.innerHTML = '';
@@ -218,21 +241,24 @@ function mountQuestPanel() {
     }
 
     body.innerHTML = activeQuests.map((q) => {
-      const cur = q.type === 'boss' ? (bp.bossKills || 0) : (st.kills || 0);
-      const pct = Math.min(100, Math.round((cur / q.req) * 100));
-      const ready = cur >= q.req;
+      const req = Math.max(1, q.req || 1);
+      const pct = Math.min(100, Math.round((q.cur / req) * 100));
+      const ready = q.cur >= req;
+      const rewTxt = Array.isArray(q.rewardTags) ? q.rewardTags.join(' + ') : (q.reward || '任務獎勵');
       return `
         <div class="hqp-item ${ready ? 'is-ready' : ''}">
           <div class="hqp-item-top">
-            <span class="hqp-item-name"><span class="hqp-tag ${q.cls}">${q.tag}</span>${q.title}</span>
-            <span class="hqp-item-prog-txt">${Math.min(cur, q.req)} / ${q.req}</span>
+            <span class="hqp-item-name"><span class="hqp-tag ${q.cls || ''}">${q.tag || '任務'}</span>${q.title}</span>
+            <span class="hqp-item-prog-txt">${Math.min(q.cur, req)} / ${req}</span>
           </div>
           <div class="hqp-bar-track"><div class="hqp-bar-fill" style="width:${pct}%"></div></div>
           <div class="hqp-item-bot">
-            <span class="hqp-reward">獎勵：${q.reward}</span>
-            ${ready
-              ? `<button type="button" class="hqp-claim-btn" data-qid="${q.id}" data-gold="${q.gold}" data-rtype="${q.rType}" data-stage="${(ch - 1) * 10 + 1}">領取獎勵</button>`
-              : '<span style="font-size:10.5px;color:#64748b;">進行中</span>'}
+            <span class="hqp-reward">${rewTxt}</span>
+            <div style="display:flex;gap:5px;align-items:center;">
+              ${ready
+                ? `<button type="button" class="hqp-claim-btn" data-qid="${q.id}">領取獎勵</button>`
+                : `<button type="button" class="hqp-abandon-btn" data-abandon="${q.id}" title="放棄此任務" style="padding:2px 7px;border-radius:5px;border:1px solid rgba(248,113,113,0.45);background:rgba(127,29,29,0.45);color:#fecaca;font-size:10px;font-weight:800;cursor:pointer;">放棄</button>`}
+            </div>
           </div>
         </div>
       `;
@@ -242,10 +268,15 @@ function mountQuestPanel() {
       btn.addEventListener('click', (e) => {
         e.stopPropagation();
         const qid = btn.dataset.qid;
-        const gold = Number(btn.dataset.gold) || 1000;
-        const rType = btn.dataset.rtype || 'gear';
-        const stHint = Number(btn.dataset.stage) || 1;
-        window.__IDLE_ARPG_BRIDGE__?.claimBounty?.(qid, gold, rType, stHint);
+        const qObj = st.acceptedQuestDefs?.[qid] || window.__v223ActiveQuestMap?.[qid];
+        if (qObj) window.__IDLE_ARPG_BRIDGE__?.claimCategorizedQuest?.(qObj);
+        renderQuests();
+      });
+    });
+    body.querySelectorAll('.hqp-abandon-btn').forEach((btn) => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        window.__IDLE_ARPG_BRIDGE__?.abandonQuest?.(btn.dataset.abandon);
         renderQuests();
       });
     });

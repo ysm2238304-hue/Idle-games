@@ -117,13 +117,13 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     try {
       const [{ DashboardUI }, { renderTownFacilityModal }, monsters, { initLobbyClassClarity }, { initWelcomeAuthUI }, { initBagSalvageFix }, { initBattleStuckGuard }, { initHudOverhaulV217 }, { hookWorldMap25D }, { initSpriteWhiteCleaner }] = await Promise.all([
         import('../../ui/DashboardUI.js?v=221'),
-        import('../../ui/NpcModalRenderer.js?v=226'),
+        import('../../ui/NpcModalRenderer.js?v=227'),
         import('../monsters.js?v=99'),
         import('../../ui/LobbyClassClarity.js?v=213'),
         import('../../ui/WelcomeAuthUI.js?v=218'),
         import('../../ui/BagFixEnhancer.js?v=213'),
         import('../../ui/BattleStuckGuard.js?v=214'),
-        import('../../ui/HudOverhaulV217.js?v=224'),
+        import('../../ui/HudOverhaulV217.js?v=227'),
         import('../../ui/WorldMap25D.js?v=222'),
         import('../../ui/SpriteWhiteCleaner.js?v=224'),
       ]);

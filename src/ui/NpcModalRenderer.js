@@ -30,13 +30,13 @@ function ensureNpcModalCss() {
   if (typeof document === 'undefined') return;
   const old = document.getElementById('npc-modal-v2-css');
   if (old) {
-    if (!old.href.includes('v=204')) old.href = './src/ui/npcModal.css?v=226';
+    if (!old.href.includes('v=204')) old.href = './src/ui/npcModal.css?v=227';
     return;
   }
   const link = document.createElement('link');
   link.id = 'npc-modal-v2-css';
   link.rel = 'stylesheet';
-  link.href = './src/ui/npcModal.css?v=226';
+  link.href = './src/ui/npcModal.css?v=227';
   document.head.appendChild(link);
 }
 
@@ -189,19 +189,19 @@ export function renderTownFacilityModal(ui, action, data, ctx, deps = {}) {
     <span>${data?.title || meta.title}</span>`;
 
   const NPC_WORK_BG_MAP = {
-    modal_blacksmith: './assets/ui/npc_bg_blacksmith.jpg?v=226',
-    modal_alchemy:    './assets/ui/npc_bg_alchemy.jpg?v=226',
-    modal_market:     './assets/ui/npc_bg_market.jpg?v=226',
-    modal_bounty:     './assets/ui/npc_bg_bounty.jpg?v=226',
-    modal_trainer:    './assets/ui/npc_bg_trainer.jpg?v=226',
-    modal_sanctum:    './assets/ui/npc_bg_sanctum.jpg?v=226',
-    modal_vault:      './assets/ui/npc_bg_vault.jpg?v=226',
-    modal_tavern:     './assets/ui/npc_bg_tavern.jpg?v=226',
-    modal_waypoint:   './assets/ui/npc_bg_waypoint.jpg?v=226',
-    modal_portal:     './assets/ui/npc_bg_portal.jpg?v=226',
-    modal_tower:      './assets/ui/npc_bg_tower.jpg?v=226',
+    modal_blacksmith: './assets/ui/npc_bg_blacksmith.jpg?v=227',
+    modal_alchemy:    './assets/ui/npc_bg_alchemy.jpg?v=227',
+    modal_market:     './assets/ui/npc_bg_market.jpg?v=227',
+    modal_bounty:     './assets/ui/npc_bg_bounty.jpg?v=227',
+    modal_trainer:    './assets/ui/npc_bg_trainer.jpg?v=227',
+    modal_sanctum:    './assets/ui/npc_bg_sanctum.jpg?v=227',
+    modal_vault:      './assets/ui/npc_bg_vault.jpg?v=227',
+    modal_tavern:     './assets/ui/npc_bg_tavern.jpg?v=227',
+    modal_waypoint:   './assets/ui/npc_bg_waypoint.jpg?v=227',
+    modal_portal:     './assets/ui/npc_bg_portal.jpg?v=227',
+    modal_tower:      './assets/ui/npc_bg_tower.jpg?v=227',
   };
-  const workBgUrl = NPC_WORK_BG_MAP[action] || './assets/ui/npc_bg_gift.jpg?v=226';
+  const workBgUrl = NPC_WORK_BG_MAP[action] || './assets/ui/npc_bg_gift.jpg?v=227';
   const workspaceHtml = buildWorkspaceHtml(ui, action, data, ctx, deps, st, chIdx, chapter);
 
   bodyEl.innerHTML = `
@@ -223,7 +223,7 @@ export function renderTownFacilityModal(ui, action, data, ctx, deps = {}) {
           <div class="npc-res-chip" title="魂晶">${SVG.crystal}<span>${fmtNum(st.soulCrystals)}</span></div>
         </div>
       </aside>
-      <section class="npc-work-col has-npc-art-bg" id="npc-work-col" style="--npc-work-bg: url('${workBgUrl}');">${workspaceHtml}</section>
+      <section class="npc-work-col has-npc-art-bg" id="npc-work-col" style="background-image: linear-gradient(180deg, rgba(10,8,14,0.34) 0%, rgba(10,8,14,0.52) 55%, rgba(8,7,12,0.72) 100%), url('${workBgUrl}');">${workspaceHtml}</section>
     </div>
   `;
 
@@ -554,7 +554,21 @@ function buildWorkspaceHtml(ui, action, data, ctx, deps, st, chIdx, chapter) {
                 <div class="npc-progress-track" style="margin-top:8px;"><div class="npc-progress-fill" style="width:${pct}%"></div></div>
                 <div style="font-size:11px;color:#cbd5e1;text-align:center;margin-top:4px;">${fmtNum(Math.min(q.cur, q.req))} / ${fmtNum(q.req)}（${pct}%）</div>
               </div>
-              ${isClaimed ? `<div class="npc-btn-claimed">${SVG.check}<span>已完成並領獎</span></div>` : costBtnHtml(`data-bounty-v223="${q.id}"`, ready ? '立即領取獎勵' : '任務進行中', `${pct}%`, ready)}
+              ${(() => {
+                const acceptedList = Array.isArray(st.acceptedQuests) ? st.acceptedQuests : [];
+                const isAccepted = acceptedList.includes(q.id);
+                if (isClaimed) return `<div class="npc-btn-claimed">${SVG.check}<span>已完成並領獎</span></div>`;
+                if (!isAccepted) return costBtnHtml(`data-accept-quest="${q.id}"`, '📜 接取任務', '追蹤至介面', true);
+                if (ready) {
+                  return `<div style="display:flex;gap:6px;width:100%;">
+                    ${costBtnHtml(`data-bounty-v223="${q.id}"`, '🎁 領取獎勵', '100%', true)}
+                  </div>`;
+                }
+                return `<div style="display:flex;gap:6px;width:100%;align-items:center;">
+                  <div style="flex:1;text-align:center;font-size:11.5px;color:#fde68a;font-weight:800;padding:8px 6px;border-radius:8px;background:rgba(245,158,11,0.14);border:1px solid rgba(245,158,11,0.35);">追蹤中 (${pct}%)</div>
+                  <button type="button" class="v227-abandon-btn" data-abandon-quest="${q.id}" title="放棄並從左側任務欄移除">放棄</button>
+                </div>`;
+              })()}
             </div>
           `;
         }).join('')}
@@ -899,6 +913,24 @@ function bindWorkspaceEvents(ui, action, data, ctx, deps, st, chIdx, bodyEl, mod
   } else if (action === 'modal_bounty') {
     bodyEl.querySelectorAll('button[data-qtab]').forEach((btn) => {
       btn.addEventListener('click', () => { activeBountyTab = btn.dataset.qtab || 'hunt'; reopen(); });
+    });
+    bodyEl.querySelectorAll('button[data-accept-quest]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const q = window.__v223ActiveQuestMap?.[btn.dataset.acceptQuest];
+        if (q && window.__IDLE_ARPG_BRIDGE__?.acceptQuest?.(q)) {
+          say(`已接取任務「${q.title}」，已顯示於左側任務追蹤欄！`, 'success');
+          setTimeout(reopen, 180);
+        }
+      });
+    });
+    bodyEl.querySelectorAll('button[data-abandon-quest]').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const qid = btn.dataset.abandonQuest;
+        if (window.__IDLE_ARPG_BRIDGE__?.abandonQuest?.(qid)) {
+          say('已放棄該任務並從左側任務欄移除。', 'info');
+          setTimeout(reopen, 180);
+        }
+      });
     });
     bodyEl.querySelectorAll('button[data-bounty-v223]').forEach((btn) => {
       btn.addEventListener('click', () => {
