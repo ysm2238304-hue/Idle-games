@@ -30,13 +30,13 @@ function ensureNpcModalCss() {
   if (typeof document === 'undefined') return;
   const old = document.getElementById('npc-modal-v2-css');
   if (old) {
-    if (!old.href.includes('v=204')) old.href = './src/ui/npcModal.css?v=223';
+    if (!old.href.includes('v=204')) old.href = './src/ui/npcModal.css?v=226';
     return;
   }
   const link = document.createElement('link');
   link.id = 'npc-modal-v2-css';
   link.rel = 'stylesheet';
-  link.href = './src/ui/npcModal.css?v=223';
+  link.href = './src/ui/npcModal.css?v=226';
   document.head.appendChild(link);
 }
 
@@ -188,6 +188,20 @@ export function renderTownFacilityModal(ui, action, data, ctx, deps = {}) {
   titleEl.innerHTML = `<img src="${meta.icon}" alt="" style="width:22px;height:22px;object-fit:contain;" />
     <span>${data?.title || meta.title}</span>`;
 
+  const NPC_WORK_BG_MAP = {
+    modal_blacksmith: './assets/ui/npc_bg_blacksmith.jpg?v=226',
+    modal_alchemy:    './assets/ui/npc_bg_alchemy.jpg?v=226',
+    modal_market:     './assets/ui/npc_bg_market.jpg?v=226',
+    modal_bounty:     './assets/ui/npc_bg_bounty.jpg?v=226',
+    modal_trainer:    './assets/ui/npc_bg_trainer.jpg?v=226',
+    modal_sanctum:    './assets/ui/npc_bg_sanctum.jpg?v=226',
+    modal_vault:      './assets/ui/npc_bg_vault.jpg?v=226',
+    modal_tavern:     './assets/ui/npc_bg_tavern.jpg?v=226',
+    modal_waypoint:   './assets/ui/npc_bg_waypoint.jpg?v=226',
+    modal_portal:     './assets/ui/npc_bg_portal.jpg?v=226',
+    modal_tower:      './assets/ui/npc_bg_tower.jpg?v=226',
+  };
+  const workBgUrl = NPC_WORK_BG_MAP[action] || './assets/ui/npc_bg_gift.jpg?v=226';
   const workspaceHtml = buildWorkspaceHtml(ui, action, data, ctx, deps, st, chIdx, chapter);
 
   bodyEl.innerHTML = `
@@ -209,7 +223,7 @@ export function renderTownFacilityModal(ui, action, data, ctx, deps = {}) {
           <div class="npc-res-chip" title="魂晶">${SVG.crystal}<span>${fmtNum(st.soulCrystals)}</span></div>
         </div>
       </aside>
-      <section class="npc-work-col" id="npc-work-col">${workspaceHtml}</section>
+      <section class="npc-work-col has-npc-art-bg" id="npc-work-col" style="--npc-work-bg: url('${workBgUrl}');">${workspaceHtml}</section>
     </div>
   `;
 

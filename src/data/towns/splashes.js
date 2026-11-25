@@ -117,7 +117,7 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     try {
       const [{ DashboardUI }, { renderTownFacilityModal }, monsters, { initLobbyClassClarity }, { initWelcomeAuthUI }, { initBagSalvageFix }, { initBattleStuckGuard }, { initHudOverhaulV217 }, { hookWorldMap25D }, { initSpriteWhiteCleaner }] = await Promise.all([
         import('../../ui/DashboardUI.js?v=221'),
-        import('../../ui/NpcModalRenderer.js?v=223'),
+        import('../../ui/NpcModalRenderer.js?v=226'),
         import('../monsters.js?v=99'),
         import('../../ui/LobbyClassClarity.js?v=213'),
         import('../../ui/WelcomeAuthUI.js?v=218'),
