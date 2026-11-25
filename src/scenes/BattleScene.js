@@ -3969,7 +3969,7 @@ export class BattleScene extends Phaser.Scene {
       this.playerMp = this.playerMaxMp;
       if (this.hero) {
         this.playAdditiveVfx('vfx_m_enlightenment_nova', this.hero.x, this.hero.y - 14, 1.42, 680);
-        this.spawnDamageText(this.hero.x, this.hero.y - 54, '✨ 啟蒙爆發 (+45%傷害)', '#fde047', true);
+        this.spawnFloatingText(this.hero.x, this.hero.y - 96, '✨ 啟蒙爆發 (+45%傷害)', '#fde047', 16);
         const st = this.getStats();
         const dmg = Math.round(st.atk * 2.4);
         this.monsters.forEach((m) => {
