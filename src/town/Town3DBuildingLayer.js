@@ -1,3 +1,5 @@
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js';
+
 // Town3DBuildingLayer.js — v291 Three.js 全十城 80 棟專屬風格真 3D 建模建築渲染器
 // 每章皆有專屬材質紋理、點光源與 8 種獨立 3D 幾何結構（鐵匠／煉金／公會／黑市／聖殿／懸賞／地標／星門）
 // 渲染為透明背景高解析度 3D 模型貼圖供 Phaser 進行真實 Y-Sort（英雄不變透明且立體遮擋自然）
@@ -53,7 +55,7 @@ function makeProceduralTex(THREE, baseHex, pattern = 'stone') {
 
 export class Town3DBuildingLayer {
   constructor() {
-    this.THREE = typeof window !== 'undefined' ? window.THREE : null;
+    this.THREE = THREE;
     this.renderer = null;
     this.scene3d = null;
     this.camera3d = null;
@@ -67,10 +69,14 @@ export class Town3DBuildingLayer {
   _ensureRenderer() {
     if (!this.THREE || this.renderer) return;
     const THREE = this.THREE;
-    this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
-    this.renderer.setSize(512, 512, false);
-    this.renderer.setClearColor(0x000000, 0);
-    this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    if (!window.__v293Town3DRenderer) {
+      const r = new THREE.WebGLRenderer({ alpha: true, antialias: true, preserveDrawingBuffer: true });
+      r.setSize(512, 512, false);
+      r.setClearColor(0x000000, 0);
+      r.outputColorSpace = THREE.SRGBColorSpace;
+      window.__v293Town3DRenderer = r;
+    }
+    this.renderer = window.__v293Town3DRenderer;
 
     this.scene3d = new THREE.Scene();
     const d = 3.2;

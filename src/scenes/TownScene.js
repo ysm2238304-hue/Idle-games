@@ -1,4 +1,4 @@
-import { Town3DBuildingLayer } from '../town/Town3DBuildingLayer.js?v=291';
+import { Town3DBuildingLayer } from '../town/Town3DBuildingLayer.js?v=293';
 import { CameraZoomHelper } from './CameraZoomHelper.js?v=282';
 import { TOWN_CH1 } from '../data/towns/ch1.js?v=290';
 import { LivingNpcEngine } from '../town/LivingNpcEngine.js?v=273';

@@ -1,4 +1,4 @@
-import { initAllDraggableModals } from './ui/DraggableModalHelper.js?v=291';
+import { initAllDraggableModals } from './ui/DraggableModalHelper.js?v=293';
 import { CLASSES } from './data/classes.js?v=99';
 import { getStageLabel, getSubStage, getChapterIdx, calcLevelGapExpMult } from './data/monsters.js?v=254';
 import { WARRIOR_SKILLS } from './data/warriorSkills.js?v=255';
@@ -22,8 +22,8 @@ import {
   saveCloudData,
   deleteCloudSave,
 } from './auth/firebase.js?v=272';
-import { BattleScene } from './scenes/BattleScene.js?v=283';
-import { TownScene } from './scenes/TownScene.js?v=292';
+import { BattleScene } from './scenes/BattleScene.js?v=293';
+import { TownScene } from './scenes/TownScene.js?v=293';
 import { TOWN_SPLASHES } from './data/towns/splashes.js?v=229';
 import { DashboardUI } from './ui/DashboardUI.js?v=282';
 import { hookWorldMap25D, openWorldMap25D, closeWorldMap25D, toggleWorldMap25D } from './ui/WorldMap25D.js?v=253';
@@ -1294,6 +1294,14 @@ function enterTown(chapterIdx = 0, instant = false) {
 
     if (phaserGame.scene.isActive('BattleScene')) phaserGame.scene.sleep('BattleScene');
   const townCallbacks = {
+    onEnterTrainingArena: () => {
+      if (typeof exitTownToBattle === 'function') exitTownToBattle();
+      setTimeout(() => {
+        battleScene?.enterTrainingArena?.(() => {
+          if (typeof enterTown === 'function') enterTown();
+        });
+      }, 180);
+    },
     getState: () => gameState,
     getComputedStats: () => computedStats,
     onTownLoadProgress: (val) => ui.updateTownSplashProgress(val),
