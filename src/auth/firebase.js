@@ -213,11 +213,11 @@ function sanitizeForFirestore(val, inArray = false) {
   if (val === null || typeof val !== 'object') return val;
   if (Array.isArray(val)) {
     const mapped = val.map((item) => sanitizeForFirestore(item, true));
-    return inArray ? { __fsNestedArr__: mapped } : mapped;
+    return inArray ? { fsNestedArr: mapped } : mapped;
   }
   const out = {};
   for (const [k, v] of Object.entries(val)) {
-    if (v === undefined || typeof v === 'function') continue;
+    if (v === undefined || typeof v === 'function' || (k.startsWith('__') && k.endsWith('__'))) continue;
     out[k] = sanitizeForFirestore(v, false);
   }
   return out;
@@ -226,8 +226,8 @@ function sanitizeForFirestore(val, inArray = false) {
 function restoreFromFirestore(val) {
   if (val === null || typeof val !== 'object') return val;
   if (Array.isArray(val)) return val.map(restoreFromFirestore);
-  if (Object.prototype.hasOwnProperty.call(val, '__fsNestedArr__') && Array.isArray(val.__fsNestedArr__)) {
-    return val.__fsNestedArr__.map(restoreFromFirestore);
+  if (Object.prototype.hasOwnProperty.call(val, 'fsNestedArr') && Array.isArray(val.fsNestedArr)) {
+    return val.fsNestedArr.map(restoreFromFirestore);
   }
   const out = {};
   for (const [k, v] of Object.entries(val)) {

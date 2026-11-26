@@ -1,6 +1,6 @@
 import { TOWN_CH1 } from '../data/towns/ch1.js?v=267';
 import { LivingNpcEngine } from '../town/LivingNpcEngine.js?v=267';
-import { TownMultiplayerSync } from '../net/TownMultiplayerSync.js?v=271';
+import { TownMultiplayerSync } from '../net/TownMultiplayerSync.js?v=272';
 import { TOWN_CH2 } from '../data/towns/ch2.js?v=268';
 import { TOWN_CH3 } from '../data/towns/ch3.js?v=268';
 import { TOWN_CH4 } from '../data/towns/ch4.js?v=268';
@@ -565,7 +565,7 @@ export class TownScene extends Phaser.Scene {
     if (action === 'modal_market') return '🎲';
     if (action === 'drawer_rebirth') return '🌀';
     if (action === 'modal_portal') return '🚪';
-    if ((this.livingNpcs?.triggerTownBlessingWave(this.townData?.landmark?.x || this.hero.x, this.townData?.landmark?.y || this.hero.y, this.townData?.ambientColor || 0xfde047), this.mpSync?.cheerAllNearby(), action.startsWith('gimmick_'))) return '✨';
+    if (action.startsWith('gimmick_')) return '✨';
     return '🎁';
   }
 
@@ -636,7 +636,7 @@ export class TownScene extends Phaser.Scene {
     };
     this.interactables.push(interactObj);
     if (!action.startsWith('gimmick_')) {
-      this.livingNpcs?.registerNpc(npcSpr, { name: n.name, workStyle: n.workStyle || 'idle', greeting: n.greeting });
+      this.livingNpcs?.registerNpc(spr, { name: npc.name, workStyle: npc.workStyle || 'idle', greeting: npc.greeting });
         this.roamNpcs.push({
         spr,
         frame: npc.frame,
@@ -1445,6 +1445,10 @@ export class TownScene extends Phaser.Scene {
   }
 
   executeInteraction(obj) {
+    if (obj?.action && String(obj.action).startsWith('gimmick_')) {
+      this.livingNpcs?.triggerTownBlessingWave(obj.x || this.hero?.x || 2048, obj.y || this.hero?.y || 1280, this.townData?.ambientColor || 0xfde047);
+      this.mpSync?.cheerAllNearby();
+    }
     if (obj.action === 'hit_dummy') {
       this.heroAttackAnimUntil = this.time.now + 340;
       const stats = this.callbacks?.getComputedStats?.() || { atk: 45, critRate: 15, critDmg: 165 };
