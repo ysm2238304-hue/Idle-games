@@ -21,8 +21,8 @@ import {
   saveCloudData,
   deleteCloudSave,
 } from './auth/firebase.js?v=272';
-import { BattleScene } from './scenes/BattleScene.js?v=277';
-import { TownScene } from './scenes/TownScene.js?v=274';
+import { BattleScene } from './scenes/BattleScene.js?v=278';
+import { TownScene } from './scenes/TownScene.js?v=281';
 import { TOWN_SPLASHES } from './data/towns/splashes.js?v=229';
 import { DashboardUI } from './ui/DashboardUI.js?v=277';
 import { hookWorldMap25D, openWorldMap25D, closeWorldMap25D, toggleWorldMap25D } from './ui/WorldMap25D.js?v=253';

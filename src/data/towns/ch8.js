@@ -1,283 +1,339 @@
+// v281: 第 8 章主城「浮空祕法群島」— 四座錯落浮空島與奧術能量橋非對稱重構（4096x2560）
 export const TOWN_CH8 = {
-  chapterIdx: 7,
-  id: 'town_ch8',
-  name: '蒼穹電弧浮空城',
-  subtitle: '第 8 章主城・奧術黃銅龐克與雲端浮島神殿',
-  styleTag: '奧術黃銅龐克＋希臘浮空神殿風',
-  mapWidth: 4096,
-  mapHeight: 2560,
-  bgKey: 'town_bg_ch8_v270',
-  bgUrl: './assets/bg/town_ch8.webp?v=270',
-  atlasKey: 'town_atlas_ch8',
-  atlasPng: './assets/towns/atlas_town_ch8.png',
-  atlasJson: './assets/towns/atlas_town_ch8.json',
-  ambientColor: 0x38bdf8,
-  particleColor: 0xfacc15,
-  spawn: { x: 2996, y: 2276 },
-
-  // 五座雲端浮島＋四道奧術光橋連接：浮島外緣雲海雷暴禁行
-  walkableZones: [
-    { x1: 380, y1: 360, x2: 3716, y2: 2260 },
-  ],
-
-  landmark: {
-    id: 'storm_core',
-    name: '聚雷磁能核心球',
-    frame: 'ch8_lm_core',
-    x: 2048, y: 1250,
-    scale: 0.88,
-    imgKey: 'ch8_lm_core_v270',
-    imgUrl: './assets/towns/ch8_lm_core.webp?v=270',
-    radius: 95,
-    action: 'gimmick_storm_core',
-    tip: '共鳴聚雷磁能核心（5 分鐘 攻速+30% / 技能傷+25% / 爆擊+20%）',
+  "chapterIdx": 7,
+  "id": "town_ch8",
+  "name": "蒼穹電弧浮空城",
+  "subtitle": "第 8 章主城・奧術黃銅龐克與雲端浮島神殿",
+  "styleTag": "四座錯落浮空島・奧術光橋群島",
+  "mapWidth": 4096,
+  "mapHeight": 2560,
+  "bgKey": "town_bg_ch8_v281",
+  "bgUrl": "./assets/bg/town_ch8.webp?v=281",
+  "atlasKey": "town_atlas_ch8",
+  "atlasPng": "./assets/towns/atlas_town_ch8.png",
+  "atlasJson": "./assets/towns/atlas_town_ch8.json",
+  "ambientColor": 3718648,
+  "particleColor": 16436245,
+  "spawn": {
+    "x": 2240,
+    "y": 1140
   },
-
-  facilities: [
+  "walkableZones": [
     {
-      id: 'smith',
-      name: '奧術黃銅避雷針鍛造台',
-      frame: 'ch8_bld_smith',
-      x: 1160, y: 620,
-      scale: 0.98,
-      imgKey: 'ch8_bld_smith_v270',
-      imgUrl: './assets/towns/ch8_bld_smith.webp?v=270',
-      workStyle: 'forge',
-      radius: 115,
-      npc: {
-        frame: 'ch8_npc_smith',
-        name: '特斯拉',
-        title: '電弧鍛造技師',
-        x: 1308, y: 706,
-        scale: 0.62,
-        workStyle: 'forge',
-        greeting: '用百萬伏特蒼穹雷電淬火出的黃銅秘銀裝備，揮動時還會帶起電弧！',
-      },
-      action: 'drawer_upgrade',
-      actionLabel: '開啟電弧鍛造',
-    },
-    {
-      id: 'guild',
-      name: '風暴飛艇貨運金庫',
-      frame: 'ch8_bld_guild',
-      x: 760, y: 1250,
-      scale: 1.0,
-      imgKey: 'ch8_bld_guild_v270',
-      imgUrl: './assets/towns/ch8_bld_guild.webp?v=270',
-      workStyle: 'guild',
-      radius: 115,
-      npc: {
-        frame: 'ch8_npc_guild',
-        name: '巴洛',
-        title: '飛艇船長',
-        x: 945, y: 1253,
-        scale: 0.62,
-        workStyle: 'guild',
-        greeting: '浮空艦隊剛運回一批雲端戰利品，你的裝備全鎖在防雷金庫裡。',
-      },
-      action: 'drawer_bag',
-      actionLabel: '打開飛艇金庫',
-    },
-    {
-      id: 'alchemy',
-      name: '雲端星露蒸餾玻璃塔',
-      frame: 'ch8_bld_alchemy',
-      x: 2940, y: 620,
-      scale: 0.98,
-      imgKey: 'ch8_bld_alchemy_v270',
-      imgUrl: './assets/towns/ch8_bld_alchemy.webp?v=270',
-      workStyle: 'alchemy',
-      radius: 115,
-      npc: {
-        frame: 'ch8_npc_alchemy',
-        name: '賽琳',
-        title: '雲端鍊金學者',
-        x: 2791, y: 706,
-        scale: 0.62,
-        workStyle: 'alchemy',
-        greeting: '這瓶高純度雷雲凝露能讓你的反應速度像閃電一樣快！',
-      },
-      action: 'modal_alchemy',
-      actionLabel: '調配雲端藥劑',
-    },
-    {
-      id: 'temple',
-      name: '蒼穹翼騎兵演武神殿',
-      frame: 'ch8_bld_temple',
-      x: 2048, y: 440,
-      scale: 1.04,
-      imgKey: 'ch8_bld_temple_v270',
-      imgUrl: './assets/towns/ch8_bld_temple.webp?v=270',
-      workStyle: 'prayer',
-      radius: 115,
-      npc: {
-        frame: 'ch8_npc_temple',
-        name: '伊莉絲',
-        title: '雷霆女武神',
-        x: 2048, y: 585,
-        scale: 0.62,
-        workStyle: 'prayer',
-        greeting: '在雷鳴高塔前必須擁有閃電般的連招節奏，來調整你的技能配置吧！',
-      },
-      action: 'drawer_skills',
-      actionLabel: '配置職業技能',
-    },
-    {
-      id: 'bounty',
-      name: '黃銅電弧懸賞觀測塔',
-      frame: 'ch8_bld_bounty',
-      x: 1120, y: 1960,
-      scale: 0.94,
-      imgKey: 'ch8_bld_bounty_v270',
-      imgUrl: './assets/towns/ch8_bld_bounty.webp?v=270',
-      workStyle: 'bounty',
-      radius: 82,
-      npc: {
-        frame: 'ch8_npc_bounty',
-        name: '艾克',
-        title: '風暴獵鷹隊長',
-        x: 1269, y: 1874,
-        scale: 0.62,
-        workStyle: 'bounty',
-        greeting: '雷鳴高塔頂端的風暴泰坦與電弧飛龍正在集結，接下懸賞去攔截它們！',
-      },
-      action: 'modal_bounty',
-      actionLabel: '接取蒼穹懸賞',
-    },
-    {
-      id: 'market',
-      name: '浮空飛艇零件黑市攤',
-      frame: 'ch8_bld_market',
-      x: 3330, y: 1250,
-      scale: 0.96,
-      imgKey: 'ch8_bld_market_v270',
-      imgUrl: './assets/towns/ch8_bld_market.webp?v=270',
-      workStyle: 'market',
-      radius: 95,
-      npc: {
-        frame: 'ch8_npc_market',
-        name: '吉茲',
-        title: '機械地精商人',
-        x: 3145, y: 1253,
-        scale: 0.62,
-        workStyle: 'market',
-        greeting: '嘻嘻！我從高塔廢墟撿到一堆發光奧術盲盒，敢不敢賭一把神話？',
-      },
-      action: 'modal_market',
-      actionLabel: '進入飛艇黑市',
-    },
-    {
-      id: 'altar',
-      name: '雷鳴雲端輪迴聖殿',
-      frame: 'ch8_bld_altar',
-      x: 2048, y: 2110,
-      scale: 0.98,
-      imgKey: 'ch8_bld_altar_v270',
-      imgUrl: './assets/towns/ch8_bld_altar.webp?v=270',
-      workStyle: 'prayer',
-      radius: 105,
-      npc: {
-        frame: 'ch8_npc_altar',
-        name: '宙斯頓',
-        title: '蒼穹大祭司',
-        x: 2048, y: 1965,
-        scale: 0.62,
-        workStyle: 'prayer',
-        greeting: '在萬雷轟鳴之上重塑靈魂，讓蒼穹電弧化為你永恆輪迴的烙印。',
-      },
-      action: 'drawer_rebirth',
-      actionLabel: '開啟蒼穹輪迴',
-    },
-    {
-      id: 'portal',
-      name: '高壓電弧跳躍傳送塔',
-      frame: 'ch8_bld_portal',
-      x: 4836, y: 882,
-      scale: 0.92,
-      radius: 104,
-      npc: {
-        frame: 'ch8_npc_portal',
-        name: '洛克',
-        title: '傳送塔工程師',
-        x: 4655, y: 1372,
-        scale: 0.62,
-        greeting: '線圈電壓已達滿載，隨時可以將你瞬間彈射至雷鳴風暴高塔前線！',
-      },
-      action: 'modal_portal',
-      actionLabel: '電弧彈射出征',
-    },
+      "x1": 280,
+      "y1": 260,
+      "x2": 3860,
+      "y2": 2380
+    }
   ],
-
-  extraNpcs: [
-    {
-      id: 'engineer',
-      frame: 'ch8_npc_engineer',
-      name: '艾迪生',
-      title: '風暴首席工程師',
-      x: 1560, y: 1520,
-      scale: 0.64,
-      greeting: '這是我最新設計的蒼穹電弧補給包，拿著這 50,000 金幣和秘藥去大展身手吧！',
-      action: 'modal_engineer',
-      actionLabel: '領取首席工程師補給',
-    },
-    {
-      id: 'tesla_coil',
-      frame: 'ch8_prop_coil',
-      name: '蓄電共鳴特斯拉線圈',
-      title: '充能機關',
-      x: 2540, y: 1520,
-      scale: 0.76,
-      greeting: '釋放線圈內的高壓奧術電流，瞬間恢復全部生命與能量！',
-      action: 'gimmick_tesla_coil',
-      actionLabel: '啟動線圈充能（回滿狀態）',
-    },
-  ],
-
-  trainingDummy: {
-    id: 'dummy',
-    name: '黃銅發條電弧靶偶',
-    frame: 'ch8_prop_dummy',
-    x: 3467, y: 910,
-    scale: 0.72,
-    radius: 42,
+  "landmark": {
+    "id": "storm_core",
+    "name": "聚雷磁能核心球",
+    "frame": "ch8_lm_core",
+    "x": 3120,
+    "y": 640,
+    "scale": 0.88,
+    "imgKey": "ch8_lm_core_v270",
+    "imgUrl": "./assets/towns/ch8_lm_core.webp?v=270",
+    "radius": 95,
+    "action": "gimmick_storm_core",
+    "tip": "共鳴聚雷磁能核心（5 分鐘 攻速+30% / 技能傷+25% / 爆擊+20%）"
   },
-
-  neighborhood: [],
-
-  props: [],
-
-  patrols: [
+  "facilities": [
     {
-      frame: 'ch8_npc_guard',
-      name: '蒼穹白金盾衛',
-      scale: 0.56,
-      speed: 78,
-      waypoints: [
-        { x: 1726, y: 1109 },
-        { x: 2370, y: 1109 },
-        { x: 2136, y: 1252 },
-        { x: 1726, y: 1508 },
-      ],
+      "id": "smith",
+      "name": "奧術黃銅避雷針鍛造台",
+      "frame": "ch8_bld_smith",
+      "x": 1020,
+      "y": 620,
+      "scale": 0.98,
+      "imgKey": "ch8_bld_smith_v270",
+      "imgUrl": "./assets/towns/ch8_bld_smith.webp?v=270",
+      "workStyle": "forge",
+      "radius": 115,
+      "npc": {
+        "frame": "ch8_npc_smith",
+        "name": "特斯拉",
+        "title": "電弧鍛造技師",
+        "x": 1180,
+        "y": 780,
+        "scale": 0.62,
+        "workStyle": "forge",
+        "greeting": "用百萬伏特蒼穹雷電淬火出的黃銅秘銀裝備，揮動時還會帶起電弧！"
+      },
+      "action": "drawer_upgrade",
+      "actionLabel": "開啟電弧鍛造"
     },
     {
-      frame: 'ch8_npc_mechanic',
-      name: '西島飛艇技師',
-      scale: 0.55,
-      speed: 68,
-      waypoints: [
-        { x: 761, y: 939 },
-        { x: 761, y: 1621 },
-      ],
+      "id": "guild",
+      "name": "風暴飛艇貨運金庫",
+      "frame": "ch8_bld_guild",
+      "x": 3160,
+      "y": 1880,
+      "scale": 1,
+      "imgKey": "ch8_bld_guild_v270",
+      "imgUrl": "./assets/towns/ch8_bld_guild.webp?v=270",
+      "workStyle": "guild",
+      "radius": 115,
+      "npc": {
+        "frame": "ch8_npc_guild",
+        "name": "巴洛",
+        "title": "飛艇船長",
+        "x": 2980,
+        "y": 1840,
+        "scale": 0.62,
+        "workStyle": "guild",
+        "greeting": "浮空艦隊剛運回一批雲端戰利品，你的裝備全鎖在防雷金庫裡。"
+      },
+      "action": "drawer_bag",
+      "actionLabel": "打開飛艇金庫"
     },
     {
-      frame: 'ch8_npc_mechanic',
-      name: '東島線圈技師',
-      scale: 0.55,
-      speed: 68,
-      waypoints: [
-        { x: 3248, y: 939 },
-        { x: 3248, y: 1621 },
-      ],
+      "id": "alchemy",
+      "name": "雲端星露蒸餾玻璃塔",
+      "frame": "ch8_bld_alchemy",
+      "x": 3120,
+      "y": 660,
+      "scale": 0.98,
+      "imgKey": "ch8_bld_alchemy_v270",
+      "imgUrl": "./assets/towns/ch8_bld_alchemy.webp?v=270",
+      "workStyle": "alchemy",
+      "radius": 115,
+      "npc": {
+        "frame": "ch8_npc_alchemy",
+        "name": "賽琳",
+        "title": "雲端鍊金學者",
+        "x": 2960,
+        "y": 840,
+        "scale": 0.62,
+        "workStyle": "alchemy",
+        "greeting": "這瓶高純度雷雲凝露能讓你的反應速度像閃電一樣快！"
+      },
+      "action": "modal_alchemy",
+      "actionLabel": "調配雲端藥劑"
     },
+    {
+      "id": "temple",
+      "name": "蒼穹翼騎兵演武神殿",
+      "frame": "ch8_bld_temple",
+      "x": 2760,
+      "y": 560,
+      "scale": 1.04,
+      "imgKey": "ch8_bld_temple_v270",
+      "imgUrl": "./assets/towns/ch8_bld_temple.webp?v=270",
+      "workStyle": "prayer",
+      "radius": 115,
+      "npc": {
+        "frame": "ch8_npc_temple",
+        "name": "伊莉絲",
+        "title": "雷霆女武神",
+        "x": 2720,
+        "y": 740,
+        "scale": 0.62,
+        "workStyle": "prayer",
+        "greeting": "在雷鳴高塔前必須擁有閃電般的連招節奏，來調整你的技能配置吧！"
+      },
+      "action": "drawer_skills",
+      "actionLabel": "配置職業技能"
+    },
+    {
+      "id": "bounty",
+      "name": "黃銅電弧懸賞觀測塔",
+      "frame": "ch8_bld_bounty",
+      "x": 1680,
+      "y": 1660,
+      "scale": 0.94,
+      "imgKey": "ch8_bld_bounty_v270",
+      "imgUrl": "./assets/towns/ch8_bld_bounty.webp?v=270",
+      "workStyle": "bounty",
+      "radius": 82,
+      "npc": {
+        "frame": "ch8_npc_bounty",
+        "name": "艾克",
+        "title": "風暴獵鷹隊長",
+        "x": 1760,
+        "y": 1760,
+        "scale": 0.62,
+        "workStyle": "bounty",
+        "greeting": "雷鳴高塔頂端的風暴泰坦與電弧飛龍正在集結，接下懸賞去攔截它們！"
+      },
+      "action": "modal_bounty",
+      "actionLabel": "接取蒼穹懸賞"
+    },
+    {
+      "id": "market",
+      "name": "浮空飛艇零件黑市攤",
+      "frame": "ch8_bld_market",
+      "x": 1340,
+      "y": 1760,
+      "scale": 0.96,
+      "imgKey": "ch8_bld_market_v270",
+      "imgUrl": "./assets/towns/ch8_bld_market.webp?v=270",
+      "workStyle": "market",
+      "radius": 95,
+      "npc": {
+        "frame": "ch8_npc_market",
+        "name": "吉茲",
+        "title": "機械地精商人",
+        "x": 1520,
+        "y": 1840,
+        "scale": 0.62,
+        "workStyle": "market",
+        "greeting": "嘻嘻！我從高塔廢墟撿到一堆發光奧術盲盒，敢不敢賭一把神話？"
+      },
+      "action": "modal_market",
+      "actionLabel": "進入飛艇黑市"
+    },
+    {
+      "id": "altar",
+      "name": "雷鳴雲端輪迴聖殿",
+      "frame": "ch8_bld_altar",
+      "x": 1380,
+      "y": 740,
+      "scale": 0.98,
+      "imgKey": "ch8_bld_altar_v270",
+      "imgUrl": "./assets/towns/ch8_bld_altar.webp?v=270",
+      "workStyle": "prayer",
+      "radius": 105,
+      "npc": {
+        "frame": "ch8_npc_altar",
+        "name": "宙斯頓",
+        "title": "蒼穹大祭司",
+        "x": 1460,
+        "y": 840,
+        "scale": 0.62,
+        "workStyle": "prayer",
+        "greeting": "在萬雷轟鳴之上重塑靈魂，讓蒼穹電弧化為你永恆輪迴的烙印。"
+      },
+      "action": "drawer_rebirth",
+      "actionLabel": "開啟蒼穹輪迴"
+    },
+    {
+      "id": "portal",
+      "name": "高壓電弧跳躍傳送塔",
+      "frame": "ch8_bld_portal",
+      "x": 740,
+      "y": 2060,
+      "scale": 0.92,
+      "radius": 104,
+      "npc": {
+        "frame": "ch8_npc_portal",
+        "name": "洛克",
+        "title": "傳送塔工程師",
+        "x": 960,
+        "y": 1980,
+        "scale": 0.62,
+        "greeting": "線圈電壓已達滿載，隨時可以將你瞬間彈射至雷鳴風暴高塔前線！"
+      },
+      "action": "modal_portal",
+      "actionLabel": "電弧彈射出征"
+    }
   ],
+  "extraNpcs": [
+    {
+      "id": "engineer",
+      "frame": "ch8_npc_engineer",
+      "name": "艾迪生",
+      "title": "風暴首席工程師",
+      "x": 1560,
+      "y": 1520,
+      "scale": 0.64,
+      "greeting": "這是我最新設計的蒼穹電弧補給包，拿著這 50,000 金幣和秘藥去大展身手吧！",
+      "action": "modal_engineer",
+      "actionLabel": "領取首席工程師補給"
+    },
+    {
+      "id": "tesla_coil",
+      "frame": "ch8_prop_coil",
+      "name": "蓄電共鳴特斯拉線圈",
+      "title": "充能機關",
+      "x": 2540,
+      "y": 1520,
+      "scale": 0.76,
+      "greeting": "釋放線圈內的高壓奧術電流，瞬間恢復全部生命與能量！",
+      "action": "gimmick_tesla_coil",
+      "actionLabel": "啟動線圈充能（回滿狀態）"
+    }
+  ],
+  "trainingDummy": {
+    "id": "dummy",
+    "name": "黃銅發條電弧靶偶",
+    "frame": "ch8_prop_dummy",
+    "x": 3467,
+    "y": 910,
+    "scale": 0.72,
+    "radius": 42
+  },
+  "neighborhood": [],
+  "props": [],
+  "patrols": [
+    {
+      "frame": "ch8_npc_guard",
+      "name": "蒼穹白金盾衛",
+      "scale": 0.56,
+      "speed": 78,
+      "waypoints": [
+        {
+          "x": 1160,
+          "y": 780
+        },
+        {
+          "x": 2120,
+          "y": 740
+        },
+        {
+          "x": 2980,
+          "y": 820
+        },
+        {
+          "x": 2240,
+          "y": 1180
+        },
+        {
+          "x": 1560,
+          "y": 1680
+        }
+      ]
+    },
+    {
+      "frame": "ch8_npc_mechanic",
+      "name": "西島飛艇技師",
+      "scale": 0.55,
+      "speed": 68,
+      "waypoints": [
+        {
+          "x": 1620,
+          "y": 1840
+        },
+        {
+          "x": 2340,
+          "y": 1860
+        },
+        {
+          "x": 3060,
+          "y": 1860
+        },
+        {
+          "x": 3140,
+          "y": 1240
+        }
+      ]
+    },
+    {
+      "frame": "ch8_npc_mechanic",
+      "name": "東島線圈技師",
+      "scale": 0.55,
+      "speed": 68,
+      "waypoints": [
+        {
+          "x": 3248,
+          "y": 939
+        },
+        {
+          "x": 3248,
+          "y": 1621
+        }
+      ]
+    }
+  ]
 };

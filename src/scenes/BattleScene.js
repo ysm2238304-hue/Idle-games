@@ -20,6 +20,9 @@ import { PaladinVfxDirector } from '../vfx/PaladinVfxDirector.js?v=266';
 import { FloatingTextPool } from '../vfx/FloatingTextPool.js?v=266';
 import { ParticlePool } from '../vfx/ParticlePool.js?v=266';
 import { TrainingArenaController } from '../combat/TrainingArenaController.js?v=277';
+import { CameraZoomHelper } from './CameraZoomHelper.js?v=278';
+import { MonsterVfxDirector } from '../vfx/MonsterVfxDirector.js?v=278';
+import { MonsterSkillEngine } from '../combat/MonsterSkillEngine.js?v=278';
 import { warriorCombatMethods } from '../combat/classes/warriorCombat.js?v=266';
 import { rangerCombatMethods } from '../combat/classes/rangerCombat.js?v=266';
 import { mageCombatMethods } from '../combat/classes/mageCombat.js?v=266';
@@ -222,6 +225,7 @@ export class BattleScene extends Phaser.Scene {
     // v265: 職業 VFX 按需懶載入（首開只載入當前職業 WebP 圖集，大幅縮減載入時間與顯存）
     this.loadedVfxClasses = new Set();
     this.preloadClassVfx(initCid);
+    MonsterVfxDirector.preload(this);
   }
 
   getVfxDirectorClass(cid) {
@@ -361,6 +365,10 @@ export class BattleScene extends Phaser.Scene {
     this.floatingTextPool = new FloatingTextPool(this, 48);
     this.particlePool = new ParticlePool(this, 96);
     this.trainingArena = new TrainingArenaController(this);
+    this.monsterVfx = new MonsterVfxDirector(this);
+    this.monsterVfx.registerAnims();
+    this.monsterSkills = new MonsterSkillEngine(this, this.monsterVfx);
+    this.cameraZoom = new CameraZoomHelper(this, { minZoom: 0.62, maxZoom: 1.38, defaultZoom: 1.0 });
     this.mageVfx = new MageVfxDirector(this);
     this.necroVfx = new NecroVfxDirector(this);
     this.warriorVfx = new WarriorVfxDirector(this);
@@ -403,6 +411,7 @@ export class BattleScene extends Phaser.Scene {
     this.input.on('pointerdown', (pointer) => {
       if (this.isPaused || this.isTransitioning || this.monsters.length === 0) return;
       const worldPt = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+      if (this.monsterSkills?.tryHitDynamicEntity(worldPt.x, worldPt.y, 56, Math.max(2, Math.round((this.getStats()?.atk || 20) * 0.75)))) return;
       const target = this.findNearestMonster(worldPt.x, worldPt.y, 140);
       if (target) {
         const stats = this.getStats();
@@ -1228,6 +1237,8 @@ export class BattleScene extends Phaser.Scene {
     this.floatingTextPool?.update(delta);
     this.particlePool?.update(delta);
     this.trainingArena?.update(time, delta);
+    this.cameraZoom?.update(delta);
+    this.monsterSkills?.update(time, delta, this.getStats());
     const stForMp = this.getStats();
     const dtSec = delta / 1000;
     this.playerMaxMp = stForMp.maxMp || 100;
@@ -1656,7 +1667,9 @@ export class BattleScene extends Phaser.Scene {
       const dx = this.hero.x - m.sprite.x;
       const dy = this.hero.y - m.sprite.y;
       const dist = Math.hypot(dx, dy) || 1;
-      const stopRange = m.isBoss ? 94 : (m.isRanged ? 260 : 70);
+      this.monsterSkills?.ensureMonsterInit(m);
+      const spacing = this.monsterSkills ? this.monsterSkills.getCombatSpacing(m) : { stopRange: m.isBoss ? 94 : (m.isRanged ? 260 : 70), kiteMin: 0 };
+      const stopRange = spacing.stopRange;
 
       let mobFlip = dx < 0;
       if (willChase) {
@@ -1666,6 +1679,13 @@ export class BattleScene extends Phaser.Scene {
           m.sprite.x = Phaser.Math.Clamp(m.sprite.x + mx, 120, MAP_W - 120);
           m.sprite.y = Phaser.Math.Clamp(m.sprite.y + my, 180, MAP_H - 180);
           this.resolveObstacleCollision(m.sprite, m.isBoss ? 34 : 24);
+        } else if (spacing.kiteMin > 0 && dist < spacing.kiteMin && !m._isCastingSkill) {
+          // v278: 遠程怪自動拉打後撤，保持 260~360px 輸出安全距離
+          const kx = (-dx / dist + Math.cos(m.jitterAngle) * 0.22) * m.speed * 0.72 * slowFactor * dt;
+          const ky = (-dy / dist + Math.sin(m.jitterAngle) * 0.22) * m.speed * 0.72 * slowFactor * dt;
+          m.sprite.x = Phaser.Math.Clamp(m.sprite.x + kx, 120, MAP_W - 120);
+          m.sprite.y = Phaser.Math.Clamp(m.sprite.y + ky, 180, MAP_H - 180);
+          this.resolveObstacleCollision(m.sprite, 24);
         }
       } else {
         m.roamTimer = (m.roamTimer || 0) - delta;
@@ -1770,7 +1790,8 @@ export class BattleScene extends Phaser.Scene {
   fireEnemyBolt(m) {
     const ang = Math.atan2(this.hero.y - m.sprite.y, this.hero.x - m.sprite.x);
     const isImp = m.atkStyle === 'imp_fire';
-    const texKey = isImp ? 'efx_imp_fire' : 'efx_necro_orb';
+    const prefKey = isImp ? 'proj_e_fireball' : (m.atkStyle === 'venom' ? 'proj_e_venom_spit' : 'proj_e_soul_bolt');
+    const texKey = this.textures.exists(prefKey) ? prefKey : (isImp ? 'efx_imp_fire' : 'efx_necro_orb');
     const sx = m.sprite.x + Math.cos(ang) * 26;
     const sy = m.sprite.y - 12 + Math.sin(ang) * 16;
     this.playFxSprite(isImp ? 'mfx_meteor_flame' : 'mfx_spark', sx, sy, 0.34, ang, 200);
@@ -1807,7 +1828,7 @@ export class BattleScene extends Phaser.Scene {
         if (!m || m.hp <= 0 || this.isTransitioning) return;
         this.playFxSprite('mfx_meteor_blast', tx, ty - 16, 1.25, 0, 440);
         this.playFxSprite('wfx_lava_ring', tx, ty, 1.15, 0, 420);
-        if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(190, 0.01);
+        // v278: zero screen shake
         if (Phaser.Math.Distance.Between(tx, ty, this.hero.x, this.hero.y) <= radius) {
           this.performMonsterAttack(m, stats, 1.45, true);
         }
@@ -3042,6 +3063,7 @@ export class BattleScene extends Phaser.Scene {
     this.towerFloor = Math.max(1, floor);
     this.towerEndAt = (this.time?.now || 0) + 60000;
     this.towerClearing = false;
+    this.monsterSkills?.clearAll();
     this.clearMonsters();
     this.collectAllGroundLoot?.();
 

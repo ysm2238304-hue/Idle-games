@@ -1,15 +1,16 @@
-import { TOWN_CH1 } from '../data/towns/ch1.js?v=273';
+import { CameraZoomHelper } from './CameraZoomHelper.js?v=278';
+import { TOWN_CH1 } from '../data/towns/ch1.js?v=281';
 import { LivingNpcEngine } from '../town/LivingNpcEngine.js?v=273';
 import { TownMultiplayerSync } from '../net/TownMultiplayerSync.js?v=274';
-import { TOWN_CH2 } from '../data/towns/ch2.js?v=273';
-import { TOWN_CH3 } from '../data/towns/ch3.js?v=273';
-import { TOWN_CH4 } from '../data/towns/ch4.js?v=273';
-import { TOWN_CH5 } from '../data/towns/ch5.js?v=273';
-import { TOWN_CH6 } from '../data/towns/ch6.js?v=273';
-import { TOWN_CH7 } from '../data/towns/ch7.js?v=273';
-import { TOWN_CH8 } from '../data/towns/ch8.js?v=273';
-import { TOWN_CH9 } from '../data/towns/ch9.js?v=273';
-import { TOWN_CH10 } from '../data/towns/ch10.js?v=273';
+import { TOWN_CH2 } from '../data/towns/ch2.js?v=281';
+import { TOWN_CH3 } from '../data/towns/ch3.js?v=281';
+import { TOWN_CH4 } from '../data/towns/ch4.js?v=281';
+import { TOWN_CH5 } from '../data/towns/ch5.js?v=281';
+import { TOWN_CH6 } from '../data/towns/ch6.js?v=281';
+import { TOWN_CH7 } from '../data/towns/ch7.js?v=281';
+import { TOWN_CH8 } from '../data/towns/ch8.js?v=281';
+import { TOWN_CH9 } from '../data/towns/ch9.js?v=281';
+import { TOWN_CH10 } from '../data/towns/ch10.js?v=281';
 import { formatNum } from '../logic/statCalc.js?v=99';
 import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta } from '../data/pets.js?v=99';
 
@@ -321,16 +322,8 @@ export class TownScene extends Phaser.Scene {
 
     this.mpSync?.start();
     this.cameras.main.startFollow(this.hero, true, 0.14, 0.14);
-    // v274: 主城滑鼠滾輪縮放視角（0.55x 全景俯瞰 ↔ 1.45x 近距細看，按 [0] 重置）
-    this._targetZoom = 0.88;
-    this.cameras.main.setZoom(this._targetZoom);
-    this.input.on('wheel', (pointer, _objs, _dx, deltaY) => {
-      const targetEl = pointer?.event?.target;
-      if (targetEl && targetEl.tagName !== 'CANVAS') return;
-      const step = deltaY > 0 ? -0.09 : 0.09;
-      this._targetZoom = Phaser.Math.Clamp((this._targetZoom || 0.88) + step, 0.55, 1.45);
-    });
-    this._resetZoomKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.ZERO);
+    // v278: 全場景通用滑鼠滾輪縮放引擎（0.55x 全景俯瞰 ↔ 1.45x 近距細看，按 [0] 重置）
+    this.cameraZoom = new CameraZoomHelper(this, { minZoom: 0.55, maxZoom: 1.45, defaultZoom: 0.88, step: 0.09 });
 
     // 9.2 全 10 座主城地面動態「星門傳送魔法陣」（2.5D 透視雙層旋轉法陣 + 章節專屬色）
     const wpX = td.spawn.x + 165;
@@ -949,15 +942,7 @@ export class TownScene extends Phaser.Scene {
   update(time, delta) {
     if (!this.hero) return;
     const dt = Math.min(0.05, delta / 1000);
-    if (this._resetZoomKey && Phaser.Input.Keyboard.JustDown(this._resetZoomKey)) {
-      this._targetZoom = 0.88;
-    }
-    if (this._targetZoom && this.cameras?.main) {
-      const curZ = this.cameras.main.zoom;
-      if (Math.abs(curZ - this._targetZoom) > 0.002) {
-        this.cameras.main.setZoom(Phaser.Math.Linear(curZ, this._targetZoom, Math.min(1, dt * 10)));
-      }
-    }
+    this.cameraZoom?.update(delta);
     const td = this.townData;
 
     // 鍵盤移動優先

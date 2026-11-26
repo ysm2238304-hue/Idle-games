@@ -20,6 +20,69 @@
   <link id="class-mech-v234-css" rel="stylesheet" href="./src/ui/classMechanic.css?v=234" />
   <link id="endgame-v237-css" rel="stylesheet" href="./src/ui/endgameModal.css?v=237" />
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
+  <style id="v278-target-hud-fix">
+    /* v278: 修復頂部目標／地標血條在長文案下被固定高度裁切與擠壓的問題 */
+    #target-frame {
+      min-width: 340px !important;
+      max-width: min(560px, 68vw) !important;
+      width: auto !important;
+      padding: 8px 14px 10px !important;
+      box-sizing: border-box !important;
+    }
+    #target-frame .target-head {
+      display: flex !important;
+      align-items: center !important;
+      gap: 8px !important;
+      flex-wrap: nowrap !important;
+      margin-bottom: 6px !important;
+    }
+    #target-frame .target-name {
+      flex: 1 1 auto !important;
+      min-width: 0 !important;
+      overflow: hidden !important;
+      text-overflow: ellipsis !important;
+      white-space: nowrap !important;
+    }
+    #target-frame .target-lv {
+      flex: 0 0 auto !important;
+      white-space: nowrap !important;
+    }
+    #target-frame .target-hp-track {
+      position: relative !important;
+      min-height: 24px !important;
+      height: auto !important;
+      padding: 3px 10px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      overflow: hidden !important;
+      border-radius: 999px !important;
+      box-sizing: border-box !important;
+    }
+    #target-frame .target-hp-fill {
+      position: absolute !important;
+      inset: 0 !important;
+      height: 100% !important;
+      border-radius: inherit !important;
+      z-index: 0 !important;
+    }
+    #target-frame .target-hp-text {
+      position: relative !important;
+      inset: auto !important;
+      transform: none !important;
+      z-index: 1 !important;
+      display: block !important;
+      width: 100% !important;
+      text-align: center !important;
+      font-size: 11.5px !important;
+      line-height: 1.35 !important;
+      white-space: normal !important;
+      word-break: keep-all !important;
+      overflow-wrap: anywhere !important;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.96) !important;
+      padding: 0 4px !important;
+    }
+  </style>
 </head>
 <body>
   <section id="welcome-screen">
@@ -646,6 +709,6 @@
     </div>
   </div>
 
-  <script type="module" src="./src/main.js?v=277"></script>
+  <script type="module" src="./src/main.js?v=281"></script>
 </body>
 </html>
