@@ -1664,10 +1664,12 @@ export const KEYSTONE_PASSIVES = {
     { id: 'mk_enlightenment', name: '啟蒙',       icon: './assets/skills/ks_mk_enlightenment.png?v=241',badge: '三系神技',color: '#fde047', desc: '交替施放火／冰／雷疊層，滿層爆發【啟蒙】：全元素傷 +90%、回魔 +100%！' },
   ],
   necro: [
-    { id: 'nk_undead_overlord', name: '死靈統御', icon: './assets/skills/ks_nk_undead_overlord.png?v=236', badge: '召喚流', color: '#2dd4bf', desc: '攻速 +25%、暴擊率 +15%、全召喚與技能傷害 +35%。' },
-    { id: 'nk_bone_tyrant',     name: '骸骨暴君', icon: './assets/skills/ks_nk_bone_tyrant.png?v=236', badge: '白骨流', color: '#e2e8f0', desc: '暴擊傷害 +85%、壓制率 +15%，命中 40% 機率噴射五向分裂骨刺！' },
-    { id: 'nk_plague_sea',      name: '血海瘟疫', icon: './assets/skills/ks_nk_plague_sea.png?v=236', badge: '屍爆流', color: '#4ade80', desc: '命中【詛咒】目標 45% 機率引爆免費血毒屍爆（130% 傷＋掛中毒）。' },
-    { id: 'nk_lich_phylactery', name: '巫妖命匣', icon: './assets/skills/ks_nk_lich_phylactery.png?v=236', badge: '變異高危', color: '#38bdf8', desc: '【變異】護甲 -40%，換取吸血 +14% 與全暗影／白骨技能傷害 +70%！' },
+    { id: 'nk_undead_overlord', name: '死靈統御',   icon: './assets/skills/ks_nk_undead_overlord.png?v=251', badge: '召喚流', color: '#2dd4bf', desc: '攻速 +25%、暴擊率 +15%、全召喚與技能傷害 +35%。' },
+    { id: 'nk_bone_tyrant',     name: '骸骨暴君',   icon: './assets/skills/ks_nk_bone_tyrant.png?v=251',     badge: '白骨流', color: '#e2e8f0', desc: '暴擊傷害 +85%、壓制率 +15%，白骨長矛必觸發雙倍回彈骨片！' },
+    { id: 'nk_plague_sea',      name: '血海瘟疫',   icon: './assets/skills/ks_nk_plague_sea.png?v=251',      badge: '屍爆流', color: '#4ade80', desc: '命中【詛咒】目標 45% 機率免費引爆血毒屍爆並額外生成屍骸。' },
+    { id: 'nk_shadowblight',    name: '暗影凋零',   icon: './assets/skills/ks_nk_shadowblight.png?v=251',    badge: '暗影流', color: '#a855f7', desc: '【暗黑 4 經典】暗影傷害每累積命中 8 次即於目標爆發巨額暗影凋零爆破（240% 傷）！' },
+    { id: 'nk_rathma_vigor',    name: '拉斯瑪活力', icon: './assets/skills/ks_nk_rathma_vigor.png?v=251',    badge: '鮮血壓制', color: '#ef4444', desc: '【暗黑 4 經典】最大生命 +20%，每拾取 2 顆鮮血球即讓下一次鮮血技 100% 必定壓制超爆！' },
+    { id: 'nk_lich_phylactery', name: '巫妖命匣',   icon: './assets/skills/ks_nk_lich_phylactery.png?v=251', badge: '變異高危', color: '#38bdf8', desc: '【變異】護甲 -40%，換取吸血 +14% 與全暗影／白骨技能傷害 +70%！' },
   ]
 };
 

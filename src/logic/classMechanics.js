@@ -207,3 +207,12 @@ export const MAGE_D4_PRESETS = [
   { id: 'storm_arc', name: '⚡ 不穩電流電花', color: '#a78bfa', skills: ['m_arc_lash', 'chain_lightning', 'm_ice_armor', 'm_arcane_blink', 'm_lightning_spear', 'm_unstable_currents'], enchants: ['m_ball_lightning', 'm_lightning_spear'], keystone: 'mk_vyr_mastery' },
   { id: 'enlighten', name: '🔮 啟蒙三系召喚', color: '#fde047', skills: ['m_spark', 'm_frozen_orb', 'm_flame_shield', 'frost_nova', 'm_familiar', 'm_astral_supernova'], enchants: ['m_fire_bolt', 'm_frozen_orb'], keystone: 'mk_enlightenment' },
 ];
+
+
+// v251: 暗黑 4 死靈法師四大流派「一鍵套用推薦配招（6 招＋亡者之書＋關鍵被動）」
+export const NECRO_D4_PRESETS = [
+  { id: 'necro_army',   name: '💀 亡靈天災大軍', color: '#2dd4bf', skills: ['n_reap_scythe', 'n_blight_pool', 'n_blood_mist', 'n_corpse_tendrils', 'raise_skeleton', 'n_army_scourge'], book: { skeleton: 'reaper', mage: 'shadow_mage', golem: 'blood_golem' }, keystone: 'nk_undead_overlord' },
+  { id: 'necro_bone',   name: '🦴 孤高骨矛貫穿', color: '#e2e8f0', skills: ['n_bone_splinters', 'bone_spear', 'n_blood_mist', 'n_corpse_tendrils', 'bone_prison', 'n_bone_storm'], book: { skeleton: 'sacrifice', mage: 'sacrifice', golem: 'sacrifice' }, keystone: 'nk_bone_tyrant' },
+  { id: 'necro_blood',  name: '🩸 血湧壓制血浪', color: '#ef4444', skills: ['n_hemorrhage', 'n_blood_surge', 'n_blood_mist', 'n_iron_maiden', 'blood_golem', 'n_blood_wave'], book: { skeleton: 'defender', mage: 'sacrifice', golem: 'blood_golem' }, keystone: 'nk_rathma_vigor' },
+  { id: 'necro_shadow', name: '☠️ 暗影屍爆凋零', color: '#a855f7', skills: ['n_decompose', 'n_sever', 'corpse_explosion', 'n_corpse_tendrils', 'n_blight_pool', 'n_soul_rift'], book: { skeleton: 'reaper', mage: 'shadow_mage', golem: 'sacrifice' }, keystone: 'nk_shadowblight' },
+];

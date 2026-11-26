@@ -4,7 +4,7 @@ import { WARRIOR_SKILLS } from './data/warriorSkills.js?v=235';
 import { RANGER_SKILLS } from './data/rangerSkills.js?v=236';
 import { MAGE_SKILLS } from './data/mageSkills.js?v=241';
 import { PALADIN_SKILLS } from './data/paladinSkills.js?v=235';
-import { NECRO_SKILLS } from './data/necroSkills.js?v=236';
+import { NECRO_SKILLS } from './data/necroSkills.js?v=251';
 import { ASSASSIN_SKILLS } from './data/assassinSkills.js?v=235';
 import { RARITIES } from './data/items.js?v=240';
 import { PET_CATALOG, rollPetDrop, getPetDef } from './data/pets.js?v=99';
@@ -20,14 +20,14 @@ import {
   loadCloudSave,
   saveCloudData,
 } from './auth/firebase.js?v=249';
-import { BattleScene } from './scenes/BattleScene.js?v=250';
+import { BattleScene } from './scenes/BattleScene.js?v=252';
 import { TownScene } from './scenes/TownScene.js?v=227';
 import { TOWN_SPLASHES } from './data/towns/splashes.js?v=229';
 import { DashboardUI } from './ui/DashboardUI.js?v=241';
 import { UniversalTooltip } from './ui/UniversalTooltip.js?v=240';
 import { SkillSpecModal } from './ui/SkillSpecModal.js?v=241';
 import { ClassMechanicModal } from './ui/ClassMechanicModal.js?v=241';
-import { MAGE_D4_PRESETS } from './logic/classMechanics.js?v=241';
+import { MAGE_D4_PRESETS, NECRO_D4_PRESETS } from './logic/classMechanics.js?v=251';
 import { EndgameModal } from './ui/EndgameModal.js?v=237';
 import { TownBgmEngine } from './audio/TownBgmEngine.js?v=99';
 import { BattleSfxEngine } from './audio/BattleSfxEngine.js?v=99';
@@ -2636,13 +2636,36 @@ if (typeof document !== 'undefined') {
     btn.addEventListener('click', () => applyMageD4Preset(btn.dataset.preset));
   });
 
+  const applyNecroD4Preset = (presetId) => {
+    const preset = NECRO_D4_PRESETS.find((p) => p.id === presetId);
+    if (!preset) return;
+    if (gameState.classId !== 'necro') {
+      ui.addLog('ℹ️ 此一鍵流派預設專屬於【死靈法師】，請先切換職業為死靈法師。', 'system');
+      return;
+    }
+    if (!gameState.equippedSkillsByClass) gameState.equippedSkillsByClass = {};
+    gameState.equippedSkillsByClass.necro = [...preset.skills];
+    if (!gameState.classMechanic) gameState.classMechanic = {};
+    gameState.classMechanic.necro = { ...(gameState.classMechanic.necro || {}), ...preset.book };
+    if (!gameState.activeKeystone) gameState.activeKeystone = {};
+    gameState.activeKeystone.necro = preset.keystone;
+    refreshStatsAndUI();
+    persistAll();
+    ui.addLog(`💀 已一鍵套用死靈流派【${preset.name}】（6 格配招＋亡者之書＋關鍵被動）！`, 'victory');
+  };
+  document.querySelectorAll('.v241-preset-pill[data-necro-preset]').forEach((btn) => {
+    btn.addEventListener('click', () => applyNecroD4Preset(btn.dataset.necroPreset));
+  });
+
   const syncV241Strip = () => {
-    const row = document.getElementById('v241-mage-preset-row');
+    const mageRow = document.getElementById('v241-mage-preset-row');
+    const necroRow = document.getElementById('v251-necro-preset-row');
     const lbl = document.getElementById('v241-class-strip-label');
-    if (!row || !lbl) return;
-    const isMage = gameState?.classId === 'mage';
-    row.style.display = isMage ? 'flex' : 'none';
-    lbl.style.display = isMage ? 'none' : 'inline-flex';
+    if (!mageRow || !lbl) return;
+    const cid = gameState?.classId;
+    mageRow.style.display = cid === 'mage' ? 'flex' : 'none';
+    if (necroRow) necroRow.style.display = cid === 'necro' ? 'flex' : 'none';
+    lbl.style.display = (cid === 'mage' || cid === 'necro') ? 'none' : 'inline-flex';
   };
   setInterval(syncV241Strip, 600);
   syncV241Strip();
