@@ -22,7 +22,7 @@ import {
   deleteCloudSave,
 } from './auth/firebase.js?v=272';
 import { BattleScene } from './scenes/BattleScene.js?v=266';
-import { TownScene } from './scenes/TownScene.js?v=272';
+import { TownScene } from './scenes/TownScene.js?v=273';
 import { TOWN_SPLASHES } from './data/towns/splashes.js?v=229';
 import { DashboardUI } from './ui/DashboardUI.js?v=263';
 import { hookWorldMap25D, openWorldMap25D, closeWorldMap25D, toggleWorldMap25D } from './ui/WorldMap25D.js?v=253';

@@ -1,15 +1,15 @@
-import { TOWN_CH1 } from '../data/towns/ch1.js?v=267';
-import { LivingNpcEngine } from '../town/LivingNpcEngine.js?v=267';
-import { TownMultiplayerSync } from '../net/TownMultiplayerSync.js?v=272';
-import { TOWN_CH2 } from '../data/towns/ch2.js?v=268';
-import { TOWN_CH3 } from '../data/towns/ch3.js?v=268';
-import { TOWN_CH4 } from '../data/towns/ch4.js?v=268';
-import { TOWN_CH5 } from '../data/towns/ch5.js?v=269';
-import { TOWN_CH6 } from '../data/towns/ch6.js?v=269';
-import { TOWN_CH7 } from '../data/towns/ch7.js?v=269';
-import { TOWN_CH8 } from '../data/towns/ch8.js?v=270';
-import { TOWN_CH9 } from '../data/towns/ch9.js?v=270';
-import { TOWN_CH10 } from '../data/towns/ch10.js?v=270';
+import { TOWN_CH1 } from '../data/towns/ch1.js?v=273';
+import { LivingNpcEngine } from '../town/LivingNpcEngine.js?v=273';
+import { TownMultiplayerSync } from '../net/TownMultiplayerSync.js?v=273';
+import { TOWN_CH2 } from '../data/towns/ch2.js?v=273';
+import { TOWN_CH3 } from '../data/towns/ch3.js?v=273';
+import { TOWN_CH4 } from '../data/towns/ch4.js?v=273';
+import { TOWN_CH5 } from '../data/towns/ch5.js?v=273';
+import { TOWN_CH6 } from '../data/towns/ch6.js?v=273';
+import { TOWN_CH7 } from '../data/towns/ch7.js?v=273';
+import { TOWN_CH8 } from '../data/towns/ch8.js?v=273';
+import { TOWN_CH9 } from '../data/towns/ch9.js?v=273';
+import { TOWN_CH10 } from '../data/towns/ch10.js?v=273';
 import { formatNum } from '../logic/statCalc.js?v=99';
 import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta } from '../data/pets.js?v=99';
 
@@ -112,6 +112,7 @@ export class TownScene extends Phaser.Scene {
     this.interactables = [];
     this.patrolActors = [];
     this.roamNpcs = [];
+    this._placedNpcPos = [];
     this.livingNpcs?.destroy();
     this.mpSync?.destroy();
     this.livingNpcs = new LivingNpcEngine(this);
@@ -250,7 +251,11 @@ export class TownScene extends Phaser.Scene {
 
     // 8. 巡邏衛兵與商販平民（支援靠近停步轉向與點擊/F 互動）
     for (const pt of td.patrols || []) {
-      const start = pt.waypoints[0];
+      const wps = pt.waypoints || pt.points || [];
+      if (!wps.length) continue;
+      pt.waypoints = wps;
+      if (!pt.scale) pt.scale = 0.62;
+      const start = wps[0];
       const isGuard = pt.frame.includes('guard');
       const sh = this.add.image(start.x, start.y + 2, 'fx_glow')
         .setTint(0x000000).setScale(0.95, 0.34).setAlpha(0.48).setDepth(2);
@@ -583,6 +588,21 @@ export class TownScene extends Phaser.Scene {
         y = ob.y + Math.sin(ang) * minD;
       }
     }
+    // v273: 強制 NPC 間保持 150px 最小安全間距，防止任何重疊
+    if (!this._placedNpcPos) this._placedNpcPos = [];
+    for (let pass = 0; pass < 3; pass++) {
+      for (const prev of this._placedNpcPos) {
+        const dx = x - prev.x;
+        const dy = y - prev.y;
+        const d = Math.hypot(dx, dy);
+        if (d < 150) {
+          const ang = d > 1 ? Math.atan2(dy, dx) : (pass * 2.1 + 0.5);
+          x = prev.x + Math.cos(ang) * 155;
+          y = prev.y + Math.sin(ang) * 155;
+        }
+      }
+    }
+    this._placedNpcPos.push({ x, y });
     return { x, y };
   }
 
@@ -636,21 +656,14 @@ export class TownScene extends Phaser.Scene {
     };
     this.interactables.push(interactObj);
     if (!action.startsWith('gimmick_')) {
-      this.livingNpcs?.registerNpc(spr, { name: npc.name, workStyle: npc.workStyle || 'idle', greeting: npc.greeting });
-        this.roamNpcs.push({
-        spr,
-        frame: npc.frame,
-        hasAnim,
-        dustAt: 0,
+      this.livingNpcs?.registerNpc(spr, {
+        name: npc.name,
+        workStyle: npc.workStyle || 'idle',
+        greeting: npc.greeting,
         shadow: sh,
         plate,
         icon,
         interactObj,
-        homeX: npc.x,
-        homeY: npc.y,
-        targetX: npc.x,
-        targetY: npc.y,
-        waitUntil: 1500 + Math.random() * 2500,
       });
     }
   }

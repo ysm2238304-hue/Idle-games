@@ -195,7 +195,8 @@ export const TOWN_CH1 = {
       name: '曙光城防衛兵',
       frame: 'ch1_npc_guard',
       speed: 74,
-      points: [
+      scale: 0.62,
+      waypoints: [
         { x: 1520, y: 1240 },
         { x: 2048, y: 890 },
         { x: 2580, y: 1240 },
@@ -206,7 +207,8 @@ export const TOWN_CH1 = {
       name: '邊境巡邏斥候',
       frame: 'ch1_npc_bounty',
       speed: 82,
-      points: [
+      scale: 0.62,
+      waypoints: [
         { x: 1180, y: 1100 },
         { x: 1180, y: 1620 },
         { x: 1740, y: 1780 },

@@ -214,7 +214,7 @@ export const TOWN_CH10 = {
       frame: 'ch10_npc_weaver',
       name: '伊莉雅',
       title: '星界編織者',
-      x: 2098, y: 540,
+      x: 1560, y: 1520,
       scale: 0.64,
       greeting: '偉大的旅者，你已走完十界征途！收下這份星界編織者的終極贈禮吧！',
       action: 'modal_weaver',
@@ -225,7 +225,7 @@ export const TOWN_CH10 = {
       frame: 'ch10_prop_starwell',
       name: '星界銀河許願泉',
       title: '星辰聖泉',
-      x: 2996, y: 1941,
+      x: 2540, y: 1520,
       scale: 0.78,
       greeting: '沐浴於流淌星塵的銀河許願泉，瞬間恢復全部生命與能量！',
       action: 'gimmick_star_well',
@@ -242,35 +242,9 @@ export const TOWN_CH10 = {
     radius: 42,
   },
 
-  neighborhood: [
-    { frame: 'ch10_bld_tavern', name: '星辰銀河酒館', x: 878, y: 1252, scale: 0.94, radius: 110 },
-    { frame: 'ch10_bld_prism', name: '無重力稜鏡水晶塔', x: 468, y: 1252, scale: 0.95, radius: 88 },
-    { frame: 'ch10_bld_sanctum', name: '金黑星盤神殿邸', x: 3569, y: 1252, scale: 0.92, radius: 102, flipX: true },
-    { frame: 'ch10_bld_gate', name: '星圖凱旋大拱門', x: 2048, y: 2254, scale: 1.04, radius: 112 },
-  ],
+  neighborhood: [],
 
-  props: [
-    // 四座發光星光彩虹橋（設 depthOverride: 1）
-    { frame: 'ch10_prop_starbridge', x: 1258, y: 1280, scale: 0.92, radius: 0, depthOverride: 1 },
-    { frame: 'ch10_prop_starbridge', x: 2838, y: 1280, scale: 0.92, radius: 0, depthOverride: 1, flipX: true },
-    { frame: 'ch10_prop_starbridge', x: 2048, y: 768, scale: 0.84, radius: 0, depthOverride: 1 },
-    { frame: 'ch10_prop_starbridge', x: 2048, y: 1792, scale: 0.84, radius: 0, depthOverride: 1 },
-    // 星光路燈、星盤儀、浮空稜鏡、星辰結晶樹、星圖戰旗、星靈
-    { frame: 'ch10_prop_lantern', x: 1741, y: 1081, scale: 0.68, radius: 18, glow: true, glowColor: 0xfde047 },
-    { frame: 'ch10_prop_lantern', x: 2355, y: 1081, scale: 0.68, radius: 18, glow: true, glowColor: 0xfde047 },
-    { frame: 'ch10_prop_lantern', x: 1741, y: 1465, scale: 0.68, radius: 18, glow: true, glowColor: 0xc084fc },
-    { frame: 'ch10_prop_lantern', x: 2355, y: 1465, scale: 0.68, radius: 18, glow: true, glowColor: 0xc084fc },
-    { frame: 'ch10_prop_astrolabe', x: 1638, y: 1536, scale: 0.74, radius: 32 },
-    { frame: 'ch10_prop_astrolabe', x: 2458, y: 1536, scale: 0.74, radius: 32, flipX: true },
-    { frame: 'ch10_prop_prism', x: 1726, y: 2076, scale: 0.76, radius: 32 },
-    { frame: 'ch10_prop_prism', x: 2370, y: 2076, scale: 0.76, radius: 32, flipX: true },
-    { frame: 'ch10_prop_startree', x: 1668, y: 441, scale: 0.86, radius: 32 },
-    { frame: 'ch10_prop_startree', x: 2428, y: 441, scale: 0.86, radius: 32, flipX: true },
-    { frame: 'ch10_prop_banner', x: 1836, y: 2155, scale: 0.72, radius: 16 },
-    { frame: 'ch10_prop_banner', x: 2260, y: 2155, scale: 0.72, radius: 16, flipX: true },
-    { frame: 'ch10_pet_wisp', x: 1821, y: 1266, scale: 0.45, radius: 0 },
-    { frame: 'ch10_pet_wisp', x: 2275, y: 1266, scale: 0.45, radius: 0, flipX: true },
-  ],
+  props: [],
 
   patrols: [
     {

@@ -214,7 +214,7 @@ export const TOWN_CH5 = {
       frame: 'ch5_npc_contractor',
       name: '墨菲斯托',
       title: '墮落契約官',
-      x: 1927, y: 555,
+      x: 1560, y: 1520,
       scale: 0.64,
       greeting: '與我簽下這份黃金魔契吧，這 10,000 金幣與秘藥算是王庭的誠意！',
       action: 'modal_contractor',
@@ -225,7 +225,7 @@ export const TOWN_CH5 = {
       frame: 'ch5_prop_chalice',
       name: '猩紅聖血聖杯座',
       title: '王庭聖物',
-      x: 2996, y: 1941,
+      x: 2540, y: 1520,
       scale: 0.76,
       greeting: '飲下聖杯中的不朽紅液，瞬間回復全部生命與能量！',
       action: 'gimmick_blood_chalice',
@@ -242,36 +242,9 @@ export const TOWN_CH5 = {
     radius: 42,
   },
 
-  neighborhood: [
-    { frame: 'ch5_bld_tavern', name: '巴洛克惡魔大酒館', x: 512, y: 1906, scale: 0.96, radius: 112 },
-    { frame: 'ch5_bld_spire', name: '懸浮鎖鏈尖塔', x: 936, y: 583, scale: 0.96, radius: 90 },
-    { frame: 'ch5_bld_manor', name: '紫黑大理石魔族邸宅', x: 3248, y: 583, scale: 0.94, radius: 108, flipX: true },
-    { frame: 'ch5_bld_gate', name: '緋紅魔獄凱旋大門', x: 2048, y: 2254, scale: 1.04, radius: 112 },
-  ],
+  neighborhood: [],
 
-  props: [
-    // 皇宮紫黑大理石柱與鎖鏈柵欄
-    { frame: 'ch5_prop_pillar', x: 1682, y: 939, scale: 0.80, radius: 30 },
-    { frame: 'ch5_prop_pillar', x: 2414, y: 939, scale: 0.80, radius: 30, flipX: true },
-    { frame: 'ch5_prop_pillar', x: 1682, y: 1650, scale: 0.80, radius: 30 },
-    { frame: 'ch5_prop_pillar', x: 2414, y: 1650, scale: 0.80, radius: 30, flipX: true },
-    { frame: 'ch5_prop_chains', x: 1521, y: 796, scale: 0.76, radius: 46 },
-    { frame: 'ch5_prop_chains', x: 2575, y: 796, scale: 0.76, radius: 46, flipX: true },
-    // 巴洛克紫焰燭台路燈與魔火盆
-    { frame: 'ch5_prop_lantern', x: 1799, y: 1052, scale: 0.68, radius: 18, glow: true, glowColor: 0xe879f9 },
-    { frame: 'ch5_prop_lantern', x: 2297, y: 1052, scale: 0.68, radius: 18, glow: true, glowColor: 0xe879f9 },
-    { frame: 'ch5_prop_lantern', x: 1799, y: 1479, scale: 0.68, radius: 18, glow: true, glowColor: 0xf43f5e },
-    { frame: 'ch5_prop_lantern', x: 2297, y: 1479, scale: 0.68, radius: 18, glow: true, glowColor: 0xf43f5e },
-    { frame: 'ch5_prop_brazier', x: 1814, y: 2091, scale: 0.70, radius: 24, glow: true, glowColor: 0xe879f9 },
-    { frame: 'ch5_prop_brazier', x: 2282, y: 2091, scale: 0.70, radius: 24, glow: true, glowColor: 0xe879f9 },
-    // 魔王骷髏王座、血葉樹、深淵之眼
-    { frame: 'ch5_prop_throne', x: 1682, y: 484, scale: 0.76, radius: 38 },
-    { frame: 'ch5_prop_throne', x: 2414, y: 484, scale: 0.76, radius: 38, flipX: true },
-    { frame: 'ch5_prop_tree', x: 453, y: 1052, scale: 0.94, radius: 42 },
-    { frame: 'ch5_prop_tree', x: 3643, y: 1052, scale: 0.94, radius: 42, flipX: true },
-    { frame: 'ch5_pet_eye', x: 1807, y: 1195, scale: 0.44, radius: 0 },
-    { frame: 'ch5_pet_eye', x: 2289, y: 1195, scale: 0.44, radius: 0, flipX: true },
-  ],
+  props: [],
 
   patrols: [
     {

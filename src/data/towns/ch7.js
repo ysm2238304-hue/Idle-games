@@ -214,7 +214,7 @@ export const TOWN_CH7 = {
       frame: 'ch7_npc_witchdoctor',
       name: '祖爾',
       title: '沼澤巫醫長',
-      x: 2654, y: 548,
+      x: 1560, y: 1520,
       scale: 0.64,
       greeting: '歡迎來到翠玉樹冠水寨！收下這份部族的巫醫聖禮，願螢火蟲指引你的道路。',
       action: 'modal_witchdoctor',
@@ -225,7 +225,7 @@ export const TOWN_CH7 = {
       frame: 'ch7_prop_horn',
       name: '沼澤巫毒號角柱',
       title: '部族機關',
-      x: 2996, y: 1934,
+      x: 2540, y: 1520,
       scale: 0.74,
       greeting: '吹響沼澤巫毒號角招來治癒螢火蟲群，瞬間回復全部生命與能量！',
       action: 'gimmick_voodoo_horn',
@@ -242,37 +242,9 @@ export const TOWN_CH7 = {
     radius: 42,
   },
 
-  neighborhood: [
-    { frame: 'ch7_bld_tavern', name: '樹冠水上竹屋酒館', x: 936, y: 2020, scale: 0.95, radius: 112 },
-    { frame: 'ch7_bld_watchhut', name: '巨樹瞭望樹屋', x: 468, y: 868, scale: 0.92, radius: 88 },
-    { frame: 'ch7_bld_stilt', name: '茅草高腳民居', x: 3569, y: 853, scale: 0.88, radius: 96, flipX: true },
-    { frame: 'ch7_bld_gate', name: '沼澤木筏水門', x: 2048, y: 2254, scale: 1.02, radius: 110 },
-  ],
+  neighborhood: [],
 
-  props: [
-    // 6 座連接各浮島的木棧道（設 depthOverride: 1）
-    { frame: 'ch7_prop_boardwalk', x: 1404, y: 939, scale: 0.92, radius: 0, depthOverride: 1 },
-    { frame: 'ch7_prop_boardwalk', x: 2692, y: 939, scale: 0.92, radius: 0, depthOverride: 1, flipX: true },
-    { frame: 'ch7_prop_boardwalk', x: 1404, y: 1621, scale: 0.92, radius: 0, depthOverride: 1 },
-    { frame: 'ch7_prop_boardwalk', x: 2692, y: 1621, scale: 0.92, radius: 0, depthOverride: 1, flipX: true },
-    { frame: 'ch7_prop_boardwalk', x: 2048, y: 832, scale: 0.84, radius: 0, depthOverride: 1 },
-    { frame: 'ch7_prop_boardwalk', x: 2048, y: 1728, scale: 0.84, radius: 0, depthOverride: 1 },
-    // 螢火蟲竹燈、巫毒圖騰、藥鍋、紅樹林、睡蓮與樹蛙
-    { frame: 'ch7_prop_lantern', x: 1777, y: 1109, scale: 0.68, radius: 18, glow: true, glowColor: 0x4ade80 },
-    { frame: 'ch7_prop_lantern', x: 2319, y: 1109, scale: 0.68, radius: 18, glow: true, glowColor: 0x4ade80 },
-    { frame: 'ch7_prop_lantern', x: 1777, y: 1465, scale: 0.68, radius: 18, glow: true, glowColor: 0x4ade80 },
-    { frame: 'ch7_prop_lantern', x: 2319, y: 1465, scale: 0.68, radius: 18, glow: true, glowColor: 0x4ade80 },
-    { frame: 'ch7_prop_totem', x: 1785, y: 2091, scale: 0.74, radius: 28 },
-    { frame: 'ch7_prop_totem', x: 2311, y: 2091, scale: 0.74, radius: 28, flipX: true },
-    { frame: 'ch7_prop_pots', x: 2984, y: 654, scale: 0.72, radius: 36 },
-    { frame: 'ch7_prop_pots', x: 1097, y: 597, scale: 0.70, radius: 36, flipX: true },
-    { frame: 'ch7_prop_mangrove', x: 424, y: 1678, scale: 0.92, radius: 42 },
-    { frame: 'ch7_prop_mangrove', x: 3672, y: 1678, scale: 0.92, radius: 42, flipX: true },
-    { frame: 'ch7_prop_lilypad', x: 1463, y: 1266, scale: 0.72, radius: 0, depthOverride: 1 },
-    { frame: 'ch7_prop_lilypad', x: 2633, y: 1266, scale: 0.72, radius: 0, depthOverride: 1, flipX: true },
-    { frame: 'ch7_pet_frog', x: 1851, y: 1351, scale: 0.44, radius: 0 },
-    { frame: 'ch7_pet_frog', x: 2260, y: 1351, scale: 0.44, radius: 0, flipX: true },
-  ],
+  props: [],
 
   patrols: [
     {

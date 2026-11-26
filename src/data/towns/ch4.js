@@ -214,7 +214,7 @@ export const TOWN_CH4 = {
       frame: 'ch4_npc_forgemaster',
       name: '赫菲斯',
       title: '火元素鍛造宗師',
-      x: 2054, y: 768,
+      x: 1560, y: 1520,
       scale: 0.64,
       greeting: '凡人，你的勇氣堪比純淨的赤炎。收下這份熔爐宗師的贈禮吧！',
       action: 'modal_forgemaster',
@@ -225,7 +225,7 @@ export const TOWN_CH4 = {
       frame: 'ch4_prop_sluice',
       name: '熔岩閘門壓力閥',
       title: '冷卻機關',
-      x: 3916, y: 1735,
+      x: 2540, y: 1520,
       scale: 0.72,
       greeting: '釋放高壓冷卻蒸汽，瞬間撫平熱傷並回復全部生命與能量！',
       action: 'gimmick_lava_sluice',
@@ -242,38 +242,9 @@ export const TOWN_CH4 = {
     radius: 44,
   },
 
-  neighborhood: [
-    { frame: 'ch4_bld_tavern', name: '矮人烈酒熔爐酒館', x: 658, y: 1934, scale: 0.96, radius: 116 },
-    { frame: 'ch4_bld_bellows', name: '巨型齒輪風箱塔', x: 1360, y: 512, scale: 0.94, radius: 92 },
-    { frame: 'ch4_bld_bunker', name: '黑曜石階梯碉堡', x: 2765, y: 526, scale: 0.90, radius: 98, flipX: true },
-    { frame: 'ch4_bld_gate', name: '火山城牆鐵門', x: 3482, y: 1963, scale: 1.02, radius: 114, flipX: true },
-  ],
+  neighborhood: [],
 
-  props: [
-    // 南北兩座橫跨岩漿河的鐵鍊玄武岩大橋（設 depthOverride: 1）
-    { frame: 'ch4_prop_bridge', x: 2048, y: 825, scale: 1.15, radius: 0, depthOverride: 1 },
-    { frame: 'ch4_prop_bridge', x: 2048, y: 1764, scale: 1.15, radius: 0, depthOverride: 1 },
-    // 熔鐵火盆路燈
-    { frame: 'ch4_prop_lantern', x: 1536, y: 704, scale: 0.68, radius: 18, glow: true, glowColor: 0xf97316 },
-    { frame: 'ch4_prop_lantern', x: 2560, y: 704, scale: 0.68, radius: 18, glow: true, glowColor: 0xf97316 },
-    { frame: 'ch4_prop_lantern', x: 1536, y: 1636, scale: 0.68, radius: 18, glow: true, glowColor: 0xf97316 },
-    { frame: 'ch4_prop_lantern', x: 2560, y: 1636, scale: 0.68, radius: 18, glow: true, glowColor: 0xf97316 },
-    { frame: 'ch4_prop_lantern', x: 1112, y: 981, scale: 0.66, radius: 18, glow: true, glowColor: 0xfbbf24 },
-    { frame: 'ch4_prop_lantern', x: 2984, y: 981, scale: 0.66, radius: 18, glow: true, glowColor: 0xfbbf24 },
-    // 熔岩鐵砧、礦石堆、鐵鍊柱、焦木樹、火蜥蜴
-    { frame: 'ch4_prop_anvil', x: 1112, y: 683, scale: 0.72, radius: 36 },
-    { frame: 'ch4_prop_anvil', x: 1229, y: 1479, scale: 0.68, radius: 34, flipX: true },
-    { frame: 'ch4_prop_slag', x: 512, y: 981, scale: 0.78, radius: 42 },
-    { frame: 'ch4_prop_slag', x: 3613, y: 996, scale: 0.78, radius: 42, flipX: true },
-    { frame: 'ch4_prop_chain', x: 1595, y: 1052, scale: 0.76, radius: 32 },
-    { frame: 'ch4_prop_chain', x: 2501, y: 1052, scale: 0.76, radius: 32, flipX: true },
-    { frame: 'ch4_prop_chain', x: 1595, y: 1479, scale: 0.76, radius: 32 },
-    { frame: 'ch4_prop_chain', x: 2501, y: 1479, scale: 0.76, radius: 32, flipX: true },
-    { frame: 'ch4_prop_deadtree', x: 453, y: 1593, scale: 0.92, radius: 42 },
-    { frame: 'ch4_prop_deadtree', x: 3657, y: 1593, scale: 0.92, radius: 42, flipX: true },
-    { frame: 'ch4_pet_lizard', x: 1851, y: 1266, scale: 0.45, radius: 0 },
-    { frame: 'ch4_pet_lizard', x: 2260, y: 1308, scale: 0.45, radius: 0, flipX: true },
-  ],
+  props: [],
 
   patrols: [
     {

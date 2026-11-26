@@ -214,7 +214,7 @@ export const TOWN_CH8 = {
       frame: 'ch8_npc_engineer',
       name: '艾迪生',
       title: '風暴首席工程師',
-      x: 2611, y: 548,
+      x: 1560, y: 1520,
       scale: 0.64,
       greeting: '這是我最新設計的蒼穹電弧補給包，拿著這 50,000 金幣和秘藥去大展身手吧！',
       action: 'modal_engineer',
@@ -225,7 +225,7 @@ export const TOWN_CH8 = {
       frame: 'ch8_prop_coil',
       name: '蓄電共鳴特斯拉線圈',
       title: '充能機關',
-      x: 2996, y: 1941,
+      x: 2540, y: 1520,
       scale: 0.76,
       greeting: '釋放線圈內的高壓奧術電流，瞬間恢復全部生命與能量！',
       action: 'gimmick_tesla_coil',
@@ -242,35 +242,9 @@ export const TOWN_CH8 = {
     radius: 42,
   },
 
-  neighborhood: [
-    { frame: 'ch8_bld_tavern', name: '雲端飛艇酒吧', x: 936, y: 1252, scale: 0.95, radius: 112 },
-    { frame: 'ch8_bld_windmill', name: '風力渦輪高塔', x: 497, y: 1252, scale: 0.94, radius: 88 },
-    { frame: 'ch8_bld_villa', name: '大理石圓頂神廟邸', x: 3569, y: 1252, scale: 0.92, radius: 102, flipX: true },
-    { frame: 'ch8_bld_gate', name: '蒼穹雲端凱旋門', x: 2048, y: 2254, scale: 1.04, radius: 112 },
-  ],
+  neighborhood: [],
 
-  props: [
-    // 四座發光奧術浮空天橋（設 depthOverride: 1）
-    { frame: 'ch8_prop_skybridge', x: 1390, y: 1280, scale: 0.94, radius: 0, depthOverride: 1 },
-    { frame: 'ch8_prop_skybridge', x: 2706, y: 1280, scale: 0.94, radius: 0, depthOverride: 1, flipX: true },
-    { frame: 'ch8_prop_skybridge', x: 2048, y: 825, scale: 0.84, radius: 0, depthOverride: 1 },
-    { frame: 'ch8_prop_skybridge', x: 2048, y: 1735, scale: 0.84, radius: 0, depthOverride: 1 },
-    // 電弧路燈、風力發電機、浮空水晶、白金柏樹、雷電精靈
-    { frame: 'ch8_prop_lantern', x: 1777, y: 1109, scale: 0.68, radius: 18, glow: true, glowColor: 0x38bdf8 },
-    { frame: 'ch8_prop_lantern', x: 2319, y: 1109, scale: 0.68, radius: 18, glow: true, glowColor: 0x38bdf8 },
-    { frame: 'ch8_prop_lantern', x: 1777, y: 1465, scale: 0.68, radius: 18, glow: true, glowColor: 0xfacc15 },
-    { frame: 'ch8_prop_lantern', x: 2319, y: 1465, scale: 0.68, radius: 18, glow: true, glowColor: 0xfacc15 },
-    { frame: 'ch8_prop_turbine', x: 1097, y: 654, scale: 0.78, radius: 36 },
-    { frame: 'ch8_prop_turbine', x: 2999, y: 654, scale: 0.78, radius: 36, flipX: true },
-    { frame: 'ch8_prop_crystal', x: 1755, y: 2076, scale: 0.76, radius: 34 },
-    { frame: 'ch8_prop_crystal', x: 2341, y: 2076, scale: 0.76, radius: 34, flipX: true },
-    { frame: 'ch8_prop_cypress', x: 1668, y: 441, scale: 0.86, radius: 28 },
-    { frame: 'ch8_prop_cypress', x: 2428, y: 441, scale: 0.86, radius: 28, flipX: true },
-    { frame: 'ch8_prop_banner', x: 1836, y: 2148, scale: 0.72, radius: 16 },
-    { frame: 'ch8_prop_banner', x: 2260, y: 2148, scale: 0.72, radius: 16, flipX: true },
-    { frame: 'ch8_pet_sprite', x: 1821, y: 1266, scale: 0.45, radius: 0 },
-    { frame: 'ch8_pet_sprite', x: 2275, y: 1266, scale: 0.45, radius: 0, flipX: true },
-  ],
+  props: [],
 
   patrols: [
     {

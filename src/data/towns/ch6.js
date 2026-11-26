@@ -214,7 +214,7 @@ export const TOWN_CH6 = {
       frame: 'ch6_npc_shaman',
       name: '奧丁森',
       title: '極地先知長老',
-      x: 1883, y: 540,
+      x: 1560, y: 1520,
       scale: 0.64,
       greeting: '遠道而來的勇者，極地的風雪考驗著每一位戰士，這份先知贈禮收下吧。',
       action: 'modal_shaman',
@@ -225,7 +225,7 @@ export const TOWN_CH6 = {
       frame: 'ch6_prop_brazier',
       name: '北歐符文暖火盆',
       title: '禦寒聖火',
-      x: 2996, y: 1963,
+      x: 2540, y: 1520,
       scale: 0.78,
       greeting: '靠近符文暖火盆驅散寒霜，瞬間回復全部生命與能量！',
       action: 'gimmick_runic_brazier',
@@ -242,35 +242,9 @@ export const TOWN_CH6 = {
     radius: 42,
   },
 
-  neighborhood: [
-    { frame: 'ch6_bld_tavern', name: '維京蜜酒長屋酒館', x: 614, y: 1920, scale: 0.96, radius: 115 },
-    { frame: 'ch6_bld_tower', name: '藍冰晶體瞭望塔', x: 556, y: 555, scale: 0.94, radius: 88 },
-    { frame: 'ch6_bld_house', name: '毛皮保暖雪屋', x: 3482, y: 555, scale: 0.88, radius: 96, flipX: true },
-    { frame: 'ch6_bld_gate', name: '極光冰晶堡正門', x: 2048, y: 2254, scale: 1.04, radius: 112 },
-  ],
+  neighborhood: [],
 
-  props: [
-    // 藍冰晶體城牆與符文石碑
-    { frame: 'ch6_prop_icewall', x: 936, y: 370, scale: 0.78, radius: 48 },
-    { frame: 'ch6_prop_icewall', x: 3160, y: 370, scale: 0.78, radius: 48, flipX: true },
-    { frame: 'ch6_prop_runestone', x: 1814, y: 825, scale: 0.76, radius: 32 },
-    { frame: 'ch6_prop_runestone', x: 2282, y: 825, scale: 0.76, radius: 32, flipX: true },
-    // 符文路燈與龍紋戰旗
-    { frame: 'ch6_prop_lantern', x: 1785, y: 1166, scale: 0.68, radius: 18, glow: true, glowColor: 0x38bdf8 },
-    { frame: 'ch6_prop_lantern', x: 2311, y: 1166, scale: 0.68, radius: 18, glow: true, glowColor: 0x38bdf8 },
-    { frame: 'ch6_prop_lantern', x: 1785, y: 1493, scale: 0.68, radius: 18, glow: true, glowColor: 0x38bdf8 },
-    { frame: 'ch6_prop_lantern', x: 2311, y: 1493, scale: 0.68, radius: 18, glow: true, glowColor: 0x38bdf8 },
-    { frame: 'ch6_prop_banner', x: 1851, y: 2148, scale: 0.72, radius: 16 },
-    { frame: 'ch6_prop_banner', x: 2245, y: 2148, scale: 0.72, radius: 16, flipX: true },
-    // 雪橇、雪松樹、白狐
-    { frame: 'ch6_prop_sled', x: 1580, y: 2005, scale: 0.74, radius: 44 },
-    { frame: 'ch6_prop_sled', x: 2545, y: 2005, scale: 0.74, radius: 44, flipX: true },
-    { frame: 'ch6_prop_pine', x: 410, y: 868, scale: 0.94, radius: 40 },
-    { frame: 'ch6_prop_pine', x: 3686, y: 868, scale: 0.94, radius: 40, flipX: true },
-    { frame: 'ch6_prop_pine', x: 3540, y: 1877, scale: 0.92, radius: 40 },
-    { frame: 'ch6_pet_fox', x: 1638, y: 1536, scale: 0.44, radius: 0 },
-    { frame: 'ch6_pet_fox', x: 2450, y: 882, scale: 0.44, radius: 0, flipX: true },
-  ],
+  props: [],
 
   patrols: [
     {

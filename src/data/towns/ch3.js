@@ -214,7 +214,7 @@ export const TOWN_CH3 = {
       frame: 'ch3_npc_chronicler',
       name: '阿爾文',
       title: '亡靈記錄者',
-      x: 2011, y: 555,
+      x: 1560, y: 1520,
       scale: 0.62,
       greeting: '我用魂羽筆記錄了每一位踏入墓穴的勇者，這份聖骨補給請收下。',
       action: 'modal_chronicler',
@@ -225,7 +225,7 @@ export const TOWN_CH3 = {
       frame: 'ch3_prop_candle',
       name: '祈禱幽藍燭台',
       title: '教堂聖壇',
-      x: 2996, y: 1941,
+      x: 2540, y: 1520,
       scale: 0.72,
       greeting: '點燃守夜人的藍蠟禱告燭台，撫平傷痛並回復全部狀態。',
       action: 'gimmick_candle_shrine',
@@ -242,38 +242,9 @@ export const TOWN_CH3 = {
     radius: 42,
   },
 
-  neighborhood: [
-    { frame: 'ch3_bld_belltower', name: '尖頂大聖堂鐘樓', x: 936, y: 583, scale: 0.96, radius: 92 },
-    { frame: 'ch3_bld_mausoleum', name: '貴族石棺陵墓', x: 3189, y: 583, scale: 0.94, radius: 108 },
-    { frame: 'ch3_bld_house', name: '守夜人石屋', x: 907, y: 1934, scale: 0.88, radius: 96 },
-    { frame: 'ch3_bld_gate', name: '鐵藝墓園正門', x: 2048, y: 2254, scale: 1.04, radius: 112 },
-  ],
+  neighborhood: [],
 
-  props: [
-    // 四角墓園鐵藝圍欄
-    { frame: 'ch3_prop_fence', x: 1521, y: 796, scale: 0.76, radius: 46 },
-    { frame: 'ch3_prop_fence', x: 2575, y: 796, scale: 0.76, radius: 46, flipX: true },
-    { frame: 'ch3_prop_fence', x: 1521, y: 1735, scale: 0.76, radius: 46 },
-    { frame: 'ch3_prop_fence', x: 2575, y: 1735, scale: 0.76, radius: 46, flipX: true },
-    // 幽藍鐵藝路燈
-    { frame: 'ch3_prop_lantern', x: 1785, y: 1052, scale: 0.68, radius: 18, glow: true, glowColor: 0x38bdf8 },
-    { frame: 'ch3_prop_lantern', x: 2311, y: 1052, scale: 0.68, radius: 18, glow: true, glowColor: 0x38bdf8 },
-    { frame: 'ch3_prop_lantern', x: 1785, y: 1479, scale: 0.68, radius: 18, glow: true, glowColor: 0x38bdf8 },
-    { frame: 'ch3_prop_lantern', x: 2311, y: 1479, scale: 0.68, radius: 18, glow: true, glowColor: 0x38bdf8 },
-    { frame: 'ch3_prop_lantern', x: 1814, y: 2091, scale: 0.66, radius: 18, glow: true, glowColor: 0x38bdf8 },
-    { frame: 'ch3_prop_lantern', x: 2282, y: 2091, scale: 0.66, radius: 18, glow: true, glowColor: 0x38bdf8 },
-    // 石像鬼、棺槨、墓碑、枯柳與墓園黑貓
-    { frame: 'ch3_prop_gargoyle', x: 1719, y: 441, scale: 0.76, radius: 34 },
-    { frame: 'ch3_prop_gargoyle', x: 2377, y: 441, scale: 0.76, radius: 34, flipX: true },
-    { frame: 'ch3_prop_coffin', x: 2984, y: 1095, scale: 0.74, radius: 44 },
-    { frame: 'ch3_prop_coffin', x: 1112, y: 1451, scale: 0.72, radius: 44, flipX: true },
-    { frame: 'ch3_prop_tombstone', x: 1053, y: 981, scale: 0.76, radius: 38 },
-    { frame: 'ch3_prop_tombstone', x: 3013, y: 1877, scale: 0.76, radius: 38, flipX: true },
-    { frame: 'ch3_prop_tree', x: 453, y: 1052, scale: 0.94, radius: 42 },
-    { frame: 'ch3_prop_tree', x: 3643, y: 1052, scale: 0.94, radius: 42, flipX: true },
-    { frame: 'ch3_pet_cat', x: 1843, y: 1963, scale: 0.44, radius: 0 },
-    { frame: 'ch3_pet_cat', x: 2267, y: 597, scale: 0.44, radius: 0, flipX: true },
-  ],
+  props: [],
 
   patrols: [
     {

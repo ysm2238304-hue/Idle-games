@@ -214,7 +214,7 @@ export const TOWN_CH9 = {
       frame: 'ch9_npc_penitent',
       name: '特蕾莎',
       title: '苦行聖女',
-      x: 1969, y: 548,
+      x: 1560, y: 1520,
       scale: 0.64,
       greeting: '願這串薔薇念珠與 80,000 金幣聖糧，支撐你渡過最黑暗的修道院長夜。',
       action: 'modal_penitent',
@@ -225,7 +225,7 @@ export const TOWN_CH9 = {
       frame: 'ch9_prop_bell',
       name: '聖血修道院黃金大鐘',
       title: '聖光機關',
-      x: 2996, y: 1941,
+      x: 2540, y: 1520,
       scale: 0.78,
       greeting: '敲響修道院黃金大鐘降下聖光洗禮，瞬間恢復全部生命與能量！',
       action: 'gimmick_abbey_bell',
@@ -242,33 +242,9 @@ export const TOWN_CH9 = {
     radius: 42,
   },
 
-  neighborhood: [
-    { frame: 'ch9_bld_tavern', name: '修道院紅酒窖酒館', x: 556, y: 1707, scale: 0.95, radius: 112 },
-    { frame: 'ch9_bld_belltower', name: '玫瑰花窗大鐘樓', x: 673, y: 540, scale: 0.96, radius: 92 },
-    { frame: 'ch9_bld_dormitory', name: '紅白大理石修道舍', x: 3482, y: 548, scale: 0.92, radius: 102, flipX: true },
-    { frame: 'ch9_bld_gate', name: '聖血薔薇大拱門', x: 2048, y: 2254, scale: 1.04, radius: 112 },
-  ],
+  neighborhood: [],
 
-  props: [
-    // 四條花徑入口的薔薇拱門花架
-    { frame: 'ch9_prop_trellis', x: 2048, y: 804, scale: 0.84, radius: 0, depthOverride: 1 },
-    { frame: 'ch9_prop_trellis', x: 2048, y: 1742, scale: 0.84, radius: 0, depthOverride: 1 },
-    // 黃金薔薇路燈、天使雕像、大理石花盆、薔薇樹、聖殿戰旗、白鴿
-    { frame: 'ch9_prop_lantern', x: 1785, y: 1109, scale: 0.68, radius: 18, glow: true, glowColor: 0xfbbf24 },
-    { frame: 'ch9_prop_lantern', x: 2311, y: 1109, scale: 0.68, radius: 18, glow: true, glowColor: 0xfbbf24 },
-    { frame: 'ch9_prop_lantern', x: 1785, y: 1465, scale: 0.68, radius: 18, glow: true, glowColor: 0xf87171 },
-    { frame: 'ch9_prop_lantern', x: 2311, y: 1465, scale: 0.68, radius: 18, glow: true, glowColor: 0xf87171 },
-    { frame: 'ch9_prop_statue', x: 1712, y: 469, scale: 0.78, radius: 34 },
-    { frame: 'ch9_prop_statue', x: 2384, y: 469, scale: 0.78, radius: 34, flipX: true },
-    { frame: 'ch9_prop_urn', x: 1785, y: 2076, scale: 0.72, radius: 28 },
-    { frame: 'ch9_prop_urn', x: 2311, y: 2076, scale: 0.72, radius: 28, flipX: true },
-    { frame: 'ch9_prop_rosetree', x: 1258, y: 1280, scale: 0.86, radius: 32 },
-    { frame: 'ch9_prop_rosetree', x: 2838, y: 1280, scale: 0.86, radius: 32, flipX: true },
-    { frame: 'ch9_prop_banner', x: 1836, y: 2155, scale: 0.72, radius: 16 },
-    { frame: 'ch9_prop_banner', x: 2260, y: 2155, scale: 0.72, radius: 16, flipX: true },
-    { frame: 'ch9_pet_dove', x: 1836, y: 1266, scale: 0.44, radius: 0 },
-    { frame: 'ch9_pet_dove', x: 2260, y: 1266, scale: 0.44, radius: 0, flipX: true },
-  ],
+  props: [],
 
   patrols: [
     {

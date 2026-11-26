@@ -214,7 +214,7 @@ export const TOWN_CH2 = {
       frame: 'ch2_npc_smuggler',
       name: '尼克',
       title: '洞窟走私客',
-      x: 2996, y: 1621,
+      x: 1560, y: 1520,
       scale: 0.62,
       greeting: '噓……我剛從哥布林酋長金庫順手摸了一批貨，這份見面禮拿去用吧！',
       action: 'modal_smuggler',
@@ -225,7 +225,7 @@ export const TOWN_CH2 = {
       frame: 'ch2_prop_pipes',
       name: '高壓蒸汽閥門',
       title: '洞窟機關',
-      x: 1755, y: 1877,
+      x: 2540, y: 1520,
       scale: 0.72,
       greeting: '轉動生鏽的紅鐵閥門釋放地底高壓蒸汽！',
       action: 'gimmick_steam_valve',
@@ -242,41 +242,9 @@ export const TOWN_CH2 = {
     radius: 42,
   },
 
-  neighborhood: [
-    { frame: 'ch2_bld_tavern', name: '巨菇微醺酒館', x: 688, y: 1934, scale: 0.96, radius: 116 },
-    { frame: 'ch2_bld_pump', name: '黃銅蒸汽抽水塔', x: 1141, y: 512, scale: 0.92, radius: 88 },
-    { frame: 'ch2_bld_house', name: '發光菌菇民居', x: 2955, y: 526, scale: 0.88, radius: 96, flipX: true },
-    { frame: 'ch2_bld_gate', name: '深層礦道防禦門', x: 2048, y: 2247, scale: 1.02, radius: 112 },
-  ],
+  neighborhood: [],
 
-  props: [
-    // 4 座跨峽谷懸索吊橋（設 depthOverride: 1 讓角色踩在橋面上！）
-    { frame: 'ch2_prop_bridge', x: 1668, y: 946, scale: 0.96, radius: 0, depthOverride: 1 },
-    { frame: 'ch2_prop_bridge', x: 1404, y: 1643, scale: 0.96, radius: 0, depthOverride: 1 },
-    { frame: 'ch2_prop_bridge', x: 2882, y: 946, scale: 0.96, radius: 0, depthOverride: 1, flipX: true },
-    { frame: 'ch2_prop_bridge', x: 2648, y: 1643, scale: 0.96, radius: 0, depthOverride: 1, flipX: true },
-    // 螢光蘑菇路燈
-    { frame: 'ch2_prop_lantern', x: 1770, y: 1052, scale: 0.68, radius: 18, glow: true, glowColor: 0x34d399 },
-    { frame: 'ch2_prop_lantern', x: 2326, y: 1052, scale: 0.68, radius: 18, glow: true, glowColor: 0xa855f7 },
-    { frame: 'ch2_prop_lantern', x: 1770, y: 1479, scale: 0.68, radius: 18, glow: true, glowColor: 0xa855f7 },
-    { frame: 'ch2_prop_lantern', x: 2326, y: 1479, scale: 0.68, radius: 18, glow: true, glowColor: 0x34d399 },
-    { frame: 'ch2_prop_lantern', x: 1229, y: 825, scale: 0.66, radius: 18, glow: true, glowColor: 0x34d399 },
-    { frame: 'ch2_prop_lantern', x: 2867, y: 825, scale: 0.66, radius: 18, glow: true, glowColor: 0xa855f7 },
-    // 晶簇、巨菇樹、礦車、火藥桶、螢光蛾
-    { frame: 'ch2_prop_crystal', x: 1785, y: 683, scale: 0.72, radius: 36 },
-    { frame: 'ch2_prop_crystal', x: 2311, y: 683, scale: 0.72, radius: 36, flipX: true },
-    { frame: 'ch2_prop_crystal', x: 3613, y: 1764, scale: 0.78, radius: 38 },
-    { frame: 'ch2_prop_shroom', x: 453, y: 1024, scale: 0.94, radius: 44 },
-    { frame: 'ch2_prop_shroom', x: 3643, y: 1024, scale: 0.94, radius: 44, flipX: true },
-    { frame: 'ch2_prop_shroom', x: 1770, y: 2105, scale: 0.86, radius: 40 },
-    { frame: 'ch2_prop_shroom', x: 2326, y: 2105, scale: 0.86, radius: 40, flipX: true },
-    { frame: 'ch2_prop_minecart', x: 2896, y: 2034, scale: 0.74, radius: 48 },
-    { frame: 'ch2_prop_minecart', x: 1009, y: 796, scale: 0.72, radius: 46, flipX: true },
-    { frame: 'ch2_prop_barrels', x: 936, y: 1764, scale: 0.72, radius: 42 },
-    { frame: 'ch2_prop_barrels', x: 3482, y: 1593, scale: 0.72, radius: 42, flipX: true },
-    { frame: 'ch2_pet_moth', x: 1807, y: 633, scale: 0.45, radius: 0 },
-    { frame: 'ch2_pet_moth', x: 2289, y: 2048, scale: 0.45, radius: 0, flipX: true },
-  ],
+  props: [],
 
   patrols: [
     {
