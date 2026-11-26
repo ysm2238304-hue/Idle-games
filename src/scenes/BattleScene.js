@@ -19,6 +19,7 @@ import { AssassinVfxDirector } from '../vfx/AssassinVfxDirector.js?v=266';
 import { PaladinVfxDirector } from '../vfx/PaladinVfxDirector.js?v=266';
 import { FloatingTextPool } from '../vfx/FloatingTextPool.js?v=266';
 import { ParticlePool } from '../vfx/ParticlePool.js?v=266';
+import { TrainingArenaController } from '../combat/TrainingArenaController.js?v=277';
 import { warriorCombatMethods } from '../combat/classes/warriorCombat.js?v=266';
 import { rangerCombatMethods } from '../combat/classes/rangerCombat.js?v=266';
 import { mageCombatMethods } from '../combat/classes/mageCombat.js?v=266';
@@ -359,6 +360,7 @@ export class BattleScene extends Phaser.Scene {
     this.createClassAnims();
     this.floatingTextPool = new FloatingTextPool(this, 48);
     this.particlePool = new ParticlePool(this, 96);
+    this.trainingArena = new TrainingArenaController(this);
     this.mageVfx = new MageVfxDirector(this);
     this.necroVfx = new NecroVfxDirector(this);
     this.warriorVfx = new WarriorVfxDirector(this);
@@ -933,6 +935,7 @@ export class BattleScene extends Phaser.Scene {
       }
       return false;
     }
+    if (this.isTrainingMode && this.trainingArena?.infiniteMp) { cost = 0; this.playerMp = this.playerMaxMp; }
     if (!freeAstral && cost > 0) this.playerMp = Math.max(0, this.playerMp - cost);
     if (hpCostPct > 0 && this.playerHp > 1) {
       const hpPaid = Math.min(this.playerHp - 1, Math.max(1, Math.round(this.playerHp * hpCostPct)));
@@ -943,7 +946,8 @@ export class BattleScene extends Phaser.Scene {
     const buildMods = computeSkillBuildMods(this.getState(), curCid, info.id, info.level);
     this._activeBuildMods = buildMods;
     this._activeBuildModsUntil = (this.time?.now || 0) + 1200;
-    const effCd = Math.max(900, Math.round(info.cooldownMs * (buildMods.cdMult || 1)));
+    const trainCdMult = (this.isTrainingMode && this.trainingArena?.fastCd) ? 0.20 : 1.0;
+    const effCd = Math.max(300, Math.round(info.cooldownMs * (buildMods.cdMult || 1) * trainCdMult));
     const cdSaved = Math.max(0, info.cooldownMs - effCd);
     this.slotCdTimers[slotIdx] = freeAstral ? Math.round(info.cooldownMs * 0.3) : (echoRefund ? Math.round(info.cooldownMs * 0.5) : cdSaved);
 
@@ -1061,6 +1065,14 @@ export class BattleScene extends Phaser.Scene {
     if (diff > 0) this.playerHp = Math.min(this.playerMaxHp, this.playerHp + diff);
     else this.playerHp = Math.min(this.playerMaxHp, this.playerHp);
     this.updateHeroHpBar();
+  }
+
+  enterTrainingArena(onExitToTown) {
+    this.trainingArena?.enter(onExitToTown);
+  }
+
+  exitTrainingArena() {
+    this.trainingArena?.exit();
   }
 
   clearAllMonsters() {
@@ -1215,6 +1227,7 @@ export class BattleScene extends Phaser.Scene {
     this.updatePaladinBattlefieldEntities(delta);
     this.floatingTextPool?.update(delta);
     this.particlePool?.update(delta);
+    this.trainingArena?.update(time, delta);
     const stForMp = this.getStats();
     const dtSec = delta / 1000;
     this.playerMaxMp = stForMp.maxMp || 100;

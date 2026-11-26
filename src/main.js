@@ -21,10 +21,10 @@ import {
   saveCloudData,
   deleteCloudSave,
 } from './auth/firebase.js?v=272';
-import { BattleScene } from './scenes/BattleScene.js?v=266';
+import { BattleScene } from './scenes/BattleScene.js?v=277';
 import { TownScene } from './scenes/TownScene.js?v=274';
 import { TOWN_SPLASHES } from './data/towns/splashes.js?v=229';
-import { DashboardUI } from './ui/DashboardUI.js?v=274';
+import { DashboardUI } from './ui/DashboardUI.js?v=277';
 import { hookWorldMap25D, openWorldMap25D, closeWorldMap25D, toggleWorldMap25D } from './ui/WorldMap25D.js?v=253';
 import { initHudOverhaulV217 } from './ui/HudOverhaulV217.js?v=257';
 import { UniversalTooltip } from './ui/UniversalTooltip.js?v=240';
@@ -1441,6 +1441,15 @@ function enterTown(chapterIdx = 0, instant = false) {
         const modalAction = action === 'drawer_upgrade' ? 'modal_blacksmith' : (action === 'drawer_skills' ? 'modal_trainer' : (action === 'drawer_bag' ? 'modal_vault' : (action === 'drawer_rebirth' ? 'modal_sanctum' : action)));
         const modalData = { ...(data || {}), chapterIdx };
         ui.openTownFacilityModal(modalAction, modalData, {
+          onRefreshAll: () => { refreshStatsAndUI(); persistAll(); },
+          onEnterTrainingArena: () => {
+            if (typeof exitTownToBattle === 'function') exitTownToBattle();
+            setTimeout(() => {
+              battleScene?.enterTrainingArena?.(() => {
+                if (typeof enterTown === 'function') enterTown();
+              });
+            }, 180);
+          },
           onBrewAllCombat: (totalCost) => {
             if ((gameState.gold || 0) < totalCost) return;
             gameState.gold -= totalCost;
@@ -1663,15 +1672,47 @@ function enterTown(chapterIdx = 0, instant = false) {
             refreshStatsAndUI();
             persistAll();
           },
-          onGambleGear: (cost, isHigh) => {
+          onQuickEquipItem: (uid) => {
+            const idx = (gameState.inventory || []).findIndex((x) => x?.uid === uid);
+            if (idx === -1) return;
+            const it = gameState.inventory[idx];
+            const prev = gameState.equipment?.[it.slot];
+            gameState.inventory.splice(idx, 1);
+            if (prev) gameState.inventory.unshift(prev);
+            if (!gameState.equipment) gameState.equipment = {};
+            gameState.equipment[it.slot] = it;
+            ui.addLog(`⚔️ 已立即裝備：${it.name}！`, 'victory');
+            refreshStatsAndUI();
+            persistAll();
+          },
+          onQuickSalvageItem: (uid) => {
+            const idx = (gameState.inventory || []).findIndex((x) => x?.uid === uid);
+            if (idx === -1) return;
+            const it = gameState.inventory[idx];
+            gameState.inventory.splice(idx, 1);
+            const gain = it.rarity === 'legendary' ? 60 : (it.rarity === 'rare' ? 24 : 10);
+            gameState.dust = (gameState.dust || 0) + gain;
+            ui.addLog(`♻️ 已拆解 ${it.name}，獲得 ${gain} 粉塵！`, 'loot');
+            refreshStatsAndUI();
+            persistAll();
+          },
+          onGambleGear: (cost, isHigh, targetSlot = null) => {
             if ((gameState.gold || 0) < cost) return;
             gameState.gold -= cost;
             if (!gameState.blackMarket) gameState.blackMarket = { nextRefreshAt: 0, items: [], pityCount: 0 };
             const hitPity = (gameState.blackMarket.pityCount || 0) >= 10;
             const stg = Math.max(1, gameState.maxStageReached || gameState.stage || 1);
-            const item = hitPity
+            let item = hitPity
               ? generateBlackMarketItem(stg, gameState.classId, 'legendary')
               : generateLoot(stg, isHigh, isHigh ? 280 : 60, true, gameState.classId);
+            if (targetSlot) {
+              for (let tries = 0; tries < 12 && item?.slot !== targetSlot; tries++) {
+                const cand = hitPity
+                  ? generateBlackMarketItem(stg, gameState.classId, 'legendary')
+                  : generateLoot(stg, isHigh, isHigh ? 280 : 60, true, gameState.classId);
+                if (cand?.slot === targetSlot) { item = cand; break; }
+              }
+            }
             if (hitPity) {
               gameState.blackMarket.pityCount = 0;
               ui.addLog(`🌟 黑市保底觸發！必得傳說裝備：${item.name}（戰力 ${item.powerScore}）！`, 'victory');
