@@ -1,16 +1,16 @@
-import { CameraZoomHelper } from './CameraZoomHelper.js?v=278';
-import { TOWN_CH1 } from '../data/towns/ch1.js?v=281';
+import { CameraZoomHelper } from './CameraZoomHelper.js?v=282';
+import { TOWN_CH1 } from '../data/towns/ch1.js?v=282';
 import { LivingNpcEngine } from '../town/LivingNpcEngine.js?v=273';
 import { TownMultiplayerSync } from '../net/TownMultiplayerSync.js?v=274';
-import { TOWN_CH2 } from '../data/towns/ch2.js?v=281';
-import { TOWN_CH3 } from '../data/towns/ch3.js?v=281';
-import { TOWN_CH4 } from '../data/towns/ch4.js?v=281';
-import { TOWN_CH5 } from '../data/towns/ch5.js?v=281';
-import { TOWN_CH6 } from '../data/towns/ch6.js?v=281';
-import { TOWN_CH7 } from '../data/towns/ch7.js?v=281';
-import { TOWN_CH8 } from '../data/towns/ch8.js?v=281';
-import { TOWN_CH9 } from '../data/towns/ch9.js?v=281';
-import { TOWN_CH10 } from '../data/towns/ch10.js?v=281';
+import { TOWN_CH2 } from '../data/towns/ch2.js?v=282';
+import { TOWN_CH3 } from '../data/towns/ch3.js?v=282';
+import { TOWN_CH4 } from '../data/towns/ch4.js?v=282';
+import { TOWN_CH5 } from '../data/towns/ch5.js?v=282';
+import { TOWN_CH6 } from '../data/towns/ch6.js?v=282';
+import { TOWN_CH7 } from '../data/towns/ch7.js?v=282';
+import { TOWN_CH8 } from '../data/towns/ch8.js?v=282';
+import { TOWN_CH9 } from '../data/towns/ch9.js?v=282';
+import { TOWN_CH10 } from '../data/towns/ch10.js?v=282';
 import { formatNum } from '../logic/statCalc.js?v=99';
 import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta } from '../data/pets.js?v=99';
 
@@ -84,14 +84,16 @@ export class TownScene extends Phaser.Scene {
       this.load.image(td.bgKey, td.bgUrl);
     }
     // v267: 載入新版暗黑 4 獨立地形融合 WebP 建築與地標
-    if (td.landmark?.imgKey && td.landmark?.imgUrl && !this.textures.exists(td.landmark.imgKey)) {
-      this.load.image(td.landmark.imgKey, td.landmark.imgUrl);
-    }
-    (td.facilities || []).forEach((fac) => {
-      if (fac.imgKey && fac.imgUrl && !this.textures.exists(fac.imgKey)) {
-        this.load.image(fac.imgKey, fac.imgUrl);
+    if (!td.integratedBuildings) {
+      if (td.landmark?.imgKey && td.landmark?.imgUrl && !this.textures.exists(td.landmark.imgKey)) {
+        this.load.image(td.landmark.imgKey, td.landmark.imgUrl);
       }
-    });
+      (td.facilities || []).forEach((fac) => {
+        if (fac.imgKey && fac.imgUrl && !this.textures.exists(fac.imgKey)) {
+          this.load.image(fac.imgKey, fac.imgUrl);
+        }
+      });
+    }
     if (!this.textures.exists(td.atlasKey)) {
       this.load.atlas(td.atlasKey, td.atlasPng, td.atlasJson);
     }
@@ -152,31 +154,36 @@ export class TownScene extends Phaser.Scene {
       .setDisplaySize(td.mapWidth, td.mapHeight)
       .setDepth(0);
 
-    // 2. 中央烽火台地標
+    // 2. 主城章節地標（v282 場景一體化：不重複貼圖，改以 2.5D 地面發光符文陣＋動態光暈融入底圖）
     if (td.landmark) {
       const lm = td.landmark;
-      this.add.image(lm.x, lm.y + 38, 'fx_glow')
-        .setTint(0x000000).setScale(2.6, 0.95).setAlpha(0.5).setDepth(2);
-      const lmSpr = (lm.imgKey && this.textures.exists(lm.imgKey))
-        ? this.add.image(lm.x, lm.y, lm.imgKey).setOrigin(0.5, 0.72)
-        : this.add.image(lm.x, lm.y, td.atlasKey, lm.frame);
-      lmSpr.setScale(lm.scale).setDepth(lm.y);
-      this.beaconGlow = this.add.image(lm.x, lm.y - 18, 'fx_glow')
-        .setTint(td.ambientColor).setScale(2.2).setAlpha(0.32).setDepth(lm.y + 2);
-      this.tweens.add({
-        targets: this.beaconGlow,
-        scale: 2.65,
-        alpha: 0.48,
-        duration: 1200,
-        yoyo: true,
-        repeat: -1,
-        ease: 'Sine.easeInOut',
-      });
-      this.obstacles.push({ x: lm.x, y: lm.y + 15, radius: lm.radius });
+      if (td.integratedBuildings) {
+        const ring = this.add.circle(lm.x, lm.y + 10, 68, td.ambientColor, 0.14)
+          .setStrokeStyle(2.5, td.ambientColor, 0.78).setScale(1, 0.54).setDepth(4);
+        this.tweens.add({ targets: ring, scaleX: 1.09, scaleY: 0.59, alpha: 0.95, duration: 1500, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        this.beaconGlow = this.add.image(lm.x, lm.y - 8, 'fx_glow')
+          .setTint(td.ambientColor).setScale(2.1, 1.15).setAlpha(0.28).setBlendMode(Phaser.BlendModes.ADD).setDepth(5);
+        this.tweens.add({ targets: this.beaconGlow, scaleX: 2.45, scaleY: 1.32, alpha: 0.44, duration: 1350, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        this.addNameplate(lm.x, lm.y - 68, `🔥 ${lm.name}`, '#fde68a', true);
+        const lmZone = this.add.zone(lm.x, lm.y, 170, 120).setInteractive({ useHandCursor: true }).setDepth(lm.y + 5);
+        lmZone.on('pointerover', () => ring.setStrokeStyle(3.5, 0xfef08a, 1));
+        lmZone.on('pointerout', () => ring.setStrokeStyle(2.5, td.ambientColor, 0.78));
+      } else {
+        this.add.image(lm.x, lm.y + 38, 'fx_glow')
+          .setTint(0x000000).setScale(2.6, 0.95).setAlpha(0.5).setDepth(2);
+        const lmSpr = (lm.imgKey && this.textures.exists(lm.imgKey))
+          ? this.add.image(lm.x, lm.y, lm.imgKey).setOrigin(0.5, 0.72)
+          : this.add.image(lm.x, lm.y, td.atlasKey, lm.frame);
+        lmSpr.setScale(lm.scale).setDepth(lm.y);
+        this.beaconGlow = this.add.image(lm.x, lm.y - 18, 'fx_glow')
+          .setTint(td.ambientColor).setScale(2.2).setAlpha(0.32).setDepth(lm.y + 2);
+        this.tweens.add({ targets: this.beaconGlow, scale: 2.65, alpha: 0.48, duration: 1200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        this.obstacles.push({ x: lm.x, y: lm.y + 15, radius: lm.radius });
+      }
       this.interactables.push({
         id: lm.id,
         x: lm.x,
-        y: lm.y + 20,
+        y: lm.y + 14,
         radius: 175,
         title: `🔥 ${lm.name}`,
         sub: lm.tip,
@@ -323,7 +330,7 @@ export class TownScene extends Phaser.Scene {
     this.mpSync?.start();
     this.cameras.main.startFollow(this.hero, true, 0.14, 0.14);
     // v278: 全場景通用滑鼠滾輪縮放引擎（0.55x 全景俯瞰 ↔ 1.45x 近距細看，按 [0] 重置）
-    this.cameraZoom = new CameraZoomHelper(this, { minZoom: 0.55, maxZoom: 1.45, defaultZoom: 0.88, step: 0.09 });
+    this.cameraZoom = new CameraZoomHelper(this, { minZoom: 0.55, maxZoom: 1.45, defaultZoom: 0.88, step: 0.09, mapWidth: td.mapWidth, mapHeight: td.mapHeight });
 
     // 9.2 全 10 座主城地面動態「星門傳送魔法陣」（2.5D 透視雙層旋轉法陣 + 章節專屬色）
     const wpX = td.spawn.x + 165;
@@ -526,6 +533,68 @@ export class TownScene extends Phaser.Scene {
   }
 
   placeBuilding(atlasKey, b) {
+    // v282: 暗黑 4 場景一體化設施系統 — 底圖已厚塗真實建築，不再硬貼迷你貼紙假房子，改為地面互動符文陣＋浮雕掛牌＋環境微粒
+    if (this.townData?.integratedBuildings && b.action) {
+      const tintMap = {
+        drawer_upgrade: 0xf97316,
+        modal_alchemy:  0x34d399,
+        modal_market:   0xc084fc,
+        drawer_skills:  0xfbbf24,
+        drawer_bag:     0x38bdf8,
+        drawer_rebirth: 0x67e8f9,
+        modal_bounty:   0xf59e0b,
+        modal_portal:   0xa855f7,
+      };
+      const accent = tintMap[b.action] || this.townData?.ambientColor || 0xfbbf24;
+      const icon = this.getActionIcon(b.action);
+
+      // 地面 2.5D 透視發光互動符文陣
+      const pad = this.add.circle(b.x, b.y + 18, 62, accent, 0.12)
+        .setStrokeStyle(2, accent, 0.72).setScale(1, 0.52).setDepth(4);
+      const inner = this.add.circle(b.x, b.y + 18, 36, accent, 0.08)
+        .setStrokeStyle(1.5, 0xfef3c7, 0.45).setScale(1, 0.52).setDepth(4);
+      this.tweens.add({
+        targets: pad,
+        scaleX: 1.08,
+        scaleY: 0.56,
+        alpha: 0.88,
+        duration: 1650 + Math.random() * 450,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
+
+      // 柔和環境光點（讓厚塗建築本體呈現鍛爐火星／煉金蒸氣／聖殿微光）
+      const glow = this.add.image(b.x, b.y - 6, 'fx_glow')
+        .setTint(accent).setScale(1.45, 0.78).setAlpha(0.22).setBlendMode(Phaser.BlendModes.ADD).setDepth(5);
+      this.tweens.add({
+        targets: glow,
+        alpha: 0.36,
+        scaleX: 1.65,
+        duration: 1400 + Math.random() * 500,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut',
+      });
+
+      // 懸浮暗黑 4 風格設施掛牌
+      if (b.name) {
+        this.addNameplate(b.x, b.y - 68, `${icon} ${b.name}`, '#fde68a', true);
+      }
+
+      // 大範圍可點擊建築互動熱區（滑鼠移過高亮外框）
+      const hitZone = this.add.zone(b.x, b.y, 175, 130).setInteractive({ useHandCursor: true }).setDepth(b.y + 4);
+      hitZone.on('pointerover', () => {
+        pad.setStrokeStyle(3.2, 0xfef08a, 1);
+        inner.setStrokeStyle(2, 0xffffff, 0.85);
+      });
+      hitZone.on('pointerout', () => {
+        pad.setStrokeStyle(2, accent, 0.72);
+        inner.setStrokeStyle(1.5, 0xfef3c7, 0.45);
+      });
+      return;
+    }
+
     this.add.ellipse(b.x, b.y + 28, (b.radius || 120) * 2.1, (b.radius || 120) * 0.82, 0x000000, 0.44).setDepth(2);
     const useStandalone = b.imgKey && this.textures.exists(b.imgKey);
     const spr = useStandalone

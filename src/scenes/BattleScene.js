@@ -20,7 +20,7 @@ import { PaladinVfxDirector } from '../vfx/PaladinVfxDirector.js?v=266';
 import { FloatingTextPool } from '../vfx/FloatingTextPool.js?v=266';
 import { ParticlePool } from '../vfx/ParticlePool.js?v=266';
 import { TrainingArenaController } from '../combat/TrainingArenaController.js?v=277';
-import { CameraZoomHelper } from './CameraZoomHelper.js?v=278';
+import { CameraZoomHelper } from './CameraZoomHelper.js?v=282';
 import { MonsterVfxDirector } from '../vfx/MonsterVfxDirector.js?v=278';
 import { MonsterSkillEngine } from '../combat/MonsterSkillEngine.js?v=278';
 import { warriorCombatMethods } from '../combat/classes/warriorCombat.js?v=266';
@@ -368,7 +368,7 @@ export class BattleScene extends Phaser.Scene {
     this.monsterVfx = new MonsterVfxDirector(this);
     this.monsterVfx.registerAnims();
     this.monsterSkills = new MonsterSkillEngine(this, this.monsterVfx);
-    this.cameraZoom = new CameraZoomHelper(this, { minZoom: 0.62, maxZoom: 1.38, defaultZoom: 1.0 });
+    this.cameraZoom = new CameraZoomHelper(this, { minZoom: 0.62, maxZoom: 1.38, defaultZoom: 1.0, mapWidth: MAP_W, mapHeight: MAP_H });
     this.mageVfx = new MageVfxDirector(this);
     this.necroVfx = new NecroVfxDirector(this);
     this.warriorVfx = new WarriorVfxDirector(this);

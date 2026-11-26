@@ -1,4 +1,4 @@
-// v279: 第 3 章主城「聖光大教堂廢墟」— 南北縱向哥德中殿軸線與墓園迴廊重構（4096x2560）
+// v282: 第 3 章主城「守夜人聖骨禮拜堂」— 全主城場景一體化建築重構＋全座標越界修正（4096x2560）
 export const TOWN_CH3 = {
   "chapterIdx": 2,
   "id": "town_ch3",
@@ -31,7 +31,7 @@ export const TOWN_CH3 = {
     "name": "靈魂永恆火盆",
     "frame": "ch3_lm_brazier",
     "x": 2048,
-    "y": 540,
+    "y": 560,
     "scale": 0.86,
     "imgKey": "ch3_lm_brazier_v268",
     "imgUrl": "./assets/towns/ch3_lm_brazier.webp?v=268",
@@ -45,7 +45,7 @@ export const TOWN_CH3 = {
       "name": "魂火附魔鍛造石台",
       "frame": "ch3_bld_smith",
       "x": 1220,
-      "y": 1120,
+      "y": 1140,
       "scale": 0.98,
       "imgKey": "ch3_bld_smith_v268",
       "imgUrl": "./assets/towns/ch3_bld_smith.webp?v=268",
@@ -68,7 +68,7 @@ export const TOWN_CH3 = {
       "id": "alchemy",
       "name": "骨灰聖水煉金室",
       "frame": "ch3_bld_alchemy",
-      "x": 640,
+      "x": 680,
       "y": 1740,
       "scale": 0.98,
       "imgKey": "ch3_bld_alchemy_v268",
@@ -79,7 +79,7 @@ export const TOWN_CH3 = {
         "frame": "ch3_npc_alchemy",
         "name": "薇拉",
         "title": "守墓煉金修女",
-        "x": 880,
+        "x": 900,
         "y": 1760,
         "scale": 0.62,
         "workStyle": "alchemy",
@@ -92,7 +92,7 @@ export const TOWN_CH3 = {
       "id": "guild",
       "name": "守夜人聖物保管庫",
       "frame": "ch3_bld_guild",
-      "x": 3360,
+      "x": 3240,
       "y": 1840,
       "scale": 1,
       "imgKey": "ch3_bld_guild_v268",
@@ -103,7 +103,7 @@ export const TOWN_CH3 = {
         "frame": "ch3_npc_guild",
         "name": "賽拉斯",
         "title": "聖物書記官",
-        "x": 3140,
+        "x": 3040,
         "y": 1760,
         "scale": 0.62,
         "workStyle": "guild",
@@ -117,7 +117,7 @@ export const TOWN_CH3 = {
       "name": "聖骨騎士演武殿",
       "frame": "ch3_bld_temple",
       "x": 2048,
-      "y": 920,
+      "y": 940,
       "scale": 1.04,
       "imgKey": "ch3_bld_temple_v268",
       "imgUrl": "./assets/towns/ch3_bld_temple.webp?v=268",
@@ -128,7 +128,7 @@ export const TOWN_CH3 = {
         "name": "亞瑟",
         "title": "聖骨騎士團長",
         "x": 2048,
-        "y": 1100,
+        "y": 1120,
         "scale": 0.62,
         "workStyle": "prayer",
         "greeting": "面對不死大軍，猶豫便意味著死亡。磨練你的戰技與天賦吧！"
@@ -164,8 +164,8 @@ export const TOWN_CH3 = {
       "id": "market",
       "name": "午夜棺槨黑市攤",
       "frame": "ch3_bld_market",
-      "x": 3040,
-      "y": 1020,
+      "x": 3020,
+      "y": 1060,
       "scale": 0.96,
       "imgKey": "ch3_bld_market_v268",
       "imgUrl": "./assets/towns/ch3_bld_market.webp?v=268",
@@ -175,7 +175,7 @@ export const TOWN_CH3 = {
         "frame": "ch3_npc_market",
         "name": "卡隆",
         "title": "掘墓走私商",
-        "x": 2940,
+        "x": 2920,
         "y": 1240,
         "scale": 0.62,
         "workStyle": "market",
@@ -213,7 +213,7 @@ export const TOWN_CH3 = {
       "name": "哥德刻文傳送墓碑門",
       "frame": "ch3_bld_portal",
       "x": 2048,
-      "y": 2280,
+      "y": 2240,
       "scale": 0.92,
       "radius": 105,
       "npc": {
@@ -221,7 +221,7 @@ export const TOWN_CH3 = {
         "name": "加百列",
         "title": "墓門守衛",
         "x": 2048,
-        "y": 2100,
+        "y": 2080,
         "scale": 0.62,
         "greeting": "穿過這道幽藍墓門便能直抵白骨墓穴前線，願守夜人榮光與你同在。"
       },
@@ -235,8 +235,8 @@ export const TOWN_CH3 = {
       "frame": "ch3_npc_chronicler",
       "name": "阿爾文",
       "title": "亡靈記錄者",
-      "x": 1560,
-      "y": 1520,
+      "x": 2360,
+      "y": 1340,
       "scale": 0.62,
       "greeting": "我用魂羽筆記錄了每一位踏入墓穴的勇者，這份聖骨補給請收下。",
       "action": "modal_chronicler",
@@ -247,8 +247,8 @@ export const TOWN_CH3 = {
       "frame": "ch3_prop_candle",
       "name": "祈禱幽藍燭台",
       "title": "教堂聖壇",
-      "x": 2540,
-      "y": 1520,
+      "x": 1660,
+      "y": 1260,
       "scale": 0.72,
       "greeting": "點燃守夜人的藍蠟禱告燭台，撫平傷痛並回復全部狀態。",
       "action": "gimmick_candle_shrine",
@@ -259,8 +259,8 @@ export const TOWN_CH3 = {
     "id": "dummy",
     "name": "骸骨騎士盔甲靶",
     "frame": "ch3_prop_dummy",
-    "x": 4601,
-    "y": 1465,
+    "x": 3460,
+    "y": 1860,
     "scale": 0.72,
     "radius": 42
   },
@@ -275,7 +275,7 @@ export const TOWN_CH3 = {
       "waypoints": [
         {
           "x": 2048,
-          "y": 760
+          "y": 780
         },
         {
           "x": 2048,
@@ -283,7 +283,7 @@ export const TOWN_CH3 = {
         },
         {
           "x": 2048,
-          "y": 2040
+          "y": 2020
         },
         {
           "x": 2048,
@@ -310,16 +310,8 @@ export const TOWN_CH3 = {
           "y": 1860
         },
         {
-          "x": 2048,
-          "y": 1760
-        },
-        {
-          "x": 2920,
-          "y": 1360
-        },
-        {
-          "x": 3080,
-          "y": 1780
+          "x": 1820,
+          "y": 1640
         }
       ]
     },
@@ -330,14 +322,23 @@ export const TOWN_CH3 = {
       "speed": 58,
       "waypoints": [
         {
-          "x": 1726,
-          "y": 640
+          "x": 2860,
+          "y": 1280
         },
         {
-          "x": 2370,
-          "y": 640
+          "x": 3180,
+          "y": 1520
+        },
+        {
+          "x": 3080,
+          "y": 1840
+        },
+        {
+          "x": 2560,
+          "y": 1660
         }
       ]
     }
-  ]
+  ],
+  "integratedBuildings": true
 };

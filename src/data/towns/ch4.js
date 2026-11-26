@@ -1,4 +1,4 @@
-// v280: 第 4 章主城「熔火鍛造堡壘」— 三層火山階梯平台與鐵鍊吊橋非對稱重構（4096x2560）
+// v282: 第 4 章主城「黑曜石熔爐要塞」— 全主城場景一體化建築重構＋全座標越界修正（4096x2560）
 export const TOWN_CH4 = {
   "chapterIdx": 3,
   "id": "town_ch4",
@@ -30,8 +30,8 @@ export const TOWN_CH4 = {
     "id": "lava_fountain",
     "name": "雙頭巨龍熔岩噴泉",
     "frame": "ch4_lm_fountain",
-    "x": 1220,
-    "y": 640,
+    "x": 1180,
+    "y": 680,
     "scale": 0.88,
     "imgKey": "ch4_lm_fountain_v268",
     "imgUrl": "./assets/towns/ch4_lm_fountain.webp?v=268",
@@ -44,8 +44,8 @@ export const TOWN_CH4 = {
       "id": "smith",
       "name": "巨龍吐息岩漿鍛造巨砧",
       "frame": "ch4_bld_smith",
-      "x": 1480,
-      "y": 780,
+      "x": 1520,
+      "y": 820,
       "scale": 1.04,
       "imgKey": "ch4_bld_smith_v268",
       "imgUrl": "./assets/towns/ch4_bld_smith.webp?v=268",
@@ -55,8 +55,8 @@ export const TOWN_CH4 = {
         "frame": "ch4_npc_smith",
         "name": "伊格納",
         "title": "火元素鍛造師",
-        "x": 1660,
-        "y": 920,
+        "x": 1680,
+        "y": 960,
         "scale": 0.62,
         "workStyle": "forge",
         "greeting": "只有龍息般的熔岩才能將神兵淬鍊至極限，把你的裝備放上巨砧吧！"
@@ -68,7 +68,7 @@ export const TOWN_CH4 = {
       "id": "guild",
       "name": "矮人黑曜石金庫",
       "frame": "ch4_bld_guild",
-      "x": 3360,
+      "x": 3280,
       "y": 1960,
       "scale": 1.02,
       "imgKey": "ch4_bld_guild_v268",
@@ -79,7 +79,7 @@ export const TOWN_CH4 = {
         "frame": "ch4_npc_guild",
         "name": "索林",
         "title": "鐵鬍倉庫長",
-        "x": 3140,
+        "x": 3080,
         "y": 1940,
         "scale": 0.62,
         "workStyle": "guild",
@@ -116,8 +116,8 @@ export const TOWN_CH4 = {
       "id": "altar",
       "name": "火山灰燼輪迴聖壇",
       "frame": "ch4_bld_altar",
-      "x": 3620,
-      "y": 1320,
+      "x": 3560,
+      "y": 1260,
       "scale": 1,
       "imgKey": "ch4_bld_altar_v268",
       "imgUrl": "./assets/towns/ch4_bld_altar.webp?v=268",
@@ -127,8 +127,8 @@ export const TOWN_CH4 = {
         "frame": "ch4_npc_altar",
         "name": "卡珊卓",
         "title": "餘燼先知",
-        "x": 3440,
-        "y": 1380,
+        "x": 3380,
+        "y": 1340,
         "scale": 0.62,
         "workStyle": "prayer",
         "greeting": "萬物皆於烈焰中化為灰燼，亦於灰燼中浴火重生。"
@@ -140,8 +140,8 @@ export const TOWN_CH4 = {
       "id": "alchemy",
       "name": "火山硫磺煉金鍋爐房",
       "frame": "ch4_bld_alchemy",
-      "x": 3140,
-      "y": 980,
+      "x": 3120,
+      "y": 1020,
       "scale": 1,
       "imgKey": "ch4_bld_alchemy_v268",
       "imgUrl": "./assets/towns/ch4_bld_alchemy.webp?v=268",
@@ -151,8 +151,8 @@ export const TOWN_CH4 = {
         "frame": "ch4_npc_alchemy",
         "name": "貝爾",
         "title": "灰燼煉金師",
-        "x": 2940,
-        "y": 1160,
+        "x": 2920,
+        "y": 1180,
         "scale": 0.62,
         "workStyle": "alchemy",
         "greeting": "這鍋高純度火蜥蜴精華能讓你的戰鬥狂暴到連炎魔都害怕！"
@@ -165,7 +165,7 @@ export const TOWN_CH4 = {
       "name": "熔岩戰鎚演武場",
       "frame": "ch4_bld_temple",
       "x": 1960,
-      "y": 760,
+      "y": 780,
       "scale": 0.98,
       "imgKey": "ch4_bld_temple_v268",
       "imgUrl": "./assets/towns/ch4_bld_temple.webp?v=268",
@@ -176,7 +176,7 @@ export const TOWN_CH4 = {
         "name": "布洛克",
         "title": "熔爐狂戰教頭",
         "x": 1980,
-        "y": 940,
+        "y": 960,
         "scale": 0.62,
         "workStyle": "prayer",
         "greeting": "戰士的熱血必須比岩漿更滾燙！來調整你的技能配置再去劈開敵人！"
@@ -188,7 +188,7 @@ export const TOWN_CH4 = {
       "id": "market",
       "name": "走私熔火軍火帳",
       "frame": "ch4_bld_market",
-      "x": 920,
+      "x": 940,
       "y": 1940,
       "scale": 0.96,
       "imgKey": "ch4_bld_market_v268",
@@ -199,7 +199,7 @@ export const TOWN_CH4 = {
         "frame": "ch4_npc_market",
         "name": "拉茲",
         "title": "炎魔軍火商",
-        "x": 1140,
+        "x": 1160,
         "y": 1960,
         "scale": 0.62,
         "workStyle": "market",
@@ -213,7 +213,7 @@ export const TOWN_CH4 = {
       "name": "黑曜石熔岩傳送閘門",
       "frame": "ch4_bld_portal",
       "x": 2020,
-      "y": 2240,
+      "y": 2220,
       "scale": 0.92,
       "radius": 108,
       "npc": {
@@ -221,7 +221,7 @@ export const TOWN_CH4 = {
         "name": "泰坦",
         "title": "閘門守衛長",
         "x": 2160,
-        "y": 2120,
+        "y": 2100,
         "scale": 0.62,
         "greeting": "烈焰傳送門已穩定開啟，踏過去便是焦土熔岩裂谷的最前線！"
       },
@@ -235,8 +235,8 @@ export const TOWN_CH4 = {
       "frame": "ch4_npc_forgemaster",
       "name": "赫菲斯",
       "title": "火元素鍛造宗師",
-      "x": 1560,
-      "y": 1520,
+      "x": 1320,
+      "y": 960,
       "scale": 0.64,
       "greeting": "凡人，你的勇氣堪比純淨的赤炎。收下這份熔爐宗師的贈禮吧！",
       "action": "modal_forgemaster",
@@ -247,8 +247,8 @@ export const TOWN_CH4 = {
       "frame": "ch4_prop_sluice",
       "name": "熔岩閘門壓力閥",
       "title": "冷卻機關",
-      "x": 2540,
-      "y": 1520,
+      "x": 2260,
+      "y": 1380,
       "scale": 0.72,
       "greeting": "釋放高壓冷卻蒸汽，瞬間撫平熱傷並回復全部生命與能量！",
       "action": "gimmick_lava_sluice",
@@ -259,8 +259,8 @@ export const TOWN_CH4 = {
     "id": "dummy",
     "name": "黑曜石重甲靶人",
     "frame": "ch4_prop_dummy",
-    "x": 4365,
-    "y": 1593,
+    "x": 3520,
+    "y": 2060,
     "scale": 0.74,
     "radius": 44
   },
@@ -307,7 +307,7 @@ export const TOWN_CH4 = {
         },
         {
           "x": 1980,
-          "y": 2200
+          "y": 2180
         },
         {
           "x": 2860,
@@ -315,7 +315,7 @@ export const TOWN_CH4 = {
         },
         {
           "x": 2040,
-          "y": 2180
+          "y": 2160
         }
       ]
     },
@@ -326,14 +326,23 @@ export const TOWN_CH4 = {
       "speed": 62,
       "waypoints": [
         {
-          "x": 2984,
-          "y": 939
+          "x": 2860,
+          "y": 1120
         },
         {
-          "x": 2984,
-          "y": 1764
+          "x": 3320,
+          "y": 1240
+        },
+        {
+          "x": 3020,
+          "y": 1380
+        },
+        {
+          "x": 2580,
+          "y": 1320
         }
       ]
     }
-  ]
+  ],
+  "integratedBuildings": true
 };

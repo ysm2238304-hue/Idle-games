@@ -1,4 +1,4 @@
-// v281: 第 8 章主城「浮空祕法群島」— 四座錯落浮空島與奧術能量橋非對稱重構（4096x2560）
+// v282: 第 8 章主城「蒼穹電弧浮空城」— 全主城場景一體化建築重構＋全座標越界修正（4096x2560）
 export const TOWN_CH8 = {
   "chapterIdx": 7,
   "id": "town_ch8",
@@ -30,8 +30,8 @@ export const TOWN_CH8 = {
     "id": "storm_core",
     "name": "聚雷磁能核心球",
     "frame": "ch8_lm_core",
-    "x": 3120,
-    "y": 640,
+    "x": 3380,
+    "y": 560,
     "scale": 0.88,
     "imgKey": "ch8_lm_core_v270",
     "imgUrl": "./assets/towns/ch8_lm_core.webp?v=270",
@@ -68,7 +68,7 @@ export const TOWN_CH8 = {
       "id": "guild",
       "name": "風暴飛艇貨運金庫",
       "frame": "ch8_bld_guild",
-      "x": 3160,
+      "x": 3120,
       "y": 1880,
       "scale": 1,
       "imgKey": "ch8_bld_guild_v270",
@@ -79,7 +79,7 @@ export const TOWN_CH8 = {
         "frame": "ch8_npc_guild",
         "name": "巴洛",
         "title": "飛艇船長",
-        "x": 2980,
+        "x": 2960,
         "y": 1840,
         "scale": 0.62,
         "workStyle": "guild",
@@ -92,8 +92,8 @@ export const TOWN_CH8 = {
       "id": "alchemy",
       "name": "雲端星露蒸餾玻璃塔",
       "frame": "ch8_bld_alchemy",
-      "x": 3120,
-      "y": 660,
+      "x": 2920,
+      "y": 740,
       "scale": 0.98,
       "imgKey": "ch8_bld_alchemy_v270",
       "imgUrl": "./assets/towns/ch8_bld_alchemy.webp?v=270",
@@ -103,8 +103,8 @@ export const TOWN_CH8 = {
         "frame": "ch8_npc_alchemy",
         "name": "賽琳",
         "title": "雲端鍊金學者",
-        "x": 2960,
-        "y": 840,
+        "x": 2840,
+        "y": 880,
         "scale": 0.62,
         "workStyle": "alchemy",
         "greeting": "這瓶高純度雷雲凝露能讓你的反應速度像閃電一樣快！"
@@ -116,8 +116,8 @@ export const TOWN_CH8 = {
       "id": "temple",
       "name": "蒼穹翼騎兵演武神殿",
       "frame": "ch8_bld_temple",
-      "x": 2760,
-      "y": 560,
+      "x": 2720,
+      "y": 540,
       "scale": 1.04,
       "imgKey": "ch8_bld_temple_v270",
       "imgUrl": "./assets/towns/ch8_bld_temple.webp?v=270",
@@ -127,8 +127,8 @@ export const TOWN_CH8 = {
         "frame": "ch8_npc_temple",
         "name": "伊莉絲",
         "title": "雷霆女武神",
-        "x": 2720,
-        "y": 740,
+        "x": 2680,
+        "y": 700,
         "scale": 0.62,
         "workStyle": "prayer",
         "greeting": "在雷鳴高塔前必須擁有閃電般的連招節奏，來調整你的技能配置吧！"
@@ -212,7 +212,7 @@ export const TOWN_CH8 = {
       "id": "portal",
       "name": "高壓電弧跳躍傳送塔",
       "frame": "ch8_bld_portal",
-      "x": 740,
+      "x": 760,
       "y": 2060,
       "scale": 0.92,
       "radius": 104,
@@ -236,7 +236,7 @@ export const TOWN_CH8 = {
       "name": "艾迪生",
       "title": "風暴首席工程師",
       "x": 1560,
-      "y": 1520,
+      "y": 1860,
       "scale": 0.64,
       "greeting": "這是我最新設計的蒼穹電弧補給包，拿著這 50,000 金幣和秘藥去大展身手吧！",
       "action": "modal_engineer",
@@ -247,8 +247,8 @@ export const TOWN_CH8 = {
       "frame": "ch8_prop_coil",
       "name": "蓄電共鳴特斯拉線圈",
       "title": "充能機關",
-      "x": 2540,
-      "y": 1520,
+      "x": 3220,
+      "y": 720,
       "scale": 0.76,
       "greeting": "釋放線圈內的高壓奧術電流，瞬間恢復全部生命與能量！",
       "action": "gimmick_tesla_coil",
@@ -259,8 +259,8 @@ export const TOWN_CH8 = {
     "id": "dummy",
     "name": "黃銅發條電弧靶偶",
     "frame": "ch8_prop_dummy",
-    "x": 3467,
-    "y": 910,
+    "x": 3440,
+    "y": 1920,
     "scale": 0.72,
     "radius": 42
   },
@@ -282,7 +282,7 @@ export const TOWN_CH8 = {
           "y": 740
         },
         {
-          "x": 2980,
+          "x": 2940,
           "y": 820
         },
         {
@@ -326,14 +326,23 @@ export const TOWN_CH8 = {
       "speed": 68,
       "waypoints": [
         {
-          "x": 3248,
-          "y": 939
+          "x": 1220,
+          "y": 820
         },
         {
-          "x": 3248,
-          "y": 1621
+          "x": 1260,
+          "y": 1320
+        },
+        {
+          "x": 1440,
+          "y": 1720
+        },
+        {
+          "x": 1240,
+          "y": 1280
         }
       ]
     }
-  ]
+  ],
+  "integratedBuildings": true
 };

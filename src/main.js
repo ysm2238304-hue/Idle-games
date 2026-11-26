@@ -21,10 +21,10 @@ import {
   saveCloudData,
   deleteCloudSave,
 } from './auth/firebase.js?v=272';
-import { BattleScene } from './scenes/BattleScene.js?v=278';
-import { TownScene } from './scenes/TownScene.js?v=281';
+import { BattleScene } from './scenes/BattleScene.js?v=282';
+import { TownScene } from './scenes/TownScene.js?v=282';
 import { TOWN_SPLASHES } from './data/towns/splashes.js?v=229';
-import { DashboardUI } from './ui/DashboardUI.js?v=277';
+import { DashboardUI } from './ui/DashboardUI.js?v=282';
 import { hookWorldMap25D, openWorldMap25D, closeWorldMap25D, toggleWorldMap25D } from './ui/WorldMap25D.js?v=253';
 import { initHudOverhaulV217 } from './ui/HudOverhaulV217.js?v=257';
 import { UniversalTooltip } from './ui/UniversalTooltip.js?v=240';

@@ -1,4 +1,4 @@
-// v281: 第 10 章主城「星界終焉聖域」— 雙螺旋星光天橋與東北宇宙星象儀聖域重構（4096x2560）
+// v282: 第 10 章主城「永恆星辰聖域」— 全主城場景一體化建築重構＋全座標越界修正（4096x2560）
 export const TOWN_CH10 = {
   "chapterIdx": 9,
   "id": "town_ch10",
@@ -31,7 +31,7 @@ export const TOWN_CH10 = {
     "name": "旋轉黑洞星象儀",
     "frame": "ch10_lm_orrery",
     "x": 3160,
-    "y": 640,
+    "y": 620,
     "scale": 0.9,
     "imgKey": "ch10_lm_orrery_v270",
     "imgUrl": "./assets/towns/ch10_lm_orrery.webp?v=270",
@@ -68,8 +68,8 @@ export const TOWN_CH10 = {
       "id": "guild",
       "name": "永恆星庫與神話秘藏殿",
       "frame": "ch10_bld_guild",
-      "x": 3620,
-      "y": 1460,
+      "x": 3460,
+      "y": 1480,
       "scale": 0.98,
       "imgKey": "ch10_bld_guild_v270",
       "imgUrl": "./assets/towns/ch10_bld_guild.webp?v=270",
@@ -79,8 +79,8 @@ export const TOWN_CH10 = {
         "frame": "ch10_npc_guild",
         "name": "阿斯特拉",
         "title": "星界典藏官",
-        "x": 3440,
-        "y": 1520,
+        "x": 3320,
+        "y": 1540,
         "scale": 0.62,
         "workStyle": "guild",
         "greeting": "所有星際征戰得來的神話遺物皆已收錄於此，請隨時檢視你的星庫。"
@@ -116,8 +116,8 @@ export const TOWN_CH10 = {
       "id": "temple",
       "name": "星界熾天使演武神壇",
       "frame": "ch10_bld_temple",
-      "x": 3120,
-      "y": 720,
+      "x": 2960,
+      "y": 820,
       "scale": 1.04,
       "imgKey": "ch10_bld_temple_v270",
       "imgUrl": "./assets/towns/ch10_bld_temple.webp?v=270",
@@ -127,8 +127,8 @@ export const TOWN_CH10 = {
         "frame": "ch10_npc_temple",
         "name": "索拉里斯",
         "title": "星界戰神",
-        "x": 2940,
-        "y": 880,
+        "x": 2820,
+        "y": 960,
         "scale": 0.62,
         "workStyle": "prayer",
         "greeting": "迎接混沌星界虛空的最終決戰前，將你的技能與天賦調整至完美吧！"
@@ -212,7 +212,7 @@ export const TOWN_CH10 = {
       "id": "portal",
       "name": "宇宙星門蟲洞羅盤",
       "frame": "ch10_bld_portal",
-      "x": 720,
+      "x": 740,
       "y": 2080,
       "scale": 0.92,
       "radius": 104,
@@ -235,8 +235,8 @@ export const TOWN_CH10 = {
       "frame": "ch10_npc_weaver",
       "name": "伊莉雅",
       "title": "星界編織者",
-      "x": 1560,
-      "y": 1520,
+      "x": 2220,
+      "y": 1280,
       "scale": 0.64,
       "greeting": "偉大的旅者，你已走完十界征途！收下這份星界編織者的終極贈禮吧！",
       "action": "modal_weaver",
@@ -247,8 +247,8 @@ export const TOWN_CH10 = {
       "frame": "ch10_prop_starwell",
       "name": "星界銀河許願泉",
       "title": "星辰聖泉",
-      "x": 2540,
-      "y": 1520,
+      "x": 2820,
+      "y": 1040,
       "scale": 0.78,
       "greeting": "沐浴於流淌星塵的銀河許願泉，瞬間恢復全部生命與能量！",
       "action": "gimmick_star_well",
@@ -259,8 +259,8 @@ export const TOWN_CH10 = {
     "id": "dummy",
     "name": "星界黃金構造體靶",
     "frame": "ch10_prop_dummy",
-    "x": 4601,
-    "y": 1508,
+    "x": 3660,
+    "y": 1520,
     "scale": 0.74,
     "radius": 42
   },
@@ -274,7 +274,7 @@ export const TOWN_CH10 = {
       "speed": 78,
       "waypoints": [
         {
-          "x": 940,
+          "x": 960,
           "y": 1940
         },
         {
@@ -310,7 +310,7 @@ export const TOWN_CH10 = {
           "y": 1860
         },
         {
-          "x": 3440,
+          "x": 3360,
           "y": 1540
         },
         {
@@ -326,14 +326,23 @@ export const TOWN_CH10 = {
       "speed": 64,
       "waypoints": [
         {
-          "x": 3248,
-          "y": 939
+          "x": 1380,
+          "y": 1160
         },
         {
-          "x": 3248,
-          "y": 1621
+          "x": 1920,
+          "y": 1260
+        },
+        {
+          "x": 2440,
+          "y": 1040
+        },
+        {
+          "x": 1880,
+          "y": 1220
         }
       ]
     }
-  ]
+  ],
+  "integratedBuildings": true
 };

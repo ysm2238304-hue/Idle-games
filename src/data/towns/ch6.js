@@ -1,4 +1,4 @@
-// v280: 第 6 章主城「凜冬峽灣港」— 冰封維京長船港口與半月山坡雪村重構（4096x2560）
+// v282: 第 6 章主城「極光冰晶堡」— 全主城場景一體化建築重構＋全座標越界修正（4096x2560）
 export const TOWN_CH6 = {
   "chapterIdx": 5,
   "id": "town_ch6",
@@ -45,7 +45,7 @@ export const TOWN_CH6 = {
       "name": "永凍藍冰符文鍛造柱",
       "frame": "ch6_bld_smith",
       "x": 940,
-      "y": 560,
+      "y": 580,
       "scale": 1,
       "imgKey": "ch6_bld_smith_v269",
       "imgUrl": "./assets/towns/ch6_bld_smith.webp?v=269",
@@ -56,7 +56,7 @@ export const TOWN_CH6 = {
         "name": "布羅恩",
         "title": "冰霜符文鐵匠",
         "x": 1120,
-        "y": 700,
+        "y": 720,
         "scale": 0.62,
         "workStyle": "forge",
         "greeting": "極地永凍冰鐵比鋼鐵更堅硬，刻上北歐符文後連冰龍都能劈開！"
@@ -69,7 +69,7 @@ export const TOWN_CH6 = {
       "name": "雪松草藥與冰晶蒸餾屋",
       "frame": "ch6_bld_alchemy",
       "x": 1960,
-      "y": 480,
+      "y": 500,
       "scale": 1,
       "imgKey": "ch6_bld_alchemy_v269",
       "imgUrl": "./assets/towns/ch6_bld_alchemy.webp?v=269",
@@ -92,8 +92,8 @@ export const TOWN_CH6 = {
       "id": "guild",
       "name": "維京毛皮與秘寶長屋",
       "frame": "ch6_bld_guild",
-      "x": 3580,
-      "y": 1060,
+      "x": 3460,
+      "y": 1040,
       "scale": 0.96,
       "imgKey": "ch6_bld_guild_v269",
       "imgUrl": "./assets/towns/ch6_bld_guild.webp?v=269",
@@ -103,8 +103,8 @@ export const TOWN_CH6 = {
         "frame": "ch6_npc_guild",
         "name": "哈康",
         "title": "長屋大管家",
-        "x": 3380,
-        "y": 1140,
+        "x": 3280,
+        "y": 1120,
         "scale": 0.62,
         "workStyle": "guild",
         "greeting": "所有戰利品與毛皮補給都妥善存放在龍首長屋裡，隨時取用！"
@@ -117,7 +117,7 @@ export const TOWN_CH6 = {
       "name": "英靈殿狂戰訓練場",
       "frame": "ch6_bld_temple",
       "x": 2940,
-      "y": 560,
+      "y": 580,
       "scale": 1.04,
       "imgKey": "ch6_bld_temple_v269",
       "imgUrl": "./assets/towns/ch6_bld_temple.webp?v=269",
@@ -212,7 +212,7 @@ export const TOWN_CH6 = {
       "id": "portal",
       "name": "北歐巨石陣傳送冰門",
       "frame": "ch6_bld_portal",
-      "x": 1240,
+      "x": 1260,
       "y": 1740,
       "scale": 0.92,
       "radius": 105,
@@ -220,7 +220,7 @@ export const TOWN_CH6 = {
         "frame": "ch6_npc_portal",
         "name": "海姆達爾",
         "title": "彩虹冰門守衛",
-        "x": 1420,
+        "x": 1440,
         "y": 1660,
         "scale": 0.62,
         "greeting": "極光傳送門已對準永凍冰霜凍原深處，隨時準備出征！"
@@ -235,8 +235,8 @@ export const TOWN_CH6 = {
       "frame": "ch6_npc_shaman",
       "name": "奧丁森",
       "title": "極地先知長老",
-      "x": 1560,
-      "y": 1520,
+      "x": 2360,
+      "y": 840,
       "scale": 0.64,
       "greeting": "遠道而來的勇者，極地的風雪考驗著每一位戰士，這份先知贈禮收下吧。",
       "action": "modal_shaman",
@@ -247,8 +247,8 @@ export const TOWN_CH6 = {
       "frame": "ch6_prop_brazier",
       "name": "北歐符文暖火盆",
       "title": "禦寒聖火",
-      "x": 2540,
-      "y": 1520,
+      "x": 1240,
+      "y": 740,
       "scale": 0.78,
       "greeting": "靠近符文暖火盆驅散寒霜，瞬間回復全部生命與能量！",
       "action": "gimmick_runic_brazier",
@@ -259,8 +259,8 @@ export const TOWN_CH6 = {
     "id": "dummy",
     "name": "冰霜巨人木偶靶",
     "frame": "ch6_prop_dummy",
-    "x": 3487,
-    "y": 1479,
+    "x": 3580,
+    "y": 1180,
     "scale": 0.72,
     "radius": 42
   },
@@ -286,7 +286,7 @@ export const TOWN_CH6 = {
           "y": 880
         },
         {
-          "x": 3360,
+          "x": 3320,
           "y": 1140
         },
         {
@@ -326,14 +326,23 @@ export const TOWN_CH6 = {
       "speed": 70,
       "waypoints": [
         {
-          "x": 1083,
-          "y": 597
+          "x": 1840,
+          "y": 1180
         },
         {
-          "x": 3013,
-          "y": 597
+          "x": 2360,
+          "y": 1240
+        },
+        {
+          "x": 2680,
+          "y": 1620
+        },
+        {
+          "x": 2060,
+          "y": 1480
         }
       ]
     }
-  ]
+  ],
+  "integratedBuildings": true
 };

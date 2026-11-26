@@ -1,4 +1,4 @@
-// v280: 第 7 章主城「翡翠巨樹聖林」— 左錨螺旋巨樹樹冠棧道與翡翠瀑布池重構（4096x2560）
+// v282: 第 7 章主城「翠玉樹冠水寨」— 全主城場景一體化建築重構＋全座標越界修正（4096x2560）
 export const TOWN_CH7 = {
   "chapterIdx": 6,
   "id": "town_ch7",
@@ -44,7 +44,7 @@ export const TOWN_CH7 = {
       "id": "smith",
       "name": "巨龜甲殼煉鐵工作台",
       "frame": "ch7_bld_smith",
-      "x": 820,
+      "x": 840,
       "y": 1160,
       "scale": 0.98,
       "imgKey": "ch7_bld_smith_v269",
@@ -55,7 +55,7 @@ export const TOWN_CH7 = {
         "frame": "ch7_npc_smith",
         "name": "卡巴",
         "title": "沼澤甲殼匠",
-        "x": 1020,
+        "x": 1040,
         "y": 1240,
         "scale": 0.62,
         "workStyle": "forge",
@@ -69,7 +69,7 @@ export const TOWN_CH7 = {
       "name": "劇毒草藥樹冠煉藥屋",
       "frame": "ch7_bld_alchemy",
       "x": 2060,
-      "y": 520,
+      "y": 540,
       "scale": 0.98,
       "imgKey": "ch7_bld_alchemy_v269",
       "imgUrl": "./assets/towns/ch7_bld_alchemy.webp?v=269",
@@ -92,8 +92,8 @@ export const TOWN_CH7 = {
       "id": "guild",
       "name": "高腳竹屋贓物倉庫",
       "frame": "ch7_bld_guild",
-      "x": 3460,
-      "y": 1980,
+      "x": 3320,
+      "y": 1960,
       "scale": 1,
       "imgKey": "ch7_bld_guild_v269",
       "imgUrl": "./assets/towns/ch7_bld_guild.webp?v=269",
@@ -103,8 +103,8 @@ export const TOWN_CH7 = {
         "frame": "ch7_npc_guild",
         "name": "巴圖",
         "title": "水寨倉管長",
-        "x": 3240,
-        "y": 1920,
+        "x": 3140,
+        "y": 1900,
         "scale": 0.62,
         "workStyle": "guild",
         "greeting": "東西全架在高腳竹屋上頭，沼澤水再怎麼漲也淹不到你的寶貝！"
@@ -164,8 +164,8 @@ export const TOWN_CH7 = {
       "id": "market",
       "name": "水上竹筏黑市攤",
       "frame": "ch7_bld_market",
-      "x": 740,
-      "y": 2080,
+      "x": 760,
+      "y": 2060,
       "scale": 0.96,
       "imgKey": "ch7_bld_market_v269",
       "imgUrl": "./assets/towns/ch7_bld_market.webp?v=269",
@@ -176,7 +176,7 @@ export const TOWN_CH7 = {
         "name": "斯萊",
         "title": "沼澤行商",
         "x": 980,
-        "y": 2060,
+        "y": 2040,
         "scale": 0.62,
         "workStyle": "market",
         "greeting": "嘶嘶……我用竹筏從沈船裡撈上來一堆寶箱，要賭一把手氣嗎？"
@@ -213,7 +213,7 @@ export const TOWN_CH7 = {
       "name": "發光蓮花木筏渡口",
       "frame": "ch7_bld_portal",
       "x": 2480,
-      "y": 2140,
+      "y": 2120,
       "scale": 0.92,
       "radius": 102,
       "npc": {
@@ -235,8 +235,8 @@ export const TOWN_CH7 = {
       "frame": "ch7_npc_witchdoctor",
       "name": "祖爾",
       "title": "沼澤巫醫長",
-      "x": 1560,
-      "y": 1520,
+      "x": 1960,
+      "y": 760,
       "scale": 0.64,
       "greeting": "歡迎來到翠玉樹冠水寨！收下這份部族的巫醫聖禮，願螢火蟲指引你的道路。",
       "action": "modal_witchdoctor",
@@ -247,8 +247,8 @@ export const TOWN_CH7 = {
       "frame": "ch7_prop_horn",
       "name": "沼澤巫毒號角柱",
       "title": "部族機關",
-      "x": 2540,
-      "y": 1520,
+      "x": 1160,
+      "y": 1320,
       "scale": 0.74,
       "greeting": "吹響沼澤巫毒號角招來治癒螢火蟲群，瞬間回復全部生命與能量！",
       "action": "gimmick_voodoo_horn",
@@ -259,8 +259,8 @@ export const TOWN_CH7 = {
     "id": "dummy",
     "name": "藤蔓稻草巫毒靶",
     "frame": "ch7_prop_dummy",
-    "x": 4601,
-    "y": 1621,
+    "x": 3520,
+    "y": 2060,
     "scale": 0.72,
     "radius": 42
   },
@@ -274,7 +274,7 @@ export const TOWN_CH7 = {
       "speed": 74,
       "waypoints": [
         {
-          "x": 1020,
+          "x": 1040,
           "y": 1240
         },
         {
@@ -303,18 +303,18 @@ export const TOWN_CH7 = {
       "waypoints": [
         {
           "x": 1040,
-          "y": 2060
+          "y": 2040
         },
         {
           "x": 1960,
-          "y": 2120
+          "y": 2100
         },
         {
           "x": 2680,
           "y": 1760
         },
         {
-          "x": 3240,
+          "x": 3220,
           "y": 1920
         }
       ]
@@ -326,14 +326,23 @@ export const TOWN_CH7 = {
       "speed": 62,
       "waypoints": [
         {
-          "x": 2984,
-          "y": 825
+          "x": 2580,
+          "y": 1380
         },
         {
-          "x": 3423,
-          "y": 825
+          "x": 2860,
+          "y": 1560
+        },
+        {
+          "x": 2720,
+          "y": 1820
+        },
+        {
+          "x": 2440,
+          "y": 1620
         }
       ]
     }
-  ]
+  ],
+  "integratedBuildings": true
 };

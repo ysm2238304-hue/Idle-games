@@ -1,4 +1,4 @@
-// v281: 第 9 章主城「血月玫瑰修道院」— 方形封閉哥德迴廊與幾何玫瑰迷宮庭園重構（4096x2560）
+// v282: 第 9 章主城「聖血薔薇修道院」— 全主城場景一體化建築重構＋全座標越界修正（4096x2560）
 export const TOWN_CH9 = {
   "chapterIdx": 8,
   "id": "town_ch9",
@@ -92,7 +92,7 @@ export const TOWN_CH9 = {
       "id": "guild",
       "name": "修道院聖典珍寶庫",
       "frame": "ch9_bld_guild",
-      "x": 3240,
+      "x": 3180,
       "y": 1960,
       "scale": 0.96,
       "imgKey": "ch9_bld_guild_v270",
@@ -103,7 +103,7 @@ export const TOWN_CH9 = {
         "frame": "ch9_npc_guild",
         "name": "格里高利",
         "title": "典藏院長",
-        "x": 3020,
+        "x": 2980,
         "y": 1940,
         "scale": 0.62,
         "workStyle": "guild",
@@ -164,7 +164,7 @@ export const TOWN_CH9 = {
       "id": "market",
       "name": "聖物贖罪券黑市攤",
       "frame": "ch9_bld_market",
-      "x": 740,
+      "x": 760,
       "y": 1920,
       "scale": 0.96,
       "imgKey": "ch9_bld_market_v270",
@@ -235,8 +235,8 @@ export const TOWN_CH9 = {
       "frame": "ch9_npc_penitent",
       "name": "特蕾莎",
       "title": "苦行聖女",
-      "x": 1560,
-      "y": 1520,
+      "x": 1620,
+      "y": 680,
       "scale": 0.64,
       "greeting": "願這串薔薇念珠與 80,000 金幣聖糧，支撐你渡過最黑暗的修道院長夜。",
       "action": "modal_penitent",
@@ -247,8 +247,8 @@ export const TOWN_CH9 = {
       "frame": "ch9_prop_bell",
       "name": "聖血修道院黃金大鐘",
       "title": "聖光機關",
-      "x": 2540,
-      "y": 1520,
+      "x": 2480,
+      "y": 680,
       "scale": 0.78,
       "greeting": "敲響修道院黃金大鐘降下聖光洗禮，瞬間恢復全部生命與能量！",
       "action": "gimmick_abbey_bell",
@@ -259,8 +259,8 @@ export const TOWN_CH9 = {
     "id": "dummy",
     "name": "審判庭聖鎧靶偶",
     "frame": "ch9_prop_dummy",
-    "x": 4901,
-    "y": 1508,
+    "x": 3420,
+    "y": 1920,
     "scale": 0.72,
     "radius": 42
   },
@@ -322,14 +322,23 @@ export const TOWN_CH9 = {
       "speed": 62,
       "waypoints": [
         {
-          "x": 1083,
-          "y": 2048
+          "x": 1120,
+          "y": 1860
         },
         {
-          "x": 3013,
-          "y": 2048
+          "x": 2048,
+          "y": 1940
+        },
+        {
+          "x": 2980,
+          "y": 1880
+        },
+        {
+          "x": 2048,
+          "y": 1820
         }
       ]
     }
-  ]
+  ],
+  "integratedBuildings": true
 };

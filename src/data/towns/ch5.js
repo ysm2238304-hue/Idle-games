@@ -1,4 +1,4 @@
-// v280: 第 5 章主城「緋紅血殿」— 斜向紅毯黑曜石王座廳與鎖鏈懸崖平台重構（4096x2560）
+// v282: 第 5 章主城「緋紅魔獄王庭」— 全主城場景一體化建築重構＋全座標越界修正（4096x2560）
 export const TOWN_CH5 = {
   "chapterIdx": 4,
   "id": "town_ch5",
@@ -30,7 +30,7 @@ export const TOWN_CH5 = {
     "id": "abyss_sigil",
     "name": "深淵召喚巨陣",
     "frame": "ch5_lm_sigil",
-    "x": 3040,
+    "x": 3060,
     "y": 560,
     "scale": 0.86,
     "imgKey": "ch5_lm_sigil_v269",
@@ -44,8 +44,8 @@ export const TOWN_CH5 = {
       "id": "smith",
       "name": "血魔骨鑄鍛造殿",
       "frame": "ch5_bld_smith",
-      "x": 740,
-      "y": 560,
+      "x": 760,
+      "y": 580,
       "scale": 0.98,
       "imgKey": "ch5_bld_smith_v269",
       "imgUrl": "./assets/towns/ch5_bld_smith.webp?v=269",
@@ -55,7 +55,7 @@ export const TOWN_CH5 = {
         "frame": "ch5_npc_smith",
         "name": "瑪門",
         "title": "血焰魔匠",
-        "x": 880,
+        "x": 900,
         "y": 720,
         "scale": 0.62,
         "workStyle": "forge",
@@ -68,8 +68,8 @@ export const TOWN_CH5 = {
       "id": "alchemy",
       "name": "魅魔猩紅魔藥沙龍",
       "frame": "ch5_bld_alchemy",
-      "x": 1160,
-      "y": 1460,
+      "x": 1180,
+      "y": 1480,
       "scale": 0.98,
       "imgKey": "ch5_bld_alchemy_v269",
       "imgUrl": "./assets/towns/ch5_bld_alchemy.webp?v=269",
@@ -79,7 +79,7 @@ export const TOWN_CH5 = {
         "frame": "ch5_npc_alchemy",
         "name": "莉莉絲",
         "title": "猩紅魅魔調劑師",
-        "x": 1340,
+        "x": 1360,
         "y": 1520,
         "scale": 0.62,
         "workStyle": "alchemy",
@@ -92,8 +92,8 @@ export const TOWN_CH5 = {
       "id": "guild",
       "name": "深淵魔契珍寶庫",
       "frame": "ch5_bld_guild",
-      "x": 3280,
-      "y": 2040,
+      "x": 3040,
+      "y": 1960,
       "scale": 1,
       "imgKey": "ch5_bld_guild_v269",
       "imgUrl": "./assets/towns/ch5_bld_guild.webp?v=269",
@@ -103,8 +103,8 @@ export const TOWN_CH5 = {
         "frame": "ch5_npc_guild",
         "name": "貝利亞",
         "title": "魔契典獄官",
-        "x": 3120,
-        "y": 1960,
+        "x": 2940,
+        "y": 1920,
         "scale": 0.62,
         "workStyle": "guild",
         "greeting": "每一份戰利品都受黃金鎖鏈封印保護，隨時清點你的庫存。"
@@ -116,8 +116,8 @@ export const TOWN_CH5 = {
       "id": "temple",
       "name": "角魔血鬥演武場",
       "frame": "ch5_bld_temple",
-      "x": 2980,
-      "y": 640,
+      "x": 2880,
+      "y": 740,
       "scale": 1.04,
       "imgKey": "ch5_bld_temple_v269",
       "imgUrl": "./assets/towns/ch5_bld_temple.webp?v=269",
@@ -127,8 +127,8 @@ export const TOWN_CH5 = {
         "frame": "ch5_npc_temple",
         "name": "巴爾",
         "title": "深淵角魔統帥",
-        "x": 2840,
-        "y": 820,
+        "x": 2740,
+        "y": 880,
         "scale": 0.62,
         "workStyle": "prayer",
         "greeting": "弱者在王庭連一秒都活不下來！調整好你的技能連段再上吧！"
@@ -189,7 +189,7 @@ export const TOWN_CH5 = {
       "name": "魔獄血祭輪迴巨陣",
       "frame": "ch5_bld_altar",
       "x": 2320,
-      "y": 1040,
+      "y": 1060,
       "scale": 0.98,
       "imgKey": "ch5_bld_altar_v269",
       "imgUrl": "./assets/towns/ch5_bld_altar.webp?v=269",
@@ -212,16 +212,16 @@ export const TOWN_CH5 = {
       "id": "portal",
       "name": "懸浮鎖鏈深淵裂隙門",
       "frame": "ch5_bld_portal",
-      "x": 740,
-      "y": 2160,
+      "x": 760,
+      "y": 2140,
       "scale": 0.92,
       "radius": 106,
       "npc": {
         "frame": "ch5_npc_portal",
         "name": "阿撒茲勒",
         "title": "裂隙守衛長",
-        "x": 940,
-        "y": 2060,
+        "x": 960,
+        "y": 2040,
         "scale": 0.62,
         "greeting": "穿過紫焰裂隙便是深淵魔王聖殿戰場，願血獄之力隨行。"
       },
@@ -235,8 +235,8 @@ export const TOWN_CH5 = {
       "frame": "ch5_npc_contractor",
       "name": "墨菲斯托",
       "title": "墮落契約官",
-      "x": 1560,
-      "y": 1520,
+      "x": 1980,
+      "y": 1380,
       "scale": 0.64,
       "greeting": "與我簽下這份黃金魔契吧，這 10,000 金幣與秘藥算是王庭的誠意！",
       "action": "modal_contractor",
@@ -247,8 +247,8 @@ export const TOWN_CH5 = {
       "frame": "ch5_prop_chalice",
       "name": "猩紅聖血聖杯座",
       "title": "王庭聖物",
-      "x": 2540,
-      "y": 1520,
+      "x": 2660,
+      "y": 880,
       "scale": 0.76,
       "greeting": "飲下聖杯中的不朽紅液，瞬間回復全部生命與能量！",
       "action": "gimmick_blood_chalice",
@@ -259,8 +259,8 @@ export const TOWN_CH5 = {
     "id": "dummy",
     "name": "石像鬼魔鎧靶",
     "frame": "ch5_prop_dummy",
-    "x": 4601,
-    "y": 1465,
+    "x": 3220,
+    "y": 2040,
     "scale": 0.72,
     "radius": 42
   },
@@ -274,8 +274,8 @@ export const TOWN_CH5 = {
       "speed": 76,
       "waypoints": [
         {
-          "x": 880,
-          "y": 2020
+          "x": 920,
+          "y": 1980
         },
         {
           "x": 1680,
@@ -286,7 +286,7 @@ export const TOWN_CH5 = {
           "y": 1020
         },
         {
-          "x": 2880,
+          "x": 2840,
           "y": 780
         },
         {
@@ -326,14 +326,23 @@ export const TOWN_CH5 = {
       "speed": 84,
       "waypoints": [
         {
-          "x": 1726,
-          "y": 640
+          "x": 1380,
+          "y": 1680
         },
         {
-          "x": 2370,
-          "y": 640
+          "x": 1840,
+          "y": 1420
+        },
+        {
+          "x": 2220,
+          "y": 1180
+        },
+        {
+          "x": 1740,
+          "y": 1520
         }
       ]
     }
-  ]
+  ],
+  "integratedBuildings": true
 };
