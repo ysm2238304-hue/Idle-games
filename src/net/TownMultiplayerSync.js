@@ -1,6 +1,6 @@
 // v267: 多人共享主城同屏同步引擎（TownMultiplayerSync）
 // 支援 Firebase Cloud Firestore 即時同屏＋未登入/離線 AI 冒險者兜底＋頭頂氣泡聊天／表情＋點擊檢視裝備
-import { publishTownPresence, subscribeTownPresence, getCurrentUser } from '../auth/firebase.js?v=267';
+import { publishTownPresence, subscribeTownPresence, getCurrentUser } from '../auth/firebase.js?v=271';
 
 const CLASS_META = {
   warrior:  { badge: '⚔️', label: '狂戰士', color: '#f97316' },

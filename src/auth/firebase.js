@@ -206,13 +206,43 @@ export function getCurrentUser() {
   return currentUser;
 }
 
+
+// v271: Firestore 不支援巢狀陣列（Nested arrays），寫入前遞迴安全轉換、讀取時自動還原
+function sanitizeForFirestore(val, inArray = false) {
+  if (val === undefined) return null;
+  if (val === null || typeof val !== 'object') return val;
+  if (Array.isArray(val)) {
+    const mapped = val.map((item) => sanitizeForFirestore(item, true));
+    return inArray ? { __fsNestedArr__: mapped } : mapped;
+  }
+  const out = {};
+  for (const [k, v] of Object.entries(val)) {
+    if (v === undefined || typeof v === 'function') continue;
+    out[k] = sanitizeForFirestore(v, false);
+  }
+  return out;
+}
+
+function restoreFromFirestore(val) {
+  if (val === null || typeof val !== 'object') return val;
+  if (Array.isArray(val)) return val.map(restoreFromFirestore);
+  if (Object.prototype.hasOwnProperty.call(val, '__fsNestedArr__') && Array.isArray(val.__fsNestedArr__)) {
+    return val.__fsNestedArr__.map(restoreFromFirestore);
+  }
+  const out = {};
+  for (const [k, v] of Object.entries(val)) {
+    out[k] = restoreFromFirestore(v);
+  }
+  return out;
+}
+
 export async function loadCloudSave(uid) {
   const ctx = await ensureFirebase();
   if (!ctx || !uid) return null;
   try {
     const { doc, getDoc } = ctx.fsMod;
     const snap = await getDoc(doc(ctx.db, COLLECTION_NAME, uid));
-    return snap.exists() ? snap.data() : null;
+    return snap.exists() ? restoreFromFirestore(snap.data()) : null;
   } catch (e) {
     console.warn('雲端讀檔失敗:', e);
     return null;
@@ -225,10 +255,11 @@ export async function saveCloudData(uid, state) {
   if (!ctx || !uid) return false;
   try {
     const { doc, setDoc } = ctx.fsMod;
-    await setDoc(doc(ctx.db, COLLECTION_NAME, uid), {
+    const safeState = sanitizeForFirestore({
       ...state,
       lastSavedAt: Date.now(),
-    }, { merge: true });
+    });
+    await setDoc(doc(ctx.db, COLLECTION_NAME, uid), safeState, { merge: true });
     return true;
   } catch (e) {
     const msg = String(e?.message || '');

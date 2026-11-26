@@ -1,6 +1,6 @@
 import { TOWN_CH1 } from '../data/towns/ch1.js?v=267';
 import { LivingNpcEngine } from '../town/LivingNpcEngine.js?v=267';
-import { TownMultiplayerSync } from '../net/TownMultiplayerSync.js?v=267';
+import { TownMultiplayerSync } from '../net/TownMultiplayerSync.js?v=271';
 import { TOWN_CH2 } from '../data/towns/ch2.js?v=268';
 import { TOWN_CH3 } from '../data/towns/ch3.js?v=268';
 import { TOWN_CH4 } from '../data/towns/ch4.js?v=268';
@@ -43,16 +43,8 @@ export class TownScene extends Phaser.Scene {
     this.interactables = [];
     this.patrolActors = [];
     this.roamNpcs = [];
-    this.livingNpcs = new LivingNpcEngine(this);
-    this.mpSync = new TownMultiplayerSync(this, td);
-    this.events.once('shutdown', () => {
-      this.livingNpcs?.destroy();
-      this.mpSync?.destroy();
-    });
-    this.events.once('destroy', () => {
-      this.livingNpcs?.destroy();
-      this.mpSync?.destroy();
-    });
+    this.livingNpcs = null;
+    this.mpSync = null;
     this.hoverRing = null;
     this.speechBubble = null;
     this._portraitCache = new Map();
@@ -120,6 +112,18 @@ export class TownScene extends Phaser.Scene {
     this.interactables = [];
     this.patrolActors = [];
     this.roamNpcs = [];
+    this.livingNpcs?.destroy();
+    this.mpSync?.destroy();
+    this.livingNpcs = new LivingNpcEngine(this);
+    this.mpSync = new TownMultiplayerSync(this, td);
+    this.events.once('shutdown', () => {
+      this.livingNpcs?.destroy();
+      this.mpSync?.destroy();
+    });
+    this.events.once('destroy', () => {
+      this.livingNpcs?.destroy();
+      this.mpSync?.destroy();
+    });
     this.moveTarget = null;
     this.nearestTarget = null;
 
