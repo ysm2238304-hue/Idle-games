@@ -43,11 +43,18 @@ async function ensureFirebase() {
       import('https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js'),
       import('https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js'),
       import('https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js'),
-    ]).then(([appMod, authMod, fsMod]) => {
+      import('https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js').catch(() => null),
+    ]).then(async ([appMod, authMod, fsMod, analyticsMod]) => {
       const app = appMod.getApps().length ? appMod.getApps()[0] : appMod.initializeApp(firebaseConfig);
       const auth = authMod.getAuth(app);
       const db = fsMod.getFirestore(app);
-      fbCtx = { app, auth, db, authMod, fsMod };
+      let analytics = null;
+      try {
+        if (analyticsMod && await analyticsMod.isSupported()) {
+          analytics = analyticsMod.getAnalytics(app);
+        }
+      } catch { /* 廣告攔截器或不支援環境自動略過 */ }
+      fbCtx = { app, auth, db, analytics, authMod, fsMod, analyticsMod };
       return fbCtx;
     }).catch((err) => {
       console.warn('⚠️ Firebase SDK 載入失敗（將以本機離線模式運行）:', err);
@@ -174,9 +181,9 @@ export async function signInWithGoogle() {
         manualLoginTriggered = false;
         return null;
       }
-      if (err.code === 'auth/popup-blocked' || err.code === 'auth/operation-not-supported-in-this-environment') {
-        await authMod.signInWithRedirect(auth, provider);
-        return null;
+      if (err.code === 'auth/popup-blocked') {
+        manualLoginTriggered = false;
+        throw new Error('瀏覽器封鎖了 Google 登入視窗，請在網址列允許彈出式視窗後再試一次。');
       }
       manualLoginTriggered = false;
       throw new Error(translateAuthError(err));

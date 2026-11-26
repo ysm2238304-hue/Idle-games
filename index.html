@@ -16,7 +16,7 @@
   <link id="worldmap-25d-v222-css" rel="stylesheet" href="./src/ui/worldMap25d.css?v=222" />
   <link id="gothic-ui-theme-v225-css" rel="stylesheet" href="./src/ui/gothicUiTheme.css?v=225" />
   <link id="custom-cursor-v232-css" rel="stylesheet" href="./src/ui/customCursor.css?v=232" />
-  <link id="skill-spec-v233-css" rel="stylesheet" href="./src/ui/skillSpec.css?v=243" />
+  <link id="skill-spec-v233-css" rel="stylesheet" href="./src/ui/skillSpec.css?v=249" />
   <link id="class-mech-v234-css" rel="stylesheet" href="./src/ui/classMechanic.css?v=234" />
   <link id="endgame-v237-css" rel="stylesheet" href="./src/ui/endgameModal.css?v=237" />
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
@@ -28,7 +28,11 @@
     <div class="welcome-vignette"></div>
 
     <!-- 步驟 1：全螢幕三層景深史詩扉頁（v215 直接內嵌新版登入祭壇，零舊UI閃現） -->
-    <div id="welcome-step-auth" class="welcome-title-gate">
+    <div id="welcome-step-loading" class="v249-auth-loading-veil">
+      <img class="welcome-abyss-logo" src="./assets/ui/logo_abyss.png?v=99" alt="無限深淵" style="max-width:280px;opacity:0.92;" />
+      <div>⚔️ 正在驗證帳號與深淵存檔...</div>
+    </div>
+    <div id="welcome-step-auth" class="welcome-title-gate hidden">
       <header class="gate-top-strip">
         <div class="gate-top-right">
           <div id="welcome-auth-status" class="auth-status-pill">請使用 Email 或 Google 帳號登入</div>
@@ -109,6 +113,7 @@
           <label for="input-hero-nickname">冒險者暱稱：</label>
           <input id="input-hero-nickname" type="text" maxlength="12" placeholder="請輸入 2~12 字暱稱..." autocomplete="off" />
           <button id="btn-random-nickname" type="button" class="btn-dice" title="隨機產生暗黑風格暱稱">🎲 隨機</button>
+          <span id="nickname-lock-badge" class="v249-nick-lock-badge hidden">🔒 創角命名已鎖定</span>
         </div>
         <button id="btn-start-game" class="btn-epic-gold start-btn">⚔️ 締結合約・踏入深淵</button>
       </footer>
@@ -617,6 +622,6 @@
     </div>
   </div>
 
-  <script type="module" src="./src/main.js?v=248"></script>
+  <script type="module" src="./src/main.js?v=250"></script>
 </body>
 </html>

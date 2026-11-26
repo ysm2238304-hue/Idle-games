@@ -1,10 +1,10 @@
 // 創角大廳：全 6 職業 × 全 8 技能 (48 招) 實戰貼圖特效、真實召喚物/分身與戰鬥背景演武預覽模組 (v77)
-import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=99';
-import { RANGER_SKILLS } from '../data/rangerSkills.js?v=99';
-import { MAGE_SKILLS } from '../data/mageSkills.js?v=99';
-import { PALADIN_SKILLS } from '../data/paladinSkills.js?v=99';
-import { NECRO_SKILLS } from '../data/necroSkills.js?v=99';
-import { ASSASSIN_SKILLS } from '../data/assassinSkills.js?v=99';
+import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=235';
+import { RANGER_SKILLS } from '../data/rangerSkills.js?v=236';
+import { MAGE_SKILLS } from '../data/mageSkills.js?v=241';
+import { PALADIN_SKILLS } from '../data/paladinSkills.js?v=235';
+import { NECRO_SKILLS } from '../data/necroSkills.js?v=236';
+import { ASSASSIN_SKILLS } from '../data/assassinSkills.js?v=235';
 
 export const CLASS_SKILLS_MAP = {
   warrior: WARRIOR_SKILLS,
@@ -65,6 +65,8 @@ export class HeroSkillShowcase {
     this.mobAtlas = null;
     this.summonAtlas = null;
     this.onSkillChange = null;
+    this._pendingSkillIdx = 0;
+    this._heroReadyStarted = false;
     this._ensureMobAtlas();
     this._ensureSummonAtlas();
   }
@@ -126,7 +128,14 @@ export class HeroSkillShowcase {
     this._loadAtlas(`./assets/heroes/atlas_${this.classId}.png?v=66`, `./assets/heroes/atlas_${this.classId}.json?v=66`);
     this._preloadClassFx(this.classId);
     this._spawnMobs();
-    this.triggerSkill(0);
+    this._heroReadyStarted = false;
+    this._pendingSkillIdx = 0;
+    this.autoSwitchAt = Number.MAX_SAFE_INTEGER;
+    const initAtlas = this.atlasCache.get(`./assets/heroes/atlas_${this.classId}.png?v=66`);
+    if (initAtlas?.ready) {
+      this._heroReadyStarted = true;
+      this.triggerSkill(0);
+    }
     const loop = (ts) => {
       this._tick(ts);
       this.rafId = requestAnimationFrame(loop);
@@ -200,7 +209,16 @@ export class HeroSkillShowcase {
     const rawMap = CLASS_SKILLS_MAP[this.classId] || WARRIOR_SKILLS;
     const skills = Array.isArray(rawMap) ? rawMap : Object.values(rawMap);
     if (!skills.length) return;
-    this.skillIdx = ((idx % skills.length) + skills.length) % skills.length;
+    const normIdx = ((idx % skills.length) + skills.length) % skills.length;
+    const heroAtlasCheck = this.atlasCache.get(`./assets/heroes/atlas_${this.classId}.png?v=66`);
+    if (!heroAtlasCheck?.ready) {
+      this._pendingSkillIdx = normIdx;
+      this.skillIdx = normIdx;
+      this.onSkillChange?.(normIdx, skills[normIdx]);
+      return;
+    }
+    this._heroReadyStarted = true;
+    this.skillIdx = normIdx;
     const sk = skills[this.skillIdx];
     const now = performance.now();
     this.castAnimUntil = now + 950;
@@ -489,7 +507,11 @@ export class HeroSkillShowcase {
     const h = this.canvas.height;
     const dt = 0.016;
 
-    if (now >= this.autoSwitchAt) {
+    const _haNow = this.atlasCache.get(`./assets/heroes/atlas_${this.classId}.png?v=66`);
+    if (_haNow?.ready && !this._heroReadyStarted) {
+      this._heroReadyStarted = true;
+      this.triggerSkill(this._pendingSkillIdx || 0);
+    } else if (_haNow?.ready && now >= this.autoSwitchAt) {
       this.triggerSkill(this.skillIdx + 1);
     }
 
@@ -527,10 +549,12 @@ export class HeroSkillShowcase {
     const heroAtlas = this.atlasCache.get(`./assets/heroes/atlas_${this.classId}.png?v=66`);
     const pf = HERO_PREFIX[this.classId] || 'wf';
     if (!heroAtlas?.ready) {
-      ctx.fillStyle = '#e2e8f0';
-      ctx.font = '12px Noto Sans TC, sans-serif';
+      ctx.fillStyle = '#d6c39b';
+      ctx.font = 'bold 12px Noto Sans TC, sans-serif';
       ctx.textAlign = 'center';
-      ctx.fillText('⚔️ 載入職業實戰演武中...', w / 2, h / 2);
+      ctx.fillText('⚔️ 載入英雄模型中...', 180, 102);
+      ctx.restore();
+      return;
     } else {
       const isAtk = now < this.castAnimUntil;
       const fIdx = isAtk ? Math.floor((now / 110) % 4) : Math.floor((now / 140) % 4);
@@ -553,17 +577,24 @@ export class HeroSkillShowcase {
           const af = heroAtlas.frames[`${pf}_right_atk_${Math.floor((now / 95) % 4)}`]?.frame || fr;
           ctx.save();
           ctx.globalAlpha = 0.68 * (1 - cl.life / cl.maxLife);
-          ctx.filter = 'hue-rotate(250deg) brightness(1.25)';
+          // v249: omit ctx.filter to prevent GPU white-box artifact on atlas drawImage
           ctx.drawImage(heroAtlas.img, af.x, af.y, af.w, af.h, cl.x - 46, cl.y - 65, 92, 92);
           ctx.restore();
           return true;
         });
 
+        ctx.save();
+        ctx.filter = 'none';
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.globalAlpha = 1;
         ctx.fillStyle = 'rgba(0,0,0,0.52)';
         ctx.beginPath();
         ctx.ellipse(this.heroX, this.heroY + 18, 22, 8, 0, 0, Math.PI * 2);
         ctx.fill();
-        ctx.drawImage(heroAtlas.img, fr.x, fr.y, fr.w, fr.h, this.heroX - 54, this.heroY - 76, 108, 108);
+        if (heroAtlas.img.complete && heroAtlas.img.naturalWidth > 0 && fr.w > 0 && fr.h > 0) {
+          ctx.drawImage(heroAtlas.img, fr.x, fr.y, fr.w, fr.h, this.heroX - 54, this.heroY - 76, 108, 108);
+        }
+        ctx.restore();
       }
     }
 
@@ -659,9 +690,11 @@ export class HeroSkillShowcase {
       const scale = f.scaleStart + (f.scaleEnd - f.scaleStart) * p;
       const drawSize = f.size * scale;
       const fade = p < 0.15 ? p / 0.15 : Math.max(0, 1 - Math.pow((p - 0.15) / 0.85, 1.5));
+      if (!rec.img.complete || !rec.img.naturalWidth) return true;
       ctx.save();
-      if (f.add) ctx.globalCompositeOperation = 'lighter';
-      ctx.globalAlpha = Math.min(1, fade * f.alpha);
+      ctx.filter = 'none';
+      ctx.globalCompositeOperation = f.add ? 'screen' : 'source-over';
+      ctx.globalAlpha = Math.min(f.add ? 0.78 : 0.96, fade * f.alpha);
       ctx.translate(f.x, f.y);
       if (f.rot) ctx.rotate(f.rot);
       ctx.drawImage(rec.img, -drawSize / 2, -drawSize / 2, drawSize, drawSize);

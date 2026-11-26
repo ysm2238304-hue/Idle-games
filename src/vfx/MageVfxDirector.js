@@ -3,6 +3,13 @@
 // Layer 2 (depth Y): 9 組 4x4 十六幀純素色去背手繪序列幀（144 幀零破圖，與英雄／怪物 Y 軸同層遮擋）
 // Layer 3 (depth Y+24): 物理炭塊／碎冰／火星粒子＋手繪投射物＋手繪分段連鎖電弧＋手繪雙護盾／電花＋召喚進退場煙塵
 
+export const MAGE_CONJ_ANIM_DEFS = [
+  { key: 'anim_conj_hydra',           fps: 6 },
+  { key: 'anim_conj_ice_blades',      fps: 10 },
+  { key: 'anim_conj_lightning_spear', fps: 9 },
+  { key: 'anim_conj_familiar',        fps: 7 },
+];
+
 export const MAGE_SEQ16_DEFS = [
   { key: 'seq16_m_meteor',           fps: 18 },
   { key: 'seq16_m_frost_nova',       fps: 20 },
@@ -46,6 +53,12 @@ export class MageVfxDirector {
     for (const key of MAGE_V248_IMAGES) {
       scene.load.image(key, `./assets/fx/${key}.png?v=248`);
     }
+    for (const cdef of MAGE_CONJ_ANIM_DEFS) {
+      scene.load.spritesheet(cdef.key, `./assets/fx/${cdef.key}.png?v=250`, {
+        frameWidth: 224,
+        frameHeight: 224,
+      });
+    }
   }
 
   registerAnims() {
@@ -57,6 +70,16 @@ export class MageVfxDirector {
           frames: s.anims.generateFrameNumbers(def.key, { start: 0, end: 15 }),
           frameRate: def.fps,
           repeat: 0,
+        });
+      }
+    }
+    for (const cdef of MAGE_CONJ_ANIM_DEFS) {
+      if (s.textures.exists(cdef.key) && !s.anims.exists(cdef.key)) {
+        s.anims.create({
+          key: cdef.key,
+          frames: s.anims.generateFrameNumbers(cdef.key, { start: 0, end: 3 }),
+          frameRate: cdef.fps,
+          repeat: -1,
         });
       }
     }

@@ -19,8 +19,8 @@ import {
   getCurrentUser,
   loadCloudSave,
   saveCloudData,
-} from './auth/firebase.js?v=218';
-import { BattleScene } from './scenes/BattleScene.js?v=248';
+} from './auth/firebase.js?v=249';
+import { BattleScene } from './scenes/BattleScene.js?v=250';
 import { TownScene } from './scenes/TownScene.js?v=227';
 import { TOWN_SPLASHES } from './data/towns/splashes.js?v=229';
 import { DashboardUI } from './ui/DashboardUI.js?v=241';
@@ -36,7 +36,7 @@ import { ShopModal } from './ui/ShopModal.js?v=99';
 import { AchievementTowerModal } from './ui/AchievementTowerModal.js?v=99';
 import { ACHIEVEMENTS } from './data/achievements.js?v=99';
 import { rollEnhance, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEVEL } from './logic/enhanceSystem.js?v=99';
-import { HeroSkillShowcase, CLASS_SKILLS_MAP } from './ui/HeroSkillShowcase.js?v=99';
+import { HeroSkillShowcase, CLASS_SKILLS_MAP } from './ui/HeroSkillShowcase.js?v=249';
 
 let gameState = loadGame() || createInitialState('warrior');
 let computedStats = recalcPlayerStats(gameState);
@@ -2208,11 +2208,16 @@ function enterWelcomeClassStep(userLabel) {
     welcomeSaveSummary.textContent = `${userLabel} ｜ 🆕 首次創角（各職業獨立保留等級）`;
     if (resetCharBtn) resetCharBtn.classList.add('hidden');
   }
+  const isNickLocked = !!(gameState.characterCreated && (gameState.nickname || '').trim().length >= 2);
+  const nickLockBadge = document.getElementById('nickname-lock-badge');
   if (nicknameInput) {
     nicknameInput.value = gameState.nickname || '';
-    nicknameInput.disabled = false;
+    nicknameInput.disabled = isNickLocked;
+    nicknameInput.readOnly = isNickLocked;
+    nicknameInput.classList.toggle('v249-nick-locked', isNickLocked);
   }
-  if (randomNickBtn) randomNickBtn.style.display = 'inline-block';
+  if (randomNickBtn) randomNickBtn.style.display = isNickLocked ? 'none' : 'inline-block';
+  if (nickLockBadge) nickLockBadge.classList.toggle('hidden', !isNickLocked);
   renderWelcomeClasses();
   updateStartButtonState();
 }
@@ -2235,7 +2240,8 @@ resetCharBtn?.addEventListener('click', () => {
 
 function startAdventure() {
   heroShowcase.stop();
-  const nick = (nicknameInput?.value || gameState.nickname || '').trim();
+  const _lockedNick = (gameState.characterCreated && (gameState.nickname || '').trim().length >= 2) ? gameState.nickname.trim() : '';
+  const nick = _lockedNick || (nicknameInput?.value || gameState.nickname || '').trim();
   if (nick.length < 2) {
     updateStartButtonState();
     return;
@@ -2479,6 +2485,17 @@ window.addEventListener('keydown', (e) => {
 
 refreshStatsAndUI();
 
+const _hideWelcomeLoading = () => {
+  document.getElementById('welcome-step-loading')?.classList.add('hidden');
+};
+setTimeout(() => {
+  const veil = document.getElementById('welcome-step-loading');
+  if (veil && !veil.classList.contains('hidden')) {
+    veil.classList.add('hidden');
+    if (welcomeClassStep?.classList.contains('hidden')) welcomeAuthStep?.classList.remove('hidden');
+  }
+}, 3500);
+
 initCloudAuth(async (user) => {
   const cloudBadge = document.getElementById('hud-cloud-status');
   const logoutBtn = document.getElementById('btn-cloud-logout');
@@ -2510,6 +2527,7 @@ initCloudAuth(async (user) => {
       if (gameState.userSettings) hudSettings.importSettings(gameState.userSettings);
       refreshStatsAndUI();
     }
+    _hideWelcomeLoading();
     if (!gameStarted) {
       enterWelcomeClassStep(`☁️ ${user.displayName || user.email}`);
     }
@@ -2517,6 +2535,10 @@ initCloudAuth(async (user) => {
     if (cloudBadge) cloudBadge.textContent = '☁️ 本機模式';
     if (logoutBtn) logoutBtn.classList.add('hidden');
     welcomeAuthStatus.textContent = '請使用 Google 帳號登入，或選擇本機離線試玩。';
+    _hideWelcomeLoading();
+    if (!gameStarted && welcomeClassStep?.classList.contains('hidden')) {
+      welcomeAuthStep?.classList.remove('hidden');
+    }
   }
 });
 
