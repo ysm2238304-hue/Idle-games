@@ -1,3 +1,4 @@
+import { initAllDraggableModals } from './ui/DraggableModalHelper.js?v=291';
 import { CLASSES } from './data/classes.js?v=99';
 import { getStageLabel, getSubStage, getChapterIdx, calcLevelGapExpMult } from './data/monsters.js?v=254';
 import { WARRIOR_SKILLS } from './data/warriorSkills.js?v=255';
@@ -22,7 +23,7 @@ import {
   deleteCloudSave,
 } from './auth/firebase.js?v=272';
 import { BattleScene } from './scenes/BattleScene.js?v=283';
-import { TownScene } from './scenes/TownScene.js?v=290';
+import { TownScene } from './scenes/TownScene.js?v=291';
 import { TOWN_SPLASHES } from './data/towns/splashes.js?v=229';
 import { DashboardUI } from './ui/DashboardUI.js?v=282';
 import { hookWorldMap25D, openWorldMap25D, closeWorldMap25D, toggleWorldMap25D } from './ui/WorldMap25D.js?v=253';
@@ -2883,3 +2884,4 @@ if (typeof document !== 'undefined') {
 
 // v253: 啟動新版 22 款暗黑手繪 Buff 圖示列
 initHudOverhaulV217();
+initAllDraggableModals();

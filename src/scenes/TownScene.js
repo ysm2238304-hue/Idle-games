@@ -1,3 +1,4 @@
+import { Town3DBuildingLayer } from '../town/Town3DBuildingLayer.js?v=291';
 import { CameraZoomHelper } from './CameraZoomHelper.js?v=282';
 import { TOWN_CH1 } from '../data/towns/ch1.js?v=290';
 import { LivingNpcEngine } from '../town/LivingNpcEngine.js?v=273';
@@ -41,6 +42,11 @@ export class TownScene extends Phaser.Scene {
     this.heroAttackAnimUntil = 0;
     this.moveTarget = null;
     this.obstacles = [];
+    this.rectObstacles = [];
+    this.town3d = new Town3DBuildingLayer();
+    if (this.town3d.isReady()) {
+      this.town3d.bakeChapterToPhaser(this, td.chapterIdx ?? 0);
+    }
     this.interactables = [];
     this.patrolActors = [];
     this.roamNpcs = [];
@@ -177,9 +183,12 @@ export class TownScene extends Phaser.Scene {
       } else {
         this.add.image(lm.x, lm.y + 38, 'fx_glow')
           .setTint(0x000000).setScale(2.6, 0.95).setAlpha(0.5).setDepth(2);
-        const lmSpr = (lm.imgKey && this.textures.exists(lm.imgKey))
-          ? this.add.image(lm.x, lm.y, lm.imgKey).setOrigin(0.5, 0.72)
-          : this.add.image(lm.x, lm.y, td.atlasKey, lm.frame);
+        const lm3d = this.get3DBuildingTexKey(lm);
+        const lmSpr = lm3d
+          ? this.add.image(lm.x, lm.y, lm3d).setOrigin(0.5, 0.92)
+          : ((lm.imgKey && this.textures.exists(lm.imgKey))
+            ? this.add.image(lm.x, lm.y, lm.imgKey).setOrigin(0.5, 0.72)
+            : this.add.image(lm.x, lm.y, td.atlasKey, lm.frame));
         lmSpr.setScale(lm.scale).setDepth(lm.y);
         if (td.modularBuildings) {
           lmSpr.setOrigin(0.5, 0.92).setInteractive({ useHandCursor: true });
@@ -239,7 +248,7 @@ export class TownScene extends Phaser.Scene {
         y: dm.y,
         radius: 135,
         title: `🎯 ${dm.name}`,
-        sub: '點擊或按 [F] 測試技能與普攻秒傷',
+        sub: '點擊或按 [F] 進入「2.5D 實戰演武場」（多木人＋自動攻擊＋DPS）',
         action: 'hit_dummy',
         data: dm,
       });
@@ -545,19 +554,42 @@ export class TownScene extends Phaser.Scene {
     });
   }
 
+  get3DBuildingTexKey(b) {
+    const ch = (this.townData?.chapterIdx ?? 0) + 1;
+    let role = 'smith';
+    const act = b.action || '';
+    const id = b.id || '';
+    if (act === 'drawer_upgrade' || id === 'smith') role = 'smith';
+    else if (act === 'modal_alchemy' || id === 'alchemy') role = 'alchemy';
+    else if (act === 'drawer_skills' || act === 'drawer_bag' || id === 'guild') role = 'guild';
+    else if (act === 'modal_market' || id === 'market') role = 'market';
+    else if (act === 'drawer_rebirth' || id === 'temple' || id === 'altar') role = 'temple';
+    else if (act === 'modal_bounty' || id === 'bounty') role = 'bounty';
+    else if (act === 'exit_battle' || act === 'modal_portal' || id === 'portal') role = 'portal';
+    else if (act.startsWith('gimmick_')) role = 'beacon';
+    const k = `t3d_ch${ch}_${role}`;
+    return this.textures.exists(k) ? k : null;
+  }
+
   placeBuilding(atlasKey, b) {
     // v283: 正統 2.5D 三層分離式主城建築（純淨地基底圖 ＋ 獨立風格化 2.5D 建築本體 ＋ doorOffset 門口綁定 NPC，完全廢除粗糙發光圓陣）
     if (this.townData?.modularBuildings) {
+      const tex3d = this.get3DBuildingTexKey(b);
       const useStandalone = b.imgKey && this.textures.exists(b.imgKey);
-      const sc = b.scale || 0.78;
-      // 自然接地柔和投影（非粗糙圓陣）
-      this.add.ellipse(b.x, b.y + 4, (b.shadowW || 240) * sc, (b.shadowH || 96) * sc, 0x000000, 0.46).setDepth(2);
-      const spr = useStandalone
-        ? this.add.image(b.x, b.y, b.imgKey).setOrigin(0.5, 0.94).setScale(sc).setDepth(b.y)
-        : this.add.image(b.x, b.y, atlasKey, b.frame).setOrigin(0.5, 0.92).setScale(sc).setDepth(b.y);
-      if (b.flipX) spr.setFlipX(true);
+      const sc = tex3d ? Math.max(0.74, (b.scale || 0.80) * 0.96) : (b.scale || 0.78);
+      // 3D 建築接地投影
+      this.add.ellipse(b.x, b.y + 6, (b.shadowW || 260) * sc, (b.shadowH || 110) * sc, 0x000000, 0.48).setDepth(2);
+      const spr = tex3d
+        ? this.add.image(b.x, b.y, tex3d).setOrigin(0.5, 0.92).setScale(sc).setDepth(b.y - 20)
+        : (useStandalone
+          ? this.add.image(b.x, b.y, b.imgKey).setOrigin(0.5, 0.94).setScale(sc).setDepth(b.y - 20)
+          : this.add.image(b.x, b.y, atlasKey, b.frame).setOrigin(0.5, 0.92).setScale(sc).setDepth(b.y - 20));
+      if (b.flipX && !tex3d) spr.setFlipX(true);
       if (b.radius > 0) {
-        this.obstacles.push({ x: b.x, y: b.y - 18, radius: b.radius });
+        // 實體 3D 矩形地基碰撞盒，防止英雄穿牆被建築蓋住（不透明、不穿模）
+        const hw = Math.round((b.radius || 75) * 1.25);
+        const hh = Math.round((b.radius || 75) * 0.75);
+        this.rectObstacles.push({ x1: b.x - hw, y1: b.y - hh * 1.75, x2: b.x + hw, y2: b.y - 8 });
       }
       if (b.name && b.action) {
         const icon = this.getActionIcon(b.action);
@@ -1116,6 +1148,19 @@ export class TownScene extends Phaser.Scene {
         this.hero.y += (dy / d) * push;
       }
     }
+    for (const rb of this.rectObstacles || []) {
+      const pad = 22;
+      const rx1 = rb.x1 - pad, ry1 = rb.y1 - pad, rx2 = rb.x2 + pad, ry2 = rb.y2 + pad;
+      if (this.hero.x > rx1 && this.hero.x < rx2 && this.hero.y > ry1 && this.hero.y < ry2) {
+        const dl = this.hero.x - rx1, dr = rx2 - this.hero.x;
+        const dt = this.hero.y - ry1, db = ry2 - this.hero.y;
+        const m = Math.min(dl, dr, dt, db);
+        if (m === db) this.hero.y = ry2;
+        else if (m === dt) this.hero.y = ry1;
+        else if (m === dl) this.hero.x = rx1;
+        else this.hero.x = rx2;
+      }
+    }
 
     this.hero.setDepth(this.hero.y);
     if (this.heroShadow) {
@@ -1580,6 +1625,10 @@ export class TownScene extends Phaser.Scene {
       this.mpSync?.cheerAllNearby();
     }
     if (obj.action === 'hit_dummy') {
+      if (this.callbacks?.onEnterTrainingArena) {
+        this.callbacks.onEnterTrainingArena();
+        return;
+      }
       this.heroAttackAnimUntil = this.time.now + 340;
       const stats = this.callbacks?.getComputedStats?.() || { atk: 45, critRate: 15, critDmg: 165 };
       const isCrit = Math.random() * 100 < (stats.critRate || 15);

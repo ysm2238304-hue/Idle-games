@@ -9,7 +9,8 @@ export class TrainingArenaController {
     this.active = false;
     this.infiniteMp = true;
     this.fastCd = false;
-    this.formation = 'boss'; // boss | trio | pack | striker
+    this.formation = 'trio';
+    this.autoAttack = true; // boss | trio | pack | striker
     this.simChapter = 1;     // 1..10
     this.trialEndAt = 0;
     this.trialTotalSec = 0;
@@ -57,6 +58,7 @@ export class TrainingArenaController {
       s.playerMp = s.playerMaxMp;
       s.updateHeroHpBar?.();
       this.spawnFormation(this.formation);
+      s.autoMoveEnabled = !!this.autoAttack;
       this._mountHud();
     };
 
@@ -74,6 +76,7 @@ export class TrainingArenaController {
     const s = this.scene;
     this.active = false;
     s.isTrainingMode = false;
+    this.autoAttack = false;
     this.trialEndAt = 0;
     this._unmountHud();
     s.clearAllMonsters?.();
@@ -254,17 +257,18 @@ export class TrainingArenaController {
     el.id = 'v277-training-hud';
     el.style.cssText = 'position:fixed;right:14px;top:92px;z-index:8600;width:305px;background:rgba(12,13,18,0.92);border:1.5px solid rgba(245,158,11,0.6);border-radius:12px;padding:11px 12px;color:#f3e8d2;font-family:"Noto Sans TC",sans-serif;box-shadow:0 12px 36px rgba(0,0,0,0.8);backdrop-filter:blur(6px);';
     el.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:0;border:none;">
         <b style="font-size:13.5px;color:#fde047;">⚔️ 2.5D 實戰演武訓練場</b>
         <button id="v277-btn-exit" type="button" style="padding:3px 9px;border-radius:6px;border:1px solid #f59e0b;background:#451a03;color:#fef3c7;font-size:11px;font-weight:800;cursor:pointer;">🏰 回主城 [G]</button>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:7px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:7px;">
+        <button id="v291-btn-auto" type="button" style="padding:5px;border-radius:6px;border:1px solid #22c55e;background:#14532d;color:#dcfce7;font-size:11px;font-weight:800;cursor:pointer;">🤖 自動打樁: 開</button>
         <button id="v277-btn-mp" type="button" style="padding:5px;border-radius:6px;border:1px solid #38bdf8;background:#0c4a6e;color:#e0f2fe;font-size:11px;font-weight:800;cursor:pointer;">♾️ 無限能量: 開</button>
         <button id="v277-btn-cd" type="button" style="padding:5px;border-radius:6px;border:1px solid #64748b;background:#1e293b;color:#cbd5e1;font-size:11px;font-weight:800;cursor:pointer;">⏱️ 標準冷卻</button>
       </div>
       <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:7px;">
-        <button data-form="boss"    style="padding:4px 2px;border-radius:5px;border:1px solid #f59e0b;background:#78350f;color:#fef3c7;font-size:10.5px;font-weight:700;cursor:pointer;">👑 首領</button>
-        <button data-form="trio"    style="padding:4px 2px;border-radius:5px;border:1px solid #475569;background:#1e293b;color:#cbd5e1;font-size:10.5px;font-weight:700;cursor:pointer;">👥 3精英</button>
+        <button data-form="boss"    style="padding:4px 2px;border-radius:5px;border:1px solid #475569;background:#1e293b;color:#cbd5e1;font-size:10.5px;font-weight:700;cursor:pointer;">👑 首領</button>
+        <button data-form="trio"    style="padding:4px 2px;border-radius:5px;border:1px solid #f59e0b;background:#78350f;color:#fef3c7;font-size:10.5px;font-weight:700;cursor:pointer;">👥 3木頭人</button>
         <button data-form="pack"    style="padding:4px 2px;border-radius:5px;border:1px solid #475569;background:#1e293b;color:#cbd5e1;font-size:10.5px;font-weight:700;cursor:pointer;">⚔️ 5群怪</button>
         <button data-form="striker" style="padding:4px 2px;border-radius:5px;border:1px solid #475569;background:#1e293b;color:#cbd5e1;font-size:10.5px;font-weight:700;cursor:pointer;">🛡️ 反擊</button>
       </div>
@@ -294,6 +298,13 @@ export class TrainingArenaController {
     el.querySelector('#v277-btn-exit')?.addEventListener('click', () => {
       this.exit();
       this._onExitToTown?.();
+    });
+    el.querySelector('#v291-btn-auto')?.addEventListener('click', (ev) => {
+      this.autoAttack = !this.autoAttack;
+      this.scene.autoMoveEnabled = this.autoAttack;
+      ev.currentTarget.textContent = this.autoAttack ? '🤖 自動打樁: 開' : '🤖 自動打樁: 關';
+      ev.currentTarget.style.background = this.autoAttack ? '#14532d' : '#334155';
+      ev.currentTarget.style.borderColor = this.autoAttack ? '#22c55e' : '#64748b';
     });
     el.querySelector('#v277-btn-mp')?.addEventListener('click', (ev) => {
       this.infiniteMp = !this.infiniteMp;

@@ -82,6 +82,36 @@
       padding: 0 4px !important;
     }
   </style>
+  <script type="module">
+    import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js';
+    window.THREE = THREE;
+  </script>
+  <style id="v291-zindex-and-drag-css">
+    /* v291: 修復圖1任務清單與角色裝備抽屜/彈窗重疊問題，並強化可拖曳標題列視覺 */
+    #hud-quest-panel {
+      z-index: 40 !important;
+      transition: opacity 0.18s ease !important;
+    }
+    body.v291-modal-open #hud-quest-panel {
+      opacity: 0.18 !important;
+      pointer-events: none !important;
+    }
+    #rpg-drawer {
+      z-index: 220 !important;
+    }
+    .modal-overlay,
+    .npc-modal-backdrop,
+    #modal-town-facility,
+    #modal-world-map,
+    #modal-settings,
+    #modal-shop,
+    #modal-ach-tower,
+    #modal-class,
+    #modal-stage-clear,
+    #modal-offline {
+      z-index: 230 !important;
+    }
+  </style>
 </head>
 <body>
   <section id="welcome-screen">
@@ -708,6 +738,6 @@
     </div>
   </div>
 
-  <script type="module" src="./src/main.js?v=290"></script>
+  <script type="module" src="./src/main.js?v=291"></script>
 </body>
 </html>
