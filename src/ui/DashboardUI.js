@@ -1,6 +1,6 @@
 import { TEMPERING_MANUALS } from '../data/items.js?v=240';
 import { temperItem } from '../logic/lootGen.js?v=240';
-import { SKILL_BUILD_SPECS, KEYSTONE_PASSIVES, getActiveKeystone } from '../logic/buildEngine.js?v=241';
+import { SKILL_BUILD_SPECS, KEYSTONE_PASSIVES, getActiveKeystone } from '../logic/buildEngine.js?v=251';
 import { UniversalTooltip } from './UniversalTooltip.js?v=240';
 import { TOWN_SPLASHES } from '../data/towns/splashes.js?v=99';
 import { CLASSES } from '../data/classes.js?v=99';
@@ -8,7 +8,7 @@ import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=235';
 import { RANGER_SKILLS } from '../data/rangerSkills.js?v=236';
 import { MAGE_SKILLS } from '../data/mageSkills.js?v=241';
 import { PALADIN_SKILLS } from '../data/paladinSkills.js?v=235';
-import { NECRO_SKILLS } from '../data/necroSkills.js?v=236';
+import { NECRO_SKILLS } from '../data/necroSkills.js?v=251';
 import { ASSASSIN_SKILLS } from '../data/assassinSkills.js?v=235';
 import { EQUIP_SLOTS, CLASS_REQ_LABELS, RARITIES, BASE_ITEMS, SET_DEFINITIONS } from '../data/items.js?v=240';
 import { PET_CATALOG, PET_SCHOOLS, getPetDef, getPetRarityMeta, getPetPickupRadius, getPetCodexInfo } from '../data/pets.js?v=99';
@@ -957,7 +957,7 @@ export class DashboardUI {
       <div class="v238-st-board">
         <div class="v238-st-topbar">
           <div>
-            <div style="font-size:14.5px;font-weight:900;color:${cls.color || '#fde68a'};">✦ 【${cls.name}】深淵星盤技能樹（共 ${skills.length} 招主動＋4 關鍵被動）</div>
+            <div style="font-size:14.5px;font-weight:900;color:${cls.color || '#fde68a'};">✦ 【${cls.name}】深淵星盤技能樹（共 ${skills.length} 招主動＋${ksList.length} 關鍵被動）</div>
             <div style="font-size:11.5px;color:#cbd5e1;margin-top:2px;">可用技能點：<b style="color:#4ade80;font-size:14px;">${sp}</b> ｜ 滑鼠移上預覽詳細數值 • 點「+1」升級解鎖 Lv.2/4/6/8 專精 • 點「裝」快速換招</div>
           </div>
           <div style="display:flex;gap:6px;">
@@ -992,7 +992,7 @@ export class DashboardUI {
 
         ${ksList.length ? `
           <div class="v238-st-tier" style="border-color:rgba(244,63,94,0.45);">
-            <div class="v238-st-tier-lbl" style="color:#fda4af;"><span>💎 T6 終局關鍵被動（4 選 1）</span><span>啟用：${curKs?.name || ''}</span></div>
+            <div class="v238-st-tier-lbl" style="color:#fda4af;"><span>💎 T6 終局關鍵被動（${ksList.length} 選 1）</span><span>啟用：${curKs?.name || ''}</span></div>
             <div class="v238-st-row">
               ${ksList.map((ks) => `
                 <button type="button" class="v238-st-node ${curKs?.id === ks.id ? 'is-equipped' : ''}" data-st-ks="${ks.id}">
@@ -1027,7 +1027,7 @@ export class DashboardUI {
         const cur = Math.max(1, Number(state.skillTree[nid] || 1));
         if (cur >= 10) return;
         state.skillTree[nid] = cur + 1;
-        state.skillPoints -= 1;
+        state.skillPoints = Math.max(0, (state.skillPoints || 0) - 1);
         this.renderSkillTree(state);
         this.renderDockSkillSlots(state);
         window.__IDLE_ARPG_BRIDGE__?.saveNow?.();

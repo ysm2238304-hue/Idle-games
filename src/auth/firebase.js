@@ -244,6 +244,19 @@ export async function saveCloudData(uid, state) {
   }
 }
 
+export async function deleteCloudSave(uid) {
+  const ctx = await ensureFirebase();
+  if (!ctx || !uid) return false;
+  try {
+    const { doc, deleteDoc } = ctx.fsMod;
+    await deleteDoc(doc(ctx.db, COLLECTION_NAME, uid));
+    return true;
+  } catch (e) {
+    console.warn('刪除雲端存檔失敗:', e);
+    return false;
+  }
+}
+
 const CHAT_COLLECTION = 'idle_arpg_chat';
 let chatSyncDisabled = false;
 

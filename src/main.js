@@ -1,5 +1,5 @@
 import { CLASSES } from './data/classes.js?v=99';
-import { getStageLabel, getSubStage, getChapterIdx, calcLevelGapExpMult } from './data/monsters.js?v=232';
+import { getStageLabel, getSubStage, getChapterIdx, calcLevelGapExpMult } from './data/monsters.js?v=254';
 import { WARRIOR_SKILLS } from './data/warriorSkills.js?v=235';
 import { RANGER_SKILLS } from './data/rangerSkills.js?v=236';
 import { MAGE_SKILLS } from './data/mageSkills.js?v=241';
@@ -10,7 +10,7 @@ import { RARITIES } from './data/items.js?v=240';
 import { PET_CATALOG, rollPetDrop, getPetDef } from './data/pets.js?v=99';
 import { SKILL_TREE_NODES, isNodeUnlocked } from './data/skillTree.js?v=99';
 import { generateLoot, calcItemPower, getSalvageReward, rerollItemAffixes, generateBlackMarketItem } from './logic/lootGen.js?v=240';
-import { recalcPlayerStats, getExpToNext, getUpgradeCost, calcRebirthCrystals, formatNum } from './logic/statCalc.js?v=240';
+import { recalcPlayerStats, getExpToNext, getUpgradeCost, calcRebirthCrystals, formatNum } from './logic/statCalc.js?v=254';
 import { createInitialState, loadGame, saveGame, calcOfflineProgress } from './logic/saveSystem.js?v=232';
 import {
   initCloudAuth,
@@ -19,11 +19,14 @@ import {
   getCurrentUser,
   loadCloudSave,
   saveCloudData,
-} from './auth/firebase.js?v=249';
-import { BattleScene } from './scenes/BattleScene.js?v=252';
+  deleteCloudSave,
+} from './auth/firebase.js?v=253';
+import { BattleScene } from './scenes/BattleScene.js?v=254';
 import { TownScene } from './scenes/TownScene.js?v=227';
 import { TOWN_SPLASHES } from './data/towns/splashes.js?v=229';
-import { DashboardUI } from './ui/DashboardUI.js?v=241';
+import { DashboardUI } from './ui/DashboardUI.js?v=253';
+import { hookWorldMap25D, openWorldMap25D, closeWorldMap25D, toggleWorldMap25D } from './ui/WorldMap25D.js?v=253';
+import { initHudOverhaulV217 } from './ui/HudOverhaulV217.js?v=253';
 import { UniversalTooltip } from './ui/UniversalTooltip.js?v=240';
 import { SkillSpecModal } from './ui/SkillSpecModal.js?v=241';
 import { ClassMechanicModal } from './ui/ClassMechanicModal.js?v=241';
@@ -31,7 +34,7 @@ import { MAGE_D4_PRESETS, NECRO_D4_PRESETS } from './logic/classMechanics.js?v=2
 import { EndgameModal } from './ui/EndgameModal.js?v=237';
 import { TownBgmEngine } from './audio/TownBgmEngine.js?v=99';
 import { BattleSfxEngine } from './audio/BattleSfxEngine.js?v=99';
-import { HudSettingsManager } from './ui/HudSettingsManager.js?v=243';
+import { HudSettingsManager } from './ui/HudSettingsManager.js?v=253';
 import { ShopModal } from './ui/ShopModal.js?v=99';
 import { AchievementTowerModal } from './ui/AchievementTowerModal.js?v=99';
 import { ACHIEVEMENTS } from './data/achievements.js?v=99';
@@ -48,7 +51,31 @@ let isRecalling = false;
 let selectedLobbyClass = gameState.classId || 'warrior';
 let gameStarted = false;
 
+function calcTotalEarnedSkillPoints(st) {
+  const lv = Math.max(1, Number(st?.level || 1));
+  return lv; // Lv.1 起始 1 點，每升 1 級獲得 1 點，單一真相來源防洗點溢位
+}
+
+function calcSpentSkillPoints(tree) {
+  if (!tree || typeof tree !== 'object') return 0;
+  return Object.values(tree).reduce((sum, lv) => sum + Math.max(0, Number(lv || 1) - 1), 0);
+}
+
+function calibrateSkillPoints(st) {
+  if (!st) return;
+  const totalEarned = calcTotalEarnedSkillPoints(st);
+  const spent = calcSpentSkillPoints(st.skillTree || {});
+  const maxAllowedRem = Math.max(0, totalEarned - spent);
+  if (typeof st.skillPoints !== 'number' || Number.isNaN(st.skillPoints) || st.skillPoints > maxAllowedRem) {
+    st.skillPoints = maxAllowedRem;
+  }
+}
+
+calibrateSkillPoints(gameState);
+hookWorldMap25D(DashboardUI);
+
 function persistAll(syncCloud = false) {
+  if (window.__WIPE_IN_PROGRESS__) return;
   if (gameState?.classId) snapshotHeroToProfile(gameState, gameState.classId);
   saveGame(gameState);
   const user = getCurrentUser();
@@ -455,13 +482,10 @@ const ui = new DashboardUI({
   },
 
   onResetSkillTree: () => {
-    const tree = gameState.skillTree || {};
-    const spent = Object.values(tree).reduce((s, v) => s + v, 0) - 6;
-    if (spent <= 0) return;
-    gameState.skillPoints = (gameState.skillPoints || 0) + spent;
+    const totalSp = calcTotalEarnedSkillPoints(gameState);
     gameState.skillTree = { w_whirlwind: 1, r_volley: 1, m_meteor: 1, p_hammer: 1, n_skeleton: 1, a_blitz: 1 };
-    gameState.equippedSkillsByClass = { warrior: ['whirlwind', null, null], ranger: ['volley', null, null], mage: ['meteor', null, null], paladin: ['blessed_hammer', null, null], necro: ['raise_skeleton', null, null], assassin: ['shadow_blitz', null, null] };
-    ui.addLog(`已重置技能樹並返還 ${spent} 點技能點。`, 'system');
+    gameState.skillPoints = totalSp;
+    ui.addLog(`已重置技能樹，目前可用技能點已依等級 (Lv.${gameState.level || 1}) 校準為 ${totalSp} 點。`, 'system');
     refreshStatsAndUI();
     persistAll(true);
   },
@@ -857,7 +881,55 @@ function initPhaserGame() {
     getStats: () => computedStats,
     addLog: (msg, type, cat) => ui.addLog(msg, type, cat),
     refreshUI: () => { refreshStatsAndUI(); persistAll(true); },
-    openWorldMap: () => ui.openWorldMapModal(gameState),
+    openWorldMap: () => openWorldMap25D(),
+    getLiveCombatBuffs: () => {
+      const list = [];
+      const bs = battleScene;
+      if (!bs || !bs.time) return list;
+      const now = bs.time.now;
+      if ((bs.heroBarrierHp || 0) > 0 && now < (bs.heroBarrierUntil || 0)) {
+        const rem = Math.max(1, Math.ceil((bs.heroBarrierUntil - now) / 1000));
+        list.push({ img: 'buff_barrier', name: '護盾屏障', tip: `目前護盾值：${Math.round(bs.heroBarrierHp)}（剩餘 ${rem}s）`, col: '#38bdf8', label: `${rem}s` });
+      }
+      if (now < (bs.heroInvulnUntil || 0)) {
+        const rem = Math.max(1, Math.ceil((bs.heroInvulnUntil - now) / 1000));
+        list.push({ img: 'buff_invuln', name: '無敵狀態', tip: `免疫所有傷害與控制（剩餘 ${rem}s）`, col: '#fb7185', label: `${rem}s` });
+      }
+      if (now < (bs.necroFrenzyUntil || 0) || now < (bs.enlightenmentUntil || 0)) {
+        const until = Math.max(bs.necroFrenzyUntil || 0, bs.enlightenmentUntil || 0);
+        const rem = Math.max(1, Math.ceil((until - now) / 1000));
+        list.push({ img: 'buff_frenzy', name: '爆發狂熱', tip: `技能／召喚攻速與回能大幅提升（剩餘 ${rem}s）`, col: '#2dd4bf', label: `${rem}s` });
+      }
+      if ((bs.necroBloodOrbStacks || 0) > 0) {
+        list.push({ img: 'buff_overpower', name: '鮮血壓制層數', tip: `累積 ${bs.necroBloodOrbStacks} 層鮮血球，達 3 層下一次鮮血技能觸發壓制暴擊`, col: '#f43f5e', label: `×${bs.necroBloodOrbStacks}` });
+      }
+      return list;
+    },
+    wipeAllProgressAndRestart: async ({ keepSettings = true } = {}) => {
+      window.__WIPE_IN_PROGRESS__ = true;
+      try {
+        const u = getCurrentUser();
+        if (u?.uid) {
+          await deleteCloudSave(u.uid);
+        }
+        const savedSettings = {};
+        if (keepSettings) {
+          for (let i = 0; i < localStorage.length; i++) {
+            const k = localStorage.key(i);
+            if (k && (k.includes('hud_settings') || k.includes('settings_v') || k.includes('audio'))) {
+              savedSettings[k] = localStorage.getItem(k);
+            }
+          }
+        }
+        localStorage.clear();
+        for (const [k, v] of Object.entries(savedSettings)) {
+          localStorage.setItem(k, v);
+        }
+      } catch (err) {
+        console.warn('刪除進度過程異常:', err);
+      }
+      window.location.reload();
+    },
     jumpStage: (stNum) => ui.handlers?.onJumpStage?.(stNum),
     enterChapterTown: (chIdx) => {
       if (isInTown && townScene?.townData?.chapterIdx === chIdx) return;
@@ -2397,8 +2469,8 @@ function toggleAutoMoveMode() {
 
 document.getElementById('btn-toggle-auto')?.addEventListener('click', toggleAutoMoveMode);
 document.getElementById('btn-potion')?.addEventListener('click', () => battleScene?.usePotion(true));
-document.getElementById('btn-world-map')?.addEventListener('click', () => ui.openWorldMapModal(gameState));
-document.getElementById('hud-stage-title')?.addEventListener('click', () => ui.openWorldMapModal(gameState));
+document.getElementById('btn-world-map')?.addEventListener('click', () => toggleWorldMap25D());
+document.getElementById('hud-stage-title')?.addEventListener('click', () => toggleWorldMap25D());
 [0, 1, 2, 3, 4, 5].forEach((i) => {
   document.getElementById(`skill-slot-${i}`)?.addEventListener('click', () => battleScene?.castSkillSlot(i, true));
 });
@@ -2433,8 +2505,8 @@ window.addEventListener('keydown', (e) => {
   } else if (e.code === kb.potion) {
     battleScene?.usePotion(true);
   } else if (e.code === kb.worldMap) {
-    const wm = document.getElementById('modal-world-map');
-    wm?.classList.contains('hidden') ? ui.openWorldMapModal(gameState) : wm.classList.add('hidden');
+    document.getElementById('modal-world-map')?.classList.add('hidden');
+    toggleWorldMap25D();
   } else if (e.code === kb.gear) {
     ui.activeDrawer === 'gear' ? ui.closeDrawer() : ui.openDrawer('gear');
   } else if (e.code === kb.bag) {
@@ -2670,3 +2742,6 @@ if (typeof document !== 'undefined') {
   setInterval(syncV241Strip, 600);
   syncV241Strip();
 }
+
+// v253: 啟動新版 22 款暗黑手繪 Buff 圖示列
+initHudOverhaulV217();

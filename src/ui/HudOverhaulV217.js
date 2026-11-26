@@ -498,24 +498,24 @@ export function initHudOverhaulV217() {
 
 
 const BUFF_CATALOG = [
-  { key: 'beaconUntil',  icon: '🔥', name: '曙光祝福',   tip: '曙光烽火台：攻擊+15% / 防禦+15% / 掉寶+15%',         col: '#f59e0b' },
-  { key: 'sporeUntil',   icon: '🍄', name: '孢子狂熱',   tip: '螢光孢子噴泉：攻速+20% / 爆擊+15% / 金幣+20%',       col: '#a855f7' },
-  { key: 'soulUntil',    icon: '🕯️', name: '魂火祝福',   tip: '靈魂永恆火盆：攻擊+18% / 爆傷+25% / 掉寶+15%',       col: '#38bdf8' },
-  { key: 'lavaUntil',    icon: '🌋', name: '熔爐狂怒',   tip: '雙頭巨龍熔岩噴泉：攻擊+25% / 爆傷+20% / 技能傷+20%', col: '#f97316' },
-  { key: 'abyssUntil',   icon: '🩸', name: '魔王血契',   tip: '深淵召喚巨陣：攻擊+30% / 爆傷+20% / 掉寶+25%',       col: '#e879f9' },
-  { key: 'auroraUntil',  icon: '❄️', name: '極光祝福',   tip: '永凍極光水晶塔：防禦+25% / 攻速+25% / 減傷+10%',     col: '#22d3ee' },
-  { key: 'emeraldUntil', icon: '🌿', name: '翠玉生機',   tip: '翡翠毒液瀑布池：攻擊+25% / 攻速+25% / 掉寶+30%',     col: '#4ade80' },
-  { key: 'stormUntil',   icon: '⚡', name: '蒼穹雷霆',   tip: '聚雷磁能核心球：攻速+30% / 技能傷+25% / 爆擊+20%',   col: '#facc15' },
-  { key: 'roseUntil',    icon: '🌹', name: '聖血薔薇',   tip: '垂淚聖母血泉：攻擊+35% / 爆傷+25% / 吸血+5%',        col: '#f43f5e' },
-  { key: 'astralUntil',  icon: '🌌', name: '永恆星辰',   tip: '旋轉黑洞星象儀：攻擊+45% / 爆傷+35% / 攻速+30% / 掉寶+40%', col: '#c084fc' },
-  { key: 'expUntil',     icon: '🟡', name: '經驗藥水',   tip: '經驗值 +50%',                                         col: '#facc15' },
-  { key: 'furyUntil',    icon: '🟣', name: '狂暴藥水',   tip: '攻速 +25% / 爆擊 +10%',                               col: '#c084fc' },
-  { key: 'mfUntil',      icon: '🟢', name: '尋寶藥水',   tip: '掉寶率 +40% / 金幣 +30%',                             col: '#4ade80' },
-  { key: 'titanUntil',   icon: '💪', name: '泰坦秘藥',   tip: '攻擊力大幅提升',                                       col: '#fb923c' },
-  { key: 'ironUntil',    icon: '🛡️', name: '鋼鐵秘藥',   tip: '護甲與減傷大幅提升',                                   col: '#94a3b8' },
-  { key: 'sageUntil',    icon: '🌟', name: '先知秘藥',   tip: '冷卻縮減 +18% / 掉寶 +50%',                           col: '#fde047' },
-  { key: 'tavernUntil',  icon: '🍖', name: '酒館飽足',   tip: '冒險者大餐全屬性增益',                                 col: '#fbbf24' },
-  { key: 'guardUntil',   icon: '🏰', name: '衛兵激勵',   tip: '主城守衛祝福增益',                                     col: '#60a5fa' },
+  { key: 'beaconUntil',  img: 'buff_beacon',  name: '曙光祝福',   tip: '曙光烽火台：攻擊+15% / 防禦+15% / 掉寶+15%',               col: '#f59e0b' },
+  { key: 'sporeUntil',   img: 'buff_spore',   name: '孢子狂熱',   tip: '螢光孢子噴泉：攻速+20% / 爆擊+15% / 金幣+20%',             col: '#a855f7' },
+  { key: 'soulUntil',    img: 'buff_soul',    name: '魂火祝福',   tip: '靈魂永恆火盆：攻擊+18% / 爆傷+25% / 掉寶+15%',             col: '#38bdf8' },
+  { key: 'lavaUntil',    img: 'buff_lava',    name: '熔爐狂怒',   tip: '雙頭巨龍熔岩噴泉：攻擊+25% / 爆傷+20% / 技能傷+20%',       col: '#f97316' },
+  { key: 'abyssUntil',   img: 'buff_abyss',   name: '魔王血契',   tip: '深淵召喚巨陣：攻擊+30% / 爆傷+20% / 掉寶+25%',             col: '#e879f9' },
+  { key: 'auroraUntil',  img: 'buff_aurora',  name: '極光祝福',   tip: '永凍極光水晶塔：防禦+25% / 攻速+25% / 減傷+10%',           col: '#22d3ee' },
+  { key: 'emeraldUntil', img: 'buff_emerald', name: '翠玉生機',   tip: '翡翠毒液瀑布池：攻擊+25% / 攻速+25% / 掉寶+30%',           col: '#4ade80' },
+  { key: 'stormUntil',   img: 'buff_storm',   name: '蒼穹雷霆',   tip: '聚雷磁能核心球：攻速+30% / 技能傷+25% / 爆擊+20%',         col: '#facc15' },
+  { key: 'roseUntil',    img: 'buff_rose',    name: '聖血薔薇',   tip: '垂淚聖母血泉：攻擊+35% / 爆傷+25% / 吸血+5%',              col: '#f43f5e' },
+  { key: 'astralUntil',  img: 'buff_astral',  name: '永恆星辰',   tip: '旋轉黑洞星象儀：攻擊+45% / 爆傷+35% / 攻速+30% / 掉寶+40%', col: '#c084fc' },
+  { key: 'expUntil',     img: 'buff_exp',     name: '經驗藥水',   tip: '經驗值取得大幅提升 (+50%)',                                 col: '#facc15' },
+  { key: 'furyUntil',    img: 'buff_fury',    name: '狂暴藥水',   tip: '攻擊速度 +25% / 暴擊率 +10%',                               col: '#c084fc' },
+  { key: 'mfUntil',      img: 'buff_mf',      name: '尋寶藥水',   tip: '掉寶率 +40% / 金幣獲取 +30%',                               col: '#4ade80' },
+  { key: 'titanUntil',   img: 'buff_titan',   name: '泰坦秘藥',   tip: '攻擊力 +30% / 暴擊傷害 +40%',                               col: '#fb923c' },
+  { key: 'ironUntil',    img: 'buff_iron',    name: '鋼鐵秘藥',   tip: '防禦力 +35% / 受到傷害減免 +12%',                           col: '#94a3b8' },
+  { key: 'sageUntil',    img: 'buff_sage',    name: '先知秘藥',   tip: '冷卻縮減 +18% / 掉寶率 +50%',                               col: '#38bdf8' },
+  { key: 'tavernUntil',  img: 'buff_tavern',  name: '酒館飽足',   tip: '冒險者大餐：金幣 +15% / 經驗 +15%',                         col: '#fbbf24' },
+  { key: 'guardUntil',   img: 'buff_guard',   name: '哨站守備',   tip: '主城守衛激勵：防禦力 +10%',                                 col: '#60a5fa' },
 ];
 
 function fmtCountdown(sec) {
@@ -528,6 +528,10 @@ function fmtCountdown(sec) {
 }
 
 function mountAltarBuffBar() {
+  if (window.__V253_BUFF_BAR_TIMER__) {
+    clearInterval(window.__V253_BUFF_BAR_TIMER__);
+  }
+  window.__V253_BUFF_BAR_OWNED__ = true;
   const renderBuffs = () => {
     const bar = document.getElementById('hud-altar-buffs');
     const st = window.__IDLE_ARPG_BRIDGE__?.getState?.();
@@ -540,13 +544,22 @@ function mountAltarBuffBar() {
       if (until > nowTs) {
         const rem = Math.max(1, Math.ceil((until - nowTs) / 1000));
         active.push(`
-          <div class="altar-buff-tile" style="--buff-col:${def.col}" title="${def.name}（剩餘 ${fmtCountdown(rem)}）
-${def.tip}">
-            <span class="altar-buff-ico">${def.icon}</span>
+          <div class="altar-buff-tile v253-buff-tile" style="--buff-col:${def.col}" title="${def.name}（剩餘 ${fmtCountdown(rem)}）&#10;${def.tip}">
+            <img class="altar-buff-img" src="./assets/buffs/${def.img}.png?v=253" alt="${def.name}" />
             <span class="altar-buff-sec">${fmtCountdown(rem)}</span>
           </div>
         `);
       }
+    }
+    // v253: 整合實戰即時核心狀態（護盾屏障／無敵／亡靈狂熱與啟蒙／壓制充能）
+    const liveBuffs = window.__IDLE_ARPG_BRIDGE__?.getLiveCombatBuffs?.() || [];
+    for (const lb of liveBuffs) {
+      active.push(`
+        <div class="altar-buff-tile v253-buff-tile is-combat" style="--buff-col:${lb.col || '#fbbf24'}" title="${lb.name}&#10;${lb.tip}">
+          <img class="altar-buff-img" src="./assets/buffs/${lb.img}.png?v=253" alt="${lb.name}" />
+          <span class="altar-buff-sec">${lb.label}</span>
+        </div>
+      `);
     }
     bar.innerHTML = active.join('');
     bar.classList.toggle('is-empty', active.length === 0);
@@ -556,7 +569,7 @@ ${def.tip}">
     if (oldWrap) oldWrap.style.display = 'none';
   };
   renderBuffs();
-  setInterval(renderBuffs, 500);
+  window.__V253_BUFF_BAR_TIMER__ = setInterval(renderBuffs, 450);
 }
 
 function mountResponsiveDockGuard() {

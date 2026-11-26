@@ -844,3 +844,46 @@
   border: 1px solid rgba(186, 146, 74, 0.42);
   white-space: nowrap;
 }
+
+/* === v253: 22 款暗黑手繪 Buff 小圖示列樣式 === */
+.v253-buff-tile {
+  position: relative;
+  width: 38px !important;
+  height: 48px !important;
+  padding: 2px !important;
+  border-radius: 7px !important;
+  border: 1.5px solid var(--buff-col, #c89b3c) !important;
+  background: linear-gradient(180deg, rgba(16, 14, 22, 0.94), rgba(8, 7, 12, 0.96)) !important;
+  box-shadow: 0 0 8px color-mix(in srgb, var(--buff-col, #c89b3c) 38%, transparent), inset 0 0 6px rgba(0, 0, 0, 0.75) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  cursor: help !important;
+  transition: transform 0.14s ease, box-shadow 0.14s ease !important;
+}
+.v253-buff-tile:hover {
+  transform: translateY(-2px) scale(1.08) !important;
+  box-shadow: 0 0 14px color-mix(in srgb, var(--buff-col, #c89b3c) 72%, transparent) !important;
+  z-index: 20 !important;
+}
+.v253-buff-tile .altar-buff-img {
+  width: 31px;
+  height: 31px;
+  border-radius: 5px;
+  object-fit: cover;
+  display: block;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.85);
+}
+.v253-buff-tile .altar-buff-sec {
+  font-size: 9.5px !important;
+  font-weight: 800 !important;
+  line-height: 1 !important;
+  color: #fde68a !important;
+  text-shadow: 0 1px 3px #000 !important;
+  letter-spacing: -0.2px;
+  margin-top: 1px;
+}
+.v253-buff-tile.is-combat {
+  box-shadow: 0 0 10px color-mix(in srgb, var(--buff-col, #38bdf8) 65%, transparent) !important;
+}

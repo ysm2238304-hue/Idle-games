@@ -1,6 +1,6 @@
 import { calcEndgameBonuses } from './endgameSystems.js?v=237';
-import { getActiveKeystone } from './buildEngine.js?v=236';
-import { getClassMechanicStatBonuses } from './classMechanics.js?v=234';
+import { getActiveKeystone } from './buildEngine.js?v=251';
+import { getClassMechanicStatBonuses } from './classMechanics.js?v=251';
 import { CLASSES } from '../data/classes.js?v=99';
 import { SET_DEFINITIONS } from '../data/items.js?v=240';
 
@@ -234,7 +234,7 @@ export function recalcPlayerStats(state) {
   }
 
   const crystals = state.soulCrystals || 0;
-  const crystalMult = 1 + crystals * 0.15;
+  const crystalMult = 1 + Math.min(2.5, crystals * 0.08);
   flat.goldFind += crystals * 5;
   flat.magicFind += crystals * 5;
   const nowTs = Date.now();
@@ -247,9 +247,10 @@ export function recalcPlayerStats(state) {
     flat.magicFind += 40;
     flat.goldFind += 30;
   }
+  let buffSkillDmgPct = 0;
   if ((buffs.beaconUntil || 0) > nowTs) {
-    flat.atkPct += 15;
-    flat.defPct += 15;
+    atkPct += 15;
+    armorPct += 15;
     flat.magicFind += 15;
   }
   if ((buffs.sporeUntil || 0) > nowTs) {
@@ -258,42 +259,42 @@ export function recalcPlayerStats(state) {
     flat.goldFind += 20;
   }
   if ((buffs.soulUntil || 0) > nowTs) {
-    flat.atkPct += 18;
+    atkPct += 18;
     flat.critDmg += 25;
     flat.magicFind += 15;
   }
   if ((buffs.lavaUntil || 0) > nowTs) {
-    flat.atkPct += 25;
+    atkPct += 25;
     flat.critDmg += 20;
-    flat.skillDmgPct += 20;
+    buffSkillDmgPct += 20;
   }
   if ((buffs.abyssUntil || 0) > nowTs) {
-    flat.atkPct += 30;
+    atkPct += 30;
     flat.critDmg += 20;
     flat.magicFind += 25;
   }
   if ((buffs.auroraUntil || 0) > nowTs) {
-    flat.defPct += 25;
+    armorPct += 25;
     flat.atkSpeedPct += 25;
-    flat.dmgReducePct += 10;
+    flat.dmgReducePct = (flat.dmgReducePct || 0) + 10;
   }
   if ((buffs.emeraldUntil || 0) > nowTs) {
-    flat.atkPct += 25;
+    atkPct += 25;
     flat.atkSpeedPct += 25;
     flat.magicFind += 30;
   }
   if ((buffs.stormUntil || 0) > nowTs) {
     flat.atkSpeedPct += 30;
-    flat.skillDmgPct += 25;
+    buffSkillDmgPct += 25;
     flat.critRate += 20;
   }
   if ((buffs.roseUntil || 0) > nowTs) {
-    flat.atkPct += 35;
+    atkPct += 35;
     flat.critDmg += 25;
-    flat.lifeSteal += 5;
+    flat.lifesteal += 5;
   }
   if ((buffs.astralUntil || 0) > nowTs) {
-    flat.atkPct += 45;
+    atkPct += 45;
     flat.critDmg += 35;
     flat.atkSpeedPct += 30;
     flat.magicFind += 40;
@@ -303,14 +304,14 @@ export function recalcPlayerStats(state) {
     expMult += 0.15;
   }
   if ((buffs.guardUntil || 0) > nowTs) {
-    flat.defPct += 10;
+    armorPct += 10;
   }
   if ((buffs.titanUntil || 0) > nowTs) {
-    flat.atkPct += 30;
+    atkPct += 30;
     flat.critDmg += 40;
   }
   if ((buffs.ironUntil || 0) > nowTs) {
-    flat.defPct += 35;
+    armorPct += 35;
     flat.dmgReducePct = (flat.dmgReducePct || 0) + 12;
   }
   if ((buffs.sageUntil || 0) > nowTs) {
@@ -335,12 +336,15 @@ export function recalcPlayerStats(state) {
     (atk * (1 + (critRate / 100) * ((critDmg - 100) / 100))) / (atkIntervalMs / 1000)
   );
 
-  const baseMp = state.classId === 'mage' ? 160 : (state.classId === 'ranger' ? 120 : 100);
-  const maxMpBonusP = (state.classId === 'paladin' ? (tree.p_p_zeal || 0) * 10 : 0) + (state.classId === 'necro' ? (tree.n_p_summon || 0) * 10 + (activeEffects.has('soul_phylactery') ? 35 : 0) : 0);
-  const mpRegenBonusP = (activeEffects.has('seraph_grace') ? 4 : 0) + (activeEffects.has('soul_phylactery') ? 4 : 0);
-  const maxMp = Math.round(baseMp + lvlBonus * 4 + (tree.m_p_arcane || 0) * 10 + maxMpFlat + (activeEffects.has('frost_heart') ? 40 : 0));
-  const mpRegenPerSec = (state.classId === 'mage' ? 13 : (state.classId === 'ranger' ? 9 : 7))
-    + (tree.m_p_ward || 0) * 1.5 + (tree.m_cdr || 0) * 1.5 + mpRegenFlat + (activeEffects.has('frost_heart') ? 4 : 0);
+  // v254: 六大職業資源池與被動回復分化（大幅下修無腦滿魔回復，強化「基礎產能 → 核心耗能」循環）
+  const classBaseMp = { mage: 120, necro: 105, ranger: 100, paladin: 100, assassin: 100, warrior: 100 };
+  const classBaseRegen = { mage: 4.8, assassin: 4.4, ranger: 4.0, paladin: 3.2, necro: 3.0, warrior: 1.6 };
+  const baseMp = classBaseMp[state.classId] || 100;
+  const maxMpBonusP = (state.classId === 'paladin' ? (tree.p_p_zeal || 0) * 8 : 0) + (state.classId === 'necro' ? (tree.n_p_summon || 0) * 8 + (activeEffects.has('soul_phylactery') ? 28 : 0) : 0);
+  const mpRegenBonusP = (activeEffects.has('seraph_grace') ? 2.2 : 0) + (activeEffects.has('soul_phylactery') ? 2.2 : 0);
+  const maxMp = Math.round(baseMp + lvlBonus * 3.5 + (tree.m_p_arcane || 0) * 8 + maxMpFlat + maxMpBonusP + (activeEffects.has('frost_heart') ? 32 : 0));
+  const mpRegenPerSec = (classBaseRegen[state.classId] || 3.2)
+    + (tree.m_p_ward || 0) * 0.7 + (tree.m_cdr || 0) * 0.7 + mpRegenFlat * 0.55 + mpRegenBonusP + (activeEffects.has('frost_heart') ? 2.2 : 0);
 
   // v234: 注入六大職業獨立專屬機制常駐屬性加成
   const cm = getClassMechanicStatBonuses(state);
@@ -411,10 +415,13 @@ export function recalcPlayerStats(state) {
   const finalCritDmg = Math.round((critDmg + (cm.critDmg || 0)) * (eg.critDmgMult2x ? 2.0 : 1.0));
   const finalLifesteal = Number((lifesteal + (cm.lifesteal || 0)).toFixed(1));
   const finalAtkInterval = Math.max(160, Math.round(atkIntervalMs / (1 + (cm.atkSpeedPct || 0) / 100)));
-  const finalSkillDmgMult = Number((skillDmgMult * (1 + (cm.skillDmgPct || 0) / 100)).toFixed(3));
+  const finalSkillDmgMult = Number((skillDmgMult * (1 + ((cm.skillDmgPct || 0) + buffSkillDmgPct) / 100)).toFixed(3));
+  const resourceCostMult = Math.max(0.65, Number((1 - ((buffs.sageUntil || 0) > nowTs ? 0.14 : 0) - Math.min(0.18, (1 - cdrMult) * 0.35)).toFixed(3)));
   const finalDps = Math.round((atk * (1 + (finalCritRate / 100) * ((finalCritDmg - 100) / 100))) / (finalAtkInterval / 1000));
 
   return {
+    heroLevel: Math.max(1, Number(state.level || 1)),
+    resourceCostMult,
     maxHp: finalMaxHp,
     maxMp: finalMaxMp,
     mpRegenPerSec: finalMpRegen,

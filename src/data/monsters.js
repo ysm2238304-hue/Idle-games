@@ -342,19 +342,41 @@ export function spawnSingleMonster(stage, forceBoss = false) {
   return buildMonster(tpl, stage, scaleFactor, uid);
 }
 
-function buildMonster(tpl, stage, scaleFactor, idx, forceAggressive = null) {
-  const diffMult = (1 + (stage - 1) * 0.28) * Math.pow(1.032, stage - 1);
-  const atkScale = (1 + (stage - 1) * 0.20) * Math.pow(1.022, stage - 1);
-  const expScale = (1 + (stage - 1) * 0.18) * Math.pow(1.018, stage - 1);
-  const goldScale = (1 + (stage - 1) * 0.26) * Math.pow(1.024, stage - 1);
+// v254: 四段式千小時關卡難度曲線（Lv.1-20 拓荒 → Lv.21-50 流派成型 → Lv.51-80 深淵高壓 → Lv.81-100 終局巔峰）
+function calcStageCurve(stage) {
+  const s = Math.max(1, Number(stage || 1));
+  const seg1 = Math.min(19, s - 1);
+  const seg2 = Math.max(0, Math.min(30, s - 20));
+  const seg3 = Math.max(0, Math.min(30, s - 50));
+  const seg4 = Math.max(0, s - 80);
+  const hpMult = (1 + (s - 1) * 0.34)
+    * Math.pow(1.052, seg1)
+    * Math.pow(1.058, seg2)
+    * Math.pow(1.064, seg3)
+    * Math.pow(1.072, seg4);
+  const atkMult = (1 + (s - 1) * 0.24)
+    * Math.pow(1.036, seg1)
+    * Math.pow(1.042, seg2)
+    * Math.pow(1.048, seg3)
+    * Math.pow(1.054, seg4);
+  const armorVal = Math.round((22 + (s - 1) * 8.5) * Math.pow(1.034, s - 1));
+  return { hpMult, atkMult, armorVal };
+}
 
-  const isAggressive = forceAggressive !== null ? forceAggressive : (tpl.isBoss ? true : Math.random() < 0.55);
+function buildMonster(tpl, stage, scaleFactor, idx, forceAggressive = null) {
+  const { hpMult: diffMult, atkMult: atkScale, armorVal } = calcStageCurve(stage);
+  const expScale = (1 + (stage - 1) * 0.20) * Math.pow(1.020, stage - 1);
+  const goldScale = (1 + (stage - 1) * 0.28) * Math.pow(1.026, stage - 1);
+
+  const isAggressive = forceAggressive !== null ? forceAggressive : (tpl.isBoss ? true : Math.random() < 0.60);
   const aggroExpBonus = isAggressive ? 1.20 : 1.0;
 
-  const baseHp = 48 * diffMult;
-  const baseAtk = 6.5 * atkScale;
-  const baseGold = 8 * goldScale;
-  const baseExp = 3.2 * expScale * aggroExpBonus;
+  const baseHp = 118 * diffMult;
+  const baseAtk = 11.5 * atkScale;
+  const baseGold = 9 * goldScale;
+  const baseExp = 3.6 * expScale * aggroExpBonus;
+  const bossHpBoost = tpl.isBoss ? (tpl.isMiniBoss ? 1.38 : 1.72) : 1.0;
+  const bossDr = tpl.isBoss ? (tpl.isMiniBoss ? 0.18 : 0.30) : 0;
 
   return {
     uid: `m_${Date.now()}_${idx}_${Math.random().toString(36).slice(2, 6)}`,
@@ -370,12 +392,15 @@ function buildMonster(tpl, stage, scaleFactor, idx, forceAggressive = null) {
     isProvoked: false,
     moveStyle: tpl.moveStyle || 'hop',
     atkStyle: tpl.atkStyle || 'claw',
-    maxHp: Math.round(baseHp * tpl.hpMult),
-    hp: Math.round(baseHp * tpl.hpMult),
+    maxHp: Math.round(baseHp * tpl.hpMult * bossHpBoost),
+    hp: Math.round(baseHp * tpl.hpMult * bossHpBoost),
     atk: Math.round(baseAtk * tpl.atkMult),
+    armor: Math.round(armorVal * (tpl.isBoss ? 1.65 : 1.0)),
+    bossDr,
+    mobLevel: getStageRecommendedLevel(stage),
     gold: Math.round(baseGold * tpl.goldMult),
     exp: Math.round(baseExp * tpl.expMult),
-    atkIntervalMs: tpl.isBoss ? 1450 : (tpl.isRanged ? 1950 : 1550),
+    atkIntervalMs: tpl.isBoss ? 1320 : (tpl.isRanged ? 1850 : 1480),
     stage,
   };
 }

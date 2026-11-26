@@ -298,3 +298,12 @@ export function hookWorldMap25D(DashboardUI) {
     }
   });
 }
+
+export function isWorldMap25DOpen() {
+  return !!(overlayEl && !overlayEl.classList.contains('hidden'));
+}
+
+export function toggleWorldMap25D() {
+  if (isWorldMap25DOpen()) closeWorldMap25D();
+  else openWorldMap25D();
+}

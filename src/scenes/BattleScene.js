@@ -9,8 +9,8 @@ import { NECRO_SKILLS } from '../data/necroSkills.js?v=251';
 import { ASSASSIN_SKILLS } from '../data/assassinSkills.js?v=235';
 import { RARITIES } from '../data/items.js?v=99';
 import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta, getPetPickupRadius, getPetCodexInfo } from '../data/pets.js?v=99';
-import { createStageEncounters, spawnSingleMonster, getChapterIdx, getStageLabel, ZONE_OBSTACLES } from '../data/monsters.js?v=232';
-import { formatNum } from '../logic/statCalc.js?v=240';
+import { createStageEncounters, spawnSingleMonster, getChapterIdx, getStageLabel, ZONE_OBSTACLES } from '../data/monsters.js?v=254';
+import { formatNum } from '../logic/statCalc.js?v=254';
 import { MageVfxDirector } from '../vfx/MageVfxDirector.js?v=250';
 import { NecroVfxDirector } from '../vfx/NecroVfxDirector.js?v=252';
 
@@ -326,7 +326,7 @@ export class BattleScene extends Phaser.Scene {
     this.playerMaxHp = stats.maxHp;
     this.playerHp = stats.maxHp;
     this.playerMaxMp = stats.maxMp || 100;
-    this.playerMp = this.playerMaxMp;
+    this.playerMp = Math.min(this.playerMaxMp, this.playerMp + Math.round(this.playerMaxMp * 0.30));
     this.spawnWaveSquad();
   }
 
@@ -676,6 +676,70 @@ export class BattleScene extends Phaser.Scene {
     this.isPaused = paused;
   }
 
+  // v254: 與英雄等級＋技能等級嚴格掛勾的階梯耗魔與生命消耗系統
+  getSkillResourcePlan(sid, skillLvl, stats, slotIdx = 0) {
+    const heroLv = Math.max(1, stats?.heroLevel || this.getState()?.level || 1);
+    const costMult = stats?.resourceCostMult || 1.0;
+    const isBasicPrimer = [
+      // 秘法師／死靈法師基礎產能招
+      'm_fire_bolt', 'm_frost_bolt', 'm_arc_lash', 'm_spark',
+      'n_reap_scythe', 'n_bone_splinters', 'n_hemorrhage', 'n_decompose',
+      // 戰士／遊俠／聖騎／刺客基礎產能與 0 耗回能招
+      'w_cleave', 'w_frenzy', 'w_bash', 'w_lunging_strike',
+      'r_quick_shot', 'r_puncture', 'r_heartseeker',
+      'p_smite', 'p_zeal', 'p_holy_bolt',
+      'a_quick_stab', 'a_invigorating', 'a_blade_shift',
+      'mana_overload', 'undead_frenzy',
+    ].includes(sid);
+
+    const isUltimate = [
+      'm_inferno', 'm_deep_freeze', 'm_unstable_currents', 'm_supernova',
+      'n_army_scourge', 'n_blood_wave', 'n_bone_storm', 'n_soul_rift',
+      'bladestorm', 'phantombow', 'void_beam', 'judgment', 'shadow_execute',
+      'w_cataclysm', 'w_wrath_berserker', 'r_rain_arrows', 'p_seraph_verdict', 'a_death_trap',
+    ].includes(sid);
+
+    const isSummonOrHeavy = [
+      'm_hydra', 'm_ice_blades', 'm_lightning_spear', 'm_familiar', 'm_meteor', 'm_blizzard',
+      'raise_skeleton', 'blood_golem', 'wraith_army', 'bone_prison',
+      'execute_cleave', 'earth_stomp', 'shadow_clones', 'death_mark', 'black_hole',
+      'consecration', 'holy_aegis', 'venom_burst', 'lethal_fangs',
+    ].includes(sid);
+
+    const isDefensiveUtility = [
+      'm_flame_shield', 'm_ice_armor', 'm_teleport', 'm_frost_nova',
+      'n_blood_mist', 'n_bone_shield', 'decrepify', 'n_iron_maiden', 'n_corpse_tendrils',
+      'shadowstep', 'frost_nova', 'w_iron_skin', 'w_war_cry',
+    ].includes(sid);
+
+    // 鮮血系與狂戰血契生命消耗（高風險高報酬，不會自殺，最少保留 1 HP）
+    let hpCostPct = 0;
+    if (sid === 'n_blood_surge') hpCostPct = 0.06;
+    else if (sid === 'n_blood_lance') hpCostPct = 0.05;
+    else if (sid === 'n_blood_wave') hpCostPct = 0.09;
+    else if (sid === 'blood_golem') hpCostPct = 0.07;
+    else if (stats?.activeKeystoneId === 'wk_blood_pact' && !isBasicPrimer) hpCostPct = 0.06;
+
+    if (isBasicPrimer) {
+      return { mpCost: 0, hpCostPct: 0, tier: 'primer' };
+    }
+    if (isUltimate || slotIdx === 5) {
+      const raw = (48 + heroLv * 1.65 + (skillLvl - 1) * 3.0) * costMult;
+      return { mpCost: Math.min(Math.round(this.playerMaxMp * 0.62), Math.round(raw)), hpCostPct, tier: 'ultimate' };
+    }
+    if (isSummonOrHeavy || slotIdx === 4) {
+      const raw = (28 + heroLv * 1.05 + (skillLvl - 1) * 2.0) * costMult;
+      return { mpCost: Math.min(Math.round(this.playerMaxMp * 0.42), Math.round(raw)), hpCostPct, tier: 'heavy' };
+    }
+    if (isDefensiveUtility || slotIdx === 2 || slotIdx === 3) {
+      const raw = (20 + heroLv * 0.80 + (skillLvl - 1) * 1.5) * costMult;
+      return { mpCost: Math.min(Math.round(this.playerMaxMp * 0.30), Math.round(raw)), hpCostPct, tier: 'utility' };
+    }
+    // 核心輸出技能（[2] 槽與其餘核心招）
+    const rawCore = (26 + heroLv * 1.15 + (skillLvl - 1) * 2.2) * costMult;
+    return { mpCost: Math.min(Math.round(this.playerMaxMp * 0.38), Math.round(rawCore)), hpCostPct, tier: 'core' };
+  }
+
   getSlotSkillInfo(slotIdx) {
     const state = this.getState();
     const cid = state.classId || 'warrior';
@@ -688,9 +752,10 @@ export class BattleScene extends Phaser.Scene {
       const sk = book[sid];
       const lvl = state.skillTree?.[sk.treeNodeId] || 0;
       if (lvl <= 0) return null;
-      const cd = Math.round(sk.cooldownMs * (this.getStats().cdrMult || 1));
-      const mpCost = ['bladestorm', 'phantombow', 'void_beam', 'execute_cleave', 'earth_stomp', 'shadow_clones', 'death_mark', 'black_hole', 'judgment', 'consecration', 'holy_aegis', 'blood_golem', 'wraith_army', 'bone_prison', 'shadow_execute', 'venom_burst', 'lethal_fangs'].includes(sid) ? 26 : (sid === 'mana_overload' ? 0 : 18);
-      return { id: sid, name: sk.name, cooldownMs: cd, level: lvl, cid, mpCost };
+      const stInfo = this.getStats();
+      const cd = Math.round(sk.cooldownMs * (stInfo.cdrMult || 1));
+      const plan = this.getSkillResourcePlan(sid, lvl, stInfo, slotIdx);
+      return { id: sid, name: sk.name, cooldownMs: cd, level: lvl, cid, mpCost: plan.mpCost, hpCostPct: plan.hpCostPct, tier: plan.tier };
     }
     if (slotIdx > 0) return null;
     const cls = CLASSES[cid] || CLASSES.mage;
@@ -754,11 +819,12 @@ export class BattleScene extends Phaser.Scene {
     if (!info) return false;
     if (this.slotCdTimers[slotIdx] < info.cooldownMs) return false;
     if (!isManual && !this.shouldAutoCastSkill(info.id)) return false;
-    const cost = info.mpCost || 18;
+    const cost = typeof info.mpCost === 'number' ? info.mpCost : 18;
+    const hpCostPct = info.hpCostPct || 0;
     const tree = this.getState().skillTree || {};
-    const freeAstral = ((this.getState().classId === 'mage' && (tree.m_key_astral || 0) > 0 && Math.random() < 0.35) || (this.getState().classId === 'ranger' && (this.time?.now || 0) < (this._rInnerSightUntil || 0)));
+    const freeAstral = ((this.getState().classId === 'mage' && (tree.m_key_astral || 0) > 0 && Math.random() < 0.25) || (this.getState().classId === 'ranger' && (this.time?.now || 0) < (this._rInnerSightUntil || 0)));
     const curCid = this.getState().classId;
-    if (!freeAstral && this.playerMp < cost) {
+    if (!freeAstral && cost > 0 && this.playerMp < cost) {
       if (isManual) {
         const rMap = {
           warrior: ['能量不足!', '#fb923c'],
@@ -773,7 +839,12 @@ export class BattleScene extends Phaser.Scene {
       }
       return false;
     }
-    if (!freeAstral) this.playerMp = Math.max(0, this.playerMp - cost);
+    if (!freeAstral && cost > 0) this.playerMp = Math.max(0, this.playerMp - cost);
+    if (hpCostPct > 0 && this.playerHp > 1) {
+      const hpPaid = Math.min(this.playerHp - 1, Math.max(1, Math.round(this.playerHp * hpCostPct)));
+      this.playerHp -= hpPaid;
+      this.spawnFloatingText(this.hero.x - 16, this.hero.y - 78, `🩸-${formatNum(hpPaid)} 血祭`, '#fb7185', 12);
+    }
     const echoRefund = (curCid === 'mage' && this.getStats().activeEffects.has('arcane_echo') && Math.random() < 0.25);
     const buildMods = computeSkillBuildMods(this.getState(), curCid, info.id, info.level);
     this._activeBuildMods = buildMods;
@@ -877,7 +948,7 @@ export class BattleScene extends Phaser.Scene {
     this.playerMaxHp = stats.maxHp;
     this.playerHp = stats.maxHp;
     this.playerMaxMp = stats.maxMp || 100;
-    this.playerMp = this.playerMaxMp;
+    this.playerMp = Math.min(this.playerMaxMp, this.playerMp + Math.round(this.playerMaxMp * 0.30));
     this.slotCdTimers = [99999, 99999, 99999, 99999, 99999, 99999];
     this.basicComboStep = 0;
     this.warriorGuardStacks = 0;
@@ -1039,7 +1110,7 @@ export class BattleScene extends Phaser.Scene {
         this.slotCdTimers[i] = Math.min(info.cooldownMs, this.slotCdTimers[i] + delta);
         const r = this.slotCdTimers[i] / info.cooldownMs;
         ratios[i] = r;
-        cdDetails[i] = { ratio: r, remMs: Math.max(0, info.cooldownMs - this.slotCdTimers[i]), mpCost: info.mpCost || 18 };
+        cdDetails[i] = { ratio: r, remMs: Math.max(0, info.cooldownMs - this.slotCdTimers[i]), mpCost: typeof info.mpCost === 'number' ? info.mpCost : 18 };
       }
     }
     this.updateMageBattlefieldEntities(delta);
@@ -1651,7 +1722,7 @@ export class BattleScene extends Phaser.Scene {
     this.lungeHeroJuice(1.07, 0.94);
     const atkPrefix = classId === 'warrior' ? 'w' : (classId === 'ranger' ? 'r' : (classId === 'paladin' ? 'p' : (classId === 'necro' ? 'n' : (classId === 'assassin' ? 'a' : 'm'))));
     this.hero.play(`${atkPrefix}_${this.heroDir}_atk`, false);
-    const mpGain = classId === 'mage' ? 7 : (classId === 'ranger' || classId === 'paladin' ? 5 : 4);
+    const mpGain = classId === 'warrior' ? 8 : (classId === 'assassin' || classId === 'paladin' ? 6 : (classId === 'ranger' || classId === 'necro' ? 5 : 4));
     this.playerMp = Math.min(this.playerMaxMp, this.playerMp + mpGain);
     const baseAngle = Math.atan2(target.sprite.y - this.hero.y, target.sprite.x - this.hero.x);
 
@@ -1875,7 +1946,7 @@ export class BattleScene extends Phaser.Scene {
     if (skillId === 'w_wrath_berserker') {
       this.warcryUntil = Math.max(this.warcryUntil || 0, this.time.now + 7000);
       this._wArsenalOverloadUntil = Math.max(this._wArsenalOverloadUntil || 0, this.time.now + 7000);
-      this.playerMp = this.playerMaxMp;
+      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + Math.round(this.playerMaxMp * 0.30));
       this.playAdditiveVfx('vfx_w_hammer_slam', _hx, _hy, 1.25, 560);
       _aoe(_hx, _hy, 320, (320 + skillLvl * 48) / 100, '#ef4444', '🔥狂戰神 ', ['burn', 'vulnerable'], true);
       return;
@@ -2683,7 +2754,7 @@ export class BattleScene extends Phaser.Scene {
     }
     if (skillId === 'm_inferno') {
       this.registerEnlightenment('fire');
-      this.playerMp = this.playerMaxMp;
+      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + Math.round(this.playerMaxMp * 0.30));
       mv.spawnGroundDecal('fire', _tx, _ty, 1.28, 2500);
       mv.playSeq16('seq16_m_inferno', _tx, _ty - 18, 1.65, 13, 20);
       for (let w = 0; w < 5; w++) {
@@ -2755,7 +2826,7 @@ export class BattleScene extends Phaser.Scene {
       this.registerEnlightenment('fire');
       this.registerEnlightenment('frost');
       this.registerEnlightenment('shock');
-      this.playerMp = this.playerMaxMp;
+      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + Math.round(this.playerMaxMp * 0.30));
       mv.spawnGroundDecal('void', _tx, _ty, 1.35, 2500);
       mv.playSeq16('seq16_m_supernova', _tx, _ty - 12, 1.75, 15, 22);
       mv.spawnDebrisBurst(_tx, _ty, 'shock', 12);
@@ -4595,7 +4666,9 @@ export class BattleScene extends Phaser.Scene {
     }
 
     if (this.time.now < (this.heroInvulnUntil || 0)) {
-      this.spawnFloatingText(this.hero.x, this.hero.y - 74, '❄️ 冰封無敵', '#7dd3fc', 14);
+      const invLbl = this.getState()?.classId === 'necro' ? '🩸 血霧無敵' : '❄️ 冰封無敵';
+      const invCol = this.getState()?.classId === 'necro' ? '#fb7185' : '#7dd3fc';
+      this.spawnFloatingText(this.hero.x, this.hero.y - 74, invLbl, invCol, 14);
       return;
     }
     const totalDodge = stats.dodge + (this.time.now < this.dodgeBuffUntil ? 25 : 0);
@@ -4625,7 +4698,13 @@ export class BattleScene extends Phaser.Scene {
       ? Math.min(0.20, this.warriorGuardStacks * 0.04) : 0;
     const curseDr = (m && this.time.now < (m.cursedUntil || 0)) ? 0.25 : 0;
     const thornsDr = this.time.now < (this.thornsModUntil || 0) ? 0.35 : 0;
-    let dmg = Math.max(1, Math.round(m.atk * atkMult * (1 - mitigation) * (1 - guardBonus) * (1 - thornsDr) * (1 - curseDr)));
+    const hLvIn = Math.max(1, stats.heroLevel || this.getState()?.level || 1);
+    const mLvIn = Math.max(1, m.mobLevel || Math.round((m.stage || 1) * 0.95));
+    const underLvThreat = (mLvIn - hLvIn) > 3 ? Math.min(2.25, 1 + ((mLvIn - hLvIn) - 3) * 0.08) : 1.0;
+    let dmg = Math.max(1, Math.round(m.atk * atkMult * underLvThreat * (1 - mitigation) * (1 - guardBonus) * (1 - thornsDr) * (1 - curseDr)));
+    if (this.getState()?.classId === 'warrior') {
+      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 6);
+    }
     if (this.mageShieldHp > 0) {
       const absorbed = Math.min(this.mageShieldHp, dmg);
       this.mageShieldHp -= absorbed;
@@ -4768,7 +4847,7 @@ export class BattleScene extends Phaser.Scene {
     if (this.enlightenmentStacks >= 100) {
       this.enlightenmentStacks = 0;
       this.enlightenmentUntil = now + 8000;
-      this.playerMp = this.playerMaxMp;
+      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + Math.round(this.playerMaxMp * 0.30));
       if (this.hero) {
         this.mageVfx?.playSeq16('seq16_m_supernova', this.hero.x, this.hero.y - 10, 1.55, 16, 20);
         this.spawnFloatingText(this.hero.x, this.hero.y - 96, '✨ 啟蒙爆發 (+45%傷害)', '#fde047', 16);
@@ -5058,7 +5137,17 @@ export class BattleScene extends Phaser.Scene {
         this.playAdditiveVfx('vfx_proc_overpower', m.sprite.x, m.sprite.y - 12, 0.68, 380);
       }
     }
-    dmg = Math.max(1, Math.round(dmg * bonusMult));
+    // v254: 千小時戰鬥數值重構（怪物護甲減傷＋首領減傷＋越級等級壓制＋爆發收斂）
+    const heroLvNow = Math.max(1, st.heroLevel || this.getState()?.level || 1);
+    const mobLvNow = Math.max(1, m.mobLevel || Math.round((m.stage || 1) * 0.95));
+    const isVuln = (nowT < (m.markedUntil || 0)) || (nowT < (m._statuses?.vulnerable || 0));
+    const effMobArmor = Math.round((m.armor || (22 + (m.stage || 1) * 8.5)) * (isVuln ? 0.65 : 1.0));
+    const mobArmorMit = effMobArmor / (effMobArmor + 95 + heroLvNow * 14);
+    const lvDiff = mobLvNow - heroLvNow;
+    const lvSuppressMult = lvDiff > 3 ? Math.max(0.32, 1 - (lvDiff - 3) * 0.065) : (lvDiff < -6 ? Math.min(1.25, 1 + Math.abs(lvDiff + 6) * 0.025) : 1.0);
+    const bossDrMult = 1 - (m.bossDr || 0);
+    const globalPaceMult = isTap ? 0.72 : 0.62;
+    dmg = Math.max(1, Math.round(dmg * bonusMult * (1 - mobArmorMit) * bossDrMult * lvSuppressMult * globalPaceMult));
     m.hp = Math.max(0, m.hp - dmg);
 
     m.sprite.setTintFill(0xffffff);

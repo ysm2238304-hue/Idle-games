@@ -496,6 +496,23 @@ export class HudSettingsManager {
               <button type="button" id="set-btn-exit-game" class="btn-ghost-sm" style="border-color:rgba(248,113,113,0.6)!important;color:#fca5a5!important;">🚪 離開遊戲</button>
             </div>
           </div>
+          <div class="set-row v253-danger-row" style="margin-top:8px;padding-top:10px;border-top:1px solid rgba(239,68,68,0.35);flex-direction:column;align-items:stretch;gap:8px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+              <div><b style="color:#f87171;">⚠️ 刪除雲端進度並重頭開始</b><small style="color:#fca5a5;">永久清除雲端與本機存檔，從 Lv.1 第 1-1 關重新創角開始</small></div>
+              <button type="button" id="set-btn-wipe-open" class="btn-ghost-sm" style="border-color:rgba(239,68,68,0.75)!important;color:#fecaca!important;background:rgba(127,29,29,0.45)!important;white-space:nowrap;">🗑️ 刪除進度</button>
+            </div>
+            <div id="set-wipe-confirm-box" class="hidden" style="padding:10px 12px;border-radius:8px;background:rgba(69,10,10,0.65);border:1px solid rgba(248,113,113,0.55);display:flex;flex-direction:column;gap:8px;">
+              <div style="font-size:12px;color:#fecaca;line-height:1.5;">此操作將<b>永久刪除雲端 Firestore 存檔與本機角色進度</b>且無法復原！若確認要重頭開始，請在下方輸入 <b style="color:#fde047;">重頭開始</b> 或 <b style="color:#fde047;">DELETE</b>：</div>
+              <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:#e2e8f0;cursor:pointer;">
+                <input type="checkbox" id="set-wipe-keep-hud" checked /> 保留目前 HUD 自由排版與聲音／畫質設定
+              </label>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input type="text" id="set-wipe-input" placeholder="請輸入：重頭開始" autocomplete="off" style="flex:1;padding:6px 10px;border-radius:6px;border:1px solid rgba(248,113,113,0.55);background:rgba(15,10,14,0.9);color:#fff;font-size:12.5px;" />
+                <button type="button" id="set-btn-wipe-exec" class="btn-ghost-sm" disabled style="opacity:0.45;border-color:#ef4444!important;background:#991b1b!important;color:#fff!important;font-weight:800;">確認永久刪除</button>
+                <button type="button" id="set-btn-wipe-cancel" class="btn-ghost-sm">取消</button>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="set-section">
           <div class="set-sec-title">各介面框架微調（顯示／獨立縮放）</div>
@@ -528,6 +545,32 @@ export class HudSettingsManager {
       body.querySelector('#set-btn-exit-game')?.addEventListener('click', () => {
         this.closeModal();
         window.__IDLE_ARPG_BRIDGE__?.exitGameToAuth?.();
+      });
+      const wipeBox = body.querySelector('#set-wipe-confirm-box');
+      const wipeInput = body.querySelector('#set-wipe-input');
+      const wipeExec = body.querySelector('#set-btn-wipe-exec');
+      body.querySelector('#set-btn-wipe-open')?.addEventListener('click', () => {
+        wipeBox?.classList.remove('hidden');
+        if (wipeInput) { wipeInput.value = ''; wipeInput.focus(); }
+      });
+      body.querySelector('#set-btn-wipe-cancel')?.addEventListener('click', () => {
+        wipeBox?.classList.add('hidden');
+      });
+      wipeInput?.addEventListener('input', () => {
+        const v = (wipeInput.value || '').trim().toUpperCase();
+        const ok = v === '重頭開始' || v === 'DELETE';
+        if (wipeExec) {
+          wipeExec.disabled = !ok;
+          wipeExec.style.opacity = ok ? '1' : '0.45';
+        }
+      });
+      wipeExec?.addEventListener('click', async () => {
+        const v = (wipeInput?.value || '').trim().toUpperCase();
+        if (v !== '重頭開始' && v !== 'DELETE') return;
+        wipeExec.disabled = true;
+        wipeExec.textContent = '清除中...';
+        const keepHud = !!body.querySelector('#set-wipe-keep-hud')?.checked;
+        await window.__IDLE_ARPG_BRIDGE__?.wipeAllProgressAndRestart?.({ keepSettings: keepHud });
       });
       body.querySelectorAll('[data-panel-vis]').forEach((el) => {
         el.addEventListener('change', (e) => {
