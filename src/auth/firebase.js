@@ -323,3 +323,72 @@ export async function sendWorldChatMessage({ sender, channel = 'world', target =
     return { ok: false, reason: msg || 'error' };
   }
 }
+
+// ===================== v267: 多人共享主城即時同步（Firestore Presence） =====================
+let townPresenceDisabled = false;
+
+export async function publishTownPresence(chIdx, payload) {
+  if (townPresenceDisabled) return { ok: false, reason: 'disabled' };
+  if (!currentUser?.uid) return { ok: false, reason: 'guest' };
+  const ctx = await ensureFirebase();
+  if (!ctx) return { ok: false, reason: 'no-firebase' };
+  try {
+    const { doc, setDoc } = ctx.fsMod;
+    const colName = `town_presence_ch${Number(chIdx) || 0}`;
+    await setDoc(doc(ctx.db, colName, currentUser.uid), {
+      uid: currentUser.uid,
+      name: String(payload.name || '冒險者').slice(0, 18),
+      classId: String(payload.classId || 'warrior'),
+      level: Number(payload.level || 1),
+      x: Math.round(payload.x || 2048),
+      y: Math.round(payload.y || 1400),
+      dir: String(payload.dir || 'down'),
+      moving: Boolean(payload.moving),
+      emote: String(payload.emote || '').slice(0, 24),
+      chat: String(payload.chat || '').slice(0, 48),
+      power: Number(payload.power || 0),
+      updatedAt: Date.now(),
+    }, { merge: true });
+    return { ok: true };
+  } catch (e) {
+    const msg = String(e?.message || '');
+    if (e?.code === 'permission-denied' || msg.includes('permissions')) {
+      townPresenceDisabled = true;
+    }
+    return { ok: false, reason: msg || 'error' };
+  }
+}
+
+export async function subscribeTownPresence(chIdx, onPlayers, onError) {
+  if (townPresenceDisabled) { onError?.('disabled'); return () => {}; }
+  const ctx = await ensureFirebase();
+  if (!ctx) { onError?.('no-firebase'); return () => {}; }
+  try {
+    const { collection, onSnapshot } = ctx.fsMod;
+    const colName = `town_presence_ch${Number(chIdx) || 0}`;
+    const unsub = onSnapshot(collection(ctx.db, colName), (snap) => {
+      const now = Date.now();
+      const myUid = currentUser?.uid || null;
+      const list = [];
+      snap.forEach((d) => {
+        const v = d.data();
+        if (!v || v.uid === myUid) return;
+        if (now - (v.updatedAt || 0) <= 65000) {
+          list.push(v);
+        }
+      });
+      list.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+      onPlayers?.(list.slice(0, 24));
+    }, (err) => {
+      const msg = String(err?.message || '');
+      if (err?.code === 'permission-denied' || msg.includes('permissions')) {
+        townPresenceDisabled = true;
+      }
+      onError?.(msg || 'error');
+    });
+    return unsub;
+  } catch (e) {
+    onError?.(String(e?.message || 'error'));
+    return () => {};
+  }
+}

@@ -1,13 +1,15 @@
-import { TOWN_CH1 } from '../data/towns/ch1.js?v=99';
-import { TOWN_CH2 } from '../data/towns/ch2.js?v=99';
-import { TOWN_CH3 } from '../data/towns/ch3.js?v=99';
-import { TOWN_CH4 } from '../data/towns/ch4.js?v=99';
-import { TOWN_CH5 } from '../data/towns/ch5.js?v=99';
-import { TOWN_CH6 } from '../data/towns/ch6.js?v=99';
-import { TOWN_CH7 } from '../data/towns/ch7.js?v=99';
-import { TOWN_CH8 } from '../data/towns/ch8.js?v=99';
-import { TOWN_CH9 } from '../data/towns/ch9.js?v=99';
-import { TOWN_CH10 } from '../data/towns/ch10.js?v=99';
+import { TOWN_CH1 } from '../data/towns/ch1.js?v=267';
+import { LivingNpcEngine } from '../town/LivingNpcEngine.js?v=267';
+import { TownMultiplayerSync } from '../net/TownMultiplayerSync.js?v=267';
+import { TOWN_CH2 } from '../data/towns/ch2.js?v=268';
+import { TOWN_CH3 } from '../data/towns/ch3.js?v=268';
+import { TOWN_CH4 } from '../data/towns/ch4.js?v=268';
+import { TOWN_CH5 } from '../data/towns/ch5.js?v=269';
+import { TOWN_CH6 } from '../data/towns/ch6.js?v=269';
+import { TOWN_CH7 } from '../data/towns/ch7.js?v=269';
+import { TOWN_CH8 } from '../data/towns/ch8.js?v=270';
+import { TOWN_CH9 } from '../data/towns/ch9.js?v=270';
+import { TOWN_CH10 } from '../data/towns/ch10.js?v=270';
 import { formatNum } from '../logic/statCalc.js?v=99';
 import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta } from '../data/pets.js?v=99';
 
@@ -41,6 +43,16 @@ export class TownScene extends Phaser.Scene {
     this.interactables = [];
     this.patrolActors = [];
     this.roamNpcs = [];
+    this.livingNpcs = new LivingNpcEngine(this);
+    this.mpSync = new TownMultiplayerSync(this, td);
+    this.events.once('shutdown', () => {
+      this.livingNpcs?.destroy();
+      this.mpSync?.destroy();
+    });
+    this.events.once('destroy', () => {
+      this.livingNpcs?.destroy();
+      this.mpSync?.destroy();
+    });
     this.hoverRing = null;
     this.speechBubble = null;
     this._portraitCache = new Map();
@@ -78,6 +90,15 @@ export class TownScene extends Phaser.Scene {
     if (!this.textures.exists(td.bgKey)) {
       this.load.image(td.bgKey, td.bgUrl);
     }
+    // v267: 載入新版暗黑 4 獨立地形融合 WebP 建築與地標
+    if (td.landmark?.imgKey && td.landmark?.imgUrl && !this.textures.exists(td.landmark.imgKey)) {
+      this.load.image(td.landmark.imgKey, td.landmark.imgUrl);
+    }
+    (td.facilities || []).forEach((fac) => {
+      if (fac.imgKey && fac.imgUrl && !this.textures.exists(fac.imgKey)) {
+        this.load.image(fac.imgKey, fac.imgUrl);
+      }
+    });
     if (!this.textures.exists(td.atlasKey)) {
       this.load.atlas(td.atlasKey, td.atlasPng, td.atlasJson);
     }
@@ -130,9 +151,10 @@ export class TownScene extends Phaser.Scene {
       const lm = td.landmark;
       this.add.image(lm.x, lm.y + 38, 'fx_glow')
         .setTint(0x000000).setScale(2.6, 0.95).setAlpha(0.5).setDepth(2);
-      this.add.image(lm.x, lm.y, td.atlasKey, lm.frame)
-        .setScale(lm.scale)
-        .setDepth(lm.y);
+      const lmSpr = (lm.imgKey && this.textures.exists(lm.imgKey))
+        ? this.add.image(lm.x, lm.y, lm.imgKey).setOrigin(0.5, 0.72)
+        : this.add.image(lm.x, lm.y, td.atlasKey, lm.frame);
+      lmSpr.setScale(lm.scale).setDepth(lm.y);
       this.beaconGlow = this.add.image(lm.x, lm.y - 18, 'fx_glow')
         .setTint(td.ambientColor).setScale(2.2).setAlpha(0.32).setDepth(lm.y + 2);
       this.tweens.add({
@@ -288,6 +310,7 @@ export class TownScene extends Phaser.Scene {
       shadow: { offsetX: 0, offsetY: 2, color: '#000000', blur: 6, fill: true },
     }).setOrigin(0.5).setDepth(4800);
 
+    this.mpSync?.start();
     this.cameras.main.startFollow(this.hero, true, 0.14, 0.14);
 
     // 9.2 全 10 座主城地面動態「星門傳送魔法陣」（2.5D 透視雙層旋轉法陣 + 章節專屬色）
@@ -491,11 +514,11 @@ export class TownScene extends Phaser.Scene {
   }
 
   placeBuilding(atlasKey, b) {
-    this.add.image(b.x, b.y + 42, 'fx_glow')
-      .setTint(0x000000).setScale(2.6, 0.95).setAlpha(0.45).setDepth(2);
-    const spr = this.add.image(b.x, b.y, atlasKey, b.frame)
-      .setScale(b.scale || 0.92)
-      .setDepth(b.y);
+    this.add.ellipse(b.x, b.y + 28, (b.radius || 120) * 2.1, (b.radius || 120) * 0.82, 0x000000, 0.44).setDepth(2);
+    const useStandalone = b.imgKey && this.textures.exists(b.imgKey);
+    const spr = useStandalone
+      ? this.add.image(b.x, b.y, b.imgKey).setOrigin(0.5, 0.72).setScale(b.scale || 0.95).setDepth(b.y)
+      : this.add.image(b.x, b.y, atlasKey, b.frame).setScale(b.scale || 0.92).setDepth(b.y);
     if (b.flipX) spr.setFlipX(true);
     if (b.radius > 0) {
       this.obstacles.push({ x: b.x, y: b.y + 24, radius: b.radius });
@@ -538,7 +561,7 @@ export class TownScene extends Phaser.Scene {
     if (action === 'modal_market') return '🎲';
     if (action === 'drawer_rebirth') return '🌀';
     if (action === 'modal_portal') return '🚪';
-    if (action.startsWith('gimmick_')) return '✨';
+    if ((this.livingNpcs?.triggerTownBlessingWave(this.townData?.landmark?.x || this.hero.x, this.townData?.landmark?.y || this.hero.y, this.townData?.ambientColor || 0xfde047), this.mpSync?.cheerAllNearby(), action.startsWith('gimmick_'))) return '✨';
     return '🎁';
   }
 
@@ -609,7 +632,8 @@ export class TownScene extends Phaser.Scene {
     };
     this.interactables.push(interactObj);
     if (!action.startsWith('gimmick_')) {
-      this.roamNpcs.push({
+      this.livingNpcs?.registerNpc(npcSpr, { name: n.name, workStyle: n.workStyle || 'idle', greeting: n.greeting });
+        this.roamNpcs.push({
         spr,
         frame: npc.frame,
         hasAnim,
@@ -910,7 +934,7 @@ export class TownScene extends Phaser.Scene {
 
     let vx = 0;
     let vy = 0;
-    const moveSpeed = 270;
+    const moveSpeed = 320;
 
     if (kx !== 0 || ky !== 0) {
       this.moveTarget = null;
@@ -1018,6 +1042,8 @@ export class TownScene extends Phaser.Scene {
       }
     }
     this.updatePatrols(dt, time);
+    this.livingNpcs?.update(time, delta);
+    this.mpSync?.update(time, delta);
     this.updateNearestPrompt();
 
     if (Phaser.Input.Keyboard.JustDown(this.wasd.interact) && this.nearestTarget) {
