@@ -1,11 +1,11 @@
 import { CLASSES } from './data/classes.js?v=99';
 import { getStageLabel, getSubStage, getChapterIdx, calcLevelGapExpMult } from './data/monsters.js?v=254';
-import { WARRIOR_SKILLS } from './data/warriorSkills.js?v=235';
-import { RANGER_SKILLS } from './data/rangerSkills.js?v=236';
+import { WARRIOR_SKILLS } from './data/warriorSkills.js?v=255';
+import { RANGER_SKILLS } from './data/rangerSkills.js?v=259';
 import { MAGE_SKILLS } from './data/mageSkills.js?v=241';
-import { PALADIN_SKILLS } from './data/paladinSkills.js?v=235';
+import { PALADIN_SKILLS } from './data/paladinSkills.js?v=263';
 import { NECRO_SKILLS } from './data/necroSkills.js?v=251';
-import { ASSASSIN_SKILLS } from './data/assassinSkills.js?v=235';
+import { ASSASSIN_SKILLS } from './data/assassinSkills.js?v=261';
 import { RARITIES } from './data/items.js?v=240';
 import { PET_CATALOG, rollPetDrop, getPetDef } from './data/pets.js?v=99';
 import { SKILL_TREE_NODES, isNodeUnlocked } from './data/skillTree.js?v=99';
@@ -21,20 +21,20 @@ import {
   saveCloudData,
   deleteCloudSave,
 } from './auth/firebase.js?v=253';
-import { BattleScene } from './scenes/BattleScene.js?v=254';
+import { BattleScene } from './scenes/BattleScene.js?v=266';
 import { TownScene } from './scenes/TownScene.js?v=227';
 import { TOWN_SPLASHES } from './data/towns/splashes.js?v=229';
-import { DashboardUI } from './ui/DashboardUI.js?v=253';
+import { DashboardUI } from './ui/DashboardUI.js?v=263';
 import { hookWorldMap25D, openWorldMap25D, closeWorldMap25D, toggleWorldMap25D } from './ui/WorldMap25D.js?v=253';
-import { initHudOverhaulV217 } from './ui/HudOverhaulV217.js?v=253';
+import { initHudOverhaulV217 } from './ui/HudOverhaulV217.js?v=257';
 import { UniversalTooltip } from './ui/UniversalTooltip.js?v=240';
 import { SkillSpecModal } from './ui/SkillSpecModal.js?v=241';
 import { ClassMechanicModal } from './ui/ClassMechanicModal.js?v=241';
-import { MAGE_D4_PRESETS, NECRO_D4_PRESETS } from './logic/classMechanics.js?v=251';
+import { MAGE_D4_PRESETS, NECRO_D4_PRESETS, WARRIOR_D4_PRESETS, RANGER_D4_PRESETS, ASSASSIN_D4_PRESETS, PALADIN_D4_PRESETS } from './logic/classMechanics.js?v=263';
 import { EndgameModal } from './ui/EndgameModal.js?v=237';
 import { TownBgmEngine } from './audio/TownBgmEngine.js?v=99';
 import { BattleSfxEngine } from './audio/BattleSfxEngine.js?v=99';
-import { HudSettingsManager } from './ui/HudSettingsManager.js?v=253';
+import { HudSettingsManager } from './ui/HudSettingsManager.js?v=257';
 import { ShopModal } from './ui/ShopModal.js?v=99';
 import { AchievementTowerModal } from './ui/AchievementTowerModal.js?v=99';
 import { ACHIEVEMENTS } from './data/achievements.js?v=99';
@@ -483,9 +483,13 @@ const ui = new DashboardUI({
 
   onResetSkillTree: () => {
     const totalSp = calcTotalEarnedSkillPoints(gameState);
+    const cid = gameState.classId || 'warrior';
     gameState.skillTree = { w_whirlwind: 1, r_volley: 1, m_meteor: 1, p_hammer: 1, n_skeleton: 1, a_blitz: 1 };
     gameState.skillPoints = totalSp;
-    ui.addLog(`已重置技能樹，目前可用技能點已依等級 (Lv.${gameState.level || 1}) 校準為 ${totalSp} 點。`, 'system');
+    if (!gameState.equippedSkillsByClass) gameState.equippedSkillsByClass = {};
+    // v257: 洗點重置時清空目前職業技能欄 6 格，方便重新配置流派
+    gameState.equippedSkillsByClass[cid] = [null, null, null, null, null, null];
+    ui.addLog(`已重置技能樹並清空技能欄，可用技能點已依等級 (Lv.${gameState.level || 1}) 校準為 ${totalSp} 點。`, 'system');
     refreshStatsAndUI();
     persistAll(true);
   },
@@ -1975,7 +1979,9 @@ function enterTown(chapterIdx = 0, instant = false) {
   }
   const btn = document.getElementById('btn-town-toggle');
   if (btn) {
-    btn.textContent = '⚔️ 出城戰鬥 (G)';
+    btn.innerHTML = '<img class="v257-town-ico" src="./assets/ui/ui_battle_depart.png?v=257" alt="出城戰鬥" /><span class="mmo-hk">G</span>';
+    btn.dataset.tip = '出城戰鬥 [G]';
+    btn.title = '出城戰鬥 [G]';
     btn.classList.add('in-town');
   }
   ui.updateSkillProgress([0, 0, 0], [0, 0, 0]);
@@ -2014,7 +2020,9 @@ function exitTownToBattle(forceRespawn = false) {
   }
   const btn = document.getElementById('btn-town-toggle');
   if (btn) {
-    btn.textContent = '🏰 返回主城 (G)';
+    btn.innerHTML = '<img class="v257-town-ico" src="./assets/ui/ui_town_return.png?v=257" alt="返回主城" /><span class="mmo-hk">G</span>';
+    btn.dataset.tip = '返回主城 [G]';
+    btn.title = '返回主城 [G]';
     btn.classList.remove('in-town');
   }
   const wpBtn = document.getElementById('btn-top-waypoint');
@@ -2519,9 +2527,7 @@ window.addEventListener('keydown', (e) => {
     ui.activeDrawer === 'skills' ? ui.closeDrawer() : ui.openDrawer('skills');
   } else if (e.code === kb.rebirth) {
     ui.activeDrawer === 'rebirth' ? ui.closeDrawer() : ui.openDrawer('rebirth');
-  } else if (e.code === kb.switchClass) {
-    const cm = document.getElementById('modal-class');
-    cm?.classList.contains('hidden') ? ui.openClassModal(gameState) : cm.classList.add('hidden');
+
   } else if (e.code === kb.townToggle) {
     if (isInTown) exitTownToBattle(); else enterTown(Math.min(9, getChapterIdx(gameState.stage)));
   } else if (e.code === kb.powerSave) {
@@ -2538,8 +2544,7 @@ window.addEventListener('keydown', (e) => {
     e.preventDefault(); hudSettings.toggleModal();
   } else if (e.code === kb.waypoint) {
     if (isInTown) openTownWaypointUI();
-  } else if (e.code === kb.log) {
-    ui.activeDrawer === 'log' ? ui.closeDrawer() : ui.openDrawer('log');
+
   } else if (e.code === kb.quickSalvage) {
     document.getElementById('btn-salvage-junk')?.click();
   } else if (e.code === 'Escape') {
@@ -2729,15 +2734,107 @@ if (typeof document !== 'undefined') {
     btn.addEventListener('click', () => applyNecroD4Preset(btn.dataset.necroPreset));
   });
 
+  const applyWarriorD4Preset = (presetId) => {
+    const preset = WARRIOR_D4_PRESETS.find((p) => p.id === presetId);
+    if (!preset) return;
+    if (gameState.classId !== 'warrior') {
+      ui.addLog('ℹ️ 此一鍵流派預設專屬於【戰士】，請先切換職業為戰士。', 'system');
+      return;
+    }
+    if (!gameState.equippedSkillsByClass) gameState.equippedSkillsByClass = {};
+    gameState.equippedSkillsByClass.warrior = [...preset.skills];
+    if (!gameState.classMechanic) gameState.classMechanic = {};
+    gameState.classMechanic.warrior = { ...(gameState.classMechanic.warrior || {}), arsenal: preset.arsenal };
+    if (!gameState.activeKeystone) gameState.activeKeystone = {};
+    gameState.activeKeystone.warrior = preset.keystone;
+    refreshStatsAndUI();
+    persistAll();
+    ui.addLog(`⚔️ 已一鍵套用戰士流派【${preset.name}】（6 格配招＋武器庫專精＋關鍵被動）！`, 'victory');
+  };
+  document.querySelectorAll('.v241-preset-pill[data-warrior-preset]').forEach((btn) => {
+    btn.addEventListener('click', () => applyWarriorD4Preset(btn.dataset.warriorPreset));
+  });
+
+  const applyRangerD4Preset = (presetId) => {
+    const preset = RANGER_D4_PRESETS.find((p) => p.id === presetId);
+    if (!preset) return;
+    if (gameState.classId !== 'ranger') {
+      ui.addLog('ℹ️ 此一鍵流派預設專屬於【暗影遊俠】，請先切換職業為遊俠。', 'system');
+      return;
+    }
+    if (!gameState.equippedSkillsByClass) gameState.equippedSkillsByClass = {};
+    gameState.equippedSkillsByClass.ranger = [...preset.skills];
+    if (!gameState.classMechanic) gameState.classMechanic = {};
+    gameState.classMechanic.ranger = { ...(gameState.classMechanic.ranger || {}), specialization: preset.specialization };
+    if (!gameState.activeKeystone) gameState.activeKeystone = {};
+    gameState.activeKeystone.ranger = preset.keystone;
+    refreshStatsAndUI();
+    persistAll();
+    ui.addLog(`🏹 已一鍵套用遊俠流派【${preset.name}】（6 格配招＋專精契約＋關鍵被動）！`, 'victory');
+  };
+  document.querySelectorAll('.v241-preset-pill[data-ranger-preset]').forEach((btn) => {
+    btn.addEventListener('click', () => applyRangerD4Preset(btn.dataset.rangerPreset));
+  });
+
+  const applyAssassinD4Preset = (presetId) => {
+    const preset = ASSASSIN_D4_PRESETS.find((p) => p.id === presetId);
+    if (!preset) return;
+    if (gameState.classId !== 'assassin') {
+      ui.addLog('ℹ️ 此一鍵流派預設專屬於【暗影刺客】，請先切換職業為刺客。', 'system');
+      return;
+    }
+    if (!gameState.equippedSkillsByClass) gameState.equippedSkillsByClass = {};
+    gameState.equippedSkillsByClass.assassin = [...preset.skills];
+    if (!gameState.classMechanic) gameState.classMechanic = {};
+    gameState.classMechanic.assassin = { ...(gameState.classMechanic.assassin || {}), ...preset.venom };
+    if (!gameState.activeKeystone) gameState.activeKeystone = {};
+    gameState.activeKeystone.assassin = preset.keystone;
+    refreshStatsAndUI();
+    persistAll();
+    ui.addLog(`🗡️ 已一鍵套用刺客流派【${preset.name}】（6 格配招＋雙極調毒＋關鍵被動）！`, 'victory');
+  };
+  document.querySelectorAll('.v241-preset-pill[data-assassin-preset]').forEach((btn) => {
+    btn.addEventListener('click', () => applyAssassinD4Preset(btn.dataset.assassinPreset));
+  });
+
+  const applyPaladinD4Preset = (presetId) => {
+    const preset = PALADIN_D4_PRESETS.find((p) => p.id === presetId);
+    if (!preset) return;
+    if (gameState.classId !== 'paladin') {
+      ui.addLog('ℹ️ 此一鍵流派預設專屬於【聖殿騎士】，請先切換職業為聖殿騎士。', 'system');
+      return;
+    }
+    if (!gameState.equippedSkillsByClass) gameState.equippedSkillsByClass = {};
+    gameState.equippedSkillsByClass.paladin = [...preset.skills];
+    if (!gameState.classMechanic) gameState.classMechanic = {};
+    gameState.classMechanic.paladin = { ...(gameState.classMechanic.paladin || {}), oath: preset.oath };
+    if (!gameState.activeKeystone) gameState.activeKeystone = {};
+    gameState.activeKeystone.paladin = preset.keystone;
+    refreshStatsAndUI();
+    persistAll();
+    ui.addLog(`🛡️ 已一鍵套用聖殿騎士流派【${preset.name}】（6 格配招＋神聖誓約＋關鍵被動）！`, 'victory');
+  };
+  document.querySelectorAll('.v241-preset-pill[data-paladin-preset]').forEach((btn) => {
+    btn.addEventListener('click', () => applyPaladinD4Preset(btn.dataset.paladinPreset));
+  });
+
   const syncV241Strip = () => {
     const mageRow = document.getElementById('v241-mage-preset-row');
     const necroRow = document.getElementById('v251-necro-preset-row');
+    const warriorRow = document.getElementById('v255-warrior-preset-row');
+    const rangerRow = document.getElementById('v259-ranger-preset-row');
+    const assassinRow = document.getElementById('v261-assassin-preset-row');
+    const paladinRow = document.getElementById('v263-paladin-preset-row');
     const lbl = document.getElementById('v241-class-strip-label');
     if (!mageRow || !lbl) return;
     const cid = gameState?.classId;
     mageRow.style.display = cid === 'mage' ? 'flex' : 'none';
     if (necroRow) necroRow.style.display = cid === 'necro' ? 'flex' : 'none';
-    lbl.style.display = (cid === 'mage' || cid === 'necro') ? 'none' : 'inline-flex';
+    if (warriorRow) warriorRow.style.display = cid === 'warrior' ? 'flex' : 'none';
+    if (rangerRow) rangerRow.style.display = cid === 'ranger' ? 'flex' : 'none';
+    if (assassinRow) assassinRow.style.display = cid === 'assassin' ? 'flex' : 'none';
+    if (paladinRow) paladinRow.style.display = cid === 'paladin' ? 'flex' : 'none';
+    lbl.style.display = (cid === 'mage' || cid === 'necro' || cid === 'warrior' || cid === 'ranger' || cid === 'assassin' || cid === 'paladin') ? 'none' : 'inline-flex';
   };
   setInterval(syncV241Strip, 600);
   syncV241Strip();

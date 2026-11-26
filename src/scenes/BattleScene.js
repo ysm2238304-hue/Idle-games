@@ -1,18 +1,31 @@
-import { getClassMechanicConfig } from '../logic/classMechanics.js?v=251';
-import { computeSkillBuildMods, checkCompoundReaction, getSmartAutoSlotOrder } from '../logic/buildEngine.js?v=251';
+import { getClassMechanicConfig } from '../logic/classMechanics.js?v=261';
+import { computeSkillBuildMods, checkCompoundReaction, getSmartAutoSlotOrder } from '../logic/buildEngine.js?v=261';
 import { CLASSES } from '../data/classes.js?v=99';
-import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=235';
-import { RANGER_SKILLS } from '../data/rangerSkills.js?v=236';
+import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=255';
+import { RANGER_SKILLS } from '../data/rangerSkills.js?v=259';
 import { MAGE_SKILLS } from '../data/mageSkills.js?v=241';
-import { PALADIN_SKILLS } from '../data/paladinSkills.js?v=235';
+import { PALADIN_SKILLS } from '../data/paladinSkills.js?v=263';
 import { NECRO_SKILLS } from '../data/necroSkills.js?v=251';
-import { ASSASSIN_SKILLS } from '../data/assassinSkills.js?v=235';
+import { ASSASSIN_SKILLS } from '../data/assassinSkills.js?v=261';
 import { RARITIES } from '../data/items.js?v=99';
 import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta, getPetPickupRadius, getPetCodexInfo } from '../data/pets.js?v=99';
 import { createStageEncounters, spawnSingleMonster, getChapterIdx, getStageLabel, ZONE_OBSTACLES } from '../data/monsters.js?v=254';
 import { formatNum } from '../logic/statCalc.js?v=254';
-import { MageVfxDirector } from '../vfx/MageVfxDirector.js?v=250';
-import { NecroVfxDirector } from '../vfx/NecroVfxDirector.js?v=252';
+import { MageVfxDirector } from '../vfx/MageVfxDirector.js?v=266';
+import { NecroVfxDirector } from '../vfx/NecroVfxDirector.js?v=266';
+import { WarriorVfxDirector } from '../vfx/WarriorVfxDirector.js?v=266';
+import { RangerVfxDirector } from '../vfx/RangerVfxDirector.js?v=266';
+import { AssassinVfxDirector } from '../vfx/AssassinVfxDirector.js?v=266';
+import { PaladinVfxDirector } from '../vfx/PaladinVfxDirector.js?v=266';
+import { FloatingTextPool } from '../vfx/FloatingTextPool.js?v=266';
+import { ParticlePool } from '../vfx/ParticlePool.js?v=266';
+import { warriorCombatMethods } from '../combat/classes/warriorCombat.js?v=266';
+import { rangerCombatMethods } from '../combat/classes/rangerCombat.js?v=266';
+import { mageCombatMethods } from '../combat/classes/mageCombat.js?v=266';
+import { paladinCombatMethods } from '../combat/classes/paladinCombat.js?v=266';
+import { necroCombatMethods } from '../combat/classes/necroCombat.js?v=266';
+import { assassinCombatMethods } from '../combat/classes/assassinCombat.js?v=266';
+
 
 const MAP_W = 4096;
 const MAP_H = 2304;
@@ -107,6 +120,26 @@ export class BattleScene extends Phaser.Scene {
     this.necroShadowHits = 0;
     this.necroFrenzyUntil = 0;
     this.necroBoneStormUntil = 0;
+    // v256: 暗黑 4 戰士戰場實體引擎（動態火山圖騰／3 位先祖英靈／磁吸怒氣血珠／狂亂與行走武器庫層數）
+    this.warriorEntities = [];
+    this.warriorRageOrbs = [];
+    this.warriorFrenzyStacks = 0;
+    this.warriorFrenzyUntil = 0;
+    this.warriorBashCount = 0;
+    this.warriorBerserkUntil = 0;
+    this.warriorRallyUntil = 0;
+    this.warriorArsenalSet = new Set();
+    // v260: 暗黑 4 暗影遊俠戰場實體引擎（動態暗影分身／煙霧誘餌／劇毒蒺藜／血刃捕獸夾／磁吸連擊結晶／精準計數）
+    this.rangerEntities = [];
+    this.rangerComboOrbs = [];
+    this.rangerComboStars = 0;
+    this.rangerPrecisionCount = 0;
+    this.rangerForcefulCount = 0;
+    this.rangerWindwalkUntil = 0;
+    // v262: 暗黑 4 暗影刺客戰場實體引擎（動態暗影分身／環繞血毒魔刃／猩紅毒霧核心／影爆替身／磁吸暗影血星）
+    this.assassinEntities = [];
+    this.assassinStarOrbs = [];
+    this.assassinVenomOverloadUntil = 0;
     this.cracklingOrbs = [];
     this.heroBarrierHp = 0;
     this.heroBarrierUntil = 0;
@@ -185,17 +218,64 @@ export class BattleScene extends Phaser.Scene {
     FX_NAMES.forEach((fx) => {
       this.load.image(fx, `./assets/fx/${fx}.png`);
     });
-    // v246: 載入 10 組秘法師 2.5D 暗黑手繪 9 格序列幀動畫（320x320）
-    const DARK_MAGE_SEQS = [
-      'anim_m_fireball_blast', 'anim_m_firewall', 'anim_m_frozen_orb', 'anim_m_blizzard',
-      'anim_m_ball_lightning', 'anim_m_supernova', 'anim_m_meteor', 'anim_m_frost_nova',
-      'anim_m_lightning_strike', 'anim_m_inferno',
-    ];
-    for (const sk of DARK_MAGE_SEQS) {
-      this.load.spritesheet(sk, `./assets/fx/${sk}.png?v=246`, { frameWidth: 320, frameHeight: 320 });
+    // v265: 職業 VFX 按需懶載入（首開只載入當前職業 WebP 圖集，大幅縮減載入時間與顯存）
+    this.loadedVfxClasses = new Set();
+    this.preloadClassVfx(initCid);
+  }
+
+  getVfxDirectorClass(cid) {
+    const map = {
+      mage: MageVfxDirector,
+      necro: NecroVfxDirector,
+      warrior: WarriorVfxDirector,
+      ranger: RangerVfxDirector,
+      assassin: AssassinVfxDirector,
+      paladin: PaladinVfxDirector,
+    };
+    return map[cid] || null;
+  }
+
+  preloadClassVfx(cid) {
+    if (!cid) return;
+    if (cid === 'mage') {
+      const DARK_MAGE_SEQS = [
+        'anim_m_fireball_blast', 'anim_m_firewall', 'anim_m_frozen_orb', 'anim_m_blizzard',
+        'anim_m_ball_lightning', 'anim_m_supernova', 'anim_m_meteor', 'anim_m_frost_nova',
+        'anim_m_lightning_strike', 'anim_m_inferno',
+      ];
+      for (const sk of DARK_MAGE_SEQS) {
+        if (!this.textures.exists(sk)) {
+          this.load.spritesheet(sk, `./assets/fx/${sk}.png?v=246`, { frameWidth: 320, frameHeight: 320 });
+        }
+      }
     }
-    MageVfxDirector.preload(this);
-    NecroVfxDirector.preload(this);
+    const DirCls = this.getVfxDirectorClass(cid);
+    if (DirCls) DirCls.preload(this);
+    if (!this.loadedVfxClasses) this.loadedVfxClasses = new Set();
+    this.loadedVfxClasses.add(cid);
+  }
+
+  registerClassVfxAnims(cid) {
+    if (cid === 'mage') {
+      this.registerMageSeqAnims();
+      this.mageVfx?.registerAnims();
+    } else if (cid === 'necro') this.necroVfx?.registerAnims();
+    else if (cid === 'warrior') this.warriorVfx?.registerAnims();
+    else if (cid === 'ranger') this.rangerVfx?.registerAnims();
+    else if (cid === 'assassin') this.assassinVfx?.registerAnims();
+    else if (cid === 'paladin') this.paladinVfx?.registerAnims();
+  }
+
+  unloadOtherClassVfx(activeCid) {
+    if (!this.loadedVfxClasses) return;
+    for (const oldCid of [...this.loadedVfxClasses]) {
+      if (oldCid === activeCid) continue;
+      const DirCls = this.getVfxDirectorClass(oldCid);
+      if (DirCls && typeof DirCls.unload === 'function') {
+        DirCls.unload(this);
+      }
+      this.loadedVfxClasses.delete(oldCid);
+    }
   }
 
   getHeroAtlasKey(cid) {
@@ -212,7 +292,9 @@ export class BattleScene extends Phaser.Scene {
   ensureClassLoaded(cid, cb) {
     const needSummons = cid === 'necro' && !this.loadedSummons;
     const needClass = !this.loadedClasses.has(cid) || !this.textures.exists(`atlas_${cid}`);
-    if (!needClass && !needSummons) {
+    const needVfx = !this.loadedVfxClasses || !this.loadedVfxClasses.has(cid);
+    if (!needClass && !needSummons && !needVfx) {
+      this.unloadOtherClassVfx(cid);
       if (cb) cb();
       return;
     }
@@ -226,6 +308,9 @@ export class BattleScene extends Phaser.Scene {
         if (!this.textures.exists(`sfx_${k}`)) this.load.image(`sfx_${k}`, `./assets/fx/sfx_${k}.png`);
       });
     }
+    if (needVfx) {
+      this.preloadClassVfx(cid);
+    }
     this.load.once('complete', () => {
       this.loadedClasses.add(cid);
       this.registerClassAnims(cid);
@@ -233,6 +318,10 @@ export class BattleScene extends Phaser.Scene {
         this.loadedSummons = true;
         this.registerSummonAnims();
       }
+      if (needVfx) {
+        this.registerClassVfxAnims(cid);
+      }
+      this.unloadOtherClassVfx(cid);
       this.isLoadingAssets = false;
       if (cb) cb();
     });
@@ -268,11 +357,16 @@ export class BattleScene extends Phaser.Scene {
   create() {
     this.generateFxTextures();
     this.createClassAnims();
-    this.registerMageSeqAnims();
+    this.floatingTextPool = new FloatingTextPool(this, 48);
+    this.particlePool = new ParticlePool(this, 96);
     this.mageVfx = new MageVfxDirector(this);
-    this.mageVfx.registerAnims();
     this.necroVfx = new NecroVfxDirector(this);
-    this.necroVfx.registerAnims();
+    this.warriorVfx = new WarriorVfxDirector(this);
+    this.rangerVfx = new RangerVfxDirector(this);
+    this.assassinVfx = new AssassinVfxDirector(this);
+    this.paladinVfx = new PaladinVfxDirector(this);
+    const initCid = this.getState ? (this.getState().classId || 'warrior') : 'warrior';
+    this.registerClassVfxAnims(initCid);
 
     const initZone = this.getZoneIdx();
     this.bgImage = this.add.image(MAP_W / 2, MAP_H / 2, `map_zone_${initZone}`)
@@ -685,10 +779,10 @@ export class BattleScene extends Phaser.Scene {
       'm_fire_bolt', 'm_frost_bolt', 'm_arc_lash', 'm_spark',
       'n_reap_scythe', 'n_bone_splinters', 'n_hemorrhage', 'n_decompose',
       // 戰士／遊俠／聖騎／刺客基礎產能與 0 耗回能招
-      'w_cleave', 'w_frenzy', 'w_bash', 'w_lunging_strike',
-      'r_quick_shot', 'r_puncture', 'r_heartseeker',
-      'p_smite', 'p_zeal', 'p_holy_bolt',
-      'a_quick_stab', 'a_invigorating', 'a_blade_shift',
+      'w_rend_slash', 'w_lunging_strike', 'w_frenzy_flurry', 'w_bash_crush', 'w_cleave', 'w_frenzy', 'w_bash',
+      'r_shadow_imbue', 'r_puncture', 'r_heartseeker', 'r_forceful_arrow', 'r_quick_shot',
+      'p_smite', 'p_zeal', 'p_smite_lash', 'p_zeal_strike', 'p_holy_bolt', 'p_justice_hammer',
+      'a_twin_fang', 'a_blade_shift', 'a_venom_slash', 'a_shuriken_fan', 'a_quick_stab', 'a_invigorating',
       'mana_overload', 'undead_frenzy',
     ].includes(sid);
 
@@ -696,7 +790,7 @@ export class BattleScene extends Phaser.Scene {
       'm_inferno', 'm_deep_freeze', 'm_unstable_currents', 'm_supernova',
       'n_army_scourge', 'n_blood_wave', 'n_bone_storm', 'n_soul_rift',
       'bladestorm', 'phantombow', 'void_beam', 'judgment', 'shadow_execute',
-      'w_cataclysm', 'w_wrath_berserker', 'r_rain_arrows', 'p_seraph_verdict', 'a_death_trap',
+      'w_call_ancients', 'w_wrath_berserker', 'execute_cleave', 'w_iron_maelstrom', 'phantombow', 'r_abyss_barrage', 'r_void_hunter', 'r_death_trap', 'w_cataclysm', 'r_rain_arrows', 'p_seraph_verdict', 'p_seraph_descent', 'p_heavens_verdict', 'p_valkyrie_avatar', 'p_akarats_wrath', 'a_death_trap',
     ].includes(sid);
 
     const isSummonOrHeavy = [
@@ -709,7 +803,7 @@ export class BattleScene extends Phaser.Scene {
     const isDefensiveUtility = [
       'm_flame_shield', 'm_ice_armor', 'm_teleport', 'm_frost_nova',
       'n_blood_mist', 'n_bone_shield', 'decrepify', 'n_iron_maiden', 'n_corpse_tendrils',
-      'shadowstep', 'frost_nova', 'w_iron_skin', 'w_war_cry',
+      'shadow_blitz', 'a_shadow_backstab', 'smoke_veil', 'a_blood_cloak', 'venom_burst', 'a_crimson_mist', 'a_garrote_bind', 'a_shadow_decoy_bomb', 'shadowstep', 'windwalk', 'r_smoke_decoy', 'r_dark_shroud', 'caltrops', 'r_razor_snare', 'r_poison_trap', 'r_smoke_grenade', 'frost_nova', 'w_iron_skin', 'warcry', 'w_challenging_shout', 'w_rallying_cry', 'w_leap_slam', 'w_chain_grasp', 'earth_stomp', 'bloodcharge', 'holy_aegis', 'p_redemption_prayer', 'shield_bash', 'p_sanctuary_ward', 'p_condemn_pull', 'p_falling_sword', 'p_crusader_charge',
     ].includes(sid);
 
     // 鮮血系與狂戰血契生命消耗（高風險高報酬，不會自殺，最少保留 1 HP）
@@ -1115,6 +1209,12 @@ export class BattleScene extends Phaser.Scene {
     }
     this.updateMageBattlefieldEntities(delta);
     this.updateNecroBattlefieldEntities(delta);
+    this.updateWarriorBattlefieldEntities(delta);
+    this.updateRangerBattlefieldEntities(delta);
+    this.updateAssassinBattlefieldEntities(delta);
+    this.updatePaladinBattlefieldEntities(delta);
+    this.floatingTextPool?.update(delta);
+    this.particlePool?.update(delta);
     const stForMp = this.getStats();
     const dtSec = delta / 1000;
     this.playerMaxMp = stForMp.maxMp || 100;
@@ -1866,1224 +1966,30 @@ export class BattleScene extends Phaser.Scene {
   }
 
   // 戰士 4 大主動技能（游標指向＋流血引爆連動）
-  castWarriorSkill(skillId, skillLvl, stats, isManual = false) {
-    const _hx = this.hero.x, _hy = this.hero.y;
-    const _n = this.findNearestMonster(_hx, _hy);
-    const _tx = _n ? _n.sprite.x : _hx + 90, _ty = _n ? _n.sprite.y : _hy;
-    const _aoe = (cx, cy, rad, mult, col, pre, stList = [], forceCrit = false) => {
-      for (const m of [...this.monsters]) {
-        if (!m || m.hp <= 0) continue;
-        if (Phaser.Math.Distance.Between(cx, cy, m.sprite.x, m.sprite.y) <= rad) {
-          const isC = forceCrit || (Math.random() * 100 < stats.critRate);
-          const d = Math.round(stats.atk * mult * (isC ? stats.critDmg / 100 : 1));
-          if (!m._statuses) m._statuses = {};
-          stList.forEach((k) => { m._statuses[k] = Math.max(m._statuses[k] || 0, this.time.now + 4800); });
-          this.damageMonster(m, d, isC, false, col, pre);
-        }
-      }
-    };
-    if (skillId === 'w_rend_slash') {
-      this.playAdditiveVfx('vfx_w_rend_arc', _tx, _ty - 10, 0.85, 340);
-      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 18);
-      _aoe(_tx, _ty, 210, (140 + skillLvl * 22) / 100, '#f87171', '🩸', ['bleed']);
-      return;
-    }
-    if (skillId === 'w_ancient_hammer') {
-      this.playAdditiveVfx('vfx_w_hammer_slam', _tx, _ty, 1.05, 460);
-      _aoe(_tx, _ty, 250, (260 + skillLvl * 40) / 100, '#fbbf24', '🔨', ['vulnerable']);
-      return;
-    }
-    if (skillId === 'w_iron_skin') {
-      this.playAdditiveVfx('vfx_w_iron_dome', _hx, _hy - 12, 0.92, 520);
-      this.healHero(Math.round(this.playerMaxHp * ((20 + skillLvl * 2) / 100)));
-      _aoe(_hx, _hy, 230, (150 + skillLvl * 24) / 100, '#cbd5e1', '🛡️', ['vulnerable']);
-      return;
-    }
-    if (skillId === 'w_chain_grasp') {
-      this.playAdditiveVfx('vfx_w_lava_fissure', _hx, _hy, 0.95, 440);
-      for (const m of [...this.monsters]) {
-        if (!m || m.hp <= 0) continue;
-        if (Phaser.Math.Distance.Between(_hx, _hy, m.sprite.x, m.sprite.y) <= 360) {
-          m.sprite.x = Phaser.Math.Linear(m.sprite.x, _hx + Phaser.Math.Between(-50, 50), 0.72);
-          m.sprite.y = Phaser.Math.Linear(m.sprite.y, _hy + Phaser.Math.Between(-40, 40), 0.72);
-        }
-      }
-      _aoe(_hx, _hy, 360, (170 + skillLvl * 26) / 100, '#fb923c', '⛓️', ['vulnerable', 'burn']);
-      return;
-    }
-    if (skillId === 'w_rupture_impale') {
-      this.playAdditiveVfx('vfx_w_rend_arc', _tx, _ty - 10, 1.05, 420);
-      for (const m of [...this.monsters]) {
-        if (!m || m.hp <= 0) continue;
-        if (Phaser.Math.Distance.Between(_tx, _ty, m.sprite.x, m.sprite.y) <= 220) {
-          const isBl = this.time.now < (m.bleedUntil || 0) || this.time.now < (m._statuses?.bleed || 0);
-          const mult = ((220 + skillLvl * 34) / 100) * (isBl ? 2.0 : 1.0);
-          this.damageMonster(m, Math.round(stats.atk * mult * (stats.critDmg / 100)), true, false, '#ef4444', '🩸血爆 ');
-          if (isBl) this.healHero(Math.round(this.playerMaxHp * 0.12));
-        }
-      }
-      return;
-    }
-    if (skillId === 'w_seismic_fissure') {
-      for (let w = 0; w < 3; w++) {
-        this.time.delayedCall(w * 280, () => {
-          this.playAdditiveVfx('vfx_w_lava_fissure', _tx + Phaser.Math.Between(-30, 30), _ty + Phaser.Math.Between(-20, 20), 0.92, 420);
-          _aoe(_tx, _ty, 240, (125 + skillLvl * 22) / 100, '#fb923c', '🌋', ['burn']);
-        });
-      }
-      return;
-    }
-    if (skillId === 'w_call_ancients') {
-      for (let w = 0; w < 4; w++) {
-        this.time.delayedCall(w * 320, () => {
-          const ox = _tx + Phaser.Math.Between(-90, 90), oy = _ty + Phaser.Math.Between(-60, 60);
-          this.playAdditiveVfx('vfx_w_ancients_spirit', ox, oy - 16, 1.05, 520);
-          _aoe(ox, oy, 300, (180 + skillLvl * 32) / 100, '#fbbf24', '🪓先祖 ', ['bleed', 'vulnerable'], true);
-        });
-      }
-      return;
-    }
-    if (skillId === 'w_wrath_berserker') {
-      this.warcryUntil = Math.max(this.warcryUntil || 0, this.time.now + 7000);
-      this._wArsenalOverloadUntil = Math.max(this._wArsenalOverloadUntil || 0, this.time.now + 7000);
-      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + Math.round(this.playerMaxMp * 0.30));
-      this.playAdditiveVfx('vfx_w_hammer_slam', _hx, _hy, 1.25, 560);
-      _aoe(_hx, _hy, 320, (320 + skillLvl * 48) / 100, '#ef4444', '🔥狂戰神 ', ['burn', 'vulnerable'], true);
-      return;
-    }
-    const alive = this.monsters.filter((m) => m.hp > 0);
-    if (alive.length === 0) return;
-    const sk = WARRIOR_SKILLS[skillId];
-    const aim = this.getAimPoint(isManual, 320);
-    this.faceHeroToward(aim.x, aim.y);
-    this.triggerHeroAttackAnim(420);
+  // v256: 暗黑 4 戰士即時倍率（武器庫專精＋狂暴狀態＋行走武器庫＋狂怒無拘）
 
-    const dmgMult = (stats.skillDmgMult || 1) * (this.time.now < this.overloadUntil ? 1.35 : 1);
-    const radMult = stats.skillRadiusMult || 1;
-    this.showSkillBanner(sk.name);
+  // v256: 記錄行走武器庫三類武器切換（slash / crush / brawl）
 
-    if (skillId === 'whirlwind') {
-      const radius = 235 * radMult;
-      const inner = this.add.image(this.hero.x, this.hero.y, 'wfx_whirl_inner').setScale(1.25 * radMult).setBlendMode(Phaser.BlendModes.ADD).setDepth(4502);
-      const outer = this.add.image(this.hero.x, this.hero.y, 'wfx_whirl_outer').setScale(1.55 * radMult).setBlendMode(Phaser.BlendModes.ADD).setDepth(4503);
-      const wind = this.add.image(this.hero.x, this.hero.y + 16, 'wfx_whirl_wind').setScale(1.6 * radMult).setAlpha(0.75).setBlendMode(Phaser.BlendModes.ADD).setDepth(4500);
+  // v256: 生成磁吸怒氣血珠（ent_w_rage_orb，拾取回怒 +12 與回血 6%）
 
-      const spinEv = this.time.addEvent({
-        delay: 260,
-        repeat: 3,
-        callback: () => {
-          const baseTick = stats.atk * (0.80 + skillLvl * 0.18) * dmgMult;
-          this.monsters.filter((m) => m.hp > 0).forEach((m) => {
-            if (Phaser.Math.Distance.Between(this.hero.x, this.hero.y, m.sprite.x, m.sprite.y) <= radius) {
-              const isBleed = this.time.now < (m.bleedUntil || 0);
-              const tickDmg = Math.round(baseTick * (isBleed ? 1.25 : 1));
-              this.damageMonster(m, tickDmg, true, false, isBleed ? '#f87171' : '#fb923c', isBleed ? '🩸' : '🌪️');
-            }
-          });
-          this.healHero(Math.round(this.playerMaxHp * 0.025));
-        },
-      });
-      this.tweens.add({
-        targets: [inner, wind],
-        angle: 720,
-        duration: 1050,
-        onUpdate: () => {
-          inner.setPosition(this.hero.x, this.hero.y);
-          outer.setPosition(this.hero.x, this.hero.y);
-          wind.setPosition(this.hero.x, this.hero.y + 16);
-        },
-        onComplete: () => {
-          inner.destroy(); outer.destroy(); wind.destroy();
-          if (spinEv) spinEv.remove();
-        },
-      });
-      this.tweens.add({ targets: outer, angle: -540, duration: 1050 });
-      if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(240, 0.008);
-    } else if (skillId === 'earthshatter') {
-      const mx = this.hero.x;
-      const my = this.hero.y + 10;
-      const radius = 245 * radMult;
-      const crack = this.add.image(mx, my + 12, 'wfx_lava_crack').setScale(1.4 * radMult).setDepth(5);
-      this.tweens.add({ targets: crack, alpha: 0, delay: 1100, duration: 450, onComplete: () => crack.destroy() });
+  // v256: 生成 2x2 四幀動態戰士實體（火山圖騰／旋風先祖／戰錘先祖／血刃先祖）
 
-      this.playFxSprite('wfx_slam_pillar', mx, my - 50, 1.4 * radMult, 0, 420);
-      this.playFxSprite('wfx_lava_ring', mx, my + 10, 1.65 * radMult, 0, 520);
-      this.playFxSprite('wfx_rubble', mx, my - 10, 1.35 * radMult, 0, 480);
+  // v256: 每幀更新戰士磁吸怒氣血珠、狂怒無拘回怒與 4 類動態先祖／火山圖騰
 
-      const baseDmg = stats.atk * (2.1 + skillLvl * 0.35) * dmgMult;
-      let bleedDetonated = 0;
-      alive.forEach((m) => {
-        if (Phaser.Math.Distance.Between(mx, my, m.sprite.x, m.sprite.y) <= radius) {
-          const isBleed = this.time.now < (m.bleedUntil || 0);
-          const dmg = Math.round(baseDmg + (isBleed ? stats.atk * 0.65 * dmgMult : 0));
-          if (isBleed) {
-            m.bleedUntil = 0;
-            bleedDetonated++;
-          }
-          this.damageMonster(m, dmg, true, false, isBleed ? '#ef4444' : '#f97316', isBleed ? '💥' : '🌋');
-          m.stunUntil = this.time.now + 1200;
-          const ang = Math.atan2(m.sprite.y - my, m.sprite.x - mx);
-          const kb = m.isBoss ? 18 : 56;
-          m.sprite.x = Phaser.Math.Clamp(m.sprite.x + Math.cos(ang) * kb, 120, MAP_W - 120);
-          m.sprite.y = Phaser.Math.Clamp(m.sprite.y + Math.sin(ang) * kb, 120, MAP_H - 120);
-        }
-      });
-      if (bleedDetonated > 0) {
-        const reduceMs = Math.min(1600, bleedDetonated * 400);
-        this.slotCdTimers = this.slotCdTimers.map((t) => t + reduceMs);
-      }
-      if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(260, 0.014);
-    } else if (skillId === 'bloodcharge') {
-      const ang = Math.atan2(aim.y - this.hero.y, aim.x - this.hero.x);
-      const sx = this.hero.x;
-      const sy = this.hero.y;
-      const tx = Phaser.Math.Clamp(sx + Math.cos(ang) * 280, 200, MAP_W - 200);
-      const ty = Phaser.Math.Clamp(sy + Math.sin(ang) * 280, 180, MAP_H - 180);
+  // v256: 暗黑 4 戰士（狂戰士）24 招實戰判定幾何＋16 幀暗黑序列＋動態先祖英靈與火山圖騰（零震動、零音效）
 
-      const aura = this.add.image(sx, sy, 'wfx_charge_aura').setScale(1.15).setRotation(ang).setBlendMode(Phaser.BlendModes.ADD).setDepth(4505);
-      const trail = this.add.image((sx + tx) / 2, (sy + ty) / 2 + 12, 'wfx_fire_trail')
-        .setDisplaySize(300, 100).setRotation(ang).setBlendMode(Phaser.BlendModes.ADD).setDepth(4500);
-      this.tweens.add({ targets: trail, alpha: 0, duration: 850, onComplete: () => trail.destroy() });
 
-      this.tweens.add({
-        targets: [this.hero, aura],
-        x: tx,
-        y: ty,
-        duration: 210,
-        ease: 'Cubic.easeOut',
-        onComplete: () => {
-          aura.destroy();
-          this.playFxSprite('wfx_blood_ring', this.hero.x, this.hero.y, 1.35 * radMult, 0, 480);
-          const dmg = Math.round(stats.atk * (1.8 + skillLvl * 0.30) * dmgMult);
-          this.monsters.filter((m) => m.hp > 0).forEach((m) => {
-            if (Phaser.Math.Distance.Between(this.hero.x, this.hero.y, m.sprite.x, m.sprite.y) <= 195 * radMult) {
-              m.bleedUntil = this.time.now + 3500;
-              m.bleedDmg = Math.max(2, Math.round(stats.atk * 0.28));
-              this.damageMonster(m, dmg, true, false, '#f87171', '🩸');
-            }
-          });
-          this.healHero(Math.round(this.playerMaxHp * (0.10 + skillLvl * 0.02)));
-        },
-      });
-    } else if (skillId === 'bladestorm') {
-      const baseAng = Math.atan2(aim.y - this.hero.y, aim.x - this.hero.x);
-      const angles = [baseAng - 0.34, baseAng, baseAng + 0.34];
-      const waveRaw = stats.atk * (1.45 + skillLvl * 0.28) * dmgMult;
+  // v260: 暗影遊俠即時倍率（連擊星契約／心眼洞察／戰術預備＋關鍵被動）
 
-      angles.forEach((ang, idx) => {
-        this.time.delayedCall(idx * 70, () => {
-          const spr = this.add.image(this.hero.x, this.hero.y - 10, 'wfx_blade_wave')
-            .setScale(0.75 * radMult).setRotation(ang).setBlendMode(Phaser.BlendModes.ADD).setDepth(4509);
-          this.projectiles.push({
-            fromEnemy: false,
-            kind: 'blade_wave',
-            sprite: spr,
-            vx: Math.cos(ang) * 620,
-            vy: Math.sin(ang) * 620,
-            lifeMs: 950,
-            fixedRawDmg: waveRaw,
-            hitIds: new Set(),
-            stats,
-          });
-        });
-      });
-    } else if (skillId === 'warcry') {
-      this.warcryUntil = this.time.now + 4500;
-      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 30);
-      this.playFxSprite('nfx_warcry', this.hero.x, this.hero.y, 1.55 * radMult, 0, 460);
-      const dmg = Math.round(stats.atk * (1.2 + skillLvl * 0.2) * dmgMult);
-      alive.forEach((m) => {
-        if (Phaser.Math.Distance.Between(this.hero.x, this.hero.y, m.sprite.x, m.sprite.y) <= 250 * radMult) {
-          this.damageMonster(m, dmg, true, false, '#f87171', '📣');
-          const ang = Math.atan2(m.sprite.y - this.hero.y, m.sprite.x - this.hero.x);
-          const kb = m.isBoss ? 18 : 65;
-          m.sprite.x = Phaser.Math.Clamp(m.sprite.x + Math.cos(ang) * kb, 140, MAP_W - 140);
-          m.sprite.y = Phaser.Math.Clamp(m.sprite.y + Math.sin(ang) * kb, 180, MAP_H - 180);
-        }
-      });
-      // v250: zero shake
-    } else if (skillId === 'execute_cleave') {
-      const ang = Math.atan2(aim.y - this.hero.y, aim.x - this.hero.x);
-      const cx = this.hero.x + Math.cos(ang) * 85;
-      const cy = this.hero.y + Math.sin(ang) * 85;
-      this.playFxSprite('wfx_cleave', cx, cy, 1.55 * radMult, ang, 320);
-      this.playFxSprite('wfx_blood_ring', cx, cy, 1.25 * radMult, 0, 380);
-      const baseDmg = stats.atk * (2.4 + skillLvl * 0.40) * dmgMult;
-      alive.forEach((m) => {
-        if (Phaser.Math.Distance.Between(cx, cy, m.sprite.x, m.sprite.y) <= 210 * radMult) {
-          const low = m.hp < m.maxHp * 0.5;
-          const isCrit = low || Math.random() * 100 < stats.critRate;
-          const dmg = Math.round(baseDmg * (low ? 1.6 : 1) * (isCrit ? stats.critDmg / 100 : 1));
-          this.damageMonster(m, dmg, isCrit, false, '#ef4444', '⚔️');
-        }
-      });
-      if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(190, 0.011);
-    } else if (skillId === 'volcano_totem') {
-      const tx = aim.x;
-      const ty = aim.y;
-      const totem = this.add.image(tx, ty, 'nfx_totem').setScale(0.85).setBlendMode(Phaser.BlendModes.ADD).setDepth(ty);
-      this.time.addEvent({
-        delay: 520,
-        repeat: 3,
-        callback: () => {
-          this.playFxSprite('wfx_lava_ring', tx, ty + 12, 1.45 * radMult, 0, 420);
-          this.playFxSprite('wfx_slam_pillar', tx, ty - 24, 1.15 * radMult, 0, 420);
-          const dmg = Math.round(stats.atk * (0.85 + skillLvl * 0.18) * dmgMult);
-          this.monsters.filter((m) => m.hp > 0).forEach((m) => {
-            if (Phaser.Math.Distance.Between(tx, ty, m.sprite.x, m.sprite.y) <= 240 * radMult) {
-              this.damageMonster(m, dmg, Math.random() * 100 < stats.critRate, false, '#fb923c', '🌋');
-            }
-          });
-        },
-      });
-      this.time.delayedCall(2200, () => totem.destroy());
-    } else if (skillId === 'earth_stomp') {
-      const mx = this.hero.x;
-      const my = this.hero.y;
-      const radius = 310 * radMult;
-      this.playFxSprite('wfx_lava_ring', mx, my + 10, 1.8 * radMult, 0, 500);
-      this.playFxSprite('wfx_rubble', mx, my, 1.55 * radMult, 0, 460);
-      const dmg = Math.round(stats.atk * (1.75 + skillLvl * 0.30) * dmgMult);
-      alive.forEach((m) => {
-        if (Phaser.Math.Distance.Between(mx, my, m.sprite.x, m.sprite.y) <= radius) {
-          m.stunUntil = this.time.now + 1500;
-          this.tweens.add({
-            targets: m.sprite,
-            x: mx + Phaser.Math.Between(-75, 75),
-            y: my + Phaser.Math.Between(-55, 55),
-            duration: 240,
-            ease: 'Cubic.easeOut',
-          });
-          this.damageMonster(m, dmg, true, false, '#fbbf24', '💥');
-        }
-      });
-      if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(220, 0.012);
-    }
-  }
+  // v260: 生成磁吸連擊精力結晶（ent_r_combo_orb，拾取回精力 +12 與 +1 連擊星）
 
-  // 遊俠 4 大主動技能（游標指向＋獵手印記連動）
-  castRangerSkill(skillId, skillLvl, stats, isManual = false) {
-    const _hx = this.hero.x, _hy = this.hero.y;
-    const _n = this.findNearestMonster(_hx, _hy);
-    const _tx = _n ? _n.sprite.x : _hx + 160, _ty = _n ? _n.sprite.y : _hy;
-    const _aoe = (cx, cy, rad, mult, col, pre, stList = [], forceCrit = false) => {
-      for (const m of [...this.monsters]) {
-        if (!m || m.hp <= 0) continue;
-        if (Phaser.Math.Distance.Between(cx, cy, m.sprite.x, m.sprite.y) <= rad) {
-          const isC = forceCrit || (Math.random() * 100 < stats.critRate);
-          const d = Math.round(stats.atk * mult * (isC ? stats.critDmg / 100 : 1));
-          if (!m._statuses) m._statuses = {};
-          stList.forEach((k) => { m._statuses[k] = Math.max(m._statuses[k] || 0, this.time.now + 4800); });
-          this.damageMonster(m, d, isC, false, col, pre);
-        }
-      }
-    };
-    if (skillId === 'r_shadow_imbue') {
-      this.playAdditiveVfx('vfx_r_shadow_arrow', _tx, _ty - 10, 0.92, 360);
-      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 18);
-      _aoe(_tx, _ty, 230, (160 + skillLvl * 25) / 100, '#c084fc', '🌑', ['vulnerable', 'curse']);
-      return;
-    }
-    if (skillId === 'r_venom_pierce') {
-      this.playAdditiveVfx('vfx_r_venom_spear', _tx, _ty - 8, 1.0, 400);
-      _aoe(_tx, _ty, 260, (245 + skillLvl * 38) / 100, '#4ade80', '☠️毒矛 ', ['poison']);
-      return;
-    }
-    if (skillId === 'r_smoke_decoy') {
-      this.playAdditiveVfx('vfx_r_decoy_phantom', _hx, _hy - 12, 0.96, 480);
-      this.healHero(Math.round(this.playerMaxHp * 0.18));
-      _aoe(_hx, _hy, 270, (195 + skillLvl * 30) / 100, '#a3e635', '💨誘餌 ', ['poison', 'vulnerable']);
-      return;
-    }
-    if (skillId === 'r_frost_barrage') {
-      for (let w = 0; w < 3; w++) {
-        this.time.delayedCall(w * 200, () => {
-          this.playAdditiveVfx('vfx_react_superconduct', _tx, _ty - 10, 0.72, 320);
-          _aoe(_tx, _ty, 240, (95 + skillLvl * 18) / 100, '#38bdf8', '❄️', ['freeze']);
-        });
-      }
-      return;
-    }
-    if (skillId === 'r_razor_snare') {
-      this.playAdditiveVfx('vfx_react_hemorrhage', _tx, _ty, 0.92, 420);
-      _aoe(_tx, _ty, 240, (230 + skillLvl * 34) / 100, '#f87171', '🩸陷阱 ', ['bleed', 'vulnerable']);
-      return;
-    }
-    if (skillId === 'r_gale_snipe') {
-      this.playAdditiveVfx('vfx_r_venom_spear', _tx, _ty - 10, 1.05, 380);
-      this._rComboStars = Math.min(3, (this._rComboStars || 0) + 2);
-      _aoe(_tx, _ty, 220, (280 + skillLvl * 44) / 100, '#34d399', '🎯狙殺 ', ['vulnerable'], true);
-      return;
-    }
-    if (skillId === 'r_abyss_barrage') {
-      for (let w = 0; w < 5; w++) {
-        this.time.delayedCall(w * 240, () => {
-          const ox = _tx + Phaser.Math.Between(-90, 90), oy = _ty + Phaser.Math.Between(-60, 60);
-          this.playAdditiveVfx('vfx_r_abyss_meteor_arrow', ox, oy - 16, 1.12, 460);
-          _aoe(ox, oy, 330, (150 + skillLvl * 28) / 100, '#c084fc', '☄️箭幕 ', ['poison', 'vulnerable'], true);
-        });
-      }
-      return;
-    }
-    if (skillId === 'r_void_hunter') {
-      this._rInnerSightUntil = Math.max(this._rInnerSightUntil || 0, this.time.now + 6000);
-      this.playAdditiveVfx('vfx_r_void_star_sigil', _tx, _ty - 10, 1.32, 620);
-      _aoe(_tx, _ty, 360, (360 + skillLvl * 54) / 100, '#e879f9', '⭐虛空獵手 ', ['curse', 'vulnerable'], true);
-      return;
-    }
-    const alive = this.monsters.filter((m) => m.hp > 0);
-    if (alive.length === 0) return;
-    const sk = RANGER_SKILLS[skillId];
-    const aim = this.getAimPoint(isManual, 480);
-    this.faceHeroToward(aim.x, aim.y);
-    this.triggerHeroAttackAnim(400);
+  // v260: 生成 2x2 四幀動態遊俠戰場實體（暗影分身／煙霧誘餌／劇毒蒺藜陣／血刃捕獸夾）
 
-    const dmgMult = (stats.skillDmgMult || 1) * (this.time.now < this.overloadUntil ? 1.35 : 1);
-    const radMult = stats.skillRadiusMult || 1;
-    this.showSkillBanner(sk.name, '#34d399');
+  // v260: 每幀更新遊俠磁吸連擊結晶與 4 類動態暗影分身／誘餌／陷阱實體
 
-    if (skillId === 'volley') {
-      const baseAng = Math.atan2(aim.y - this.hero.y, aim.x - this.hero.x);
-      this.playFxSprite('rfx_wind_trail', this.hero.x, this.hero.y, 0.85, baseAng, 320);
-      const offsets = [-0.36, -0.18, 0, 0.18, 0.36];
-      const rawDmg = stats.atk * (0.80 + skillLvl * 0.18) * dmgMult;
+  // v260: 暗影遊俠 24 招實戰判定幾何＋16 幀暗黑序列＋動態分身與陷阱實體（零震動、零音效）
 
-      offsets.forEach((off, idx) => {
-        this.time.delayedCall(idx * 45, () => {
-          const ang = baseAng + off;
-          const spr = this.add.image(this.hero.x, this.hero.y - 12, 'rfx_beam')
-            .setScale(0.65).setRotation(ang).setBlendMode(Phaser.BlendModes.ADD).setDepth(4509);
-          this.projectiles.push({
-            fromEnemy: false,
-            kind: 'ranger_beam',
-            sprite: spr,
-            vx: Math.cos(ang) * 820,
-            vy: Math.sin(ang) * 820,
-            lifeMs: 850,
-            fixedRawDmg: rawDmg,
-            bonusCrit: 25,
-            appliesMark: true,
-            hitIds: new Set(),
-            stats,
-          });
-        });
-      });
-    } else if (skillId === 'arrowrain') {
-      const tx = aim.x;
-      const ty = aim.y;
-      const radius = 225 * radMult;
-      const sigil = this.add.image(tx, ty + 14, 'rfx_rain_sigil')
-        .setScale(1.4 * radMult).setBlendMode(Phaser.BlendModes.ADD).setDepth(6);
-      this.tweens.add({ targets: sigil, angle: 120, duration: 1300, onComplete: () => sigil.destroy() });
 
-      const waveDmg = Math.round(stats.atk * (0.65 + skillLvl * 0.16) * dmgMult);
-      this.time.addEvent({
-        delay: 280,
-        repeat: 3,
-        callback: () => {
-          this.playFxSprite('rfx_rain_fall', tx + Phaser.Math.Between(-30, 30), ty - 60, 1.3 * radMult, 0, 320);
-          this.playFxSprite('rfx_rain_impact', tx, ty + 10, 1.35 * radMult, 0, 360);
-          this.playFxSprite('rfx_leaf_sparks', tx, ty, 1.2 * radMult, Math.random() * Math.PI, 400);
-
-          let healed = false;
-          this.monsters.filter((m) => m.hp > 0).forEach((m) => {
-            if (Phaser.Math.Distance.Between(tx, ty, m.sprite.x, m.sprite.y) <= radius) {
-              const isMarked = this.time.now < (m.markedUntil || 0);
-              m.slowUntil = this.time.now + (isMarked ? 2400 : 1500);
-              if (isMarked && !healed) {
-                healed = true;
-                this.healHero(Math.round(this.playerMaxHp * 0.015));
-              }
-              this.damageMonster(m, waveDmg, Math.random() * 100 < (stats.critRate + (isMarked ? 15 : 0)), false, '#34d399', isMarked ? '🎯' : '🌧️');
-            }
-          });
-        },
-      });
-    } else if (skillId === 'shadowstep') {
-      const ox = this.hero.x;
-      const oy = this.hero.y;
-      const nearest = this.findNearestMonster(ox, oy) || alive[0];
-      const awayAng = isManual && this.hasPointerMoved
-        ? Math.atan2(aim.y - oy, aim.x - ox)
-        : Math.atan2(oy - nearest.sprite.y, ox - nearest.sprite.x);
-      const nx = Phaser.Math.Clamp(ox + Math.cos(awayAng) * 260, 200, MAP_W - 200);
-      const ny = Phaser.Math.Clamp(oy + Math.sin(awayAng) * 260, 180, MAP_H - 180);
-
-      this.playFxSprite('rfx_shadow_smoke', ox, oy, 1.0, 0, 380);
-      const trap = this.add.image(ox, oy + 10, 'rfx_trap_rune').setScale(1.15 * radMult).setBlendMode(Phaser.BlendModes.ADD).setDepth(6);
-
-      this.hero.setPosition(nx, ny);
-      this.dodgeBuffUntil = this.time.now + 3000;
-      this.playFxSprite('rfx_dodge_aura', nx, ny, 1.2, 0, 750);
-
-      this.time.delayedCall(260, () => {
-        trap.destroy();
-        this.playFxSprite('rfx_poison_burst', ox, oy, 1.45 * radMult, 0, 480);
-        const baseDmg = stats.atk * (1.9 + skillLvl * 0.32) * dmgMult;
-        this.monsters.filter((m) => m.hp > 0).forEach((m) => {
-          if (Phaser.Math.Distance.Between(ox, oy, m.sprite.x, m.sprite.y) <= 215 * radMult) {
-            const isMarked = this.time.now < (m.markedUntil || 0);
-            const dmg = Math.round(baseDmg + (isMarked ? stats.atk * 0.80 * dmgMult : 0));
-            this.damageMonster(m, dmg, true, false, '#4ade80', isMarked ? '🎯' : '☠️');
-          }
-        });
-      });
-    } else if (skillId === 'phantombow') {
-      const ang = Math.atan2(aim.y - this.hero.y, aim.x - this.hero.x);
-      this.playFxSprite('rfx_charge_bow', this.hero.x, this.hero.y, 1.1, 0, 340);
-      this.playFxSprite('rfx_sonic_ring', this.hero.x + Math.cos(ang) * 40, this.hero.y + Math.sin(ang) * 40, 0.9, ang, 320);
-
-      const dragonDmg = Math.round(stats.atk * (3.0 + skillLvl * 0.45) * (stats.critDmg / 100) * dmgMult);
-      const spr = this.add.image(this.hero.x, this.hero.y - 12, 'rfx_phantom_dragon')
-        .setScale(0.95 * radMult).setRotation(ang).setBlendMode(Phaser.BlendModes.ADD).setDepth(4512);
-      this.projectiles.push({
-        fromEnemy: false,
-        kind: 'phantom_dragon',
-        sprite: spr,
-        vx: Math.cos(ang) * 860,
-        vy: Math.sin(ang) * 860,
-        lifeMs: 1100,
-        fixedDmg: dragonDmg,
-        hitIds: new Set(),
-        stats,
-      });
-      if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(180, 0.01);
-    } else if (skillId === 'windwalk') {
-      this.windwalkUntil = this.time.now + 4500;
-      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 25);
-      this.playFxSprite('rfx_dodge_aura', this.hero.x, this.hero.y, 1.35, 0, 650);
-      this.playFxSprite('rfx_wind_trail', this.hero.x, this.hero.y, 1.15, 0, 450);
-    } else if (skillId === 'caltrops') {
-      const tx = aim.x;
-      const ty = aim.y;
-      const field = this.add.image(tx, ty + 10, 'nfx_caltrops').setScale(1.25 * radMult).setBlendMode(Phaser.BlendModes.ADD).setDepth(6);
-      this.time.addEvent({
-        delay: 650,
-        repeat: 5,
-        callback: () => {
-          const dmg = Math.round(stats.atk * (0.55 + skillLvl * 0.14) * dmgMult);
-          this.monsters.filter((m) => m.hp > 0).forEach((m) => {
-            if (Phaser.Math.Distance.Between(tx, ty, m.sprite.x, m.sprite.y) <= 220 * radMult) {
-              m.slowUntil = this.time.now + 1200;
-              this.damageMonster(m, dmg, Math.random() * 100 < stats.critRate, false, '#a3e635', '☠️');
-            }
-          });
-        },
-      });
-      this.time.delayedCall(4000, () => field.destroy());
-    } else if (skillId === 'shadow_clones') {
-      const baseAng = Math.atan2(aim.y - this.hero.y, aim.x - this.hero.x);
-      const rawDmg = stats.atk * (0.90 + skillLvl * 0.20) * dmgMult;
-      [-90, 90].forEach((oy) => {
-        const cx = this.hero.x - 20;
-        const cy = this.hero.y + oy;
-        const clone = this.add.image(cx, cy, this.hero.texture.key).setScale(0.52).setTint(0x10b981).setAlpha(0.75).setDepth(cy);
-        this.playFxSprite('rfx_shadow_smoke', cx, cy, 0.85, 0, 320);
-        [-0.18, 0, 0.18].forEach((off) => {
-          const ang = baseAng + off;
-          const spr = this.add.image(cx, cy, 'rfx_beam').setScale(0.58).setRotation(ang).setBlendMode(Phaser.BlendModes.ADD).setDepth(4509);
-          this.projectiles.push({
-            fromEnemy: false, kind: 'ranger_beam', sprite: spr,
-            vx: Math.cos(ang) * 800, vy: Math.sin(ang) * 800, lifeMs: 850,
-            fixedRawDmg: rawDmg, bonusCrit: 15, appliesMark: true, hitIds: new Set(), stats,
-          });
-        });
-        this.tweens.add({ targets: clone, alpha: 0, duration: 550, onComplete: () => clone.destroy() });
-      });
-    } else if (skillId === 'death_mark') {
-      const dmgBase = stats.atk * (1.8 + skillLvl * 0.35) * dmgMult;
-      alive.forEach((m) => {
-        if (Phaser.Math.Distance.Between(this.hero.x, this.hero.y, m.sprite.x, m.sprite.y) <= 520) {
-          const isMarked = this.time.now < (m.markedUntil || 0);
-          m.markedUntil = this.time.now + 5000;
-          this.playFxSprite('nfx_deathmark', m.sprite.x, m.sprite.y - 10, 0.72, 0, 380);
-          this.damageMonster(m, Math.round(dmgBase * (isMarked ? 2.0 : 1.0)), true, false, '#f87171', '💀');
-        }
-      });
-    }
-  }
-
-  // 法師 4 大主動技能（游標指向＋冰寒共鳴與奧術充能連動）
-  castMageSkill(skillId, skillLvl, stats, isManual = false) {
-    const _hx = this.hero.x, _hy = this.hero.y;
-    const _n = this.findNearestMonster(_hx, _hy);
-    const _tx = _n ? _n.sprite.x : _hx + 160, _ty = _n ? _n.sprite.y : _hy;
-    const _aoe = (cx, cy, rad, mult, col, pre, stList = [], forceCrit = false) => {
-      for (const m of [...this.monsters]) {
-        if (!m || m.hp <= 0) continue;
-        if (Phaser.Math.Distance.Between(cx, cy, m.sprite.x, m.sprite.y) <= rad) {
-          const isC = forceCrit || (Math.random() * 100 < stats.critRate);
-          const d = Math.round(stats.atk * mult * (isC ? stats.critDmg / 100 : 1));
-          if (!m._statuses) m._statuses = {};
-          stList.forEach((k) => { m._statuses[k] = Math.max(m._statuses[k] || 0, this.time.now + 4800); });
-          this.damageMonster(m, d, isC, false, col, pre);
-        }
-      }
-    };
-    const _d4Mult = this.getMageD4LiveMult();
-    const _aoeD4 = (cx, cy, rad, mul, col, pre, stList = [], forceC = false) => {
-      const elem = stList.includes('freeze') ? 'frost' : (stList.includes('shock') ? 'shock' : 'fire');
-      const tintHex = elem === 'frost' ? 0x7dd3fc : (elem === 'shock' ? 0xc084fc : 0xfb923c);
-      const hitSeq = elem === 'frost' ? 'anim_m_frost_nova' : (elem === 'shock' ? 'anim_m_lightning_strike' : 'anim_m_fireball_blast');
-      let sparkBudget = 3;
-      this.monsters.forEach((m) => {
-        if (m.hp > 0 && m.sprite && Phaser.Math.Distance.Between(cx, cy, m.sprite.x, m.sprite.y) <= rad) {
-          m.sprite.setTint(tintHex);
-          this.time.delayedCall(110, () => m.sprite && m.sprite.active && m.sprite.clearTint());
-          if (sparkBudget > 0) {
-            sparkBudget--;
-            this.mageVfx?.spawnDebrisBurst(m.sprite.x, m.sprite.y, elem, forceC ? 7 : 4);
-          }
-        }
-      });
-      _aoe(cx, cy, rad, mul * _d4Mult, col, pre, stList, forceC);
-    };
-    const mv = this.mageVfx;
-    const _pickPrimary = () => this.findNearestMonster(_tx, _ty, 360) || this.findNearestMonster(_hx, _hy, 560);
-    const _applyHitVisual = (m, elem, forceC) => {
-      if (!m || m.hp <= 0 || !m.sprite) return;
-      const tintHex = elem === 'frost' ? 0x7dd3fc : (elem === 'shock' ? 0xc084fc : 0xfb923c);
-      m.sprite.setTint(tintHex);
-      this.time.delayedCall(110, () => m.sprite && m.sprite.active && m.sprite.clearTint());
-      mv?.spawnDebrisBurst(m.sprite.x, m.sprite.y, elem, forceC ? 7 : 4);
-    };
-
-    // 幾何 1：精準單體判定（絕不亂濺射，高單體倍率專打首領與精英）
-    const _singleD4 = (m, mul, col, pre, stList = [], forceC = false) => {
-      if (!m || m.hp <= 0 || !m.sprite) return;
-      const elem = stList.includes('freeze') ? 'frost' : (stList.includes('shock') ? 'shock' : 'fire');
-      const isC = forceC || Math.random() * 100 < stats.critChance;
-      const d = Math.max(1, Math.round(stats.atk * mul * _d4Mult * (isC ? stats.critDmg / 100 : 1)));
-      if (!m._statuses) m._statuses = {};
-      stList.forEach((k) => { m._statuses[k] = Math.max(m._statuses[k] || 0, this.time.now + 4800); });
-      _applyHitVisual(m, elem, isC);
-      this.damageMonster(m, d, isC, false, col, pre);
-    };
-
-    // 幾何 2：前方扇形揮斬判定（電弧鞭 130° 近戰扇形）
-    const _coneD4 = (ox, oy, dirAng, rad, halfAng, mul, col, pre, stList = []) => {
-      const elem = stList.includes('freeze') ? 'frost' : (stList.includes('shock') ? 'shock' : 'fire');
-      for (const m of this.monsters) {
-        if (!m || m.hp <= 0 || !m.sprite) continue;
-        const dist = Phaser.Math.Distance.Between(ox, oy, m.sprite.x, m.sprite.y);
-        if (dist > rad) continue;
-        const ang = Phaser.Math.Angle.Between(ox, oy, m.sprite.x, m.sprite.y);
-        const diff = Math.abs(Phaser.Math.Angle.Wrap(ang - dirAng));
-        if (diff <= halfAng || dist < 56) {
-          const isC = Math.random() * 100 < stats.critChance;
-          const d = Math.max(1, Math.round(stats.atk * mul * _d4Mult * (isC ? stats.critDmg / 100 : 1)));
-          if (!m._statuses) m._statuses = {};
-          stList.forEach((k) => { m._statuses[k] = Math.max(m._statuses[k] || 0, this.time.now + 4800); });
-          _applyHitVisual(m, elem, isC);
-          this.damageMonster(m, d, isC, false, col, pre);
-        }
-      }
-    };
-
-    // 幾何 3：矩形火道判定（烈焰火牆 320x96px）
-    const _rectD4 = (cx, cy, halfW, halfH, mul, col, pre, stList = []) => {
-      for (const m of this.monsters) {
-        if (!m || m.hp <= 0 || !m.sprite) continue;
-        if (Math.abs(m.sprite.x - cx) <= halfW && Math.abs(m.sprite.y - cy) <= halfH) {
-          const isC = Math.random() * 100 < stats.critChance;
-          const d = Math.max(1, Math.round(stats.atk * mul * _d4Mult * (isC ? stats.critDmg / 100 : 1)));
-          if (!m._statuses) m._statuses = {};
-          stList.forEach((k) => { m._statuses[k] = Math.max(m._statuses[k] || 0, this.time.now + 4800); });
-          _applyHitVisual(m, 'fire', isC);
-          this.damageMonster(m, d, isC, false, col, pre);
-        }
-      }
-    };
-
-    // 幾何 4：真實連鎖彈跳判定（英雄→怪 A→怪 B→C，單體首領時反覆彈跳）
-    const _chainD4 = (bounces, baseMul, col, pre, stList = []) => {
-      const first = _pickPrimary();
-      if (!first || !first.sprite) return;
-      let curX = _hx, curY = _hy - 14;
-      let curTgt = first;
-      const visited = new Set();
-      for (let b = 0; b < bounces; b++) {
-        if (!curTgt || curTgt.hp <= 0 || !curTgt.sprite) break;
-        const sx0 = curX, sy0 = curY;
-        const tgtSnap = curTgt;
-        const mulSnap = baseMul * Math.pow(0.92, b);
-        visited.add(tgtSnap.uid);
-        curX = tgtSnap.sprite.x;
-        curY = tgtSnap.sprite.y - 10;
-
-        this.time.delayedCall(b * 60, () => {
-          if (!tgtSnap.sprite) return;
-          mv?.playChainArc(sx0, sy0, tgtSnap.sprite.x, tgtSnap.sprite.y - 10, 0.46, 230);
-          mv?.playSeq16('seq16_m_ball_lightning', tgtSnap.sprite.x, tgtSnap.sprite.y - 8, 0.58, 24, 16);
-          if (tgtSnap.hp > 0) _singleD4(tgtSnap, mulSnap, col, pre, stList, b === 0);
-        });
-
-        // 找下一名最近的未命中敵人；若只剩單體首領則反彈回英雄再打同一目標
-        const nextList = this.monsters
-          .filter((m) => m.hp > 0 && m.sprite && !visited.has(m.uid) && Phaser.Math.Distance.Between(curX, curY, m.sprite.x, m.sprite.y) <= 320)
-          .sort((a, b2) => Phaser.Math.Distance.Between(curX, curY, a.sprite.x, a.sprite.y) - Phaser.Math.Distance.Between(curX, curY, b2.sprite.x, b2.sprite.y));
-        if (nextList.length > 0) {
-          curTgt = nextList[0];
-        } else if (tgtSnap.hp > 0) {
-          // 單體首領反彈：從英雄再次射回首領
-          curX = _hx; curY = _hy - 14;
-          curTgt = tgtSnap;
-        } else {
-          break;
-        }
-      }
-    };
-
-    // 幾何 5：真實聚怪牽引（煉獄／黑洞把周圍非首領怪拉向中心）
-    const _pullVortex = (cx, cy, rad, pullPx = 42) => {
-      for (const m of this.monsters) {
-        if (!m || m.hp <= 0 || !m.sprite || m.isBoss) continue;
-        const dist = Phaser.Math.Distance.Between(cx, cy, m.sprite.x, m.sprite.y);
-        if (dist > 28 && dist <= rad) {
-          const ang = Phaser.Math.Angle.Between(m.sprite.x, m.sprite.y, cx, cy);
-          const step = Math.min(pullPx, dist - 22);
-          m.sprite.x += Math.cos(ang) * step;
-          m.sprite.y += Math.sin(ang) * step;
-        }
-      }
-    };
-
-    if (skillId === 'm_fire_bolt') {
-      this.registerEnlightenment('fire');
-      const tgt = _pickPrimary();
-      const ex = tgt?.sprite?.x ?? _tx, ey = tgt?.sprite?.y ?? _ty;
-      mv.launchProjectile('proj_m_fire_bolt', _hx, _hy - 14, ex, ey - 10, 0.56, 175, 'fire', () => {
-        mv.playSeq16('seq16_m_fireball_blast', ex, ey - 8, 0.65, 24, 14);
-        _singleD4(tgt, (175 + skillLvl * 26) / 100, '#fb923c', '🔥', ['burn']);
-      });
-      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 22);
-      return;
-    }
-    if (skillId === 'm_frost_bolt') {
-      this.registerEnlightenment('frost');
-      const tgt = _pickPrimary();
-      const ex = tgt?.sprite?.x ?? _tx, ey = tgt?.sprite?.y ?? _ty;
-      mv.launchProjectile('proj_m_ice_lance', _hx, _hy - 14, ex, ey - 10, 0.52, 170, 'frost', () => {
-        mv.playSeq16('seq16_m_frost_nova', ex, ey - 8, 0.62, 24, 14);
-        _singleD4(tgt, (168 + skillLvl * 25) / 100, '#7dd3fc', '❄️', ['freeze']);
-      });
-      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 22);
-      return;
-    }
-    if (skillId === 'm_arc_lash') {
-      this.registerEnlightenment('shock');
-      const dirAng = Phaser.Math.Angle.Between(_hx, _hy, _tx, _ty);
-      const cx = _hx + Math.cos(dirAng) * 90, cy = _hy + Math.sin(dirAng) * 70;
-      mv.playChainArc(_hx, _hy - 12, cx + Math.cos(dirAng + 0.6) * 75, cy + Math.sin(dirAng + 0.6) * 55, 0.44, 210);
-      mv.playChainArc(_hx, _hy - 12, cx + Math.cos(dirAng - 0.6) * 75, cy + Math.sin(dirAng - 0.6) * 55, 0.44, 210);
-      mv.playSeq16('seq16_m_lightning_strike', cx, cy - 10, 0.85, 24, 16);
-      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 20);
-      this.slotCdTimers = this.slotCdTimers.map((t) => t + 420);
-      _coneD4(_hx, _hy, dirAng, 235, 1.15, (168 + skillLvl * 25) / 100, '#c084fc', '⚡電弧鞭 ', ['shock']);
-      if (Math.random() < 0.45) this.spawnCracklingOrb(cx, cy);
-      return;
-    }
-    if (skillId === 'm_spark') {
-      this.registerEnlightenment('shock');
-      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 20);
-      _chainD4(3, (118 + skillLvl * 18) / 100, '#60a5fa', '✦電花 ', ['shock']);
-      if (Math.random() < 0.65) this.spawnCracklingOrb(_tx, _ty);
-      return;
-    }
-    if (skillId === 'm_fireball') {
-      this.registerEnlightenment('fire');
-      const tgt = _pickPrimary();
-      const ex = tgt?.sprite?.x ?? _tx, ey = tgt?.sprite?.y ?? _ty;
-      mv.launchProjectile('proj_m_fireball', _hx, _hy - 14, ex, ey - 10, 0.64, 200, 'fire', () => {
-        mv.spawnGroundDecal('fire', ex, ey, 0.82, 1750);
-        mv.playSeq16('seq16_m_fireball_blast', ex, ey - 10, 1.32, 20, 16);
-        mv.spawnDebrisBurst(ex, ey, 'fire', 9);
-        _aoeD4(ex, ey, 215, (255 + skillLvl * 38) / 100, '#fb923c', '🔥火球 ', ['burn']);
-      });
-      return;
-    }
-    if (skillId === 'm_ice_shards') {
-      this.registerEnlightenment('frost');
-      const tgt = _pickPrimary();
-      for (let w = 0; w < 3; w++) {
-        this.time.delayedCall(w * 135, () => {
-          const curT = (tgt && tgt.hp > 0) ? tgt : _pickPrimary();
-          if (!curT || !curT.sprite) return;
-          const ex = curT.sprite.x, ey = curT.sprite.y;
-          mv.launchProjectile('proj_m_ice_lance', _hx, _hy - 12, ex, ey - 10, 0.56, 165, 'frost', () => {
-            mv.playSeq16('seq16_m_frost_nova', ex, ey - 6, 0.58, 24, 14);
-            const wasFrozen = (curT._statuses?.freeze || 0) > this.time.now || (curT.chilledUntil || 0) > this.time.now;
-            _singleD4(curT, (108 + skillLvl * 16) / 100, '#38bdf8', '🧊冰片 ', ['freeze', 'vulnerable']);
-            // 暗黑 4 冰片規則：命中凍結目標時自動彈射 1 枚冰片至鄰近敵人
-            if (wasFrozen) {
-              const near = this.monsters.find((m) => m.hp > 0 && m !== curT && m.sprite && Phaser.Math.Distance.Between(ex, ey, m.sprite.x, m.sprite.y) <= 260);
-              if (near && near.sprite) {
-                mv.launchProjectile('proj_m_ice_lance', ex, ey - 10, near.sprite.x, near.sprite.y - 10, 0.45, 130, 'frost', () => {
-                  _singleD4(near, (88 + skillLvl * 12) / 100, '#7dd3fc', '🧊彈射 ', ['freeze']);
-                });
-              }
-            }
-          });
-        });
-      }
-      return;
-    }
-    if (skillId === 'm_frozen_orb') {
-      this.registerEnlightenment('frost');
-      mv.launchFrozenOrb(
-        _hx, _hy, _tx, _ty,
-        (mx, my) => {
-          const midTgt = this.findNearestMonster(mx, my, 240);
-          if (midTgt) _singleD4(midTgt, (105 + skillLvl * 15) / 100, '#7dd3fc', '❄️冰刺 ', ['freeze']);
-        },
-        () => {
-          _aoeD4(_tx, _ty, 265, (180 + skillLvl * 24) / 100, '#38bdf8', '💥冰球碎裂 ', ['freeze', 'vulnerable'], true);
-        }
-      );
-      return;
-    }
-    if (skillId === 'm_flame_shield') {
-      this.registerEnlightenment('fire');
-      this.activateHeroBarrier(Math.round(this.playerMaxHp * 0.38), 5500, 'ent_m_flame_shield');
-      mv.spawnGroundDecal('fire', _hx, _hy, 0.72, 1400);
-      mv.playSeq16('seq16_m_inferno', _hx, _hy - 12, 1.05, 20, 16);
-      this.healHero(Math.round(this.playerMaxHp * ((22 + skillLvl * 2) / 100)));
-      _aoeD4(_hx, _hy, 230, (175 + skillLvl * 26) / 100, '#fb923c', '🔥烈焰護盾 ', ['burn']);
-      return;
-    }
-    if (skillId === 'm_ice_armor') {
-      this.registerEnlightenment('frost');
-      this.activateHeroBarrier(Math.round(this.playerMaxHp * 0.45), 6500, 'ent_m_ice_armor');
-      mv.spawnGroundDecal('frost', _hx, _hy, 0.72, 1400);
-      mv.playSeq16('seq16_m_frost_nova', _hx, _hy - 8, 1.02, 20, 16);
-      this.healHero(Math.round(this.playerMaxHp * ((24 + skillLvl * 2) / 100)));
-      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 30);
-      _aoeD4(_hx, _hy, 230, (158 + skillLvl * 24) / 100, '#38bdf8', '🧊寒冰護甲 ', ['freeze']);
-      return;
-    }
-    if (skillId === 'm_arcane_blink') {
-      this.registerEnlightenment('shock');
-      // 真實傳送閃現：將英雄座標瞬移至目標側翼安全點！
-      mv.spawnConjurationPoof(_hx, _hy, 'shock');
-      mv.playSeq16('seq16_m_lightning_strike', _hx, _hy - 10, 0.85, 24, 14);
-      const ang = Phaser.Math.Angle.Between(_hx, _hy, _tx, _ty);
-      const dist = Math.min(260, Phaser.Math.Distance.Between(_hx, _hy, _tx, _ty));
-      const destX = Phaser.Math.Clamp(_hx + Math.cos(ang) * Math.max(90, dist - 52), 140, MAP_W - 140);
-      const destY = Phaser.Math.Clamp(_hy + Math.sin(ang) * Math.max(70, dist - 52), 140, MAP_H - 140);
-      if (this.hero) {
-        this.hero.setPosition(destX, destY);
-        if (this.heroGroundShadow) this.heroGroundShadow.setPosition(destX, destY + 18);
-        if (this.heroCastShadow) this.heroCastShadow.setPosition(destX, destY + 16);
-      }
-      mv.spawnGroundDecal('shock', destX, destY, 0.78, 1500);
-      mv.playSeq16('seq16_m_lightning_strike', destX, destY - 14, 1.22, 22, 18);
-      this.slotCdTimers = this.slotCdTimers.map((t) => t + 1000);
-      _aoeD4(destX, destY, 220, (215 + skillLvl * 32) / 100, '#60a5fa', '⚡傳送閃現 ', ['shock', 'vulnerable']);
-      this.spawnCracklingOrb(destX, destY);
-      return;
-    }
-    if (skillId === 'm_flame_hydra') {
-      this.registerEnlightenment('fire');
-      const hx2 = _tx + Phaser.Math.Between(-35, 35), hy2 = _ty + Phaser.Math.Between(-25, 25);
-      this.spawnMageConjuration('hydra', hx2, hy2, skillLvl, 10500);
-      mv.spawnGroundDecal('fire', hx2, hy2, 0.65, 2400);
-      mv.playSeq16('seq16_m_fireball_blast', hx2, hy2 - 8, 0.88, 22, 12);
-      const tgt = _pickPrimary();
-      if (tgt) _singleD4(tgt, (135 + skillLvl * 20) / 100, '#fb923c', '🐍多頭火蛇 ', ['burn']);
-      return;
-    }
-    if (skillId === 'm_ice_blades') {
-      this.registerEnlightenment('frost');
-      this.spawnMageConjuration('ice_blades', _tx, _ty, skillLvl, 8500);
-      mv.spawnGroundDecal('frost', _tx, _ty, 0.62, 1500);
-      mv.playSeq16('seq16_m_frost_nova', _tx, _ty - 8, 0.85, 22, 12);
-      this.slotCdTimers = this.slotCdTimers.map((t) => t + 500);
-      const tgt = _pickPrimary();
-      if (tgt) _singleD4(tgt, (145 + skillLvl * 20) / 100, '#7dd3fc', '⚔️寒冰之刃 ', ['freeze', 'vulnerable']);
-      return;
-    }
-    if (skillId === 'm_lightning_spear') {
-      this.registerEnlightenment('shock');
-      this.spawnMageConjuration('lightning_spear', _tx, _ty, skillLvl, 8000);
-      mv.spawnGroundDecal('shock', _tx, _ty, 0.68, 1500);
-      _chainD4(2, (145 + skillLvl * 22) / 100, '#facc15', '⚡閃電長矛 ', ['shock']);
-      this.spawnCracklingOrb(_tx, _ty);
-      return;
-    }
-    if (skillId === 'm_familiar') {
-      this.registerEnlightenment(['fire', 'frost', 'shock'][Math.floor(Math.random() * 3)]);
-      this.spawnMageConjuration('familiar', _hx + Phaser.Math.Between(-45, 45), _hy - 26, skillLvl, 10000);
-      mv.spawnGroundDecal('void', _tx, _ty, 0.68, 1500);
-      mv.playSeq16('seq16_m_supernova', _tx, _ty - 10, 0.92, 20, 14);
-      _aoeD4(_tx, _ty, 220, (130 + skillLvl * 18) / 100, '#fde047', '🔮元素使魔 ', ['burn', 'freeze', 'shock']);
-      return;
-    }
-    if (skillId === 'm_firewall') {
-      this.registerEnlightenment('fire');
-      mv.spawnGroundDecal('fire', _tx, _ty, 1.05, 2400);
-      mv.playSeq16('seq16_m_firewall', _tx, _ty - 6, 1.52, 12, -4);
-      for (let w = 0; w < 4; w++) {
-        this.time.delayedCall(w * 320, () => {
-          _rectD4(_tx, _ty, 165, 52, (132 + skillLvl * 22) / 100, '#ef4444', '🔥烈焰火牆 ', ['burn']);
-        });
-      }
-      return;
-    }
-    if (skillId === 'm_ball_lightning') {
-      this.registerEnlightenment('shock');
-      for (let w = 0; w < 3; w++) {
-        this.time.delayedCall(w * 250, () => {
-          const ox = _tx + Phaser.Math.Between(-42, 42), oy = _ty + Phaser.Math.Between(-30, 30);
-          mv.playSeq16('seq16_m_ball_lightning', ox, oy - 8, 1.12, 18, 14);
-          _aoeD4(ox, oy, 165, (118 + skillLvl * 18) / 100, '#a78bfa', '⚡球狀閃電 ', ['shock']);
-        });
-      }
-      this.spawnCracklingOrb(_tx, _ty);
-      return;
-    }
-    if (skillId === 'm_blizzard_field') {
-      this.registerEnlightenment('frost');
-      mv.spawnGroundDecal('frost', _tx, _ty, 1.15, 2300);
-      mv.playSeq16('seq16_m_blizzard', _tx, _ty - 14, 1.55, 13, 18);
-      for (let w = 0; w < 4; w++) {
-        this.time.delayedCall(w * 300, () => {
-          _aoeD4(_tx, _ty, 265, (118 + skillLvl * 20) / 100, '#7dd3fc', '❄️暴風雪 ', ['freeze']);
-        });
-      }
-      return;
-    }
-    if (skillId === 'm_inferno') {
-      this.registerEnlightenment('fire');
-      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + Math.round(this.playerMaxMp * 0.30));
-      mv.spawnGroundDecal('fire', _tx, _ty, 1.28, 2500);
-      mv.playSeq16('seq16_m_inferno', _tx, _ty - 18, 1.65, 13, 20);
-      for (let w = 0; w < 5; w++) {
-        this.time.delayedCall(w * 270, () => {
-          _pullVortex(_tx, _ty, 330, 48);
-          _aoeD4(_tx, _ty, 310, (182 + skillLvl * 30) / 100, '#fb923c', '🐍煉獄巨蛇 ', ['burn', 'vulnerable'], true);
-        });
-      }
-      return;
-    }
-    if (skillId === 'm_deep_freeze') {
-      this.registerEnlightenment('frost');
-      // 真正進入 2.2 秒無敵冰封狀態！
-      this.heroInvulnUntil = Math.max(this.heroInvulnUntil || 0, this.time.now + 2200);
-      if (this.hero) {
-        this.hero.setTint(0x7dd3fc);
-        this.time.delayedCall(2200, () => this.hero && this.hero.active && this.hero.clearTint());
-      }
-      this.activateHeroBarrier(Math.round(this.playerMaxHp * 0.65), 6000, 'ent_m_ice_armor');
-      this.healHero(Math.round(this.playerMaxHp * 0.35));
-      this.slotCdTimers = this.slotCdTimers.map((t) => t + 4500);
-      mv.spawnGroundDecal('frost', _hx, _hy, 1.25, 2200);
-      mv.playSeq16('seq16_m_blizzard', _hx, _hy - 14, 1.62, 14, 18);
-      for (let w = 0; w < 4; w++) {
-        this.time.delayedCall(w * 500, () => {
-          if (w === 3) {
-            mv.playSeq16('seq16_m_frost_nova', _hx, _hy - 10, 1.65, 18, 20);
-            mv.spawnDebrisBurst(_hx, _hy, 'frost', 12);
-          }
-          _aoeD4(_hx, _hy, 330, (128 + skillLvl * 18) / 100, '#38bdf8', '❄️深度凍結 ', ['freeze', 'vulnerable'], true);
-        });
-      }
-      return;
-    }
-    if (skillId === 'm_unstable_currents') {
-      this.registerEnlightenment('shock');
-      mv.spawnGroundDecal('shock', _hx, _hy, 1.15, 2200);
-      mv.playSeq16('seq16_m_ball_lightning', _hx, _hy - 12, 1.38, 18, 18);
-      this.spawnMageConjuration('lightning_spear', _tx, _ty, skillLvl, 7500);
-      this.spawnCracklingOrb(_tx - 30, _ty);
-      this.spawnCracklingOrb(_tx + 30, _ty);
-      for (let w = 0; w < 5; w++) {
-        this.time.delayedCall(w * 240, () => {
-          const ox = _tx + Phaser.Math.Between(-85, 85), oy = _ty + Phaser.Math.Between(-55, 55);
-          if (w % 2 === 0) mv.playSeq16('seq16_m_lightning_strike', ox, oy - 16, 1.32, 22, 18);
-          else mv.playSeq16('seq16_m_ball_lightning', ox, oy - 10, 1.25, 20, 18);
-          _aoeD4(ox, oy, 280, (176 + skillLvl * 30) / 100, '#c084fc', '⚡不穩電流 ', ['shock', 'vulnerable'], true);
-        });
-      }
-      return;
-    }
-    if (skillId === 'm_elemental_cataclysm') {
-      this.registerEnlightenment('fire');
-      this.registerEnlightenment('frost');
-      this.registerEnlightenment('shock');
-      mv.spawnGroundDecal('void', _tx, _ty, 1.25, 2400);
-      mv.playSeq16('seq16_m_supernova', _tx, _ty - 12, 1.62, 15, 20);
-      for (let w = 0; w < 4; w++) {
-        this.time.delayedCall(w * 270, () => {
-          if (w === 1) mv.playSeq16('seq16_m_meteor', _tx, _ty - 14, 1.45, 18, 18);
-          if (w === 2) mv.playSeq16('seq16_m_frost_nova', _tx, _ty - 10, 1.45, 20, 18);
-          if (w === 3) mv.playSeq16('seq16_m_lightning_strike', _tx, _ty - 16, 1.45, 22, 18);
-          _aoeD4(_tx, _ty, 340, (185 + skillLvl * 32) / 100, '#e879f9', '🌀元素天災 ', ['burn', 'freeze', 'shock'], true);
-        });
-      }
-      return;
-    }
-    if (skillId === 'm_astral_supernova') {
-      this.registerEnlightenment('fire');
-      this.registerEnlightenment('frost');
-      this.registerEnlightenment('shock');
-      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + Math.round(this.playerMaxMp * 0.30));
-      mv.spawnGroundDecal('void', _tx, _ty, 1.35, 2500);
-      mv.playSeq16('seq16_m_supernova', _tx, _ty - 12, 1.75, 15, 22);
-      mv.spawnDebrisBurst(_tx, _ty, 'shock', 12);
-      _aoeD4(_tx, _ty, 360, (410 + skillLvl * 60) / 100, '#fde047', '🌟星界超新星 ', ['vulnerable', 'curse'], true);
-      return;
-    }
-    if (skillId === 'meteor') {
-      this.registerEnlightenment('fire');
-      mv.playSeq16('seq16_m_meteor', _tx, _ty - 14, 1.58, 16, 18);
-      this.time.delayedCall(320, () => {
-        mv.spawnGroundDecal('fire', _tx, _ty, 1.15, 2200);
-        mv.spawnDebrisBurst(_tx, _ty, 'fire', 12);
-        _aoeD4(_tx, _ty, 250, (295 + skillLvl * 42) / 100, '#fb923c', '☄️隕石 ', ['burn', 'vulnerable'], true);
-      });
-      return;
-    }
-    if (skillId === 'frost_nova') {
-      this.registerEnlightenment('frost');
-      mv.spawnGroundDecal('frost', _hx, _hy, 1.05, 1900);
-      mv.playSeq16('seq16_m_frost_nova', _hx, _hy - 8, 1.48, 20, 18);
-      mv.spawnDebrisBurst(_hx, _hy, 'frost', 10);
-      _aoeD4(_hx, _hy, 250, (195 + skillLvl * 28) / 100, '#38bdf8', '❄️冰霜新星 ', ['freeze', 'vulnerable']);
-      return;
-    }
-    if (skillId === 'chain_lightning') {
-      this.registerEnlightenment('shock');
-      mv.spawnGroundDecal('shock', _tx, _ty, 0.72, 1400);
-      _chainD4(5, (165 + skillLvl * 24) / 100, '#a78bfa', '⚡連鎖閃電 ', ['shock']);
-      if (Math.random() < 0.65) this.spawnCracklingOrb(_tx, _ty);
-      return;
-    }
-    if (skillId === 'black_hole') {
-      this.registerEnlightenment('shock');
-      mv.spawnGroundDecal('void', _tx, _ty, 1.15, 2200);
-      mv.playSeq16('seq16_m_supernova', _tx, _ty - 10, 1.52, 15, 16);
-      for (let w = 0; w < 4; w++) {
-        this.time.delayedCall(w * 240, () => {
-          _pullVortex(_tx, _ty, 310, 52);
-          if (w === 3) _aoeD4(_tx, _ty, 275, (250 + skillLvl * 36) / 100, '#c084fc', '🕳️黑洞坍縮 ', ['vulnerable', 'curse'], true);
-        });
-      }
-      return;
-    }
-    const alive = this.monsters.filter((m) => m.hp > 0);
-    if (alive.length === 0) return;
-    const sk = MAGE_SKILLS[skillId];
-    const aim = this.getAimPoint(isManual, 480);
-    this.faceHeroToward(aim.x, aim.y);
-    this.triggerHeroAttackAnim(420);
-
-    const dmgMult = (stats.skillDmgMult || 1) * (this.time.now < this.overloadUntil ? 1.35 : 1);
-    const radMult = stats.skillRadiusMult || 1;
-    this.showSkillBanner(sk.name, '#c084fc');
-
-    if (skillId === 'meteor') {
-      const mx = aim.x;
-      const my = aim.y;
-      const sigil = this.add.image(mx, my + 16, 'mfx_nova_ring')
-        .setScale(1.35 * radMult).setBlendMode(Phaser.BlendModes.ADD).setDepth(6);
-      this.tweens.add({ targets: sigil, angle: 90, duration: 380 });
-
-      const meteor = this.add.image(mx - 150, my - 340, 'mfx_meteor_rock')
-        .setScale(1.15).setBlendMode(Phaser.BlendModes.ADD).setDepth(4510);
-      this.tweens.add({
-        targets: meteor,
-        x: mx,
-        y: my,
-        duration: 340,
-        ease: 'Quad.easeIn',
-        onComplete: () => {
-          meteor.destroy();
-          sigil.destroy();
-          const crater = this.add.image(mx, my + 12, 'mfx_meteor_crater')
-            .setScale(1.45 * radMult).setBlendMode(Phaser.BlendModes.ADD).setDepth(5);
-          this.tweens.add({ targets: crater, alpha: 0, delay: 950, duration: 420, onComplete: () => crater.destroy() });
-
-          this.playFxSprite('mfx_meteor_blast', mx, my - 16, 1.65 * radMult, 0, 480);
-          this.playFxSprite('mfx_meteor_flame', mx, my - 30, 1.35 * radMult, 0, 520);
-
-          const baseDmg = stats.atk * (2.6 + skillLvl * 0.42) * dmgMult;
-          this.monsters.filter((m) => m.hp > 0).forEach((m) => {
-            if (Phaser.Math.Distance.Between(mx, my, m.sprite.x, m.sprite.y) <= 230 * radMult) {
-              const isChill = this.time.now < (m.chilledUntil || 0);
-              const dmg = Math.round(baseDmg * (isChill ? 1.35 : 1));
-              this.damageMonster(m, dmg, true, false, isChill ? '#38bdf8' : '#e879f9', isChill ? '❄️' : '☄️');
-            }
-          });
-          if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(240, 0.013);
-        },
-      });
-    } else if (skillId === 'arcane_orb') {
-      const baseAng = Math.atan2(aim.y - this.hero.y, aim.x - this.hero.x);
-      this.playFxSprite('mfx_star_sigil', this.hero.x, this.hero.y - 10, 0.9, 0, 280);
-      const offsets = [-0.28, 0, 0.28];
-      const rawDmg = stats.atk * (1.15 + skillLvl * 0.22) * dmgMult;
-
-      offsets.forEach((off, idx) => {
-        this.time.delayedCall(idx * 65, () => {
-          const ang = baseAng + off;
-          const spr = this.add.image(this.hero.x, this.hero.y - 12, 'mfx_orb')
-            .setScale(0.62 * radMult).setBlendMode(Phaser.BlendModes.ADD).setDepth(4510);
-          this.tweens.add({ targets: spr, angle: 360, duration: 900, repeat: -1 });
-          this.projectiles.push({
-            fromEnemy: false,
-            kind: 'mage_orb',
-            sprite: spr,
-            vx: Math.cos(ang) * 580,
-            vy: Math.sin(ang) * 580,
-            lifeMs: 1100,
-            fixedRawDmg: rawDmg,
-            bonusCrit: 15,
-            hitIds: new Set(),
-            stats,
-          });
-        });
-      });
-    } else if (skillId === 'frost_nova') {
-      const mx = this.hero.x;
-      const my = this.hero.y;
-      const radius = 240 * radMult;
-      this.playFxSprite('mfx_frost_ring', mx, my + 8, 1.75 * radMult, 0, 520);
-      this.playFxSprite('mfx_frost_shard', mx, my - 12, 1.45 * radMult, 0, 440);
-      this.playFxSprite('mfx_frost_burst', mx, my, 1.35 * radMult, Math.random() * Math.PI, 460);
-
-      const shieldGain = Math.round(this.playerMaxHp * (0.16 + skillLvl * 0.02));
-      this.mageShieldHp = Math.min(Math.round(this.playerMaxHp * 0.5), this.mageShieldHp + shieldGain);
-
-      const shield = this.add.image(mx, my, 'mfx_arcane_shield')
-        .setScale(0.85).setAlpha(0.75).setBlendMode(Phaser.BlendModes.ADD).setDepth(4508);
-      this.tweens.add({
-        targets: shield,
-        alpha: 0,
-        scale: 1.15,
-        duration: 1400,
-        onUpdate: () => shield.setPosition(this.hero.x, this.hero.y),
-        onComplete: () => shield.destroy(),
-      });
-
-      const dmg = Math.round(stats.atk * (1.8 + skillLvl * 0.30) * dmgMult);
-      alive.forEach((m) => {
-        if (Phaser.Math.Distance.Between(mx, my, m.sprite.x, m.sprite.y) <= radius) {
-          m.slowUntil = this.time.now + 3500;
-          m.chilledUntil = this.time.now + 3500;
-          this.damageMonster(m, dmg, Math.random() * 100 < stats.critRate, false, '#38bdf8', '❄️');
-        }
-      });
-      this.healHero(Math.round(this.playerMaxHp * (0.08 + skillLvl * 0.02)));
-    } else if (skillId === 'void_beam') {
-      const charges = this.arcaneChargeStacks || 0;
-      this.arcaneChargeStacks = 0;
-      const chargeDmgMult = 1 + charges * 0.12;
-      const chargeWidthMult = 1 + charges * 0.10;
-
-      const ang = Math.atan2(aim.y - this.hero.y, aim.x - this.hero.x);
-      const sx = this.hero.x;
-      const sy = this.hero.y - 12;
-      this.playFxSprite('mfx_void_core', sx, sy, 1.05 * chargeWidthMult, 0, 380);
-      this.playFxSprite('mfx_void_slash', sx + Math.cos(ang) * 45, sy + Math.sin(ang) * 45, 0.95, ang, 340);
-
-      const beamLen = 580 * radMult;
-      const bx = sx + Math.cos(ang) * (beamLen / 2);
-      const by = sy + Math.sin(ang) * (beamLen / 2);
-      const beam = this.add.image(bx, by, 'mfx_void_beam')
-        .setDisplaySize(beamLen, 145 * radMult * chargeWidthMult).setRotation(ang).setBlendMode(Phaser.BlendModes.ADD).setDepth(4512);
-      this.tweens.add({ targets: beam, alpha: 0, scaleY: 0.4, duration: 420, onComplete: () => beam.destroy() });
-
-      const beamDmg = Math.round(stats.atk * (3.1 + skillLvl * 0.48) * (stats.critDmg / 100) * dmgMult * chargeDmgMult);
-      const cosA = Math.cos(ang);
-      const sinA = Math.sin(ang);
-      alive.forEach((m) => {
-        const dx = m.sprite.x - sx;
-        const dy = m.sprite.y - sy;
-        const along = dx * cosA + dy * sinA;
-        const perp = Math.abs(-dx * sinA + dy * cosA);
-        if (along >= -40 && along <= beamLen && perp <= 105 * radMult * chargeWidthMult) {
-          this.playFxSprite('mfx_star_sigil', m.sprite.x, m.sprite.y - 10, 0.85, Math.random() * Math.PI, 300);
-          this.applyHitEffects(m, beamDmg, true, stats);
-        }
-      });
-      if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(210, 0.011);
-    } else if (skillId === 'mana_overload') {
-      this.overloadUntil = this.time.now + 4500;
-      this.arcaneChargeStacks = 5;
-      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + Math.round(this.playerMaxMp * (0.5 + skillLvl * 0.05)));
-      this.playFxSprite('nfx_overload', this.hero.x, this.hero.y - 20, 1.35, 0, 560);
-      this.spawnFloatingText(this.hero.x, this.hero.y - 95, '⚡魔力超載!', '#38bdf8', 16);
-    } else if (skillId === 'chain_lightning') {
-      let curX = this.hero.x;
-      let curY = this.hero.y - 12;
-      const hitSet = new Set();
-      for (let hop = 0; hop < 6; hop++) {
-        const next = this.monsters.find((m) => m.hp > 0 && !hitSet.has(m.uid) && Phaser.Math.Distance.Between(curX, curY, m.sprite.x, m.sprite.y) <= 420);
-        if (!next) break;
-        hitSet.add(next.uid);
-        const mx = (curX + next.sprite.x) / 2;
-        const my = (curY + next.sprite.y) / 2;
-        const dist = Math.max(60, Phaser.Math.Distance.Between(curX, curY, next.sprite.x, next.sprite.y));
-        const ang = Math.atan2(next.sprite.y - curY, next.sprite.x - curX);
-        const arc = this.add.image(mx, my, 'nfx_lightning').setDisplaySize(dist, 85).setRotation(ang).setBlendMode(Phaser.BlendModes.ADD).setDepth(4512);
-        this.tweens.add({ targets: arc, alpha: 0, duration: 280, onComplete: () => arc.destroy() });
-        const isChill = this.time.now < (next.chilledUntil || 0);
-        const dmg = Math.round(stats.atk * (1.3 + skillLvl * 0.26) * (isChill ? 1.85 : 1) * dmgMult);
-        this.damageMonster(next, dmg, Math.random() * 100 < stats.critRate, false, '#38bdf8', '⚡');
-        curX = next.sprite.x;
-        curY = next.sprite.y;
-      }
-    } else if (skillId === 'icicle_rain') {
-      const tx = aim.x;
-      const ty = aim.y;
-      const radius = 235 * radMult;
-      this.time.addEvent({
-        delay: 280,
-        repeat: 3,
-        callback: () => {
-          this.playFxSprite('nfx_icicles', tx + Phaser.Math.Between(-30, 30), ty - 45, 1.35 * radMult, 0, 360);
-          this.playFxSprite('mfx_frost_burst', tx, ty + 10, 1.15 * radMult, 0, 340);
-          const dmg = Math.round(stats.atk * (0.78 + skillLvl * 0.16) * dmgMult);
-          this.monsters.filter((m) => m.hp > 0).forEach((m) => {
-            if (Phaser.Math.Distance.Between(tx, ty, m.sprite.x, m.sprite.y) <= radius) {
-              m.slowUntil = this.time.now + 3500;
-              m.chilledUntil = this.time.now + 3500;
-              this.damageMonster(m, dmg, Math.random() * 100 < stats.critRate, false, '#7dd3fc', '❄️');
-            }
-          });
-        },
-      });
-    } else if (skillId === 'black_hole') {
-      const bx = aim.x;
-      const by = aim.y;
-      const radius = 330 * radMult;
-      const bh = this.add.image(bx, by, 'nfx_blackhole').setScale(1.4 * radMult).setBlendMode(Phaser.BlendModes.ADD).setDepth(4505);
-      this.tweens.add({ targets: bh, angle: 360, duration: 1200 });
-      alive.forEach((m) => {
-        if (Phaser.Math.Distance.Between(bx, by, m.sprite.x, m.sprite.y) <= radius) {
-          m.stunUntil = this.time.now + 1200;
-          this.tweens.add({
-            targets: m.sprite,
-            x: bx + Phaser.Math.Between(-50, 50),
-            y: by + Phaser.Math.Between(-40, 40),
-            duration: 550,
-            ease: 'Quad.easeIn',
-          });
-        }
-      });
-      this.time.delayedCall(1100, () => {
-        bh.destroy();
-        this.playFxSprite('mfx_void_core', bx, by, 1.6 * radMult, 0, 450);
-        const dmg = Math.round(stats.atk * (2.5 + skillLvl * 0.42) * dmgMult);
-        this.monsters.filter((m) => m.hp > 0).forEach((m) => {
-          if (Phaser.Math.Distance.Between(bx, by, m.sprite.x, m.sprite.y) <= radius * 0.85) {
-            this.damageMonster(m, dmg, true, false, '#c084fc', '🕳️');
-          }
-        });
-        if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(220, 0.012);
-      });
-    }
-  }
 
   showSkillBanner(name, color = '#fde047') {
     const banner = this.add.text(this.scale.width / 2, 68, `⚡ 【${name}】`, {
@@ -3094,272 +2000,8 @@ export class BattleScene extends Phaser.Scene {
   }
 
 
-  castPaladinSkill(skillId, skillLvl, stats, isManual = false) {
-    const _hx = this.hero.x, _hy = this.hero.y;
-    const _n = this.findNearestMonster(_hx, _hy);
-    const _tx = _n ? _n.sprite.x : _hx + 90, _ty = _n ? _n.sprite.y : _hy;
-    const _aoe = (cx, cy, rad, mult, col, pre, stList = [], forceCrit = false, extraFlat = 0) => {
-      for (const m of [...this.monsters]) {
-        if (!m || m.hp <= 0) continue;
-        if (Phaser.Math.Distance.Between(cx, cy, m.sprite.x, m.sprite.y) <= rad) {
-          const isC = forceCrit || (Math.random() * 100 < stats.critRate);
-          const d = Math.round((stats.atk * mult + extraFlat) * (isC ? stats.critDmg / 100 : 1));
-          if (!m._statuses) m._statuses = {};
-          stList.forEach((k) => { m._statuses[k] = Math.max(m._statuses[k] || 0, this.time.now + 5000); });
-          this.damageMonster(m, d, isC, false, col, pre);
-        }
-      }
-    };
-    if (skillId === 'p_smite_lash') {
-      this.playAdditiveVfx('vfx_p_cross_fire', _tx, _ty - 10, 0.78, 340);
-      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 18);
-      _aoe(_tx, _ty, 220, (145 + skillLvl * 22) / 100, '#fde047', '✨', ['conviction']);
-      return;
-    }
-    if (skillId === 'p_holy_lance') {
-      this.playAdditiveVfx('vfx_p_cross_fire', _tx, _ty - 8, 1.0, 420);
-      for (const m of [...this.monsters]) {
-        if (!m || m.hp <= 0) continue;
-        if (Phaser.Math.Distance.Between(_tx, _ty, m.sprite.x, m.sprite.y) <= 250) {
-          const hasConv = this.time.now < (m._statuses?.conviction || 0);
-          const mult = ((240 + skillLvl * 38) / 100) * (hasConv ? 1.55 : 1.0);
-          this.damageMonster(m, Math.round(stats.atk * mult), Math.random() * 100 < stats.critRate, false, '#fde047', '🔱聖槍 ');
-        }
-      }
-      return;
-    }
-    if (skillId === 'p_crusader_charge') {
-      this.playAdditiveVfx('vfx_p_cross_fire', _tx, _ty, 1.08, 460);
-      _aoe(_tx, _ty, 260, (210 + skillLvl * 32) / 100, '#fbbf24', '✝️', ['burn', 'conviction']);
-      return;
-    }
-    if (skillId === 'p_redemption_prayer') {
-      this.playAdditiveVfx('vfx_p_redemption_halo', _hx, _hy - 12, 1.0, 520);
-      this.healHero(Math.round(this.playerMaxHp * ((35 + skillLvl * 3) / 100)));
-      _aoe(_hx, _hy, 260, (160 + skillLvl * 25) / 100, '#fef08a', '🕊️', ['conviction']);
-      return;
-    }
-    if (skillId === 'p_thorns_aura') {
-      this.playAdditiveVfx('vfx_p_thorns_ring', _hx, _hy - 6, 1.02, 460);
-      _aoe(_hx, _hy, 270, (175 + skillLvl * 28) / 100, '#fbbf24', '🛡️荊棘 ', ['vulnerable'], false, (stats.armor || 20) * 2.8);
-      return;
-    }
-    if (skillId === 'p_solar_beacon') {
-      for (let w = 0; w < 3; w++) {
-        this.time.delayedCall(w * 280, () => {
-          this.playAdditiveVfx('vfx_p_redemption_halo', _tx, _ty - 10, 0.95, 420);
-          _aoe(_tx, _ty, 260, (130 + skillLvl * 22) / 100, '#fde047', '☀️', ['conviction', 'burn']);
-        });
-      }
-      return;
-    }
-    if (skillId === 'p_seraph_descent') {
-      this.healHero(Math.round(this.playerMaxHp * 0.30));
-      this.playAdditiveVfx('vfx_p_seraph_wings', _hx, _hy - 30, 1.25, 680);
-      for (let w = 0; w < 4; w++) {
-        this.time.delayedCall(w * 300, () => {
-          this.playAdditiveVfx('vfx_p_redemption_halo', _tx, _ty - 12, 1.08, 460);
-          _aoe(_tx, _ty, 340, (175 + skillLvl * 30) / 100, '#fde047', '👼熾天使 ', ['conviction', 'burn'], true);
-        });
-      }
-      return;
-    }
-    if (skillId === 'p_heavens_verdict') {
-      this.playAdditiveVfx('vfx_p_verdict_sword', _tx, _ty - 36, 1.28, 620);
-      _aoe(_tx, _ty, 330, (380 + skillLvl * 55) / 100, '#fef08a', '⚔️天罰巨劍 ', ['conviction', 'shock'], true);
-      return;
-    }
-    const alive = this.monsters.filter((m) => m.hp > 0);
-    if (alive.length === 0) return;
-    const tree = this.getState().skillTree || {};
-    const aim = this.getAimPoint(isManual, 360);
-    this.faceHeroToward(aim.x, aim.y);
-    this.triggerHeroAttackAnim(420);
-    this.hero.play(`p_${this.heroDir}_atk`, false);
+  // ===================== v264: 聖殿騎士 2.5D 動態召喚實體與磁吸聖光之球系統 =====================
 
-    const auraBonus = this.time.now < this.radiantAuraUntil ? 1.25 : 1;
-    const dmgMult = (stats.skillDmgMult || 1) * auraBonus;
-    const stunMult = 1 + (stats.stunDurPct || 0) / 100;
-    const keyJudg = (tree.p_key_judgment || 0) > 0;
-
-    const dealHolyDmg = (mob, mult, forceCrit = false, color = '#fde047') => {
-      if (!mob || mob.hp <= 0) return;
-      const isStun = this.time.now < (mob.stunUntil || 0);
-      const isCrit = forceCrit || (keyJudg && isStun) || Math.random() * 100 < stats.critRate;
-      const dmg = Math.max(1, Math.round(stats.atk * mult * dmgMult * (isCrit ? stats.critDmg / 100 : 1)));
-      this.damageMonster(mob, dmg, isCrit, false, color, '✨');
-    };
-
-    if (skillId === 'blessed_hammer') {
-      const count = 3 + (skillLvl >= 4 ? 1 : 0) + ((tree.p_mod_spiral || 0) > 0 ? 2 : 0) + (stats.activeEffects.has('hammer_extra') ? 2 : 0);
-      const mult = 0.95 + skillLvl * 0.20;
-      const speedMult = (tree.p_mod_spiral || 0) > 0 ? 1.25 : 1;
-      for (let i = 0; i < count; i++) {
-        const startAng = (Math.PI * 2 * i) / count;
-        const spr = this.add.image(this.hero.x, this.hero.y, 'pfx_hammer')
-          .setScale(0.45).setBlendMode(Phaser.BlendModes.ADD).setDepth(4512);
-        const hitSet = new Set();
-        const stateObj = { t: 0 };
-        this.tweens.add({
-          targets: stateObj,
-          t: 1,
-          duration: Math.round(1700 / speedMult),
-          onUpdate: () => {
-            if (!spr.active || !this.hero) return;
-            const ang = startAng + stateObj.t * Math.PI * 4.2;
-            const rad = 45 + stateObj.t * 210;
-            spr.x = this.hero.x + Math.cos(ang) * rad;
-            spr.y = this.hero.y + Math.sin(ang) * rad;
-            spr.rotation += 0.28;
-            for (const m of this.monsters) {
-              if (m.hp <= 0 || hitSet.has(m.uid)) continue;
-              if (Phaser.Math.Distance.Between(spr.x, spr.y, m.sprite.x, m.sprite.y) <= 68) {
-                hitSet.add(m.uid);
-                const stunBoost = this.time.now < (m.stunUntil || 0) ? 1.25 : 1;
-                dealHolyDmg(m, mult * stunBoost);
-              }
-            }
-          },
-          onComplete: () => spr.destroy(),
-        });
-      }
-      return;
-    }
-
-    if (skillId === 'heaven_fist') {
-      this.playFxSprite('pfx_heaven', aim.x, aim.y - 45, 1.35, 0, 420);
-      if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(120, 0.006);
-      const mult = 2.10 + skillLvl * 0.36;
-      const hasMod = (tree.p_mod_bolts || 0) > 0;
-      for (const m of alive) {
-        if (Phaser.Math.Distance.Between(aim.x, aim.y, m.sprite.x, m.sprite.y) <= 185) {
-          if (hasMod) m.stunUntil = Math.max(m.stunUntil || 0, this.time.now + Math.round(800 * stunMult));
-          dealHolyDmg(m, mult);
-        }
-      }
-      const bolts = hasMod ? 8 : 6;
-      for (let i = 0; i < bolts; i++) {
-        const ang = (Math.PI * 2 * i) / bolts;
-        const spr = this.add.image(aim.x, aim.y - 10, 'pfx_slash')
-          .setScale(0.42).setRotation(ang).setBlendMode(Phaser.BlendModes.ADD).setDepth(4508);
-        this.projectiles.push({
-          fromEnemy: false, kind: 'mage_bolt', sprite: spr,
-          vx: Math.cos(ang) * 620, vy: Math.sin(ang) * 620,
-          lifeMs: 750, dmgMult: 0.65 + skillLvl * 0.12, bouncesLeft: 0, hitIds: new Set(), stats,
-        });
-      }
-      return;
-    }
-
-    if (skillId === 'judgment') {
-      this.playFxSprite('pfx_judgment', aim.x, aim.y - 12, 1.45, 0, 480);
-      if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(160, 0.008);
-      const mult = 2.35 + skillLvl * 0.42;
-      let hits = 0;
-      for (const m of alive) {
-        if (Phaser.Math.Distance.Between(aim.x, aim.y, m.sprite.x, m.sprite.y) <= 220) {
-          m.stunUntil = Math.max(m.stunUntil || 0, this.time.now + Math.round(1500 * stunMult));
-          dealHolyDmg(m, mult, false, '#fef08a');
-          hits++;
-        }
-      }
-      if (hits > 0) this.playerMp = Math.min(this.playerMaxMp, this.playerMp + hits * 4);
-      return;
-    }
-
-    if (skillId === 'divine_storm') {
-      this.playFxSprite('pfx_storm', this.hero.x, this.hero.y, 1.65, 0, 460);
-      const mult = 1.75 + skillLvl * 0.32;
-      let hits = 0;
-      for (const m of alive) {
-        if (Phaser.Math.Distance.Between(this.hero.x, this.hero.y, m.sprite.x, m.sprite.y) <= 260) {
-          dealHolyDmg(m, mult);
-          hits++;
-        }
-      }
-      if (hits > 0) {
-        this.healHero(Math.round(this.playerMaxHp * Math.min(0.30, hits * 0.03)));
-        this.playerMp = Math.min(this.playerMaxMp, this.playerMp + hits * 3);
-      }
-      return;
-    }
-
-    if (skillId === 'shield_bash') {
-      const ang = Math.atan2(aim.y - this.hero.y, aim.x - this.hero.x);
-      const dist = Math.min(260, Math.hypot(aim.x - this.hero.x, aim.y - this.hero.y));
-      const nx = Phaser.Math.Clamp(this.hero.x + Math.cos(ang) * dist, 180, MAP_W - 180);
-      const ny = Phaser.Math.Clamp(this.hero.y + Math.sin(ang) * dist, 220, MAP_H - 180);
-      this.hero.setPosition(nx, ny);
-      this.playFxSprite('pfx_bash', nx + Math.cos(ang) * 40, ny + Math.sin(ang) * 40, 1.15, ang, 380);
-      const mult = 1.55 + skillLvl * 0.28;
-      const armBonus = stats.armor * (0.65 + skillLvl * 0.10);
-      let hits = 0;
-      for (const m of alive) {
-        if (Phaser.Math.Distance.Between(nx, ny, m.sprite.x, m.sprite.y) <= 200) {
-          m.stunUntil = Math.max(m.stunUntil || 0, this.time.now + Math.round(1000 * stunMult));
-          const isCrit = keyJudg || Math.random() * 100 < stats.critRate;
-          const dmg = Math.max(1, Math.round((stats.atk * mult + armBonus) * dmgMult * (isCrit ? stats.critDmg / 100 : 1)));
-          this.damageMonster(m, dmg, isCrit, false, '#fbbf24', '🛡️');
-          hits++;
-        }
-      }
-      if ((tree.p_mod_thorns || 0) > 0) this.thornsModUntil = this.time.now + 3000;
-      if ((tree.p_mod_taunt || 0) > 0 && hits > 0) {
-        this.healHero(Math.round(this.playerMaxHp * Math.min(0.25, hits * 0.03)));
-        this.playerMp = Math.min(this.playerMaxMp, this.playerMp + hits * 4);
-      }
-      return;
-    }
-
-    if (skillId === 'holy_aegis') {
-      this.holyAegisHp = Math.round(this.playerMaxHp * (0.40 + skillLvl * 0.06));
-      this.holyAegisUntil = this.time.now + 5000;
-      const dome = this.add.image(this.hero.x, this.hero.y - 12, 'pfx_aegis')
-        .setScale(0.75).setAlpha(0.85).setBlendMode(Phaser.BlendModes.ADD).setDepth(4515);
-      this.tweens.add({
-        targets: dome, alpha: 0, scale: 1.05, duration: 1200,
-        onUpdate: () => { if (dome.active && this.hero) dome.setPosition(this.hero.x, this.hero.y - 12); },
-        onComplete: () => dome.destroy(),
-      });
-      this.spawnFloatingText(this.hero.x, this.hero.y - 90, `🛡️ 聖盾 +${formatNum(this.holyAegisHp)}`, '#fde047', 15);
-      return;
-    }
-
-    if (skillId === 'consecration') {
-      const cx = this.hero.x;
-      const cy = this.hero.y + 12;
-      const circle = this.add.image(cx, cy, 'pfx_consecration')
-        .setScale(1.25).setAlpha(0.9).setBlendMode(Phaser.BlendModes.ADD).setDepth(6);
-      const waveMult = 0.75 + skillLvl * 0.16;
-      const healPct = (3 + skillLvl * 0.8) / 100;
-      for (let w = 0; w < 4; w++) {
-        this.time.delayedCall(w * 950, () => {
-          if (this.isTransitioning) return;
-          this.healHero(Math.max(1, Math.round(this.playerMaxHp * healPct)));
-          for (const m of this.monsters) {
-            if (m.hp > 0 && Phaser.Math.Distance.Between(cx, cy, m.sprite.x, m.sprite.y) <= 230) {
-              dealHolyDmg(m, waveMult);
-            }
-          }
-        });
-      }
-      this.tweens.add({ targets: circle, angle: 90, alpha: 0, delay: 3200, duration: 800, onComplete: () => circle.destroy() });
-      return;
-    }
-
-    if (skillId === 'radiant_aura') {
-      this.radiantAuraUntil = this.time.now + 4500;
-      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 28);
-      this.playFxSprite('pfx_storm', this.hero.x, this.hero.y, 1.4, 0, 420);
-      const mult = 1.30 + skillLvl * 0.24;
-      for (const m of alive) {
-        if (Phaser.Math.Distance.Between(this.hero.x, this.hero.y, m.sprite.x, m.sprite.y) <= 240) {
-          dealHolyDmg(m, mult);
-        }
-      }
-      this.spawnFloatingText(this.hero.x, this.hero.y - 90, '✨ 熾光懲戒光環！', '#fef08a', 15);
-    }
-  }
 
 
   updateSummons(dt, stats) {
@@ -3464,1009 +2106,34 @@ export class BattleScene extends Phaser.Scene {
   }
 
   // v252: 暗黑 4 死靈法師即時倍率（亡者之書獻祭孤狼加成＋關鍵被動＋鮮血球層數）
-  getNecroD4LiveMult() {
-    const st = this.getState();
-    const book = st?.classMechanic?.necro || {};
-    const ks = st?.activeKeystone?.necro || '';
-    let mult = 1.0;
-    let sacCount = 0;
-    if (book.skeleton === 'sacrifice') sacCount += 1;
-    if (book.mage === 'sacrifice') sacCount += 1;
-    if (book.golem === 'sacrifice') sacCount += 1;
-    if (sacCount === 3) mult *= 1.45;
-    else if (sacCount > 0) mult *= (1 + sacCount * 0.14);
-    if (ks === 'nk_undead_overlord' && (this.necroMinions?.length || 0) >= 3) mult *= 1.28;
-    if (ks === 'nk_bone_tyrant') mult *= 1.18;
-    if (ks === 'nk_plague_sea') mult *= 1.16;
-    if (ks === 'nk_lich_phylactery' && this.playerMp >= this.playerMaxMp * 0.5) mult *= 1.22;
-    return mult;
-  }
 
   // v252: 在地面生成真實屍體（ent_n_corpse，供屍爆／屍體觸鬚／亡靈軍團消耗）
-  spawnNecroCorpse(x, y) {
-    if (!this.textures.exists('ent_n_corpse')) return null;
-    if (!this.necroCorpses) this.necroCorpses = [];
-    while (this.necroCorpses.length >= 12) {
-      const old = this.necroCorpses.shift();
-      if (old?.sprite?.active) old.sprite.destroy();
-    }
-    const cx = Phaser.Math.Clamp(x + Phaser.Math.Between(-18, 18), 80, MAP_W - 80);
-    const cy = Phaser.Math.Clamp(y + Phaser.Math.Between(-10, 14), 80, MAP_H - 80);
-    const sp = this.add.image(cx, cy, 'ent_n_corpse')
-      .setScale(0.32)
-      .setAlpha(0)
-      .setDepth(52);
-    this.tweens.add({ targets: sp, scale: 0.56, alpha: 0.94, duration: 180, ease: 'Back.easeOut' });
-    const entry = { x: cx, y: cy, sprite: sp, expiresAt: this.time.now + 18000 };
-    this.necroCorpses.push(entry);
-    return entry;
-  }
 
   // v252: 消耗（或定位）最近地面屍體
-  consumeNearestNecroCorpse(x, y, maxDist = 440, destroyCorpse = true) {
-    if (!this.necroCorpses || this.necroCorpses.length === 0) {
-      return { x, y, consumed: false };
-    }
-    let bestIdx = -1;
-    let bestDist = maxDist;
-    for (let i = 0; i < this.necroCorpses.length; i++) {
-      const c = this.necroCorpses[i];
-      if (!c?.sprite?.active) continue;
-      const d = Phaser.Math.Distance.Between(x, y, c.x, c.y);
-      if (d < bestDist) {
-        bestDist = d;
-        bestIdx = i;
-      }
-    }
-    if (bestIdx === -1) return { x, y, consumed: false };
-    const picked = this.necroCorpses[bestIdx];
-    const rx = picked.x;
-    const ry = picked.y;
-    if (destroyCorpse) {
-      if (picked.sprite?.active) picked.sprite.destroy();
-      this.necroCorpses.splice(bestIdx, 1);
-    }
-    return { x: rx, y: ry, consumed: true };
-  }
 
   // v252: 生成磁吸鮮血球（ent_n_blood_orb，回血＋回魂能＋疊加拉斯瑪壓制）
-  spawnNecroBloodOrb(x, y) {
-    if (!this.textures.exists('ent_n_blood_orb')) return null;
-    if (!this.necroBloodOrbs) this.necroBloodOrbs = [];
-    while (this.necroBloodOrbs.length >= 10) {
-      const old = this.necroBloodOrbs.shift();
-      if (old?.sprite?.active) old.sprite.destroy();
-    }
-    const ox = Phaser.Math.Clamp(x + Phaser.Math.Between(-36, 36), 80, MAP_W - 80);
-    const oy = Phaser.Math.Clamp(y + Phaser.Math.Between(-24, 24), 80, MAP_H - 80);
-    const sp = this.add.image(ox, oy, 'ent_n_blood_orb')
-      .setScale(0.24)
-      .setAlpha(0)
-      .setDepth(Math.max(115, Math.round(oy + 6)));
-    this.tweens.add({ targets: sp, scale: 0.44, alpha: 0.96, duration: 200, ease: 'Back.easeOut' });
-    const entry = { x: ox, y: oy, sprite: sp, phase: Math.random() * 6.28, expiresAt: this.time.now + 14000 };
-    this.necroBloodOrbs.push(entry);
-    return entry;
-  }
 
   // v252: 暗影枯萎（Shadowblight）累積觸發器
-  triggerNecroShadowHit(target, stats) {
-    if (!target || !target.sprite || target.hp <= 0) return;
-    const st = this.getState();
-    const hasKeystone = st?.activeKeystone?.necro === 'nk_shadowblight';
-    this.necroShadowHits = (this.necroShadowHits || 0) + 1;
-    const threshold = hasKeystone ? 8 : 14;
-    if (this.necroShadowHits >= threshold) {
-      this.necroShadowHits = 0;
-      const sx = target.sprite.x;
-      const sy = target.sprite.y;
-      this.necroVfx?.playSeq16('seq16_n_soul_rift', sx, sy - 8, 1.05, 18, 18);
-      this.necroVfx?.spawnDebrisBurst(sx, sy, 'shadow', 7);
-      const sbMult = (hasKeystone ? 2.45 : 1.35) * this.getNecroD4LiveMult();
-      for (const m of [...this.monsters]) {
-        if (!m || m.hp <= 0 || !m.sprite) continue;
-        if (Phaser.Math.Distance.Between(sx, sy, m.sprite.x, m.sprite.y) <= 230) {
-          const dmg = Math.max(1, Math.round(stats.atk * sbMult * (stats.critDmg / 100)));
-          this.damageMonster(m, dmg, true, false, '#c084fc', '☠️暗影枯萎 ', true);
-        }
-      }
-    }
-  }
 
   // v252: 生成 2x2 四幀動態亡靈隨從（嚴格尊重亡者之書獻祭設定）
-  spawnNecroMinion(kind, x, y, skillLvl = 1, lifeMs = 20000) {
-    const st = this.getState();
-    const book = st?.classMechanic?.necro || {};
-    const ks = st?.activeKeystone?.necro || '';
-    if (kind === 'skeleton' && book.skeleton === 'sacrifice') return false;
-    if (kind === 'mage' && book.mage === 'sacrifice') return false;
-    if (kind === 'golem' && book.golem === 'sacrifice') return false;
-
-    const animKeyMap = {
-      skeleton: 'anim_n_skeleton',
-      mage: 'anim_n_mage',
-      golem: 'anim_n_golem',
-      wraith: 'anim_n_wraith',
-    };
-    const scaleMap = { skeleton: 0.44, mage: 0.46, golem: 0.62, wraith: 0.46 };
-    const capMap = {
-      skeleton: ks === 'nk_undead_overlord' ? 6 : 4,
-      mage: ks === 'nk_undead_overlord' ? 4 : 3,
-      golem: 1,
-      wraith: 5,
-    };
-    const intervalMap = { skeleton: 920, mage: 1120, golem: 1420, wraith: 780 };
-    const themeMap = { skeleton: 'bone', mage: 'shadow', golem: 'blood', wraith: 'shadow' };
-
-    const key = animKeyMap[kind];
-    if (!key || !this.textures.exists(key)) return false;
-    if (!this.necroMinions) this.necroMinions = [];
-
-    const existing = this.necroMinions.filter((m) => m.kind === kind);
-    if (existing.length >= (capMap[kind] || 3)) {
-      const oldest = existing[0];
-      oldest.expiresAt = this.time.now + lifeMs;
-      oldest.skillLvl = Math.max(oldest.skillLvl, skillLvl);
-      this.necroVfx?.spawnSummonPoof(oldest.x, oldest.y, themeMap[kind]);
-      return true;
-    }
-
-    const mx = Phaser.Math.Clamp(x, 80, MAP_W - 80);
-    const my = Phaser.Math.Clamp(y, 80, MAP_H - 80);
-    const shadow = this.add.ellipse(mx, my + 12, kind === 'golem' ? 56 : 36, kind === 'golem' ? 20 : 14, 0x050507, 0.52)
-      .setDepth(Math.max(50, Math.round(my - 2)));
-    const sp = this.add.sprite(mx, my - 10, key, 0)
-      .setScale(scaleMap[kind])
-      .setDepth(Math.max(120, Math.round(my + 10)));
-    if (this.anims.exists(key)) sp.play(key);
-    this.necroVfx?.spawnSummonPoof(mx, my, themeMap[kind]);
-
-    this.necroMinions.push({
-      kind,
-      x: mx,
-      y: my,
-      sprite: sp,
-      shadow,
-      skillLvl,
-      interval: intervalMap[kind],
-      atkCd: 260 + Math.random() * 220,
-      expiresAt: this.time.now + lifeMs,
-      phase: Math.random() * 6.28,
-      slamCount: 0,
-      theme: themeMap[kind],
-      homeOffX: Phaser.Math.Between(-95, 95),
-      homeOffY: Phaser.Math.Between(-65, 65),
-    });
-    return true;
-  }
 
   // v252: 每幀更新死靈法師地面屍體、磁吸鮮血球與 4 類動態亡靈隨從
-  updateNecroBattlefieldEntities(delta) {
-    const now = this.time.now;
-    const dtSec = delta / 1000;
-
-    // 1. 地面屍體過期清除
-    if (this.necroCorpses && this.necroCorpses.length > 0) {
-      for (let i = this.necroCorpses.length - 1; i >= 0; i--) {
-        const c = this.necroCorpses[i];
-        if (!c?.sprite?.active || now >= c.expiresAt) {
-          if (c?.sprite?.active) c.sprite.destroy();
-          this.necroCorpses.splice(i, 1);
-        }
-      }
-    }
-
-    // 2. 鮮血球磁吸拾取（回血＋回魂能＋疊加拉斯瑪層數）
-    if (this.necroBloodOrbs && this.necroBloodOrbs.length > 0 && this.hero) {
-      for (let i = this.necroBloodOrbs.length - 1; i >= 0; i--) {
-        const orb = this.necroBloodOrbs[i];
-        if (!orb?.sprite?.active || now >= orb.expiresAt) {
-          if (orb?.sprite?.active) orb.sprite.destroy();
-          this.necroBloodOrbs.splice(i, 1);
-          continue;
-        }
-        orb.phase += dtSec * 5.0;
-        const dist = Phaser.Math.Distance.Between(orb.x, orb.y, this.hero.x, this.hero.y);
-        if (dist <= 250) {
-          const ang = Phaser.Math.Angle.Between(orb.x, orb.y, this.hero.x, this.hero.y);
-          orb.x += Math.cos(ang) * 340 * dtSec;
-          orb.y += Math.sin(ang) * 340 * dtSec;
-        }
-        orb.sprite.setPosition(orb.x, orb.y - 6 + Math.sin(orb.phase) * 4);
-        orb.sprite.setDepth(Math.max(118, Math.round(orb.y + 8)));
-        if (dist <= 44) {
-          orb.sprite.destroy();
-          this.necroBloodOrbs.splice(i, 1);
-          this.healHero(Math.round(this.playerMaxHp * 0.08));
-          this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 10);
-          this.necroBloodOrbStacks = Math.min(5, (this.necroBloodOrbStacks || 0) + 1);
-          this.necroVfx?.spawnDebrisBurst(this.hero.x, this.hero.y - 8, 'blood', 4);
-        }
-      }
-    }
-
-    // 3. 4 類動態亡靈隨從自主追蹤、走位與攻擊
-    if (this.necroMinions && this.necroMinions.length > 0) {
-      const stats = this.getStats();
-      const mult = this.getNecroD4LiveMult();
-      const frenzied = now < (this.necroFrenzyUntil || 0);
-      const atkSpdFactor = frenzied ? 0.65 : 1.0;
-
-      for (let i = this.necroMinions.length - 1; i >= 0; i--) {
-        const mn = this.necroMinions[i];
-        if (!mn?.sprite?.active || now >= mn.expiresAt) {
-          this.necroVfx?.spawnSummonPoof(mn.x, mn.y, mn.theme || 'shadow');
-          if (mn?.sprite?.active) mn.sprite.destroy();
-          if (mn?.shadow?.active) mn.shadow.destroy();
-          this.necroMinions.splice(i, 1);
-          continue;
-        }
-        mn.phase += dtSec * 4.2;
-        const tgt = this.findNearestMonster(mn.x, mn.y, 680);
-        const speedMap = { skeleton: 215, mage: 175, golem: 185, wraith: 285 };
-        const desiredRange = mn.kind === 'mage' ? 210 : (mn.kind === 'golem' ? 58 : 48);
-
-        if (tgt && tgt.sprite && tgt.hp > 0) {
-          const dist = Phaser.Math.Distance.Between(mn.x, mn.y, tgt.sprite.x, tgt.sprite.y);
-          const ang = Phaser.Math.Angle.Between(mn.x, mn.y, tgt.sprite.x, tgt.sprite.y);
-          if (dist > desiredRange) {
-            mn.x += Math.cos(ang) * speedMap[mn.kind] * dtSec;
-            mn.y += Math.sin(ang) * speedMap[mn.kind] * dtSec;
-          } else if (mn.kind === 'mage' && dist < 130) {
-            mn.x -= Math.cos(ang) * 110 * dtSec;
-            mn.y -= Math.sin(ang) * 110 * dtSec;
-          }
-          mn.sprite.setFlipX(tgt.sprite.x < mn.x);
-        } else if (this.hero) {
-          const hx = this.hero.x + mn.homeOffX;
-          const hy = this.hero.y + mn.homeOffY;
-          const distH = Phaser.Math.Distance.Between(mn.x, mn.y, hx, hy);
-          if (distH > 40) {
-            const angH = Phaser.Math.Angle.Between(mn.x, mn.y, hx, hy);
-            mn.x += Math.cos(angH) * speedMap[mn.kind] * dtSec;
-            mn.y += Math.sin(angH) * speedMap[mn.kind] * dtSec;
-            mn.sprite.setFlipX(hx < mn.x);
-          }
-        }
-
-        if (mn.shadow?.active) {
-          mn.shadow.setPosition(mn.x, mn.y + 12);
-          mn.shadow.setDepth(Math.max(50, Math.round(mn.y - 2)));
-        }
-        const bob = mn.kind === 'wraith' ? Math.sin(mn.phase * 1.4) * 6 : Math.sin(mn.phase) * 2.5;
-        mn.sprite.setPosition(mn.x, mn.y - 12 + bob);
-        mn.sprite.setDepth(Math.max(120, Math.round(mn.y + 10)));
-
-        mn.atkCd -= delta;
-        if (mn.atkCd <= 0 && tgt && tgt.sprite && tgt.hp > 0) {
-          const hitDist = Phaser.Math.Distance.Between(mn.x, mn.y, tgt.sprite.x, tgt.sprite.y);
-          if (hitDist <= desiredRange + 65) {
-            mn.atkCd = mn.interval * atkSpdFactor;
-            const baseDmg = Math.max(1, Math.round(stats.atk * (0.68 + mn.skillLvl * 0.11) * mult * (frenzied ? 1.30 : 1)));
-            this.tweens.add({ targets: mn.sprite, scaleX: mn.sprite.scaleX * 1.16, scaleY: mn.sprite.scaleY * 1.16, duration: 85, yoyo: true });
-
-            if (mn.kind === 'skeleton') {
-              this.necroVfx?.playSeq16('seq16_n_bone_burst', tgt.sprite.x, tgt.sprite.y - 6, 0.44, 22, 14);
-              this.necroVfx?.spawnDebrisBurst(tgt.sprite.x, tgt.sprite.y, 'bone', 4);
-              this.damageMonster(tgt, baseDmg, false, false, '#e2e8f0', '💀骷髏 ', true);
-            } else if (mn.kind === 'mage') {
-              this.necroVfx?.playSeq16('seq16_n_soul_rift', tgt.sprite.x, tgt.sprite.y - 8, 0.48, 20, 14);
-              this.damageMonster(tgt, Math.round(baseDmg * 1.12), false, false, '#c084fc', '🔮骸法 ', true);
-              this.triggerNecroShadowHit(tgt, stats);
-            } else if (mn.kind === 'golem') {
-              mn.slamCount += 1;
-              this.necroVfx?.playSeq16('seq16_n_blood_surge', tgt.sprite.x, tgt.sprite.y - 8, 0.72, 20, 16);
-              this.necroVfx?.spawnGroundDecal('blood', tgt.sprite.x, tgt.sprite.y, 0.65, 1400);
-              for (const m of [...this.monsters]) {
-                if (m && m.hp > 0 && m.sprite && Phaser.Math.Distance.Between(tgt.sprite.x, tgt.sprite.y, m.sprite.x, m.sprite.y) <= 170) {
-                  this.damageMonster(m, Math.round(baseDmg * 1.35), false, false, '#fb7185', '🩸魔像 ', true);
-                }
-              }
-              if (mn.slamCount % 2 === 0) this.spawnNecroBloodOrb(tgt.sprite.x, tgt.sprite.y);
-            } else if (mn.kind === 'wraith') {
-              this.necroVfx?.playSeq16('seq16_n_blight_pool', tgt.sprite.x, tgt.sprite.y - 6, 0.46, 20, 14);
-              this.damageMonster(tgt, Math.round(baseDmg * 1.18), true, false, '#5eead4', '👻怨靈 ', true);
-              this.triggerNecroShadowHit(tgt, stats);
-            }
-          }
-        }
-      }
-    }
-  }
 
   // v252: 暗黑 4 死靈法師 24 招實戰判定幾何＋16 幀暗黑序列＋動態亡靈軍團（零震動、零音效）
-  castNecroSkill(skillId, skillLvl, stats, isManual = false) {
-    const _hx = this.hero.x, _hy = this.hero.y;
-    const aim = this.getAimPoint(isManual, 440);
-    const nearest = this.findNearestMonster(_hx, _hy);
-    const _tx = isManual ? aim.x : (nearest ? nearest.sprite.x : aim.x);
-    const _ty = isManual ? aim.y : (nearest ? nearest.sprite.y : aim.y);
-    const _ang = Phaser.Math.Angle.Between(_hx, _hy, _tx, _ty);
-
-    this.faceHeroToward(_tx, _ty);
-    this.triggerHeroAttackAnim(380);
-    if (this.anims.exists(`n_${this.heroDir}_atk`)) {
-      this.hero.play(`n_${this.heroDir}_atk`, false);
-    }
-
-    const st = this.getState();
-    const ks = st?.activeKeystone?.necro || '';
-    const nv = this.necroVfx;
-    const liveMult = (stats.skillDmgMult || 1) * this.getNecroD4LiveMult();
-    const boneMult = (1 + (stats.boneDmgPct || 0) / 100) * (ks === 'nk_bone_tyrant' ? 1.25 : 1);
-
-    const _hitOne = (m, mult, col, pre, stList = [], opts = {}) => {
-      if (!m || m.hp <= 0 || !m.sprite) return false;
-      const bonusCrit = opts.bonusCrit || 0;
-      const isC = opts.forceCrit || (Math.random() * 100 < (stats.critRate + bonusCrit));
-      const curseAmp = (this.time.now < (m.cursedUntil || 0)) ? 1.25 : 1.0;
-      const d = Math.max(1, Math.round(stats.atk * mult * liveMult * curseAmp * (isC ? stats.critDmg / 100 : 1)));
-      if (!m._statuses) m._statuses = {};
-      stList.forEach((k) => {
-        m._statuses[k] = Math.max(m._statuses[k] || 0, this.time.now + 5000);
-        if (k === 'curse') m.cursedUntil = Math.max(m.cursedUntil || 0, this.time.now + 6000);
-        if (k === 'chill' || k === 'slow') m.chilledUntil = Math.max(m.chilledUntil || 0, this.time.now + 3600);
-        if (k === 'bleed') m.bleedUntil = Math.max(m.bleedUntil || 0, this.time.now + 5000);
-      });
-      this.damageMonster(m, d, isC, false, col, pre);
-      if (opts.shadow) this.triggerNecroShadowHit(m, stats);
-      return true;
-    };
-
-    const _aoe = (cx, cy, rad, mult, col, pre, stList = [], opts = {}) => {
-      let hits = 0;
-      for (const m of [...this.monsters]) {
-        if (!m || m.hp <= 0 || !m.sprite) continue;
-        if (Phaser.Math.Distance.Between(cx, cy, m.sprite.x, m.sprite.y) <= rad) {
-          if (_hitOne(m, mult, col, pre, stList, opts)) hits += 1;
-        }
-      }
-      return hits;
-    };
-
-    const _cone = (ox, oy, dirAng, halfArcRad, maxDist, mult, col, pre, stList = [], opts = {}) => {
-      let hits = 0;
-      for (const m of [...this.monsters]) {
-        if (!m || m.hp <= 0 || !m.sprite) continue;
-        const dist = Phaser.Math.Distance.Between(ox, oy, m.sprite.x, m.sprite.y);
-        if (dist > maxDist) continue;
-        const mAng = Phaser.Math.Angle.Between(ox, oy, m.sprite.x, m.sprite.y);
-        const diff = Math.abs(Phaser.Math.Angle.Wrap(mAng - dirAng));
-        if (diff <= halfArcRad || dist <= 48) {
-          if (_hitOne(m, mult, col, pre, stList, opts)) hits += 1;
-        }
-      }
-      return hits;
-    };
-
-    const _line = (ox, oy, dirAng, length, halfWidth, mult, col, pre, stList = [], opts = {}) => {
-      const cosA = Math.cos(dirAng), sinA = Math.sin(dirAng);
-      const hitList = [];
-      for (const m of [...this.monsters]) {
-        if (!m || m.hp <= 0 || !m.sprite) continue;
-        const dx = m.sprite.x - ox, dy = m.sprite.y - oy;
-        const proj = dx * cosA + dy * sinA;
-        if (proj < -20 || proj > length) continue;
-        const perp = Math.abs(-dx * sinA + dy * cosA);
-        if (perp <= halfWidth) {
-          if (_hitOne(m, mult, col, pre, stList, opts)) hitList.push(m);
-        }
-      }
-      return hitList;
-    };
-
-    // ===================== [1] 基礎產能 =====================
-    if (skillId === 'n_reap_scythe') {
-      // 125° 前方鐮刀扇形掃擊＋必定產出 1 具地面屍體
-      const sx = _hx + Math.cos(_ang) * 95;
-      const sy = _hy + Math.sin(_ang) * 95;
-      nv?.playSeq16('seq16_n_soul_rift', sx, sy - 8, 0.78, 22, 14);
-      nv?.spawnDebrisBurst(sx, sy, 'shadow', 6);
-      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 20);
-      const hits = _cone(_hx, _hy, _ang, 1.09, 235, (1.48 + skillLvl * 0.22), '#5eead4', '💀收割 ', ['curse'], { shadow: true });
-      if (hits > 0 || nearest) this.spawnNecroCorpse(_tx, _ty);
-      return;
-    }
-
-    if (skillId === 'n_bone_splinters') {
-      // 125° 扇形三枚碎骨貫穿飛矛
-      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 18);
-      [-0.24, 0, 0.24].forEach((off) => {
-        const a = _ang + off;
-        const ex = _hx + Math.cos(a) * 340;
-        const ey = _hy + Math.sin(a) * 340;
-        nv?.launchSpear('proj_n_bone_spear', _hx, _hy - 12, ex, ey, 0.44, 175, 'bone', () => {
-          nv?.spawnDebrisBurst(ex, ey, 'bone', 4);
-        });
-        _line(_hx, _hy, a, 350, 44, (0.78 + skillLvl * 0.13) * boneMult, '#e2e8f0', '🦴碎骨 ', ['vulnerable'], { bonusCrit: 12 });
-      });
-      return;
-    }
-
-    if (skillId === 'n_hemorrhage') {
-      // 單體鎖定鮮血汲取＋50% 機率掉落磁吸鮮血球
-      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 18);
-      const target = nearest;
-      const bx = target ? target.sprite.x : _tx;
-      const by = target ? target.sprite.y : _ty;
-      nv?.playSeq16('seq16_n_blood_surge', bx, by - 8, 0.62, 22, 14);
-      nv?.spawnGroundDecal('blood', bx, by, 0.52, 1400);
-      if (target) {
-        _hitOne(target, (1.62 + skillLvl * 0.24), '#fb7185', '🩸血湧汲 ', ['bleed']);
-        if (Math.random() < 0.55) this.spawnNecroBloodOrb(bx, by);
-      }
-      return;
-    }
-
-    if (skillId === 'n_decompose') {
-      // 單體腐化鎖定（2 段持續傷害＋必生屍體＋觸發暗影枯萎）
-      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 22);
-      const target = nearest;
-      const dx = target ? target.sprite.x : _tx;
-      const dy = target ? target.sprite.y : _ty;
-      nv?.playSeq16('seq16_n_blight_pool', dx, dy - 6, 0.66, 16, 14);
-      nv?.spawnGroundDecal('plague', dx, dy, 0.58, 1600);
-      if (target) {
-        _hitOne(target, (1.05 + skillLvl * 0.17), '#c084fc', '☠️分解 ', ['curse', 'vulnerable'], { shadow: true });
-        this.time.delayedCall(280, () => {
-          if (target.hp > 0) _hitOne(target, (1.05 + skillLvl * 0.17), '#c084fc', '☠️腐蝕 ', ['curse'], { shadow: true });
-          this.spawnNecroCorpse(dx, dy);
-        });
-      }
-      return;
-    }
-
-    // ===================== [2] 核心輸出 =====================
-    if (skillId === 'bone_spear') {
-      // 560px 直線貫穿長矛＋末端 3 枚折返碎骨彈射
-      const ex = _hx + Math.cos(_ang) * 520;
-      const ey = _hy + Math.sin(_ang) * 520;
-      const spearBonus = stats.activeEffects?.has('bone_pierce') ? 1.30 : 1.0;
-      nv?.launchSpear('proj_n_bone_spear', _hx, _hy - 14, ex, ey, 0.72, 200, 'bone', () => {
-        nv?.playSeq16('seq16_n_bone_burst', ex, ey - 8, 0.92, 20, 16);
-        nv?.spawnGroundDecal('bone', ex, ey, 0.78, 1800);
-        nv?.spawnDebrisBurst(ex, ey, 'bone', 8);
-        // 3 枚折返碎骨回擊路徑敵人
-        [-0.26, 0, 0.26].forEach((off) => {
-          const backAng = _ang + Math.PI + off;
-          const rx = ex + Math.cos(backAng) * 280;
-          const ry = ey + Math.sin(backAng) * 280;
-          nv?.launchSpear('proj_n_bone_spear', ex, ey - 10, rx, ry, 0.42, 160, 'bone');
-          _line(ex, ey, backAng, 290, 48, (0.95 + skillLvl * 0.16) * boneMult, '#f1f5f9', '🦴折返 ', ['vulnerable'], { bonusCrit: ks === 'nk_bone_tyrant' ? 100 : 25 });
-        });
-      });
-      _line(_hx, _hy, _ang, 540, 56, (2.25 + skillLvl * 0.36) * boneMult * spearBonus, '#e2e8f0', '🦴骨矛 ', ['vulnerable'], { bonusCrit: ks === 'nk_bone_tyrant' ? 100 : 25 });
-      return;
-    }
-
-    if (skillId === 'n_blood_surge') {
-      // 二段式鮮血新星＋消耗 3 層鮮血球觸發拉斯瑪壓制暴擊
-      const overpower = (this.necroBloodOrbStacks || 0) >= 3 || ks === 'nk_rathma_vigor';
-      if (this.necroBloodOrbStacks >= 3) this.necroBloodOrbStacks -= 3;
-      nv?.playSeq16('seq16_n_blood_surge', _hx, _hy - 10, overpower ? 1.38 : 1.15, 20, 18);
-      nv?.spawnGroundDecal('blood', _hx, _hy, 0.96, 1800);
-      nv?.spawnDebrisBurst(_hx, _hy, 'blood', overpower ? 10 : 6);
-      this.healHero(Math.round(this.playerMaxHp * (overpower ? 0.26 : 0.18)));
-      _aoe(_hx, _hy, 305, (2.45 + skillLvl * 0.38) * (overpower ? 1.48 : 1.0), '#fb7185', overpower ? '🩸壓制血湧 ' : '🩸血湧 ', ['bleed'], { forceCrit: overpower });
-      return;
-    }
-
-    if (skillId === 'n_blood_lance') {
-      // 540px 直線貫穿鮮血長矛＋全場「穿刺連動共鳴」＋掉落鮮血球
-      const ex = _hx + Math.cos(_ang) * 510;
-      const ey = _hy + Math.sin(_ang) * 510;
-      nv?.launchSpear('proj_n_blood_lance', _hx, _hy - 12, ex, ey, 0.72, 195, 'blood', () => {
-        nv?.spawnDebrisBurst(ex, ey, 'blood', 7);
-        this.spawnNecroBloodOrb(ex, ey);
-      });
-      const hitList = _line(_hx, _hy, _ang, 530, 52, (2.05 + skillLvl * 0.34), '#f43f5e', '🩸血矛 ', ['bleed']);
-      hitList.forEach((m) => { m.bloodLancedUntil = this.time.now + 5500; });
-      // 觸發全場已穿刺敵人共鳴血爆
-      for (const m of [...this.monsters]) {
-        if (m && m.hp > 0 && m.sprite && this.time.now < (m.bloodLancedUntil || 0)) {
-          nv?.playSeq16('seq16_n_blood_surge', m.sprite.x, m.sprite.y - 6, 0.54, 24, 14);
-          _hitOne(m, (1.10 + skillLvl * 0.18), '#fda4af', '🩸共鳴 ', ['bleed']);
-        }
-      }
-      return;
-    }
-
-    if (skillId === 'n_sever') {
-      // 幽魂死神直線衝刺斬擊＋回旋暗影收割
-      const ex = _hx + Math.cos(_ang) * 380;
-      const ey = _hy + Math.sin(_ang) * 380;
-      nv?.playSeq16('seq16_n_soul_rift', (_hx + ex) / 2, (_hy + ey) / 2 - 8, 1.05, 20, 16);
-      nv?.spawnGroundDecal('rift', ex, ey, 0.78, 1700);
-      nv?.spawnDebrisBurst(ex, ey, 'shadow', 7);
-      _line(_hx, _hy, _ang, 410, 66, (2.15 + skillLvl * 0.34), '#2dd4bf', '👻斬裂 ', ['curse', 'vulnerable'], { shadow: true });
-      this.time.delayedCall(220, () => {
-        nv?.playSeq16('seq16_n_soul_rift', ex, ey - 8, 0.88, 22, 16);
-        _aoe(ex, ey, 175, (1.35 + skillLvl * 0.22), '#c084fc', '👻回旋 ', ['curse'], { shadow: true });
-      });
-      return;
-    }
-
-    // ===================== [3] 屍骸與防禦 =====================
-    if (skillId === 'n_blood_mist') {
-      // 2.0 秒真正無敵血霧形態＋路徑殘留屍體＋3 段血霧脈衝
-      this.heroInvulnUntil = Math.max(this.heroInvulnUntil || 0, this.time.now + 2000);
-      this.healHero(Math.round(this.playerMaxHp * 0.16));
-      if (this.hero) {
-        this.hero.setTint(0xef4444).setAlpha(0.55);
-        this.time.delayedCall(2000, () => {
-          if (this.hero?.active) this.hero.clearTint().setAlpha(1);
-        });
-      }
-      this.spawnFloatingText(_hx, _hy - 78, '🩸 血霧無敵 2.0s', '#fb7185', 14);
-      for (let w = 0; w < 3; w++) {
-        this.time.delayedCall(w * 520, () => {
-          if (!this.hero?.active || this.isTransitioning) return;
-          nv?.playSeq16('seq16_n_blood_surge', this.hero.x, this.hero.y - 6, 0.86, 20, 14);
-          nv?.spawnGroundDecal('blood', this.hero.x, this.hero.y, 0.72, 1600);
-          _aoe(this.hero.x, this.hero.y, 215, (1.25 + skillLvl * 0.20), '#fb7185', '🩸血霧 ', ['bleed']);
-          if (w < 2) this.spawnNecroCorpse(this.hero.x, this.hero.y);
-        });
-      }
-      return;
-    }
-
-    if (skillId === 'n_bone_shield') {
-      // 白骨護盾屏障＋周身骨刺爆裂新星
-      const shieldAmt = Math.round(this.playerMaxHp * (0.30 + skillLvl * 0.025));
-      if (typeof this.grantHeroBarrier === 'function') this.grantHeroBarrier(shieldAmt, 5500);
-      this.healHero(Math.round(this.playerMaxHp * 0.15));
-      nv?.playSeq16('seq16_n_bone_burst', _hx, _hy - 10, 1.15, 18, 16);
-      nv?.spawnGroundDecal('bone', _hx, _hy, 0.92, 1800);
-      nv?.spawnDebrisBurst(_hx, _hy, 'bone', 8);
-      _aoe(_hx, _hy, 275, (1.90 + skillLvl * 0.28) * boneMult, '#e2e8f0', '🦴骨盾 ', ['vulnerable']);
-      return;
-    }
-
-    if (skillId === 'bone_prison') {
-      // 圓環骨牢困敵（235px 定身減速＋4 段穿刺脈衝）
-      nv?.playSeq16('seq16_n_bone_burst', _tx, _ty - 6, 1.24, 16, 16);
-      nv?.spawnGroundDecal('bone', _tx, _ty, 1.05, 2400);
-      for (let w = 0; w < 4; w++) {
-        this.time.delayedCall(w * 540, () => {
-          if (this.isTransitioning) return;
-          if (w > 0) nv?.playSeq16('seq16_n_bone_burst', _tx, _ty - 6, 0.90, 20, 14);
-          _aoe(_tx, _ty, 235, (0.92 + skillLvl * 0.16) * boneMult, '#e2e8f0', '🦴骨牢 ', ['chill', 'curse', 'vulnerable']);
-        });
-      }
-      return;
-    }
-
-    if (skillId === 'corpse_explosion') {
-      // 消耗真實地面屍體爆破（有屍體傷害 ×1.35 且範圍擴大）
-      const spot = this.consumeNearestNecroCorpse(_tx, _ty, 460, true);
-      const rad = (spot.consumed ? 275 : 225) * (1 + (stats.corpseRadiusPct || 0) / 100);
-      nv?.playSeq16('seq16_n_corpse_boom', spot.x, spot.y - 10, spot.consumed ? 1.28 : 1.05, 20, 18);
-      nv?.spawnGroundDecal('plague', spot.x, spot.y, 0.95, 2000);
-      nv?.spawnDebrisBurst(spot.x, spot.y, 'blood', 9);
-      const mult = (2.45 + skillLvl * 0.42) * (spot.consumed ? 1.35 : 1.0);
-      _aoe(spot.x, spot.y, rad, mult, '#fb7185', spot.consumed ? '💥屍爆 ' : '💥爆裂 ', ['bleed', 'curse'], { shadow: ks === 'nk_plague_sea' });
-      return;
-    }
-
-    // ===================== [4] 詛咒與控場 =====================
-    if (skillId === 'decrepify') {
-      // 衰老詛咒法陣（320px 減速＋易傷＋每命中減冷卻）
-      nv?.playSeq16('seq16_n_blight_pool', _tx, _ty - 6, 1.25, 16, 14);
-      nv?.spawnGroundDecal('plague', _tx, _ty, 1.05, 2200);
-      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 18);
-      const hits = _aoe(_tx, _ty, 320, (1.45 + skillLvl * 0.24), '#a78bfa', '🔮衰老 ', ['curse', 'chill'], { shadow: true });
-      if (hits > 0) {
-        const cdrMs = Math.min(2400, hits * 420);
-        this.slotCdTimers = this.slotCdTimers.map((t) => t + cdrMs);
-      }
-      return;
-    }
-
-    if (skillId === 'n_iron_maiden') {
-      // 鋼鐵處女詛咒（320px 群體回魂能＋流血反傷印記）
-      nv?.playSeq16('seq16_n_blood_surge', _tx, _ty - 6, 1.12, 18, 14);
-      nv?.spawnGroundDecal('blood', _tx, _ty, 0.98, 2200);
-      const hits = _aoe(_tx, _ty, 320, (1.65 + skillLvl * 0.26), '#fda4af', '🩸鐵處女 ', ['curse', 'bleed']);
-      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + Math.min(36, 12 + hits * 6));
-      return;
-    }
-
-    if (skillId === 'n_corpse_tendrils') {
-      // 屍體觸鬚漩渦強拉聚怪（不消耗屍體，340px 全部拉至屍體中心＋易傷定身）
-      const spot = this.consumeNearestNecroCorpse(_tx, _ty, 460, false);
-      nv?.playSeq16('seq16_n_tendrils', spot.x, spot.y - 8, 1.32, 18, 18);
-      nv?.spawnGroundDecal('blood', spot.x, spot.y, 1.05, 2200);
-      nv?.spawnDebrisBurst(spot.x, spot.y, 'blood', 8);
-      for (const m of [...this.monsters]) {
-        if (!m || m.hp <= 0 || !m.sprite) continue;
-        if (Phaser.Math.Distance.Between(spot.x, spot.y, m.sprite.x, m.sprite.y) <= 345) {
-          const nx = spot.x + Phaser.Math.Between(-28, 28);
-          const ny = spot.y + Phaser.Math.Between(-22, 22);
-          this.tweens.add({ targets: m.sprite, x: nx, y: ny, duration: 240, ease: 'Cubic.easeOut' });
-        }
-      }
-      _aoe(spot.x, spot.y, 345, (1.95 + skillLvl * 0.30), '#fb7185', '🩸觸鬚聚怪 ', ['vulnerable', 'chill', 'bleed']);
-      return;
-    }
-
-    if (skillId === 'n_blight_pool') {
-      // 枯萎腐沼（3 段持續暗影腐蝕池，連觸暗影枯萎）
-      nv?.spawnGroundDecal('plague', _tx, _ty, 1.08, 2400);
-      for (let w = 0; w < 3; w++) {
-        this.time.delayedCall(w * 340, () => {
-          if (this.isTransitioning) return;
-          nv?.playSeq16('seq16_n_blight_pool', _tx, _ty - 6, 1.15, 14, 14);
-          nv?.spawnDebrisBurst(_tx, _ty, 'shadow', 5);
-          _aoe(_tx, _ty, 275, (1.35 + skillLvl * 0.22), '#a855f7', '☠️枯萎 ', ['poison', 'curse'], { shadow: true });
-        });
-      }
-      return;
-    }
-
-    // ===================== [E] 亡靈召喚軍團 =====================
-    if (skillId === 'raise_skeleton') {
-      // 召喚 2 名動態骷髏戰士＋1 名骸骨法師（若已獻祭則改為孤狼骨爆＋回魔）
-      let spawned = 0;
-      if (this.spawnNecroMinion('skeleton', _hx + Phaser.Math.Between(-75, 75), _hy + Phaser.Math.Between(-50, 50), skillLvl, 22000)) spawned += 1;
-      if (this.spawnNecroMinion('skeleton', _hx + Phaser.Math.Between(-75, 75), _hy + Phaser.Math.Between(-50, 50), skillLvl, 22000)) spawned += 1;
-      if (this.spawnNecroMinion('mage', _hx + Phaser.Math.Between(-90, 90), _hy + Phaser.Math.Between(-60, 60), skillLvl, 22000)) spawned += 1;
-      if (spawned === 0) {
-        nv?.playSeq16('seq16_n_bone_burst', _hx, _hy - 8, 1.18, 20, 16);
-        this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 26);
-        _aoe(_hx, _hy, 270, (2.10 + skillLvl * 0.30) * boneMult, '#e2e8f0', '🦴獻祭骨爆 ', ['vulnerable']);
-      } else {
-        this.spawnFloatingText(_hx, _hy - 78, `💀 亡靈喚醒 +${spawned}`, '#5eead4', 13);
-      }
-      return;
-    }
-
-    if (skillId === 'blood_golem') {
-      // 召喚／指令猛擊 4 幀動態鮮血魔像＋掉落 2 顆鮮血球（若已獻祭則改為鮮血衝擊波）
-      const ok = this.spawnNecroMinion('golem', _tx, _ty, skillLvl, 24000);
-      nv?.playSeq16('seq16_n_blood_surge', _tx, _ty - 10, 1.18, 18, 18);
-      nv?.spawnGroundDecal('blood', _tx, _ty, 0.96, 1800);
-      _aoe(_tx, _ty, 240, (2.15 + skillLvl * 0.34) * (ok ? 1.0 : 1.35), '#fb7185', ok ? '🩸魔像猛擊 ' : '🩸獻祭血爆 ', ['bleed', 'vulnerable']);
-      this.spawnNecroBloodOrb(_tx - 24, _ty);
-      this.spawnNecroBloodOrb(_tx + 24, _ty);
-      return;
-    }
-
-    if (skillId === 'undead_frenzy') {
-      // 亡靈狂熱（全軍團 6 秒攻速＋50%、續命＋5 秒、英雄回血回魂能）
-      this.necroFrenzyUntil = this.time.now + 6000;
-      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 26);
-      this.healHero(Math.round(this.playerMaxHp * 0.14));
-      nv?.playSeq16('seq16_n_soul_rift', _hx, _hy - 10, 1.12, 18, 16);
-      (this.necroMinions || []).forEach((mn) => { mn.expiresAt += 5000; });
-      this.spawnFloatingText(_hx, _hy - 84, '💀 亡靈狂熱 6s！', '#5eead4', 15);
-      return;
-    }
-
-    if (skillId === 'wraith_army') {
-      // 召喚 4 隻 4 幀動態怨靈自主穿刺敵群
-      const count = 3 + (skillLvl >= 4 ? 1 : 0);
-      nv?.playSeq16('seq16_n_soul_rift', _hx, _hy - 10, 1.05, 18, 16);
-      for (let i = 0; i < count; i++) {
-        this.spawnNecroMinion('wraith', _hx + Phaser.Math.Between(-85, 85), _hy + Phaser.Math.Between(-60, 60), skillLvl, 10000);
-      }
-      _aoe(_tx, _ty, 250, (1.85 + skillLvl * 0.28), '#5eead4', '👻怨靈出擊 ', ['curse'], { shadow: true });
-      return;
-    }
-
-    // ===================== [R] 終極奧義 =====================
-    if (skillId === 'n_army_scourge') {
-      // 亡者大軍（5 波交錯自爆骷髏屍爆＋生出 3 具屍體＋2 隻怨靈）
-      nv?.spawnGroundDecal('rift', _tx, _ty, 1.25, 2800);
-      this.spawnNecroMinion('wraith', _tx - 40, _ty, skillLvl, 11000);
-      this.spawnNecroMinion('wraith', _tx + 40, _ty, skillLvl, 11000);
-      for (let w = 0; w < 5; w++) {
-        this.time.delayedCall(w * 260, () => {
-          if (this.isTransitioning) return;
-          const bx = _tx + Phaser.Math.Between(-110, 110);
-          const by = _ty + Phaser.Math.Between(-75, 75);
-          nv?.playSeq16(w % 2 === 0 ? 'seq16_n_corpse_boom' : 'seq16_n_soul_rift', bx, by - 8, 1.22, 18, 18);
-          nv?.spawnDebrisBurst(bx, by, 'shadow', 7);
-          _aoe(bx, by, 260, (1.85 + skillLvl * 0.30), '#2dd4bf', '☠️亡者大軍 ', ['curse', 'poison'], { forceCrit: true, shadow: true });
-          if (w < 3) this.spawnNecroCorpse(bx, by);
-        });
-      }
-      return;
-    }
-
-    if (skillId === 'n_blood_wave') {
-      // 鮮血巨浪（3 段 480px 前推擊退巨浪＋殘留 3 顆磁吸鮮血球）
-      for (let w = 0; w < 3; w++) {
-        this.time.delayedCall(w * 240, () => {
-          if (this.isTransitioning) return;
-          const dist = 140 + w * 145;
-          const wx = _hx + Math.cos(_ang) * dist;
-          const wy = _hy + Math.sin(_ang) * dist;
-          nv?.playSeq16('seq16_n_blood_wave', wx, wy - 10, 1.38, 18, 18);
-          nv?.spawnGroundDecal('blood', wx, wy, 1.08, 2200);
-          nv?.spawnDebrisBurst(wx, wy, 'blood', 8);
-          this.spawnNecroBloodOrb(wx, wy);
-          for (const m of [...this.monsters]) {
-            if (!m || m.hp <= 0 || !m.sprite) continue;
-            if (Phaser.Math.Distance.Between(wx, wy, m.sprite.x, m.sprite.y) <= 235) {
-              const kx = Phaser.Math.Clamp(m.sprite.x + Math.cos(_ang) * 115, 80, MAP_W - 80);
-              const ky = Phaser.Math.Clamp(m.sprite.y + Math.sin(_ang) * 115, 80, MAP_H - 80);
-              this.tweens.add({ targets: m.sprite, x: kx, y: ky, duration: 220, ease: 'Quad.easeOut' });
-              _hitOne(m, (2.15 + skillLvl * 0.34), '#f43f5e', '🌊血浪 ', ['bleed', 'chill'], { forceCrit: true });
-            }
-          }
-        });
-      }
-      return;
-    }
-
-    if (skillId === 'n_bone_storm') {
-      // 白骨風暴（周身 5 段高暴擊白骨漩渦＋護盾屏障）
-      this.necroBoneStormUntil = this.time.now + 2600;
-      if (typeof this.grantHeroBarrier === 'function') {
-        this.grantHeroBarrier(Math.round(this.playerMaxHp * 0.28), 4500);
-      }
-      for (let w = 0; w < 5; w++) {
-        this.time.delayedCall(w * 420, () => {
-          if (!this.hero?.active || this.isTransitioning) return;
-          nv?.playSeq16('seq16_n_bone_storm', this.hero.x, this.hero.y - 10, 1.36, 16, 18);
-          nv?.spawnGroundDecal('bone', this.hero.x, this.hero.y, 1.05, 1800);
-          nv?.spawnDebrisBurst(this.hero.x, this.hero.y, 'bone', 7);
-          _aoe(this.hero.x, this.hero.y, 345, (1.80 + skillLvl * 0.30) * boneMult, '#e2e8f0', '🦴骨風暴 ', ['vulnerable', 'bleed'], { forceCrit: true });
-        });
-      }
-      return;
-    }
-
-    if (skillId === 'n_soul_rift') {
-      // 靈魂裂隙（4 段深淵裂縫吸收魂能＋持續觸發暗影枯萎）
-      nv?.spawnGroundDecal('rift', _tx, _ty, 1.24, 2600);
-      for (let w = 0; w < 4; w++) {
-        this.time.delayedCall(w * 360, () => {
-          if (this.isTransitioning) return;
-          nv?.playSeq16('seq16_n_soul_rift', _tx, _ty - 10, 1.36, 16, 18);
-          nv?.spawnDebrisBurst(_tx, _ty, 'shadow', 7);
-          this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 12);
-          _aoe(_tx, _ty, 330, (1.95 + skillLvl * 0.32), '#2dd4bf', '🔮靈魂裂隙 ', ['curse', 'vulnerable'], { forceCrit: w === 3, shadow: true });
-        });
-      }
-      return;
-    }
-  }
 
 
-  castAssassinSkill(skillId, skillLvl, stats, isManual = false) {
-    const _hx = this.hero.x, _hy = this.hero.y;
-    const _n = this.findNearestMonster(_hx, _hy);
-    const _tx = _n ? _n.sprite.x : _hx + 90, _ty = _n ? _n.sprite.y : _hy;
-    const _aoe = (cx, cy, rad, mult, col, pre, stList = [], forceCrit = false) => {
-      for (const m of [...this.monsters]) {
-        if (!m || m.hp <= 0) continue;
-        if (Phaser.Math.Distance.Between(cx, cy, m.sprite.x, m.sprite.y) <= rad) {
-          const isC = forceCrit || (Math.random() * 100 < stats.critRate);
-          const d = Math.round(stats.atk * mult * (isC ? stats.critDmg / 100 : 1));
-          if (!m._statuses) m._statuses = {};
-          stList.forEach((k) => { m._statuses[k] = Math.max(m._statuses[k] || 0, this.time.now + 4800); });
-          this.damageMonster(m, d, isC, false, col, pre);
-        }
-      }
-    };
-    if (skillId === 'a_twin_fang') {
-      this.playAdditiveVfx('vfx_a_backstab_pierce', _tx, _ty - 10, 0.78, 320);
-      this._aShadowStars = Math.min(5, (this._aShadowStars || 0) + 2);
-      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 18);
-      _aoe(_tx, _ty, 210, (150 + skillLvl * 24) / 100, '#c084fc', '🗡️', ['bleed']);
-      return;
-    }
-    if (skillId === 'a_boomerang_blades') {
-      for (let w = 0; w < 2; w++) {
-        this.time.delayedCall(w * 260, () => {
-          this.playAdditiveVfx('vfx_a_boomerang', _tx, _ty - 8, 0.92, 380);
-          _aoe(_tx, _ty, 240, (145 + skillLvl * 26) / 100, '#d8b4fe', '🌀', ['vulnerable', 'bleed']);
-        });
-      }
-      return;
-    }
-    if (skillId === 'a_shadow_backstab') {
-      this.playAdditiveVfx('vfx_a_backstab_pierce', _tx, _ty - 12, 1.02, 380);
-      _aoe(_tx, _ty, 210, (275 + skillLvl * 42) / 100, '#f43f5e', '🩸背刺 ', ['vulnerable', 'bleed'], true);
-      this.slotCdTimers = this.slotCdTimers.map((t) => t + 1000);
-      return;
-    }
-    if (skillId === 'a_crimson_mist') {
-      for (let w = 0; w < 3; w++) {
-        this.time.delayedCall(w * 280, () => {
-          this.playAdditiveVfx('vfx_a_crimson_mist', _tx, _ty, 0.96, 440);
-          _aoe(_tx, _ty, 250, (120 + skillLvl * 20) / 100, '#4ade80', '☠️毒霧 ', ['poison', 'burn']);
-        });
-      }
-      return;
-    }
-    if (skillId === 'a_death_lotus') {
-      for (let w = 0; w < 3; w++) {
-        this.time.delayedCall(w * 220, () => {
-          this.playAdditiveVfx('vfx_a_boomerang', _hx, _hy, 1.05, 360);
-          _aoe(_hx, _hy, 280, (130 + skillLvl * 22) / 100, '#e879f9', '🌸蓮華 ', ['bleed']);
-        });
-      }
-      return;
-    }
-    if (skillId === 'a_venom_imbue') {
-      this.playAdditiveVfx('vfx_a_crimson_mist', _hx, _hy, 0.95, 420);
-      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 20);
-      _aoe(_hx, _hy, 290, (210 + skillLvl * 34) / 100, '#4ade80', '🧪淬毒 ', ['poison', 'vulnerable']);
-      return;
-    }
-    if (skillId === 'a_thousand_shadows') {
-      for (let w = 0; w < 5; w++) {
-        this.time.delayedCall(w * 220, () => {
-          this.playAdditiveVfx('vfx_a_bloodmoon_array', _tx, _ty - 10, 1.15, 460);
-          _aoe(_tx, _ty, 340, (145 + skillLvl * 26) / 100, '#f43f5e', '🌙千影 ', ['bleed', 'vulnerable'], true);
-        });
-      }
-      return;
-    }
-    if (skillId === 'a_crimson_eclipse') {
-      this.playAdditiveVfx('vfx_a_fivestar_slash', _tx, _ty - 14, 1.32, 620);
-      _aoe(_tx, _ty, 350, (390 + skillLvl * 58) / 100, '#e879f9', '⭐血月絕殺 ', ['bleed', 'vulnerable', 'poison'], true);
-      return;
-    }
-    const alive = this.monsters.filter((m) => m.hp > 0);
-    if (alive.length === 0) return;
-    const tree = this.getState().skillTree || {};
-    const aim = this.getAimPoint(isManual, 380);
-    this.faceHeroToward(aim.x, aim.y);
-    this.triggerHeroAttackAnim(360);
-    this.hero.play(`a_${this.heroDir}_atk`, false);
+  // v262: 暗影刺客即時倍率（雙毒過載＋五星暗影絕殺＋關鍵被動）
 
-    const dmgMult = stats.skillDmgMult || 1;
-    const poisonMult = 1 + (stats.poisonDmgPct || 0) / 100;
-    const keyVenom = (tree.a_key_venom || 0) > 0;
-    const poisonDur = stats.activeEffects.has('venom_core') ? 6000 : 4000;
+  // v262: 累積暗影星印（滿 5 星自動觸發五星絕殺＋五星影宗免費喚分身）
 
-    const applyPoison = (mob) => {
-      if (!mob) return;
-      mob.bleedUntil = Math.max(mob.bleedUntil || 0, this.time.now + poisonDur);
-      mob.bleedDmg = Math.max(3, Math.round(stats.atk * 0.35 * poisonMult * (keyVenom ? 1.6 : 1)));
-      mob.poisonedUntil = Math.max(mob.poisonedUntil || 0, this.time.now + poisonDur);
-    };
+  // v262: 生成磁吸暗影血星珠（ent_a_shadow_star，拾取回影能 +12、+1 暗影星、回血 5%）
 
-    if (skillId === 'shadow_blitz') {
-      const ang = Math.atan2(aim.y - this.hero.y, aim.x - this.hero.x);
-      this.playFxSprite('afx_dash', this.hero.x, this.hero.y - 10, 0.9, ang, 280);
-      const tx = Phaser.Math.Clamp(aim.x - Math.cos(ang) * 40, 180, MAP_W - 180);
-      const ty = Phaser.Math.Clamp(aim.y - Math.sin(ang) * 40, 220, MAP_H - 180);
-      this.hero.setPosition(tx, ty);
-      this.playFxSprite('afx_slash', aim.x, aim.y - 10, 1.15, ang, 320);
-      this.dodgeBuffUntil = Math.max(this.dodgeBuffUntil || 0, this.time.now + 2500);
-      const mult = (1.75 + skillLvl * 0.32) * dmgMult;
-      let hits = 0;
-      for (const m of alive) {
-        if (Phaser.Math.Distance.Between(aim.x, aim.y, m.sprite.x, m.sprite.y) <= 185) {
-          const isCrit = Math.random() * 100 < (stats.critRate + 25);
-          const dmg = Math.max(1, Math.round(stats.atk * mult * (isCrit ? stats.critDmg / 100 : 1)));
-          this.damageMonster(m, dmg, isCrit, false, '#d8b4fe', '⚡');
-          hits++;
-        }
-      }
-      if ((tree.a_mod_leech || 0) > 0 && hits > 0) this.healHero(Math.round(this.playerMaxHp * 0.10));
-      return;
-    }
+  // v262: 生成 2x2 四幀動態刺客實體（暗影刺客分身／環繞血毒魔刃／猩紅毒霧核心／血影炸彈替身）
 
-    if (skillId === 'shadow_clones') {
-      const count = 2 + (skillLvl >= 4 ? 1 : 0) + ((tree.a_mod_phantom || 0) > 0 ? 1 : 0) + (stats.activeEffects.has('extra_clone') ? 1 : 0);
-      const mult = (1.20 + skillLvl * 0.24) * dmgMult;
-      const forceCrit = (tree.a_mod_phantom || 0) > 0;
-      for (let i = 0; i < count; i++) {
-        const tgt = alive[i % alive.length];
-        const cx = tgt.sprite.x + Phaser.Math.Between(-50, 50);
-        const cy = tgt.sprite.y + Phaser.Math.Between(-35, 35);
-        const clone = this.add.image(cx, cy, 'atlas_assassin', 'af_down_atk_2').setScale(0.54).setTint(0xc084fc).setAlpha(0.85).setDepth(cy);
-        this.playFxSprite('afx_slash', tgt.sprite.x, tgt.sprite.y - 10, 0.95, Math.random() * Math.PI, 280);
-        const isCrit = forceCrit || Math.random() * 100 < stats.critRate;
-        const dmg = Math.max(1, Math.round(stats.atk * mult * (isCrit ? stats.critDmg / 100 : 1)));
-        this.damageMonster(tgt, dmg, isCrit, false, '#c084fc', '👥');
-        this.tweens.add({ targets: clone, alpha: 0, duration: 480, onComplete: () => clone.destroy() });
-      }
-      return;
-    }
+  // v262: 每幀更新刺客磁吸血星珠與 4 類動態實體
 
-    if (skillId === 'blade_flurry') {
-      const mult = (0.82 + skillLvl * 0.18) * dmgMult;
-      for (let w = 0; w < 3; w++) {
-        this.time.delayedCall(w * 240, () => {
-          if (this.isTransitioning || !this.hero) return;
-          this.playFxSprite('afx_flurry', this.hero.x, this.hero.y - 6, 1.35, w * 0.8, 320);
-          let hits = 0;
-          for (const m of this.monsters) {
-            if (m.hp > 0 && Phaser.Math.Distance.Between(this.hero.x, this.hero.y, m.sprite.x, m.sprite.y) <= 240) {
-              const isCrit = Math.random() * 100 < stats.critRate;
-              const dmg = Math.max(1, Math.round(stats.atk * mult * (isCrit ? stats.critDmg / 100 : 1)));
-              this.damageMonster(m, dmg, isCrit, false, '#e9d5ff', '🌀');
-              hits++;
-            }
-          }
-          if (hits > 0) this.playerMp = Math.min(this.playerMaxMp, this.playerMp + hits * 3);
-        });
-      }
-      return;
-    }
+  // v262: 暗影刺客 24 招實戰判定幾何＋16 幀暗黑序列＋動態分身與環繞魔刃（零震動、零音效）
 
-    if (skillId === 'shadow_execute') {
-      this.playFxSprite('afx_execute', aim.x, aim.y - 10, 1.5, 0, 520);
-      if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(170, 0.009);
-      const mult = (2.50 + skillLvl * 0.45) * dmgMult;
-      for (const m of alive) {
-        if (Phaser.Math.Distance.Between(aim.x, aim.y, m.sprite.x, m.sprite.y) <= 250) {
-          const lowHp = m.hp / m.maxHp < 0.50;
-          const isCrit = lowHp || Math.random() * 100 < stats.critRate;
-          const dmg = Math.max(1, Math.round(stats.atk * mult * (lowHp ? 1.55 : 1) * (isCrit ? stats.critDmg / 100 : 1)));
-          this.damageMonster(m, dmg, isCrit, false, '#f0abfc', '⚔️絕殺 ');
-        }
-      }
-      return;
-    }
-
-    if (skillId === 'poison_kunai') {
-      const baseAng = Math.atan2(aim.y - this.hero.y, aim.x - this.hero.x);
-      const count = (tree.a_mod_fan || 0) > 0 ? 7 : 5;
-      const spread = 0.65;
-      for (let i = 0; i < count; i++) {
-        const off = -spread / 2 + (spread * i) / (count - 1);
-        const ang = baseAng + off;
-        const spr = this.add.image(this.hero.x, this.hero.y - 12, 'afx_kunai')
-          .setScale(0.38).setRotation(ang).setBlendMode(Phaser.BlendModes.ADD).setDepth(4510);
-        this.projectiles.push({
-          fromEnemy: false, kind: 'pierce_arrow', sprite: spr,
-          vx: Math.cos(ang) * 780, vy: Math.sin(ang) * 780,
-          lifeMs: 900, pierceLeft: 2, dmgMult: (0.88 + skillLvl * 0.18) * dmgMult * poisonMult,
-          appliesMark: false, hitIds: new Set(), stats,
-        });
-      }
-      for (const m of alive) {
-        if (Phaser.Math.Distance.Between(aim.x, aim.y, m.sprite.x, m.sprite.y) <= 200) applyPoison(m);
-      }
-      return;
-    }
-
-    if (skillId === 'smoke_veil') {
-      this.playFxSprite('afx_smoke', this.hero.x, this.hero.y, 1.45, 0, 540);
-      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 25);
-      this.dodgeBuffUntil = Math.max(this.dodgeBuffUntil || 0, this.time.now + 3500);
-      const mult = (1.10 + skillLvl * 0.20) * dmgMult;
-      for (const m of alive) {
-        if (Phaser.Math.Distance.Between(this.hero.x, this.hero.y, m.sprite.x, m.sprite.y) <= 260) {
-          m.chilledUntil = Math.max(m.chilledUntil || 0, this.time.now + 3500);
-          applyPoison(m);
-          this.damageMonster(m, Math.max(1, Math.round(stats.atk * mult)), false, false, '#a855f7', '💨');
-        }
-      }
-      return;
-    }
-
-    if (skillId === 'venom_burst') {
-      this.playFxSprite('afx_venom', aim.x, aim.y - 10, 1.5, 0, 480);
-      if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(130, 0.007);
-      const mult = (2.10 + skillLvl * 0.38) * dmgMult * poisonMult;
-      for (const m of alive) {
-        if (Phaser.Math.Distance.Between(aim.x, aim.y, m.sprite.x, m.sprite.y) <= 240) {
-          const isPois = this.time.now < (m.bleedUntil || 0) || this.time.now < (m.poisonedUntil || 0);
-          const isCrit = (keyVenom || isPois) && Math.random() * 100 < stats.critRate;
-          const dmg = Math.max(1, Math.round(stats.atk * mult * (isPois ? 1.45 : 1) * (isCrit ? stats.critDmg / 100 : 1)));
-          this.damageMonster(m, dmg, isCrit, false, '#4ade80', '☠️');
-        }
-      }
-      return;
-    }
-
-    if (skillId === 'lethal_fangs') {
-      this.lethalFangsUntil = this.time.now + 4500;
-      this.playFxSprite('afx_fangs', this.hero.x, this.hero.y - 8, 1.35, 0, 440);
-      for (const m of alive) {
-        if (Phaser.Math.Distance.Between(this.hero.x, this.hero.y, m.sprite.x, m.sprite.y) <= 220) applyPoison(m);
-      }
-      this.spawnFloatingText(this.hero.x, this.hero.y - 90, '🐍 致命毒牙！', '#4ade80', 15);
-    }
-  }
 
   applyHitEffects(mob, dmg, isCrit, stats) {
     if (!mob || mob.hp <= 0) return;
@@ -4803,14 +2470,6 @@ export class BattleScene extends Phaser.Scene {
   }
 
   // v242: 暗黑 4 秘法師實戰加成倍率（召喚精通層數＋屏障增傷＋啟蒙三系爆發）
-  getMageD4LiveMult() {
-    let mult = 1;
-    const conjStacks = Math.min(10, (this.mageConjurations || []).length);
-    if (conjStacks > 0) mult *= (1 + conjStacks * 0.06);
-    if (this.heroBarrierHp > 0 && this.time.now < (this.heroBarrierUntil || 0)) mult *= 1.25;
-    if (this.time.now < (this.enlightenmentUntil || 0)) mult *= 1.45;
-    return mult;
-  }
 
   // v242: 飛行投射物特效（火彈／火球／冰片）
   launchVfxProjectile(key, sx, sy, tx, ty, scale = 0.6, durationMs = 200, onHit = null) {
@@ -4901,197 +2560,8 @@ export class BattleScene extends Phaser.Scene {
   }
 
   // v242: 生成場上真實召喚實體（火蛇炮台／寒冰之刃／閃電長矛／元素使魔）
-  spawnMageConjuration(type, x, y, skillLvl = 1, durationMs = 9000) {
-    if ((this.mageConjurations || []).length >= 8) {
-      const oldest = this.mageConjurations.shift();
-      if (oldest?.sprite) oldest.sprite.destroy();
-      if (oldest?.shadow) oldest.shadow.destroy();
-    }
-    const animMap = {
-      hydra: 'anim_conj_hydra',
-      ice_blades: 'anim_conj_ice_blades',
-      lightning_spear: 'anim_conj_lightning_spear',
-      familiar: 'anim_conj_familiar',
-    };
-    const fallbackMap = {
-      hydra: 'conj_m_hydra',
-      ice_blades: 'conj_m_ice_blades',
-      lightning_spear: 'conj_m_lightning_spear',
-      familiar: 'conj_m_familiar',
-    };
-    const animKey = animMap[type] || 'anim_conj_hydra';
-    const fbKey = fallbackMap[type] || 'conj_m_hydra';
-    const scaleMap = { hydra: 0.54, ice_blades: 0.46, lightning_spear: 0.48, familiar: 0.42 };
-    const baseSc = scaleMap[type] || 0.48;
-    const elemMap = { hydra: 'fire', ice_blades: 'frost', lightning_spear: 'shock', familiar: 'shock' };
-    const elem = elemMap[type] || 'fire';
-    this.mageVfx?.spawnConjurationPoof(x, y, elem);
-    const shadow = this.add.ellipse(x, y + 10, 58, 22, 0x050507, 0.58)
-      .setDepth(Math.max(50, Math.round(y - 2)));
-    let sp = null;
-    if (this.textures.exists(animKey) && this.anims.exists(animKey)) {
-      sp = this.add.sprite(x, y - 14, animKey, 0)
-        .setScale(baseSc * 0.2)
-        .setAlpha(0.98)
-        .setDepth(Math.max(120, Math.round(y + 10)));
-      sp.play(animKey);
-    } else if (this.textures.exists(fbKey)) {
-      sp = this.add.image(x, y - 14, fbKey)
-        .setScale(baseSc * 0.2)
-        .setAlpha(0.98)
-        .setDepth(Math.max(120, Math.round(y + 10)));
-    }
-    if (sp) {
-      this.tweens.add({ targets: sp, scale: baseSc, duration: 220, ease: 'Back.easeOut' });
-    }
-    this.mageConjurations.push({
-      type,
-      elem,
-      sprite: sp,
-      shadow,
-      x,
-      y,
-      skillLvl,
-      expiresAt: this.time.now + durationMs,
-      atkCd: 350,
-      interval: type === 'hydra' ? 850 : (type === 'ice_blades' ? 750 : 800),
-      phase: Math.random() * 6.28,
-    });
-  }
 
   // v242: 每幀更新場上召喚實體、劈啪電花拾取與屏障光環
-  updateMageBattlefieldEntities(delta) {
-    const now = this.time.now;
-    const dtSec = delta / 1000;
-
-    // 1. 屏障護盾光環跟隨與過期清除
-    if (this.heroBarrierSprite) {
-      if (!this.hero || now >= (this.heroBarrierUntil || 0) || (this.heroBarrierHp || 0) <= 0) {
-        this.heroBarrierSprite.destroy();
-        this.heroBarrierSprite = null;
-        this.heroBarrierHp = 0;
-      } else {
-        this.heroBarrierSprite.setVisible(true);
-        this.heroBarrierSprite.setPosition(this.hero.x, this.hero.y - 4);
-        this.heroBarrierSprite.setDepth(Math.max(120, Math.round(this.hero.y + 10)));
-        this.heroBarrierSprite.setScale(0.56 + Math.sin(now * 0.006) * 0.03);
-      }
-    }
-
-    // 2. 啟蒙爆發期間額外回魔
-    if (now < (this.enlightenmentUntil || 0)) {
-      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 16 * dtSec);
-    }
-
-    // 3. 場上召喚實體（火蛇／冰刃／閃電長矛／元素使魔）自主鎖敵與攻擊
-    if (this.mageConjurations && this.mageConjurations.length > 0) {
-      const stats = this.getStats();
-      const mult = this.getMageD4LiveMult();
-      // 召喚精通每層額外回魔
-      this.playerMp = Math.min(this.playerMaxMp, this.playerMp + Math.min(10, this.mageConjurations.length) * 1.4 * dtSec);
-
-      for (let i = this.mageConjurations.length - 1; i >= 0; i--) {
-        const c = this.mageConjurations[i];
-        if (now >= c.expiresAt) {
-          this.mageVfx?.spawnConjurationPoof(c.x, c.y, c.elem || 'fire');
-          if (c.sprite) c.sprite.destroy();
-          if (c.shadow) c.shadow.destroy();
-          this.mageConjurations.splice(i, 1);
-          continue;
-        }
-        c.phase += dtSec * 4.5;
-        const tgt = this.findNearestMonster(c.x, c.y, 650);
-        if (c.type === 'ice_blades' || c.type === 'lightning_spear') {
-          if (tgt && tgt.sprite) {
-            const ang = Phaser.Math.Angle.Between(c.x, c.y, tgt.sprite.x, tgt.sprite.y);
-            const spd = c.type === 'lightning_spear' ? 280 : 220;
-            if (Phaser.Math.Distance.Between(c.x, c.y, tgt.sprite.x, tgt.sprite.y) > 48) {
-              c.x += Math.cos(ang) * spd * dtSec;
-              c.y += Math.sin(ang) * spd * dtSec;
-            }
-            if (c.sprite) c.sprite.setRotation(ang);
-          }
-        } else if (c.type === 'familiar' && this.hero) {
-          c.x = this.hero.x + Math.cos(c.phase * 0.7) * 62;
-          c.y = this.hero.y - 24 + Math.sin(c.phase * 0.7) * 34;
-        }
-
-        if (c.shadow) {
-          c.shadow.setPosition(c.x, c.y + 10);
-          c.shadow.setDepth(Math.max(50, Math.round(c.y - 2)));
-        }
-        if (c.sprite) {
-          c.sprite.setVisible(true);
-          const bob = c.type === 'hydra' ? Math.sin(c.phase * 0.9) * 2.5 : Math.sin(c.phase) * 5;
-          c.sprite.setPosition(c.x, c.y - 14 + bob);
-          c.sprite.setDepth(Math.max(120, Math.round(c.y + 10)));
-          if (tgt && tgt.sprite && (c.type === 'hydra' || c.type === 'familiar')) {
-            c.sprite.setFlipX(tgt.sprite.x < c.x);
-          }
-        }
-        c.atkCd -= delta;
-        if (c.atkCd <= 0 && tgt && tgt.sprite && tgt.hp > 0) {
-          c.atkCd = c.interval;
-          const baseDmg = Math.round(stats.atk * ((0.72 + c.skillLvl * 0.11) * mult));
-          if (c.sprite) {
-            this.tweens.add({ targets: c.sprite, scaleX: c.sprite.scaleX * 1.18, scaleY: c.sprite.scaleY * 1.18, duration: 90, yoyo: true });
-          }
-          if (c.type === 'hydra') {
-            this.mageVfx?.launchProjectile('proj_m_fire_bolt', c.x, c.y - 24, tgt.sprite.x, tgt.sprite.y - 8, 0.42, 160, 'fire', () => {
-              if (tgt.hp > 0) {
-                this.mageVfx?.playSeq16('seq16_m_fireball_blast', tgt.sprite.x, tgt.sprite.y - 6, 0.58, 22, 14);
-                this.damageMonster(tgt, baseDmg, false, false, '#fb923c', '🐍火蛇 ', true);
-              }
-            });
-          } else if (c.type === 'ice_blades') {
-            this.mageVfx?.playSeq16('seq16_m_frost_nova', tgt.sprite.x, tgt.sprite.y - 6, 0.58, 22, 14);
-            this.slotCdTimers = this.slotCdTimers.map((t) => t + 380);
-            this.damageMonster(tgt, baseDmg, false, false, '#7dd3fc', '⚔️冰刃 ', true);
-          } else if (c.type === 'lightning_spear') {
-            this.mageVfx?.playChainArc(c.x, c.y - 10, tgt.sprite.x, tgt.sprite.y - 8, 0.42, 200); this.mageVfx?.playSeq16('seq16_m_ball_lightning', tgt.sprite.x, tgt.sprite.y - 8, 0.62, 24, 16);
-            this.damageMonster(tgt, Math.round(baseDmg * 1.15), true, false, '#facc15', '⚡雷矛 ', true);
-          } else if (c.type === 'familiar') {
-            this.mageVfx?.playChainArc(c.x, c.y - 12, tgt.sprite.x, tgt.sprite.y - 8, 0.34, 190); this.mageVfx?.playSeq16('seq16_m_ball_lightning', tgt.sprite.x, tgt.sprite.y - 6, 0.56, 22, 14);
-            this.damageMonster(tgt, baseDmg, false, false, '#fde047', '🔮使魔 ', true);
-          }
-        }
-      }
-    }
-
-    // 4. 地面劈啪電花能量球：磁吸拾取回魔＋減冷卻＋放電
-    if (this.cracklingOrbs && this.cracklingOrbs.length > 0 && this.hero) {
-      const stats = this.getStats();
-      for (let i = this.cracklingOrbs.length - 1; i >= 0; i--) {
-        const orb = this.cracklingOrbs[i];
-        if (now >= orb.expiresAt) {
-          orb.sprite.destroy();
-          this.cracklingOrbs.splice(i, 1);
-          continue;
-        }
-        orb.phase += dtSec * 6;
-        const dist = Phaser.Math.Distance.Between(orb.x, orb.y, this.hero.x, this.hero.y);
-        if (dist < 210) {
-          const ang = Phaser.Math.Angle.Between(orb.x, orb.y, this.hero.x, this.hero.y);
-          orb.x += Math.cos(ang) * 320 * dtSec;
-          orb.y += Math.sin(ang) * 320 * dtSec;
-        }
-        orb.sprite.setVisible(true);
-        orb.sprite.setPosition(orb.x, orb.y + Math.sin(orb.phase) * 4);
-        orb.sprite.setScale(0.26 + Math.sin(orb.phase) * 0.04);
-        if (dist <= 44) {
-          orb.sprite.destroy();
-          this.cracklingOrbs.splice(i, 1);
-          this.playerMp = Math.min(this.playerMaxMp, this.playerMp + 18);
-          this.slotCdTimers = this.slotCdTimers.map((t) => t + 600);
-          const near = this.findNearestMonster(this.hero.x, this.hero.y, 420);
-          if (near && near.sprite && near.hp > 0) {
-            this.mageVfx?.playChainArc(this.hero.x, this.hero.y - 14, near.sprite.x, near.sprite.y - 10, 0.38, 200);
-            this.damageMonster(near, Math.round(stats.atk * 0.95 * this.getMageD4LiveMult()), false, false, '#38bdf8', '⚡電花 ', true);
-          }
-        }
-      }
-    }
-  }
 
   damageMonster(m, dmg, isCrit, isTap, customColor = null, prefix = '', _isProc = false) {
     if (!m || m.hp <= 0) return;
@@ -5426,6 +2896,15 @@ export class BattleScene extends Phaser.Scene {
     const kStats = this.getStats();
     if ((kStats.killEssence || 0) > 0) {
       this.playerMp = Math.min(this.playerMaxMp, this.playerMp + kStats.killEssence);
+    }
+    if (this.getState().classId === 'assassin' && Math.random() < 0.28) {
+      this.spawnAssassinStarOrb(mx, my);
+    }
+    if (this.getState().classId === 'ranger' && Math.random() < 0.28) {
+      this.spawnRangerComboOrb(mx, my);
+    }
+    if (this.getState().classId === 'warrior' && Math.random() < 0.28) {
+      this.spawnWarriorRageOrb(mx, my);
     }
     if (this.getState().classId === 'necro') {
       // v252: 擊殺怪物必定留下真實地面屍體（供屍爆／屍體觸鬚消耗）
@@ -5977,27 +3456,11 @@ export class BattleScene extends Phaser.Scene {
     this.groundLoot = [];
   }
 
-  spawnFloatingText(x, y, msg, color, fontSize = 16) {
-    if (window.__powerSaveMode) return;
-    const dens = window.__gameSettings?.graphics?.particles || 'high';
-    if (dens === 'low' && Math.random() < 0.45 && fontSize < 18) return;
-    const txt = this.add.text(x, y, msg, {
-      fontSize: `${fontSize}px`,
-      color,
-      fontFamily: 'sans-serif',
-      fontStyle: 'bold',
-      stroke: '#000000',
-      strokeThickness: 4,
-    }).setOrigin(0.5).setDepth(4600);
-
-    this.tweens.add({
-      targets: txt,
-      y: y - 42,
-      alpha: 0,
-      duration: 700,
-      ease: 'Cubic.easeOut',
-      onComplete: () => txt.destroy(),
-    });
+  spawnFloatingText(x, y, text, color = '#ffffff', size = 15) {
+    if (this.floatingTextPool) {
+      return this.floatingTextPool.spawn(x, y, text, color, size);
+    }
+    return null;
   }
 
   handleResize(w, h) {
@@ -6005,3 +3468,14 @@ export class BattleScene extends Phaser.Scene {
     if (this.waveInfoText) this.waveInfoText.setPosition(w / 2, 24);
   }
 }
+
+// v266: 將六大職業獨立戰鬥模組掛接至 BattleScene.prototype（零效能損耗、100% 相容既有呼叫）
+Object.assign(
+  BattleScene.prototype,
+  warriorCombatMethods,
+  rangerCombatMethods,
+  mageCombatMethods,
+  paladinCombatMethods,
+  necroCombatMethods,
+  assassinCombatMethods,
+);

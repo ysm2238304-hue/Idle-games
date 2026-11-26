@@ -1,15 +1,15 @@
 import { TEMPERING_MANUALS } from '../data/items.js?v=240';
 import { temperItem } from '../logic/lootGen.js?v=240';
-import { SKILL_BUILD_SPECS, KEYSTONE_PASSIVES, getActiveKeystone } from '../logic/buildEngine.js?v=251';
+import { SKILL_BUILD_SPECS, KEYSTONE_PASSIVES, getActiveKeystone } from '../logic/buildEngine.js?v=263';
 import { UniversalTooltip } from './UniversalTooltip.js?v=240';
 import { TOWN_SPLASHES } from '../data/towns/splashes.js?v=99';
 import { CLASSES } from '../data/classes.js?v=99';
-import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=235';
-import { RANGER_SKILLS } from '../data/rangerSkills.js?v=236';
+import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=255';
+import { RANGER_SKILLS } from '../data/rangerSkills.js?v=259';
 import { MAGE_SKILLS } from '../data/mageSkills.js?v=241';
-import { PALADIN_SKILLS } from '../data/paladinSkills.js?v=235';
+import { PALADIN_SKILLS } from '../data/paladinSkills.js?v=263';
 import { NECRO_SKILLS } from '../data/necroSkills.js?v=251';
-import { ASSASSIN_SKILLS } from '../data/assassinSkills.js?v=235';
+import { ASSASSIN_SKILLS } from '../data/assassinSkills.js?v=261';
 import { EQUIP_SLOTS, CLASS_REQ_LABELS, RARITIES, BASE_ITEMS, SET_DEFINITIONS } from '../data/items.js?v=240';
 import { PET_CATALOG, PET_SCHOOLS, getPetDef, getPetRarityMeta, getPetPickupRadius, getPetCodexInfo } from '../data/pets.js?v=99';
 import { getClaimableAchievementCount } from '../data/achievements.js?v=99';
@@ -649,105 +649,151 @@ export class DashboardUI {
     this.renderRebirthPanel(state);
   }
 
+  // v258: 暗黑 4 風格分職業三欄紙娃娃裝備介面（6 職業專屬祭壇底圖＋48 張暗金浮雕空槽剪影）
   renderGearAndStats(state, stats) {
     const dollEl = document.getElementById('paper-doll-stage');
     if (dollEl) {
       dollEl.innerHTML = '';
-      const cls = CLASSES[state.classId] || CLASSES.warrior;
-      const layout = [
-        { type: 'slot', id: 'weapon' },
-        { type: 'slot', id: 'helm' },
-        { type: 'slot', id: 'offhand' },
-        { type: 'slot', id: 'armor' },
-        { type: 'crest' },
-        { type: 'slot', id: 'gloves' },
-        { type: 'slot', id: 'amulet' },
-        { type: 'slot', id: 'boots' },
-        { type: 'slot', id: 'ring' },
-        { type: 'pet' },
-      ];
-      layout.forEach((cell) => {
-        if (cell.type === 'crest') {
-          const crest = document.createElement('div');
-          crest.className = 'doll-center-crest';
-          crest.innerHTML = `<img src="${cls.spritePath}" alt="${cls.name}" /><span style="color:${cls.color}">${cls.name}</span>`;
-          dollEl.appendChild(crest);
-        } else if (cell.type === 'pet') {
-          const eqPet = state.equippedPetId ? getPetDef(state.equippedPetId) : null;
-          const eqRec = (state.pets || []).find((p) => p.petId === state.equippedPetId);
-          const box = document.createElement('div');
-          box.className = 'doll-slot';
-          if (eqPet) { box.onmouseenter = (e) => UniversalTooltip.showPet(e, eqPet, eqRec, state); box.onmousemove = (e) => UniversalTooltip.move(e); box.onmouseleave = () => UniversalTooltip.hide(); }
-          if (eqPet) {
-            const r = getPetRarityMeta(eqPet.rarity);
-            const sch = PET_SCHOOLS[eqPet.school];
-            const upgStr = (eqRec?.upgradeLevel || 0) > 0 ? ` +${eqRec.upgradeLevel}` : '';
-            box.style.borderColor = r.border;
-            box.style.background = r.bg;
-            box.style.boxShadow = `inset 0 0 10px ${r.border}55`;
-            box.innerHTML = `
-              <img src="${eqPet.icon}" alt="${eqPet.name}" style="width:40px;height:40px;object-fit:contain;" />
-              <div class="doll-name" style="color:${r.color}">${eqPet.name}${upgStr}</div>
-              <div style="font-size:9.5px;color:${sch?.color || '#fde68a'};">${sch?.label || '寵物'}</div>
-            `;
-          } else {
-            box.innerHTML = `<span style="font-size:18px;opacity:0.55;">🐾</span><div class="doll-lbl">出戰寵物</div>`;
-          }
-          box.onclick = () => this.openDrawer('pets');
-          dollEl.appendChild(box);
-        } else if (cell.type === 'empty') {
-          const emp = document.createElement('div');
-          dollEl.appendChild(emp);
+      const cid = state.classId || 'warrior';
+      const cls = CLASSES[cid] || CLASSES.warrior;
+      const accentMap = {
+        warrior: '#f97316',
+        ranger: '#34d399',
+        mage: '#a855f7',
+        paladin: '#fbbf24',
+        necro: '#2dd4bf',
+        assassin: '#f43f5e',
+      };
+      const accent = accentMap[cid] || cls.color || '#c89b3c';
+      const SLOT_LABELS = {
+        helm: '頭盔', armor: '胸甲', gloves: '手套', boots: '戰靴',
+        weapon: '武器', offhand: '副手', amulet: '護符', ring: '戒指',
+      };
+      const leftSlots = ['helm', 'armor', 'gloves', 'boots'];
+      const rightSlots = ['weapon', 'offhand', 'amulet', 'ring'];
+
+      const stage = document.createElement('div');
+      stage.className = 'd4-paperdoll-stage';
+      stage.style.setProperty('--d4-accent', accent);
+      stage.style.backgroundImage = `linear-gradient(180deg, rgba(10,9,14,0.48) 0%, rgba(10,9,14,0.22) 45%, rgba(8,7,12,0.88) 100%), url('./assets/ui/paperdoll/bg_${cid}.jpg?v=257')`;
+
+      const buildSlotBox = (slotId) => {
+        const item = state.equipment?.[slotId];
+        const label = SLOT_LABELS[slotId] || EQUIP_SLOTS[slotId]?.label || slotId;
+        const box = document.createElement('div');
+        box.className = `d4-eq-slot${item ? ' is-equipped' : ' is-empty'}`;
+        if (item) {
+          const r = RARITIES[item.rarity] || RARITIES.common;
+          box.style.borderColor = r.border;
+          box.style.background = r.bg;
+          box.style.boxShadow = `inset 0 0 12px ${r.border}55, 0 0 8px ${r.border}33`;
+          const upgBadge = item.upgradeLevel > 0 ? `<span class="d4-slot-upg">+${item.upgradeLevel}</span>` : '';
+          box.innerHTML = `
+            <img class="d4-slot-item-img" src="${resolveItemIcon(item)}" alt="${item.name}" />
+            ${upgBadge}
+            <div class="d4-slot-name" style="color:${r.color}">${item.name}</div>
+          `;
+          box.onclick = () => this.renderItemInspector(item, true, state);
+          box.onmouseenter = (e) => this.showCompareTooltip(e, item, true, state);
+          box.onmousemove = (e) => this.moveCompareTooltip(e);
+          box.onmouseleave = () => this.hideCompareTooltip();
         } else {
-          const slotMeta = EQUIP_SLOTS[cell.id];
-          const item = state.equipment[cell.id];
-          const box = document.createElement('div');
-          box.className = 'doll-slot';
-          if (item) {
-            const r = RARITIES[item.rarity];
-            box.style.borderColor = r.border;
-            box.style.background = r.bg;
-            box.style.boxShadow = `inset 0 0 10px ${r.border}44`;
-            const upgStr = item.upgradeLevel > 0 ? ` +${item.upgradeLevel}` : '';
-            box.innerHTML = `
-              <img src="${resolveItemIcon(item)}" alt="${item.name}" />
-              <div class="doll-name" style="color:${r.color}">${item.name}${upgStr}</div>
-            `;
-            box.onclick = () => this.renderItemInspector(item, true, state);
-            box.onmouseenter = (e) => this.showCompareTooltip(e, item, true, state);
-            box.onmousemove = (e) => this.moveCompareTooltip(e);
-            box.onmouseleave = () => this.hideCompareTooltip();
-          } else {
-            box.innerHTML = `<span style="font-size:18px;opacity:0.5;">${slotMeta.icon}</span><div class="doll-lbl">${slotMeta.label}</div>`;
-          }
-          dollEl.appendChild(box);
+          box.innerHTML = `
+            <img class="d4-slot-silhouette" src="./assets/ui/paperdoll/slot_${cid}_${slotId}.png?v=258" alt="${label}" />
+            <div class="d4-slot-empty-lbl">${label}</div>
+          `;
+          box.onmouseenter = (e) => UniversalTooltip.showRich(e, {
+            title: `${cls.name}・${label}槽位`,
+            subtitle: '尚未穿戴裝備',
+            icon: `./assets/ui/paperdoll/slot_${cid}_${slotId}.png?v=258`,
+            color: accent,
+            lines: ['從右側背包點擊裝備即可立即穿戴。'],
+          });
+          box.onmousemove = (e) => UniversalTooltip.move(e);
+          box.onmouseleave = () => UniversalTooltip.hide();
         }
-      });
+        return box;
+      };
+
+      const colL = document.createElement('div');
+      colL.className = 'd4-col-stack';
+      leftSlots.forEach((s) => colL.appendChild(buildSlotBox(s)));
+
+      const center = document.createElement('div');
+      center.className = 'd4-center-altar';
+      const nickStr = state.nickname ? `${state.nickname}・` : '';
+      center.innerHTML = `
+        <div class="d4-hero-plate">
+          <div class="d4-hero-name" style="color:${accent};">${nickStr}${cls.name}</div>
+          <div class="d4-hero-sub">Lv.${state.level || 1} ｜ ⚔️ DPS ${formatNum(stats.dps || 0)}</div>
+        </div>
+        <div class="d4-hero-pedestal">
+          <img class="d4-hero-sprite" src="${cls.spritePath}" alt="${cls.name}" />
+        </div>
+      `;
+
+      // 底部橫向出戰靈寵專屬卡槽
+      const eqPet = state.equippedPetId ? getPetDef(state.equippedPetId) : null;
+      const eqRec = (state.pets || []).find((p) => p.petId === state.equippedPetId);
+      const petStrip = document.createElement('div');
+      petStrip.className = 'd4-pet-strip';
+      if (eqPet) {
+        const pr = getPetRarityMeta(eqPet.rarity);
+        const sch = PET_SCHOOLS[eqPet.school];
+        const upgStr = (eqRec?.upgradeLevel || 0) > 0 ? ` +${eqRec.upgradeLevel}` : '';
+        petStrip.style.borderColor = pr.border;
+        petStrip.innerHTML = `
+          <img class="d4-pet-ico" src="${eqPet.icon}" alt="${eqPet.name}" />
+          <div class="d4-pet-info">
+            <div class="d4-pet-name" style="color:${pr.color};">${eqPet.name}${upgStr}</div>
+            <div class="d4-pet-sch" style="color:${sch?.color || '#fde68a'};">${sch?.label || '出戰靈寵'}</div>
+          </div>
+        `;
+        petStrip.onmouseenter = (e) => UniversalTooltip.showPet(e, eqPet, eqRec, state);
+        petStrip.onmousemove = (e) => UniversalTooltip.move(e);
+        petStrip.onmouseleave = () => UniversalTooltip.hide();
+      } else {
+        petStrip.innerHTML = `<span style="font-size:16px;opacity:0.6;">🐾</span><div class="d4-pet-info"><div class="d4-pet-name" style="color:#94a3b8;">尚未出戰靈寵</div><div class="d4-pet-sch" style="color:#64748b;">點擊開啟寵物欄</div></div>`;
+      }
+      petStrip.onclick = () => this.openDrawer('pets');
+      center.appendChild(petStrip);
+
+      const colR = document.createElement('div');
+      colR.className = 'd4-col-stack';
+      rightSlots.forEach((s) => colR.appendChild(buildSlotBox(s)));
+
+      stage.appendChild(colL);
+      stage.appendChild(center);
+      stage.appendChild(colR);
+      dollEl.appendChild(stage);
     }
 
     const statsEl = document.getElementById('char-stats-list');
-    statsEl.innerHTML = `
-      <div class="stat-row"><span>生命 / 魔力上限</span><strong>${formatNum(stats.maxHp)} / ${formatNum(stats.maxMp || 100)}</strong></div>
-      <div class="stat-row"><span>攻擊力</span><strong>${formatNum(stats.atk)}</strong></div>
-      <div class="stat-row"><span>攻擊間隔</span><strong>${(stats.atkIntervalMs / 1000).toFixed(2)}s</strong></div>
-      <div class="stat-row"><span>暴擊率 / 暴傷</span><strong>${stats.critRate}% / ${stats.critDmg}%</strong></div>
-      <div class="stat-row"><span>護甲 / 閃避</span><strong>${formatNum(stats.armor)} / ${stats.dodge}%</strong></div>
-      <div class="stat-row"><span>攻擊吸血</span><strong>${stats.lifesteal}%</strong></div>
-      <div class="stat-row"><span>移動速度</span><strong>${stats.moveSpeed}</strong></div>
-      <div class="stat-row"><span>金幣 / 掉寶</span><strong>+${stats.goldFind}% / +${stats.magicFind}%</strong></div>
-      ${(stats.activeSets && stats.activeSets.length) ? `
-        <div style="margin-top:8px;padding:8px 10px;border-radius:7px;background:rgba(22,163,74,0.14);border:1px solid rgba(34,197,94,0.45);font-size:11.5px;">
-          <div style="color:#4ade80;font-weight:700;margin-bottom:4px;">🌿 已啟動綠色套裝效果</div>
-          ${stats.activeSets.map((s) => `
-            <div style="margin-top:3px;">
-              <b style="color:#86efac;">${s.name} (${s.count}/4)</b>
-              <div style="color:${s.count >= 2 ? '#bbf7d0' : '#64748b'};font-size:10.5px;">(2件) ${s.def.bonus2Desc}</div>
-              <div style="color:${s.count >= 4 ? '#bbf7d0' : '#64748b'};font-size:10.5px;">(4件) ${s.def.bonus4Desc}</div>
-            </div>
-          `).join('')}
-        </div>
-      ` : ''}
-    `;
+    if (statsEl) {
+      const resName = state.classId === 'warrior' ? '怒氣' : (state.classId === 'ranger' ? '精力' : (state.classId === 'paladin' ? '聖能' : (state.classId === 'necro' ? '魂能' : (state.classId === 'assassin' ? '影能' : '魔力'))));
+      statsEl.innerHTML = `
+        <div class="stat-row"><span>生命 / ${resName}上限</span><strong>${formatNum(stats.maxHp)} / ${formatNum(stats.maxMp || 100)}</strong></div>
+        <div class="stat-row"><span>攻擊力 / 秒傷</span><strong>${formatNum(stats.atk)} / ${formatNum(stats.dps || 0)}</strong></div>
+        <div class="stat-row"><span>攻擊間隔 / 回能</span><strong>${(stats.atkIntervalMs / 1000).toFixed(2)}s / ${(stats.mpRegenPerSec || 0).toFixed(1)}/s</strong></div>
+        <div class="stat-row"><span>暴擊率 / 暴傷</span><strong>${stats.critRate}% / ${stats.critDmg}%</strong></div>
+        <div class="stat-row"><span>護甲 / 閃避</span><strong>${formatNum(stats.armor)} / ${stats.dodge}%</strong></div>
+        <div class="stat-row"><span>攻擊吸血 / 減傷</span><strong>${stats.lifesteal}% / ${Math.round(stats.dmgReducePct || 0)}%</strong></div>
+        <div class="stat-row"><span>移動速度</span><strong>${stats.moveSpeed}</strong></div>
+        <div class="stat-row"><span>金幣 / 掉寶</span><strong>+${stats.goldFind}% / +${stats.magicFind}%</strong></div>
+        ${(stats.activeSets && stats.activeSets.length) ? `
+          <div style="grid-column:1/-1;margin-top:6px;padding:8px 10px;border-radius:7px;background:rgba(22,163,74,0.14);border:1px solid rgba(34,197,94,0.45);font-size:11.5px;">
+            <div style="color:#4ade80;font-weight:700;margin-bottom:4px;">🌿 已啟動綠色套裝效果</div>
+            ${stats.activeSets.map((s) => `
+              <div style="margin-top:3px;">
+                <b style="color:#86efac;">${s.name} (${s.count}/4)</b>
+                <div style="color:${s.count >= 2 ? '#bbf7d0' : '#64748b'};font-size:10.5px;">(2件) ${s.def.bonus2Desc}</div>
+                <div style="color:${s.count >= 4 ? '#bbf7d0' : '#64748b'};font-size:10.5px;">(4件) ${s.def.bonus4Desc}</div>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+      `;
+    }
   }
 
   renderInventory(state) {

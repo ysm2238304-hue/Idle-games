@@ -45,19 +45,34 @@ export class MageVfxDirector {
 
   static preload(scene) {
     for (const def of MAGE_SEQ16_DEFS) {
-      scene.load.spritesheet(def.key, `./assets/fx/${def.key}.png?v=248`, {
+      if (!scene.textures.exists(def.key)) scene.load.spritesheet(def.key, `./assets/fx/${def.key}.webp?v=265`, {
         frameWidth: 256,
         frameHeight: 256,
       });
     }
     for (const key of MAGE_V248_IMAGES) {
-      scene.load.image(key, `./assets/fx/${key}.png?v=248`);
+      if (!scene.textures.exists(key)) scene.load.image(key, `./assets/fx/${key}.webp?v=265`);
     }
     for (const cdef of MAGE_CONJ_ANIM_DEFS) {
-      scene.load.spritesheet(cdef.key, `./assets/fx/${cdef.key}.png?v=250`, {
+      if (!scene.textures.exists(cdef.key)) scene.load.spritesheet(cdef.key, `./assets/fx/${cdef.key}.webp?v=265`, {
         frameWidth: 224,
         frameHeight: 224,
       });
+    }
+  }
+
+
+  static unload(scene) {
+    const animKeys = [
+      ...MAGE_SEQ16_DEFS.map((d) => d.key),
+      ...MAGE_CONJ_ANIM_DEFS.map((d) => d.key),
+    ];
+    for (const k of animKeys) {
+      if (scene.anims?.exists(k)) scene.anims.remove(k);
+      if (scene.textures?.exists(k)) scene.textures.remove(k);
+    }
+    for (const k of MAGE_V248_IMAGES) {
+      if (scene.textures?.exists(k)) scene.textures.remove(k);
     }
   }
 

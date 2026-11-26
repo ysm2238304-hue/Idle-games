@@ -40,19 +40,34 @@ export class NecroVfxDirector {
 
   static preload(scene) {
     for (const def of NECRO_SEQ16_DEFS) {
-      scene.load.spritesheet(def.key, `./assets/fx/${def.key}.png?v=252`, {
+      if (!scene.textures.exists(def.key)) scene.load.spritesheet(def.key, `./assets/fx/${def.key}.webp?v=265`, {
         frameWidth: 256,
         frameHeight: 256,
       });
     }
     for (const mdef of NECRO_MINION_ANIM_DEFS) {
-      scene.load.spritesheet(mdef.key, `./assets/fx/${mdef.key}.png?v=252`, {
+      if (!scene.textures.exists(mdef.key)) scene.load.spritesheet(mdef.key, `./assets/fx/${mdef.key}.webp?v=265`, {
         frameWidth: 224,
         frameHeight: 224,
       });
     }
     for (const key of NECRO_V252_IMAGES) {
-      scene.load.image(key, `./assets/fx/${key}.png?v=252`);
+      if (!scene.textures.exists(key)) scene.load.image(key, `./assets/fx/${key}.webp?v=265`);
+    }
+  }
+
+
+  static unload(scene) {
+    const animKeys = [
+      ...NECRO_SEQ16_DEFS.map((d) => d.key),
+      ...NECRO_MINION_ANIM_DEFS.map((d) => d.key),
+    ];
+    for (const k of animKeys) {
+      if (scene.anims?.exists(k)) scene.anims.remove(k);
+      if (scene.textures?.exists(k)) scene.textures.remove(k);
+    }
+    for (const k of NECRO_V252_IMAGES) {
+      if (scene.textures?.exists(k)) scene.textures.remove(k);
     }
   }
 

@@ -216,3 +216,134 @@ export const NECRO_D4_PRESETS = [
   { id: 'necro_blood',  name: '🩸 血湧壓制血浪', color: '#ef4444', skills: ['n_hemorrhage', 'n_blood_surge', 'n_blood_mist', 'n_iron_maiden', 'blood_golem', 'n_blood_wave'], book: { skeleton: 'defender', mage: 'sacrifice', golem: 'blood_golem' }, keystone: 'nk_rathma_vigor' },
   { id: 'necro_shadow', name: '☠️ 暗影屍爆凋零', color: '#a855f7', skills: ['n_decompose', 'n_sever', 'corpse_explosion', 'n_corpse_tendrils', 'n_blight_pool', 'n_soul_rift'], book: { skeleton: 'reaper', mage: 'shadow_mage', golem: 'sacrifice' }, keystone: 'nk_shadowblight' },
 ];
+
+
+// v255: 戰士（狂戰士）4 套暗黑四 HUD 一鍵流派預設
+export const WARRIOR_D4_PRESETS = [
+  {
+    id: 'w_bleed_ww',
+    name: '旋風流血流',
+    skills: ['w_rend_slash', 'whirlwind', 'warcry', 'bloodcharge', 'w_rupture_impale', 'w_call_ancients'],
+    arsenal: 'greatsword',
+    keystone: 'wk_blood_tide',
+  },
+  {
+    id: 'w_hota_op',
+    name: '上古重錘壓制',
+    skills: ['w_bash_crush', 'w_ancient_hammer', 'w_challenging_shout', 'earth_stomp', 'volcano_totem', 'w_wrath_berserker'],
+    arsenal: 'warhammer',
+    keystone: 'wk_aftershock',
+  },
+  {
+    id: 'w_frenzy_exec',
+    name: '雙持狂亂斬殺',
+    skills: ['w_frenzy_flurry', 'w_double_swing', 'w_rallying_cry', 'w_leap_slam', 'bladestorm', 'execute_cleave'],
+    arsenal: 'dual_axes',
+    keystone: 'wk_unconstrained',
+  },
+  {
+    id: 'w_arsenal_storm',
+    name: '行走武器庫',
+    skills: ['w_lunging_strike', 'w_upheaval_wave', 'w_iron_skin', 'w_chain_grasp', 'w_seismic_fissure', 'w_iron_maelstrom'],
+    arsenal: 'warhammer',
+    keystone: 'wk_walking_arsenal',
+  },
+];
+
+
+// v259: 遊俠（暗影遊俠）4 套暗黑四 HUD 一鍵流派預設
+export const RANGER_D4_PRESETS = [
+  {
+    id: 'r_volley_gale',
+    name: '穿透連射彈幕',
+    skills: ['r_heartseeker', 'volley', 'windwalk', 'caltrops', 'shadow_clones', 'phantombow'],
+    specialization: 'combo_points',
+    keystone: 'rk_gale_crossbow',
+  },
+  {
+    id: 'r_poison_trap',
+    name: '劇毒死亡陷阱',
+    skills: ['r_puncture', 'r_venom_pierce', 'r_smoke_decoy', 'r_poison_trap', 'death_mark', 'r_death_trap'],
+    specialization: 'preparation',
+    keystone: 'rk_exposure',
+  },
+  {
+    id: 'r_shadow_rain',
+    name: '暗影分身箭雨',
+    skills: ['r_shadow_imbue', 'r_frost_barrage', 'shadowstep', 'r_smoke_grenade', 'arrowrain', 'r_abyss_barrage'],
+    specialization: 'inner_sight',
+    keystone: 'rk_chain_shadow',
+  },
+  {
+    id: 'r_rapid_snipe',
+    name: '虛空連珠狙殺',
+    skills: ['r_forceful_arrow', 'r_rapid_fire', 'r_dark_shroud', 'r_razor_snare', 'r_gale_snipe', 'r_void_hunter'],
+    specialization: 'combo_points',
+    keystone: 'rk_precision',
+  },
+];
+
+
+// v261: 刺客（暗影刺客）4 套暗黑四 HUD 一鍵流派預設
+export const ASSASSIN_D4_PRESETS = [
+  {
+    id: 'a_five_star_clones',
+    name: '五星千影分身',
+    skills: ['a_twin_fang', 'a_twisting_blades', 'a_shadow_backstab', 'a_garrote_bind', 'shadow_clones', 'a_thousand_shadows'],
+    venom: { mainHand: 'corrosive', offHand: 'hellvenom' },
+    keystone: 'ak_shadow_mastery',
+  },
+  {
+    id: 'a_dual_venom',
+    name: '雙毒蝕骨引爆',
+    skills: ['a_venom_slash', 'poison_kunai', 'smoke_veil', 'venom_burst', 'a_venom_imbue', 'a_crimson_eclipse'],
+    venom: { mainHand: 'corrosive', offHand: 'hellvenom' },
+    keystone: 'ak_corrosive_heart',
+  },
+  {
+    id: 'a_blood_execute',
+    name: '血月亂舞斬殺',
+    skills: ['a_blade_shift', 'blade_flurry', 'shadow_blitz', 'a_crimson_mist', 'lethal_fangs', 'shadow_execute'],
+    venom: { mainHand: 'paralyze', offHand: 'bloodtoxin' },
+    keystone: 'ak_blood_moon',
+  },
+  {
+    id: 'a_reaper_tempo',
+    name: '迴旋影舞暴殺',
+    skills: ['a_shuriken_fan', 'a_boomerang_blades', 'a_blood_cloak', 'a_shadow_decoy_bomb', 'a_death_lotus', 'a_reaper_dance'],
+    venom: { mainHand: 'paralyze', offHand: 'bloodtoxin' },
+    keystone: 'ak_lethal_tempo',
+  },
+];
+
+// v263: 聖殿騎士 4 套暗黑四一鍵流派預設（聖鎚風暴／天雷審判／鐵壁荊棘／烈陽殉道）
+export const PALADIN_D4_PRESETS = [
+  {
+    id: 'p_hammer_storm',
+    name: '聖鎚風暴流',
+    skills: ['p_justice_hammer', 'blessed_hammer', 'divine_storm', 'p_condemn_pull', 'radiant_aura', 'p_akarats_wrath'],
+    oath: 'sun_oath',
+    keystone: 'pk_hammer_domain',
+  },
+  {
+    id: 'p_heaven_thunder',
+    name: '天雷審判流',
+    skills: ['p_smite_lash', 'heaven_fist', 'p_holy_lance', 'judgment', 'p_solar_beacon', 'p_heavens_verdict'],
+    oath: 'sun_oath',
+    keystone: 'pk_divine_thunder',
+  },
+  {
+    id: 'p_iron_thorns',
+    name: '鐵壁荊棘流',
+    skills: ['p_holy_bolt', 'shield_bash', 'holy_aegis', 'p_sanctuary_ward', 'p_thorns_aura', 'p_valkyrie_avatar'],
+    oath: 'bastion_oath',
+    keystone: 'pk_immortal_bulwark',
+  },
+  {
+    id: 'p_solar_martyr',
+    name: '烈陽殉道流',
+    skills: ['p_zeal_strike', 'p_crusader_charge', 'p_falling_sword', 'consecration', 'p_redemption_prayer', 'p_seraph_descent'],
+    oath: 'martyr_oath',
+    keystone: 'pk_solar_zealot',
+  },
+];

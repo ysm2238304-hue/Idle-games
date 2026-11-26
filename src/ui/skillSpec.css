@@ -887,3 +887,227 @@
 .v253-buff-tile.is-combat {
   box-shadow: 0 0 10px color-mix(in srgb, var(--buff-col, #38bdf8) 65%, transparent) !important;
 }
+
+/* === v257: 回城／出城戰鬥精緻暗黑小圖示鈕 === */
+#btn-town-toggle.btn-town-toggle {
+  position: relative !important;
+  width: 42px !important;
+  height: 42px !important;
+  min-width: 42px !important;
+  padding: 2px !important;
+  border-radius: 8px !important;
+  border: 1.5px solid rgba(200, 155, 60, 0.78) !important;
+  background: linear-gradient(180deg, rgba(22, 18, 28, 0.94), rgba(10, 8, 14, 0.96)) !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.72), inset 0 0 8px rgba(200, 155, 60, 0.22) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: visible !important;
+  cursor: pointer !important;
+  transition: transform 0.14s ease, box-shadow 0.14s ease, border-color 0.14s ease !important;
+}
+#btn-town-toggle.btn-town-toggle.in-town {
+  border-color: rgba(249, 115, 22, 0.88) !important;
+  box-shadow: 0 0 12px rgba(249, 115, 22, 0.42), inset 0 0 8px rgba(234, 88, 12, 0.25) !important;
+}
+#btn-town-toggle.btn-town-toggle:hover {
+  transform: translateY(-1px) scale(1.06) !important;
+  border-color: #fde047 !important;
+}
+#btn-town-toggle .v257-town-ico {
+  width: 34px;
+  height: 34px;
+  border-radius: 5px;
+  object-fit: cover;
+  display: block;
+}
+#btn-town-toggle .mmo-hk {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  font-size: 9.5px;
+  font-weight: 900;
+  color: #fde68a;
+  background: rgba(10, 8, 14, 0.92);
+  border: 1px solid rgba(200, 155, 60, 0.75);
+  border-radius: 4px;
+  padding: 0 3px;
+  line-height: 1.25;
+}
+.v253-buff-tile {
+  will-change: transform;
+}
+
+/* === v258: 暗黑 4 風格分職業三欄紙娃娃角色裝備介面 === */
+#paper-doll-stage {
+  display: block !important;
+  padding: 0 !important;
+  background: transparent !important;
+  border: none !important;
+}
+.d4-paperdoll-stage {
+  display: grid;
+  grid-template-columns: 76px 1fr 76px;
+  gap: 8px;
+  padding: 12px 10px;
+  border-radius: 12px;
+  border: 1.5px solid color-mix(in srgb, var(--d4-accent, #c89b3c) 55%, rgba(200, 155, 60, 0.35));
+  background-size: cover;
+  background-position: center;
+  box-shadow: inset 0 0 28px rgba(0, 0, 0, 0.82), 0 4px 18px rgba(0, 0, 0, 0.65);
+  min-height: 356px;
+  align-items: stretch;
+}
+.d4-col-stack {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 7px;
+}
+.d4-eq-slot {
+  position: relative;
+  width: 74px;
+  height: 78px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(148, 130, 100, 0.42);
+  background: rgba(12, 11, 16, 0.84);
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.85);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease;
+}
+.d4-eq-slot:hover {
+  transform: scale(1.05);
+  border-color: var(--d4-accent, #fde047) !important;
+  box-shadow: 0 0 12px color-mix(in srgb, var(--d4-accent, #fde047) 55%, transparent) !important;
+  z-index: 6;
+}
+.d4-slot-silhouette {
+  width: 54px;
+  height: 54px;
+  border-radius: 5px;
+  object-fit: cover;
+  opacity: 0.78;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8));
+}
+.d4-slot-empty-lbl {
+  font-size: 10px;
+  font-weight: 700;
+  color: rgba(214, 195, 155, 0.72);
+  line-height: 1.1;
+  margin-top: 2px;
+  text-shadow: 0 1px 2px #000;
+}
+.d4-slot-item-img {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 5px rgba(0,0,0,0.85));
+}
+.d4-slot-name {
+  font-size: 9.5px;
+  font-weight: 800;
+  line-height: 1.15;
+  max-width: 68px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-shadow: 0 1px 3px #000;
+  margin-top: 2px;
+}
+.d4-slot-upg {
+  position: absolute;
+  top: 2px;
+  right: 3px;
+  font-size: 9.5px;
+  font-weight: 900;
+  color: #fde047;
+  background: rgba(10, 8, 14, 0.88);
+  border: 1px solid rgba(250, 204, 21, 0.65);
+  border-radius: 4px;
+  padding: 0 3px;
+  line-height: 1.25;
+}
+.d4-center-altar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 2px 0;
+}
+.d4-hero-plate {
+  text-align: center;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(10, 9, 15, 0.72);
+  border: 1px solid color-mix(in srgb, var(--d4-accent, #c89b3c) 45%, transparent);
+  backdrop-filter: blur(2px);
+}
+.d4-hero-name {
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 0.4px;
+  text-shadow: 0 1px 4px #000;
+}
+.d4-hero-sub {
+  font-size: 10.5px;
+  color: #e2d5be;
+  font-weight: 700;
+  margin-top: 1px;
+}
+.d4-hero-pedestal {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 0;
+}
+.d4-hero-sprite {
+  width: 118px;
+  height: 118px;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 14px rgba(0, 0, 0, 0.92)) drop-shadow(0 0 14px color-mix(in srgb, var(--d4-accent, #c89b3c) 38%, transparent));
+}
+.d4-pet-strip {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  border: 1.5px solid rgba(148, 130, 100, 0.48);
+  background: rgba(12, 10, 18, 0.86);
+  cursor: pointer;
+  transition: transform 0.14s ease, border-color 0.14s ease;
+}
+.d4-pet-strip:hover {
+  transform: translateY(-1px);
+  border-color: var(--d4-accent, #fde047);
+}
+.d4-pet-ico {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  border-radius: 5px;
+  flex-shrink: 0;
+}
+.d4-pet-info {
+  min-width: 0;
+  flex: 1;
+}
+.d4-pet-name {
+  font-size: 11.5px;
+  font-weight: 800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.d4-pet-sch {
+  font-size: 9.5px;
+  font-weight: 700;
+}

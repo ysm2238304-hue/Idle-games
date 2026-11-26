@@ -16,7 +16,7 @@
   <link id="worldmap-25d-v222-css" rel="stylesheet" href="./src/ui/worldMap25d.css?v=222" />
   <link id="gothic-ui-theme-v225-css" rel="stylesheet" href="./src/ui/gothicUiTheme.css?v=225" />
   <link id="custom-cursor-v232-css" rel="stylesheet" href="./src/ui/customCursor.css?v=232" />
-  <link id="skill-spec-v233-css" rel="stylesheet" href="./src/ui/skillSpec.css?v=253" />
+  <link id="skill-spec-v233-css" rel="stylesheet" href="./src/ui/skillSpec.css?v=258" />
   <link id="class-mech-v234-css" rel="stylesheet" href="./src/ui/classMechanic.css?v=234" />
   <link id="endgame-v237-css" rel="stylesheet" href="./src/ui/endgameModal.css?v=237" />
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.70.0/dist/phaser.min.js"></script>
@@ -182,7 +182,7 @@
 
       <!-- 獨立可移動縮放：出城／回城快捷鈕 -->
       <div id="hud-town-btn-panel" class="hud-corner hud-town-btn-panel hud-indep-panel">
-        <button id="btn-town-toggle" class="btn-town-toggle" title="返回主城 / 出城戰鬥 [G]">🏰 返回主城 (G)</button>
+        <button id="btn-town-toggle" class="btn-town-toggle" data-tip="返回主城 [G]" title="返回主城 [G]"><img class="v257-town-ico" src="./assets/ui/ui_town_return.png?v=257" alt="返回主城" /><span class="mmo-hk">G</span></button>
       </div>
 
       <!-- 中上方：當前鎖定目標／首領血條 (Target Frame) -->
@@ -214,10 +214,8 @@
             </div>
             <div class="matrix-row" data-group="世界系統">
               <button id="btn-world-map" class="mmo-micro-btn" data-tip="世界大地圖選關 [M]"><img class="mmo-ui-img" src="./assets/ui/ui_worldmap.png" alt="地圖" /><span class="mmo-hk">M</span></button>
-              <button id="btn-switch-class" class="mmo-micro-btn" data-tip="切換冒險職業 [C]"><img class="mmo-ui-img" src="./assets/ui/ui_class.png" alt="職業" /><span class="mmo-hk">C</span></button>
               <button id="btn-top-waypoint" class="mmo-micro-btn mmo-waypoint-btn" data-tip="主城快速傳送陣 [Y]"><img class="mmo-ui-img" src="./assets/ui/ui_waypoint.png?v=99" alt="傳送" /><span class="mmo-hk">Y</span></button>
               <button class="mmo-micro-btn" data-drawer="pets" data-tip="技能變異寵物 [P]"><span class="mmo-emoji">🐾</span><span class="mmo-hk">P</span></button>
-              <button class="mmo-micro-btn" data-drawer="log" data-tip="完整戰鬥日誌 [L]"><img class="mmo-ui-img" src="./assets/ui/ui_log.png" alt="日誌" /><span class="mmo-hk">L</span></button>
               <button id="btn-open-ach-tower" class="mmo-micro-btn" data-tip="成就稱號與無盡爬塔 [J]"><span class="mmo-emoji">🏆</span><span id="ach-dot" class="notify-dot hidden"></span><span class="mmo-hk">J</span></button>
               <button id="btn-open-shop" class="mmo-micro-btn" data-tip="暗黑深淵商城 (基礎/裝備/寵物/藥水) [F]"><span class="mmo-emoji">🛒</span><span class="mmo-hk">F</span></button>
               <button id="btn-town-bgm" class="mmo-micro-btn" data-tip="開啟 / 靜音主城 BGM [X]"><span class="mmo-emoji">🎵</span><span class="mmo-hk">X</span></button>
@@ -354,6 +352,30 @@
           <button type="button" class="v241-preset-pill" data-necro-preset="necro_bone" title="一鍵套用：孤高骨矛貫穿（6 招＋三獻祭暴君＋骸骨暴君）">🦴 孤高骨矛</button>
           <button type="button" class="v241-preset-pill" data-necro-preset="necro_blood" title="一鍵套用：血湧壓制血浪（6 招＋鮮血魔像＋拉斯瑪活力）">🩸 血湧血浪</button>
           <button type="button" class="v241-preset-pill" data-necro-preset="necro_shadow" title="一鍵套用：暗影屍爆凋零（6 招＋暗影法師＋暗影凋零）">☠️ 暗影屍爆</button>
+        </div>
+        <div id="v255-warrior-preset-row" class="v241-preset-row" style="display:none;">
+          <button type="button" class="v241-preset-pill" data-warrior-preset="w_bleed_ww" title="一鍵套用：旋風流血流（雙手巨劍＋血河狂潮）">🌪️ 旋風流血</button>
+          <button type="button" class="v241-preset-pill" data-warrior-preset="w_hota_op" title="一鍵套用：上古重錘壓制（重型戰錘＋餘震轟鳴）">🔨 上古重錘</button>
+          <button type="button" class="v241-preset-pill" data-warrior-preset="w_frenzy_exec" title="一鍵套用：雙持狂亂斬殺（雙持戰斧＋狂怒無拘）">🪓 雙持狂亂</button>
+          <button type="button" class="v241-preset-pill" data-warrior-preset="w_arsenal_storm" title="一鍵套用：行走武器庫（武器切換＋鋼鐵漩渦）">⚔️ 行走武器庫</button>
+        </div>
+        <div id="v259-ranger-preset-row" class="v241-preset-row" style="display:none;">
+          <button type="button" class="v241-preset-pill" data-ranger-preset="r_volley_gale" title="一鍵套用：穿透連射彈幕（連擊點契約＋疾風連弩）">🏹 穿透連射</button>
+          <button type="button" class="v241-preset-pill" data-ranger-preset="r_poison_trap" title="一鍵套用：劇毒死亡陷阱（戰術預備＋弱點暴露）">☠️ 死亡陷阱</button>
+          <button type="button" class="v241-preset-pill" data-ranger-preset="r_shadow_rain" title="一鍵套用：暗影分身箭雨（心眼洞察＋連鎖暗爆）">🌑 暗影箭雨</button>
+          <button type="button" class="v241-preset-pill" data-ranger-preset="r_rapid_snipe" title="一鍵套用：虛空連珠狙殺（連擊點契約＋精準射擊）">🎯 虛空連珠</button>
+        </div>
+        <div id="v261-assassin-preset-row" class="v241-preset-row" style="display:none;">
+          <button type="button" class="v241-preset-pill" data-assassin-preset="a_five_star_clones" title="一鍵套用：五星千影分身（迴旋絞殺刃＋五星影宗）">⭐ 五星千影</button>
+          <button type="button" class="v241-preset-pill" data-assassin-preset="a_dual_venom" title="一鍵套用：雙毒蝕骨引爆（劇毒淬刃＋蝕骨毒心）">☠️ 雙毒引爆</button>
+          <button type="button" class="v241-preset-pill" data-assassin-preset="a_blood_execute" title="一鍵套用：血月亂舞斬殺（血月收割＋暗影絕殺陣）">🩸 血月斬殺</button>
+          <button type="button" class="v241-preset-pill" data-assassin-preset="a_reaper_tempo" title="一鍵套用：迴旋影舞暴殺（必殺連攜＋死神影舞）">🗡️ 死神影舞</button>
+        </div>
+        <div id="v263-paladin-preset-row" class="v241-preset-row" style="display:none;">
+          <button type="button" class="v241-preset-pill" data-paladin-preset="p_hammer_storm" title="一鍵套用：聖鎚風暴流（祝福之鎚＋迴旋聖域）">🔨 聖鎚風暴</button>
+          <button type="button" class="v241-preset-pill" data-paladin-preset="p_heaven_thunder" title="一鍵套用：天雷審判流（天堂之拳＋天罰雷霆）">⚡ 天雷審判</button>
+          <button type="button" class="v241-preset-pill" data-paladin-preset="p_iron_thorns" title="一鍵套用：鐵壁荊棘流（盾擊反傷＋不朽壁壘）">🛡️ 鐵壁荊棘</button>
+          <button type="button" class="v241-preset-pill" data-paladin-preset="p_solar_martyr" title="一鍵套用：烈陽殉道流（烈陽聖旗＋熾天使降臨）">☀️ 烈陽殉道</button>
         </div>
         <span id="v241-class-strip-label" style="display:none;font-size:11px;color:#d6c39b;font-weight:700;letter-spacing:0.5px;">⚔️ 6 格流派技能列（右鍵快換）</span>
         <div class="v241-medallion-group">
@@ -628,6 +650,6 @@
     </div>
   </div>
 
-  <script type="module" src="./src/main.js?v=254"></script>
+  <script type="module" src="./src/main.js?v=266"></script>
 </body>
 </html>

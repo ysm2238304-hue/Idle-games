@@ -910,6 +910,112 @@ export const SKILL_BUILD_SPECS = {
     { name: '幸運：二次天罰', desc: '幸運一擊 28% 機率追加 70% 天雷傷', procChance: 0.28, bonusMult: 0.70 }
   ),
 
+
+  p_zeal_strike: makeSpec('p_zeal_strike', 'primer', ['基礎', '連斬', '印記'], ['conviction'], [],
+    { name: '狂熱加速', desc: '傷害 +22%，攻速流暢度 +15%', dmgPct: 22, cdPct: 12 },
+    [
+      { id: 'a', name: '烈陽狂斬', desc: '附加【灼燒】', dmgPct: 18, addStatus: 'burn' },
+      { id: 'b', name: '審判連擊', desc: '附加【易傷】', dmgPct: 18, addStatus: 'vulnerable' },
+      { id: 'c', name: '五連聖斬', desc: '總傷 +28%', dmgPct: 28 },
+    ],
+    [
+      { id: 'a', name: '雷鳴狂熱', desc: '附加【感電】', elem: 'lightning', addStatus: 'shock' },
+      { id: 'b', name: '霜刃狂熱', desc: '附加【凍結】', elem: 'frost', addStatus: 'freeze' },
+    ],
+    { name: '幸運：聖印湧動', desc: '幸運一擊 30% 機率額外回復 18 聖能', procChance: 0.30, mpRefund: 18 }
+  ),
+  p_holy_bolt: makeSpec('p_holy_bolt', 'primer', ['基礎', '遠程', '治癒'], ['conviction'], [],
+    { name: '貫穿聖矢', desc: '傷害 +20%，冷卻 -12%', dmgPct: 20, cdPct: 12 },
+    [
+      { id: 'a', name: '淨化裂光', desc: '附加【易傷】', dmgPct: 16, addStatus: 'vulnerable' },
+      { id: 'b', name: '聖炎箭矢', desc: '附加【灼燒】', dmgPct: 20, addStatus: 'burn' },
+      { id: 'c', name: '雙發聖箭', desc: '總傷 +26%', dmgPct: 26 },
+    ],
+    [
+      { id: 'a', name: '雷光貫箭', desc: '附加【感電】', elem: 'lightning', addStatus: 'shock' },
+      { id: 'b', name: '寒星聖箭', desc: '附加【凍結】', elem: 'frost', addStatus: 'freeze' },
+    ],
+    { name: '幸運：恩典回響', desc: '幸運一擊 30% 機率回復 18 聖能', procChance: 0.30, mpRefund: 18 }
+  ),
+  p_justice_hammer: makeSpec('p_justice_hammer', 'primer', ['基礎', '飛鎚', '分裂'], ['conviction'], [],
+    { name: '正義迴響', desc: '傷害 +22%，暴擊 +8%', dmgPct: 22, critPct: 8 },
+    [
+      { id: 'a', name: '裂光飛鎚', desc: '附加【易傷】', dmgPct: 18, addStatus: 'vulnerable' },
+      { id: 'b', name: '灼熱飛鎚', desc: '附加【灼燒】', dmgPct: 20, addStatus: 'burn' },
+      { id: 'c', name: '重擊飛鎚', desc: '總傷 +26%', dmgPct: 26 },
+    ],
+    [
+      { id: 'a', name: '雷霆飛鎚', desc: '附加【感電】', elem: 'lightning', addStatus: 'shock' },
+      { id: 'b', name: '霜凍飛鎚', desc: '附加【凍結】', elem: 'frost', addStatus: 'freeze' },
+    ],
+    { name: '幸運：正義回能', desc: '幸運一擊 30% 機率回復 20 聖能', procChance: 0.30, mpRefund: 20 }
+  ),
+  p_sanctuary_ward: makeSpec('p_sanctuary_ward', 'utility', ['防禦', '結界', '反傷'], ['conviction'], [],
+    { name: '不朽聖域', desc: '反傷 +25%，冷卻 -14%', dmgPct: 25, cdPct: 14 },
+    [
+      { id: 'a', name: '荊棘結界', desc: '附加【易傷】', dmgPct: 18, addStatus: 'vulnerable' },
+      { id: 'b', name: '灼燒結界', desc: '附加【灼燒】', dmgPct: 20, addStatus: 'burn' },
+      { id: 'c', name: '堅壁結界', desc: '總傷 +26%', dmgPct: 26 },
+    ],
+    [
+      { id: 'a', name: '雷光結界', desc: '附加【感電】', elem: 'lightning', addStatus: 'shock' },
+      { id: 'b', name: '霜寒結界', desc: '附加【凍結】', elem: 'frost', addStatus: 'freeze' },
+    ],
+    { name: '幸運：聖域回能', desc: '幸運一擊 28% 機率回復 22 聖能', procChance: 0.28, mpRefund: 22 }
+  ),
+  p_condemn_pull: makeSpec('p_condemn_pull', 'utility', ['懲戒', '聚怪', '雷爆'], ['vulnerable', 'conviction'], ['shock'],
+    { name: '引力增幅', desc: '爆傷 +26%，暴擊 +10%', dmgPct: 26, critPct: 10 },
+    [
+      { id: 'a', name: '雷霆天譴', desc: '附加【感電】', dmgPct: 20, addStatus: 'shock' },
+      { id: 'b', name: '烈陽天譴', desc: '附加【灼燒】', dmgPct: 22, addStatus: 'burn' },
+      { id: 'c', name: '真空聚爆', desc: '總傷 +30%', dmgPct: 30 },
+    ],
+    [
+      { id: 'a', name: '霜爆天譴', desc: '附加【凍結】', elem: 'frost', addStatus: 'freeze' },
+      { id: 'b', name: '血罰天譴', desc: '附加【流血】', elem: 'blood', addStatus: 'bleed' },
+    ],
+    { name: '幸運：連鎖天譴', desc: '幸運一擊 26% 機率追加 55% 聖雷傷', procChance: 0.26, bonusMult: 0.55 }
+  ),
+  p_falling_sword: makeSpec('p_falling_sword', 'utility', ['懲戒', '空降', '聖火'], ['burn', 'conviction'], ['vulnerable'],
+    { name: '流星墜擊', desc: '傷害 +26%，冷卻 -14%', dmgPct: 26, cdPct: 14 },
+    [
+      { id: 'a', name: '裂甲空降', desc: '附加【易傷】', dmgPct: 20, addStatus: 'vulnerable' },
+      { id: 'b', name: '天雷空降', desc: '附加【感電】', dmgPct: 22, addStatus: 'shock' },
+      { id: 'c', name: '巨劍流星', desc: '總傷 +32%', dmgPct: 32 },
+    ],
+    [
+      { id: 'a', name: '極寒墜劍', desc: '附加【凍結】', elem: 'frost', addStatus: 'freeze' },
+      { id: 'b', name: '冥火墜劍', desc: '附加【詛咒】', elem: 'shadow', addStatus: 'curse' },
+    ],
+    { name: '幸運：餘震天火', desc: '幸運一擊 26% 機率追加 55% 聖火傷', procChance: 0.26, bonusMult: 0.55 }
+  ),
+  p_valkyrie_avatar: makeSpec('p_valkyrie_avatar', 'ultimate', ['終極', '召喚', '聖衛'], ['conviction'], ['vulnerable'],
+    { name: '天界英靈', desc: '聖衛傷害 +30%，冷卻 -12%', dmgPct: 30, cdPct: 12 },
+    [
+      { id: 'a', name: '破甲英靈', desc: '附加【易傷】', dmgPct: 22, addStatus: 'vulnerable' },
+      { id: 'b', name: '熾炎英靈', desc: '附加【灼燒】', dmgPct: 24, addStatus: 'burn' },
+      { id: 'c', name: '雙刃女武神', desc: '總傷 +34%', dmgPct: 34 },
+    ],
+    [
+      { id: 'a', name: '雷槍英靈', desc: '附加【感電】', elem: 'lightning', addStatus: 'shock' },
+      { id: 'b', name: '霜翼英靈', desc: '附加【凍結】', elem: 'frost', addStatus: 'freeze' },
+    ],
+    { name: '幸運：英靈庇護', desc: '幸運一擊 28% 機率回復 25 聖能', procChance: 0.28, mpRefund: 25 }
+  ),
+  p_akarats_wrath: makeSpec('p_akarats_wrath', 'ultimate', ['終極', '化身', '聖鎚'], ['conviction'], ['burn', 'shock'],
+    { name: '戰神降世', desc: '傷害 +32%，暴擊 +12%', dmgPct: 32, critPct: 12 },
+    [
+      { id: 'a', name: '烈陽化身', desc: '附加【灼燒】', dmgPct: 24, addStatus: 'burn' },
+      { id: 'b', name: '天雷化身', desc: '附加【感電】', dmgPct: 24, addStatus: 'shock' },
+      { id: 'c', name: '無盡聖鎚', desc: '總傷 +36%', dmgPct: 36 },
+    ],
+    [
+      { id: 'a', name: '霜光化身', desc: '附加【凍結】', elem: 'frost', addStatus: 'freeze' },
+      { id: 'b', name: '血誓化身', desc: '附加【流血】', elem: 'blood', addStatus: 'bleed' },
+    ],
+    { name: '幸運：神聖狂湧', desc: '幸運一擊 30% 機率回復 25 聖能', procChance: 0.30, mpRefund: 25 }
+  ),
+
   a_twin_fang: makeSpec('a_twin_fang', 'primer', ['基礎', '連擊', '回能'], ['bleed'], [],
     { name: '極速雙牙', desc: '傷害 +22%，冷卻 -14%', dmgPct: 22, cdPct: 14 },
     [
@@ -1015,6 +1121,108 @@ export const SKILL_BUILD_SPECS = {
     { name: '幸運：五星回響', desc: '幸運一擊 28% 機率追加 70% 絕殺傷', procChance: 0.28, bonusMult: 0.70 }
   ),
 
+  w_lunging_strike: makeSpec('w_lunging_strike', 'primer', ['基礎', '位移', '流血'], ['bleed'], [], [
+    { tier: 2, name: '血刃突襲', desc: '突進斬擊額外附加流血並提升移速' },
+    { tier: 4, name: '狂怒追擊', desc: '命中額外回復 4 點怒氣' },
+    { tier: 6, name: '碎甲穿刺', desc: '對高血量敵人暴擊率 +20%' },
+    { tier: 8, name: '戰神衝刺', desc: '傷害倍率 +35% 並縮短冷卻 12%' },
+  ]),
+  w_frenzy_flurry: makeSpec('w_frenzy_flurry', 'primer', ['基礎', '雙持', '狂亂'], ['vulnerable'], [], [
+    { tier: 2, name: '雙斧連舞', desc: '狂亂每層額外提供 +3% 減傷' },
+    { tier: 4, name: '疾風怒濤', desc: '滿層狂亂額外回復 5 怒氣' },
+    { tier: 6, name: '狂血沸騰', desc: '暴擊率 +15%' },
+    { tier: 8, name: '不息狂亂', desc: '傷害倍率 +35%' },
+  ]),
+  w_bash_crush: makeSpec('w_bash_crush', 'primer', ['基礎', '重錘', '壓制'], ['vulnerable'], [], [
+    { tier: 2, name: '震骨重擊', desc: '暈眩時間延長至 1.6 秒' },
+    { tier: 4, name: '壓制蓄能', desc: '每 3 下即觸發必壓制' },
+    { tier: 6, name: '碎盾衝擊', desc: '命中必附加易傷' },
+    { tier: 8, name: '泰坦巨力', desc: '傷害倍率 +40%' },
+  ]),
+  w_upheaval_wave: makeSpec('w_upheaval_wave', 'core', ['核心', '大地', '擊退'], ['burn'], ['burn'], [
+    { tier: 2, name: '烈岩掀地', desc: '扇形距離擴大至 460px' },
+    { tier: 4, name: '餘震裂片', desc: '附帶額外碎岩爆炸' },
+    { tier: 6, name: '熾熱崩塌', desc: '對灼燒敵人傷害 +30%' },
+    { tier: 8, name: '地核噴發', desc: '傷害倍率 +45%' },
+  ]),
+  w_double_swing: makeSpec('w_double_swing', 'core', ['核心', '雙持', '易傷'], ['vulnerable'], ['vulnerable'], [
+    { tier: 2, name: '雙刃交錯', desc: '命中易傷目標返還 50% 怒氣' },
+    { tier: 4, name: '血腥迴旋', desc: '額外附加流血效果' },
+    { tier: 6, name: '破甲交叉', desc: '暴擊傷害 +40%' },
+    { tier: 8, name: '狂斧處決', desc: '傷害倍率 +40%' },
+  ]),
+  w_challenging_shout: makeSpec('w_challenging_shout', 'defensive', ['戰吼', '嘲諷', '荊棘'], ['vulnerable'], [], [
+    { tier: 2, name: '鋼鐵咆哮', desc: '荊棘反傷大幅提升' },
+    { tier: 4, name: '怒火受擊', desc: '受擊回怒提高至 +10' },
+    { tier: 6, name: '不屈戰意', desc: '持續時間延長 2 秒' },
+    { tier: 8, name: '泰坦壁壘', desc: '減傷效果提升至 45%' },
+  ]),
+  w_rallying_cry: makeSpec('w_rallying_cry', 'defensive', ['戰吼', '回怒', '增幅'], [], [], [
+    { tier: 2, name: '戰旗鼓舞', desc: '額外回復 10 點怒氣' },
+    { tier: 4, name: '先祖共鳴', desc: '全場先祖與圖騰攻速 +35%' },
+    { tier: 6, name: '不屈衝鋒', desc: '移速提升至 +35%' },
+    { tier: 8, name: '永恆戰意', desc: '冷卻縮短 18%' },
+  ]),
+  w_leap_slam: makeSpec('w_leap_slam', 'defensive', ['搏鬥', '位移', '大地'], ['vulnerable'], [], [
+    { tier: 2, name: '震地衝擊', desc: '落地範圍擴大至 300px' },
+    { tier: 4, name: '戰神降臨', desc: '落地觸發短暫地震餘震' },
+    { tier: 6, name: '怒氣迸發', desc: '額外回復 8 怒氣' },
+    { tier: 8, name: '天崩躍擊', desc: '傷害倍率 +40%' },
+  ]),
+  w_iron_maelstrom: makeSpec('w_iron_maelstrom', 'ultimate', ['終極', '武器庫', '三段'], ['bleed', 'vulnerable'], ['bleed'], [
+    { tier: 2, name: '三器連攜', desc: '每段武器切換傷害 +20%' },
+    { tier: 4, name: '鎖鏈暴風', desc: '第三段範圍擴大至 380px' },
+    { tier: 6, name: '武器大師', desc: '全段必定觸發壓制' },
+    { tier: 8, name: '鋼鐵終焉', desc: '總傷害 +50% 並減 CD 15%' },
+  ]),
+  a_blade_shift: makeSpec('a_blade_shift', 'primer', ['基礎', '位移', '閃避'], ['vulnerable'], [], [
+    { tier: 2, name: '暗影疾步', desc: '滑步距離延長並提升閃避至 22%' },
+    { tier: 4, name: '影能汲取', desc: '穿刺每名敵人額外回 3 影能' },
+    { tier: 6, name: '破防影刃', desc: '暴擊率 +18%' },
+    { tier: 8, name: '極影步法', desc: '傷害倍率 +35%' },
+  ]),
+  a_venom_slash: makeSpec('a_venom_slash', 'primer', ['基礎', '劇毒', '扇形'], ['poison'], [], [
+    { tier: 2, name: '雙毒調和', desc: '中毒傷害 +25%' },
+    { tier: 4, name: '腐蝕刃風', desc: '額外附加易傷狀態' },
+    { tier: 6, name: '影星凝毒', desc: '命中中毒敵人額外 +1 暗影星' },
+    { tier: 8, name: '毒刃宗師', desc: '傷害倍率 +35%' },
+  ]),
+  a_shuriken_fan: makeSpec('a_shuriken_fan', 'primer', ['基礎', '手裡劍', '流血'], ['bleed'], [], [
+    { tier: 2, name: '血月五鏢', desc: '流血傷害提升 +30%' },
+    { tier: 4, name: '精準投擲', desc: '暴擊率 +15%' },
+    { tier: 6, name: '吸血飛鏢', desc: '命中回復 3% 最大生命' },
+    { tier: 8, name: '影鏢極意', desc: '傷害倍率 +38%' },
+  ]),
+  a_twisting_blades: makeSpec('a_twisting_blades', 'core', ['核心', '折返', '減CD'], ['vulnerable', 'bleed'], ['vulnerable'], [
+    { tier: 2, name: '疾速折返', desc: '回程傷害再提升 +25%' },
+    { tier: 4, name: '連環減CD', desc: '每貫穿一名敵人額外縮短 CD 0.35s' },
+    { tier: 6, name: '雙毒穿刺', desc: '折返附加劇毒與流血' },
+    { tier: 8, name: '絞殺宗師', desc: '傷害倍率 +45%' },
+  ]),
+  a_blood_cloak: makeSpec('a_blood_cloak', 'defensive', ['防禦', '護盾', '吸血'], ['bleed'], [], [
+    { tier: 2, name: '血月護幕', desc: '護盾量提升至 45% 最大生命' },
+    { tier: 4, name: '嗜血反刃', desc: '散射血刃暴擊率 +25%' },
+    { tier: 6, name: '暗影癒合', desc: '吸血額外 +8%' },
+    { tier: 8, name: '不滅影衣', desc: '冷卻縮短 18%' },
+  ]),
+  a_garrote_bind: makeSpec('a_garrote_bind', 'defensive', ['控場', '聚怪', '暈眩'], ['bleed', 'vulnerable'], [], [
+    { tier: 2, name: '緊縮血線', desc: '聚怪半徑擴大至 380px' },
+    { tier: 4, name: '致命窒息', desc: '暈眩時間延長至 2.6 秒' },
+    { tier: 6, name: '裂骨絞殺', desc: '對流血目標傷害 +35%' },
+    { tier: 8, name: '血線大師', desc: '傷害倍率 +40%' },
+  ]),
+  a_shadow_decoy_bomb: makeSpec('a_shadow_decoy_bomb', 'defensive', ['實體', '影爆', '暈眩'], ['vulnerable', 'curse'], [], [
+    { tier: 2, name: '高壓影核', desc: '爆炸半徑擴大至 330px' },
+    { tier: 4, name: '雙毒炸彈', desc: '爆炸額外掛中毒與流血' },
+    { tier: 6, name: '影能震盪', desc: '引爆回復 15 影能' },
+    { tier: 8, name: '替身絕爆', desc: '傷害倍率 +45%' },
+  ]),
+  a_reaper_dance: makeSpec('a_reaper_dance', 'ultimate', ['終極', '無敵', '連斬'], ['bleed', 'vulnerable'], ['bleed'], [
+    { tier: 2, name: '極速殘影', desc: '連斬次數提升至 7 次' },
+    { tier: 4, name: '血星收割', desc: '額外掉落 2 顆磁吸暗影血星珠' },
+    { tier: 6, name: '影舞壓制', desc: '最後一斬必定觸發壓制暴擊' },
+    { tier: 8, name: '死神終舞', desc: '總傷害 +50%' },
+  ]),
   // ==================== v236 遠程／法系三職新增 24 招專精樹 ====================
   r_shadow_imbue: makeSpec('r_shadow_imbue', 'primer', ['基礎', '暗影', '回能'], ['vulnerable', 'curse'], [],
     { name: '幽冥箭羽', desc: '傷害 +24%，冷卻 -12%', dmgPct: 24, cdPct: 12 },
@@ -1329,6 +1537,54 @@ export const SKILL_BUILD_SPECS = {
     { name: '幸運：骨刺飛射', desc: '幸運一擊 28% 機率追加 62% 連攜爆發並回能 15', procChance: 0.28, bonusMult: 0.62, mpRefund: 15 }
   ),
 
+  r_puncture: makeSpec('r_puncture', 'primer', ['基礎', '飛刀', '劇毒'], ['poison', 'vulnerable'], [], [
+    { tier: 2, name: '淬毒三刃', desc: '飛刀中毒持續時間延長至 6 秒' },
+    { tier: 4, name: '精準回能', desc: '命中易傷目標額外回 4 精力' },
+    { tier: 6, name: '破綻飛刃', desc: '暴擊率 +18%' },
+    { tier: 8, name: '影刃精通', desc: '傷害倍率 +35%' },
+  ]),
+  r_heartseeker: makeSpec('r_heartseeker', 'primer', ['基礎', '追蹤', '暴擊'], ['vulnerable'], [], [
+    { tier: 2, name: '尋心追獵', desc: '彈射距離擴大並附加易傷' },
+    { tier: 4, name: '連擊蓄星', desc: '暴擊機率額外 +1 連擊星' },
+    { tier: 6, name: '穿心暴傷', desc: '暴擊傷害 +40%' },
+    { tier: 8, name: '極速拉弓', desc: '傷害倍率 +35%' },
+  ]),
+  r_forceful_arrow: makeSpec('r_forceful_arrow', 'primer', ['基礎', '貫穿', '擊退'], ['vulnerable'], [], [
+    { tier: 2, name: '破陣重矢', desc: '貫穿寬度增加並附帶減速' },
+    { tier: 4, name: '震盪精力', desc: '擊退額外回復 5 點精力' },
+    { tier: 6, name: '弱點鎖定', desc: '對易傷目標暴擊率 +25%' },
+    { tier: 8, name: '重弓極意', desc: '傷害倍率 +40%' },
+  ]),
+  r_rapid_fire: makeSpec('r_rapid_fire', 'core', ['核心', '連射', '單體'], ['vulnerable'], ['vulnerable'], [
+    { tier: 2, name: '疾風五連', desc: '暴擊返還精力提高至 5 點' },
+    { tier: 4, name: '穿甲彈幕', desc: '對首領傷害額外 +25%' },
+    { tier: 6, name: '暗影追矢', desc: '命中易傷目標附加暗影爆裂' },
+    { tier: 8, name: '神射終結', desc: '傷害倍率 +42%' },
+  ]),
+  r_dark_shroud: makeSpec('r_dark_shroud', 'defensive', ['防禦', '護盾', '暗影'], ['curse'], [], [
+    { tier: 2, name: '暗影護罩', desc: '護盾量提升至 45% 最大生命' },
+    { tier: 4, name: '疾步帷幕', desc: '護盾期間移速 +20%' },
+    { tier: 6, name: '反擊影矢', desc: '散射暗影箭暴擊率 +25%' },
+    { tier: 8, name: '幽影壁壘', desc: '冷卻縮短 18%' },
+  ]),
+  r_poison_trap: makeSpec('r_poison_trap', 'defensive', ['陷阱', '劇毒', '暈眩'], ['poison'], ['poison'], [
+    { tier: 2, name: '劇毒擴散', desc: '毒雲範圍擴大至 280px' },
+    { tier: 4, name: '震盪毒雷', desc: '暈眩時間延長至 2.0 秒' },
+    { tier: 6, name: '腐蝕深化', desc: '附加易傷與額外毒池' },
+    { tier: 8, name: '毒王陷阱', desc: '傷害倍率 +42%' },
+  ]),
+  r_smoke_grenade: makeSpec('r_smoke_grenade', 'defensive', ['控場', '致盲', '易傷'], ['vulnerable', 'curse'], [], [
+    { tier: 2, name: '深邃迷霧', desc: '致盲暈眩延長至 3.0 秒' },
+    { tier: 4, name: '破防煙彈', desc: '被致盲目標承受傷害 +25%' },
+    { tier: 6, name: '暗影回能', desc: '每命中 1 名敵人回 3 精力' },
+    { tier: 8, name: '煙霧大師', desc: '冷卻縮短 20%' },
+  ]),
+  r_death_trap: makeSpec('r_death_trap', 'ultimate', ['終極', '陷阱', '漩渦'], ['bleed', 'vulnerable'], ['vulnerable'], [
+    { tier: 2, name: '致命引力', desc: '聚怪半徑擴大至 400px' },
+    { tier: 4, name: '連鎖收割', desc: '擊殺敵人減 CD 提升至 5 秒' },
+    { tier: 6, name: '暗紅絞殺', desc: '全段必定壓制暴擊' },
+    { tier: 8, name: '死神領域', desc: '總傷害 +50%' },
+  ]),
   // ==================== v241 暗黑 4 秘法師新增 14 招專精樹 ====================
   m_frost_bolt: makeSpec('m_frost_bolt', 'primer', ['基礎', '冰霜', '回魔'], ['freeze'], [],
     { name: '閃爍冰霜箭', desc: '傷害 +24%，冷卻 -12%', dmgPct: 24, cdPct: 12 },
@@ -1632,28 +1888,36 @@ export function getSmartAutoSlotOrder(equippedSkillIds, monsters, nowT) {
 // v235: 關鍵被動（Keystone Passives，每職業 4 選 1，含高風險變異流派）
 export const KEYSTONE_PASSIVES = {
   warrior: [
-    { id: 'wk_blood_tide',   name: '血河狂潮', icon: './assets/skills/ks_wk_blood_tide.png?v=235', badge: '流血流', color: '#f87171', desc: '流血傷害 +60% 且必定暴擊，攻擊流血目標有 35% 機率引爆周圍猩紅血浪。' },
-    { id: 'wk_aftershock',   name: '餘震轟鳴', icon: './assets/skills/ks_wk_aftershock.png?v=235', badge: '大地流', color: '#fb923c', desc: '所有技能命中後有 40% 機率觸發二次大地餘震（65% 攻擊範圍傷＋壓制率 +10%）。' },
-    { id: 'wk_endless_fury', name: '無盡狂怒', icon: './assets/skills/ks_wk_endless_fury.png?v=235', badge: '狂暴流', color: '#fbbf24', desc: '攻速 +28%、吸血 +10%、技能冷卻縮短 15%，越戰越狂。' },
-    { id: 'wk_blood_pact',   name: '血契戰鬼', icon: './assets/skills/ks_wk_blood_pact.png?v=235', badge: '變異高危', color: '#ef4444', desc: '【變異】最大生命上限縮減 55%，換取全技能傷害 +65%、壓制觸發率 +45%！' },
+    { id: 'wk_blood_tide',      name: '血河狂潮',   icon: './assets/skills/ks_wk_blood_tide.png?v=255',      badge: '流血流',   color: '#f87171', desc: '流血傷害 +60% 且必定暴擊，攻擊流血目標有 35% 機率引爆周圍猩紅血浪。' },
+    { id: 'wk_aftershock',      name: '餘震轟鳴',   icon: './assets/skills/ks_wk_aftershock.png?v=255',      badge: '大地流',   color: '#fb923c', desc: '所有技能命中後有 40% 機率觸發二次大地餘震（65% 攻擊範圍傷＋壓制率 +10%）。' },
+    { id: 'wk_endless_fury',    name: '無盡狂怒',   icon: './assets/skills/ks_wk_endless_fury.png?v=255',    badge: '狂暴流',   color: '#fbbf24', desc: '攻速 +28%、吸血 +10%、技能冷卻縮短 15%，越戰越狂。' },
+    { id: 'wk_blood_pact',      name: '血契戰鬼',   icon: './assets/skills/ks_wk_blood_pact.png?v=255',      badge: '變異血祭', color: '#ef4444', desc: '【變異】最大生命縮減 55% 且施放非基礎技消耗 6% 生命，換取全技傷 +65%、壓制率 +45%！' },
+    { id: 'wk_unconstrained',   name: '狂怒無拘',   icon: './assets/skills/ks_wk_unconstrained.png?v=255',   badge: '極限狂暴', color: '#f97316', desc: '狂暴持續時間延長 50%，狂暴期間全傷害 +40% 且每秒額外回復 6 點怒氣。' },
+    { id: 'wk_walking_arsenal', name: '行走武器庫', icon: './assets/skills/ks_wk_walking_arsenal.png?v=255', badge: '武器切換', color: '#38bdf8', desc: '交替施放斬擊／重擊／搏鬥招式疊加 3 層武器大師印記，滿層全傷 +55% 並觸發壓制暴擊！' },
   ],
   paladin: [
-    { id: 'pk_hammer_domain',   name: '迴旋聖域', icon: './assets/skills/ks_pk_hammer_domain.png?v=235', badge: '聖鎚流', color: '#fde047', desc: '技能傷害 +35%，所有攻擊必附加【定罪】且擴大聖光範圍。' },
-    { id: 'pk_divine_thunder',  name: '天罰雷霆', icon: './assets/skills/ks_pk_divine_thunder.png?v=235', badge: '審判流', color: '#38bdf8', desc: '對【定罪】目標暴擊時 45% 機率降下 140% 天罰落雷並附加【感電】。' },
-    { id: 'pk_immortal_bulwark',name: '不朽壁壘', icon: './assets/skills/ks_pk_immortal_bulwark.png?v=235', badge: '鐵壁流', color: '#60a5fa', desc: '護甲 +45%、最大生命 +30%、每 2.5 秒自動釋放聖光反震波。' },
-    { id: 'pk_martyr_crown',    name: '荊棘王冠', icon: './assets/skills/ks_pk_martyr_crown.png?v=235', badge: '變異高危', color: '#fb923c', desc: '【變異】閃避歸零，換取將 180% 護甲值直接轉化為基礎攻擊力＋壓制率 +18%！' },
+    { id: 'pk_hammer_domain',   name: '迴旋聖域', icon: './assets/skills/ks_pk_hammer_domain.png?v=263',   badge: '聖鎚流',   color: '#fde047', desc: '技能傷害 +35%，所有攻擊必附加【定罪】且擴大聖光範圍。' },
+    { id: 'pk_divine_thunder',  name: '天罰雷霆', icon: './assets/skills/ks_pk_divine_thunder.png?v=263',  badge: '審判流',   color: '#38bdf8', desc: '對【定罪】目標暴擊時 45% 機率降下 140% 天罰落雷並附加【感電】。' },
+    { id: 'pk_immortal_bulwark',name: '不朽壁壘', icon: './assets/skills/ks_pk_immortal_bulwark.png?v=263',badge: '鐵壁流',   color: '#60a5fa', desc: '護甲 +45%、最大生命 +30%、每 2.5 秒自動釋放聖光反震波。' },
+    { id: 'pk_martyr_crown',    name: '荊棘王冠', icon: './assets/skills/ks_pk_martyr_crown.png?v=263',    badge: '變異高危', color: '#fb923c', desc: '【變異】閃避歸零，換取將 180% 護甲值直接轉化為基礎攻擊力＋壓制率 +18%！' },
+    { id: 'pk_solar_zealot',    name: '烈陽狂熱', icon: './assets/skills/ks_pk_solar_zealot.png?v=263',    badge: '召喚聖旗', color: '#f59e0b', desc: '召喚物（旋轉聖鎚／烈陽聖旗／英靈聖衛）數量與傷害 +35%，觸發【定罪】縮短終極技能冷卻 0.4 秒！' },
+    { id: 'pk_radiant_grace',   name: '聖恩救贖', icon: './assets/skills/ks_pk_radiant_grace.png?v=263',   badge: '光球爆發', color: '#fef08a', desc: '拾取磁吸「聖光之球」時回復 12 聖能與 6% 生命，4 秒內下次核心／終極技能必爆且額外 +40% 傷害！' },
   ],
   assassin: [
-    { id: 'ak_mirror_phantoms', name: '千面幻影', icon: './assets/skills/ks_ak_mirror_phantoms.png?v=235', badge: '分身流', color: '#c084fc', desc: '施放任何核心技有 40% 機率由暗影分身額外複製 55% 威力追擊。' },
-    { id: 'ak_corrosive_heart', name: '蝕骨毒心', icon: './assets/skills/ks_ak_corrosive_heart.png?v=235', badge: '劇毒流', color: '#4ade80', desc: '毒素傷害 +75%，命中中毒敵人自動擴散劇毒並附加【灼燒】。' },
-    { id: 'ak_lethal_tempo',    name: '必殺連攜', icon: './assets/skills/ks_ak_lethal_tempo.png?v=235', badge: '暴殺流', color: '#fb7185', desc: '暴擊率 +15%、暴擊傷害 +70%、每 3 次暴擊必觸發壓制穿甲。' },
-    { id: 'ak_glass_reaper',    name: '玻璃死神', icon: './assets/skills/ks_ak_glass_reaper.png?v=235', badge: '變異高危', color: '#f43f5e', desc: '【變異】護甲減半，換取所有技能傷害 +55% 且有 45% 機率觸發雙倍連擊！' },
+    { id: 'ak_mirror_phantoms', name: '千面幻影', icon: './assets/skills/ks_ak_mirror_phantoms.png?v=261', badge: '分身流',   color: '#c084fc', desc: '施放任何核心技有 40% 機率由暗影分身額外複製 55% 威力追擊。' },
+    { id: 'ak_corrosive_heart', name: '蝕骨毒心', icon: './assets/skills/ks_ak_corrosive_heart.png?v=261', badge: '劇毒流',   color: '#4ade80', desc: '毒素傷害 +75%，命中中毒敵人自動擴散劇毒並附加【灼燒】。' },
+    { id: 'ak_lethal_tempo',    name: '必殺連攜', icon: './assets/skills/ks_ak_lethal_tempo.png?v=261',    badge: '暴殺流',   color: '#fb7185', desc: '暴擊率 +15%、暴擊傷害 +70%、每 3 次暴擊必觸發壓制穿甲。' },
+    { id: 'ak_glass_reaper',    name: '玻璃死神', icon: './assets/skills/ks_ak_glass_reaper.png?v=261',    badge: '變異高危', color: '#f43f5e', desc: '【變異】護甲減半，換取所有技能傷害 +55% 且有 45% 機率觸發雙倍連擊！' },
+    { id: 'ak_blood_moon',      name: '血月收割', icon: './assets/skills/ks_ak_blood_moon.png?v=261',      badge: '斬殺續航', color: '#ef4444', desc: '對 HP < 55% 敵人全傷害 +45%，擊殺必回 12 影能與 8% 生命並自動刷新瞬影位移冷卻！' },
+    { id: 'ak_shadow_mastery',  name: '五星影宗', icon: './assets/skills/ks_ak_shadow_mastery.png?v=261',  badge: '五星分身', color: '#a855f7', desc: '暗影星印獲取翻倍，觸發五星絕殺時額外召喚 1 名動態暗影分身協戰 6 秒且增傷 +35%！' },
   ],
   ranger: [
-    { id: 'rk_chain_shadow',   name: '連鎖暗爆', icon: './assets/skills/ks_rk_chain_shadow.png?v=236', badge: '暗影流', color: '#c084fc', desc: '命中【易傷】目標有 40% 機率引爆暗影衝擊波（125% 傷＋掛詛咒）。' },
-    { id: 'rk_corrosive_venom',name: '腐蝕劇毒', icon: './assets/skills/ks_rk_corrosive_venom.png?v=236', badge: '劇毒流', color: '#4ade80', desc: '毒素傷害 +70%，命中中毒敵人 35% 機率附加【灼燒】直接自爆煉獄毒爆。' },
-    { id: 'rk_gale_crossbow',  name: '疾風連弩', icon: './assets/skills/ks_rk_gale_crossbow.png?v=236', badge: '彈幕流', color: '#34d399', desc: '攻速 +28%、幸運一擊率 +15%，每命中 35% 機率免費射出額外穿透箭。' },
-    { id: 'rk_void_sniper',    name: '虛空死狙', icon: './assets/skills/ks_rk_void_sniper.png?v=236', badge: '變異高危', color: '#a855f7', desc: '【變異】移動速度大幅降低，換取暴擊傷害 +110%、全技能傷害 +55%！' },
+    { id: 'rk_chain_shadow',    name: '連鎖暗爆', icon: './assets/skills/ks_rk_chain_shadow.png?v=259',    badge: '暗影流',   color: '#c084fc', desc: '命中【易傷】目標有 40% 機率引爆暗影衝擊波（125% 傷＋掛詛咒）。' },
+    { id: 'rk_corrosive_venom', name: '腐蝕劇毒', icon: './assets/skills/ks_rk_corrosive_venom.png?v=259', badge: '劇毒流',   color: '#4ade80', desc: '毒素傷害 +70%，命中中毒敵人 35% 機率附加【灼燒】直接自爆煉獄毒爆。' },
+    { id: 'rk_gale_crossbow',   name: '疾風連弩', icon: './assets/skills/ks_rk_gale_crossbow.png?v=259',   badge: '彈幕流',   color: '#34d399', desc: '攻速 +28%、幸運一擊率 +15%，每命中 35% 機率免費射出額外穿透箭。' },
+    { id: 'rk_void_sniper',     name: '虛空死狙', icon: './assets/skills/ks_rk_void_sniper.png?v=259',     badge: '變異高危', color: '#a855f7', desc: '【變異】移動速度大幅降低，換取暴擊傷害 +110%、全技能傷害 +55%！' },
+    { id: 'rk_precision',       name: '精準射擊', icon: './assets/skills/ks_rk_precision.png?v=259',       badge: '狙殺必暴', color: '#fde047', desc: '每 4 次施放技能必定觸發【精準必暴】，暴擊傷害額外 +65% 且無視目標 35% 護甲！' },
+    { id: 'rk_exposure',        name: '弱點暴露', icon: './assets/skills/ks_rk_exposure.png?v=259',        badge: '陷阱爆破', color: '#fb7185', desc: '命中受陷阱／控場影響的敵人 40% 機率自動引爆額外手雷毒爆，並縮短全陷阱冷卻 1.5 秒！' },
   ],
   mage: [
     { id: 'mk_esu_ferocity',  name: '艾蘇的兇暴', icon: './assets/skills/ks_mk_esu_ferocity.png?v=241', badge: '火暴流', color: '#fb923c', desc: '火焰暴擊傷害 +65%、攻速 +25%，對高血量目標必提暴擊率。' },

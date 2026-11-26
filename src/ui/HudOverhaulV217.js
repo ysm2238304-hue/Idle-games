@@ -1,3 +1,4 @@
+import { UniversalTooltip } from './UniversalTooltip.js?v=240';
 /**
  * HudOverhaulV217.js (v217)
  * 1. 右上功能列移至右下角橫排 + 放大圖示 + 直覺縮放小圖示
@@ -532,39 +533,111 @@ function mountAltarBuffBar() {
     clearInterval(window.__V253_BUFF_BAR_TIMER__);
   }
   window.__V253_BUFF_BAR_OWNED__ = true;
+  const buffMetaMap = new Map();
+  let hoveredKey = null;
+
+  const ensureBarDelegation = (bar) => {
+    if (bar._v257TipBound) return;
+    bar._v257TipBound = true;
+    bar.addEventListener('mouseover', (ev) => {
+      const tile = ev.target?.closest?.('.v253-buff-tile');
+      if (!tile) return;
+      const k = tile.dataset.buffKey;
+      hoveredKey = k;
+      const info = buffMetaMap.get(k);
+      if (info) {
+        UniversalTooltip.showRich(ev, {
+          title: info.name,
+          subtitle: info.sub,
+          icon: `./assets/buffs/${info.img}.png?v=253`,
+          color: info.col || '#fde68a',
+          lines: [info.tip],
+          footer: info.footer || '目前生效中',
+        });
+      }
+    });
+    bar.addEventListener('mousemove', (ev) => {
+      if (hoveredKey) UniversalTooltip.move(ev);
+    });
+    bar.addEventListener('mouseout', (ev) => {
+      const tile = ev.target?.closest?.('.v253-buff-tile');
+      if (!tile) return;
+      if (tile.contains(ev.relatedTarget)) return;
+      hoveredKey = null;
+      UniversalTooltip.hide();
+    });
+  };
+
   const renderBuffs = () => {
     const bar = document.getElementById('hud-altar-buffs');
     const st = window.__IDLE_ARPG_BRIDGE__?.getState?.();
     if (!bar || !st) return;
+    ensureBarDelegation(bar);
+
     const buffs = st.potionBuffs || {};
     const nowTs = Date.now();
-    const active = [];
+    const desired = [];
+
     for (const def of BUFF_CATALOG) {
       const until = buffs[def.key] || 0;
       if (until > nowTs) {
         const rem = Math.max(1, Math.ceil((until - nowTs) / 1000));
-        active.push(`
-          <div class="altar-buff-tile v253-buff-tile" style="--buff-col:${def.col}" title="${def.name}（剩餘 ${fmtCountdown(rem)}）&#10;${def.tip}">
-            <img class="altar-buff-img" src="./assets/buffs/${def.img}.png?v=253" alt="${def.name}" />
-            <span class="altar-buff-sec">${fmtCountdown(rem)}</span>
-          </div>
-        `);
+        const label = fmtCountdown(rem);
+        desired.push({
+          id: def.key,
+          img: def.img,
+          name: def.name,
+          sub: `剩餘時間：${label}`,
+          tip: def.tip,
+          col: def.col,
+          label,
+          isCombat: false,
+          footer: '藥水／主城祭壇常駐增益',
+        });
       }
     }
-    // v253: 整合實戰即時核心狀態（護盾屏障／無敵／亡靈狂熱與啟蒙／壓制充能）
     const liveBuffs = window.__IDLE_ARPG_BRIDGE__?.getLiveCombatBuffs?.() || [];
     for (const lb of liveBuffs) {
-      active.push(`
-        <div class="altar-buff-tile v253-buff-tile is-combat" style="--buff-col:${lb.col || '#fbbf24'}" title="${lb.name}&#10;${lb.tip}">
-          <img class="altar-buff-img" src="./assets/buffs/${lb.img}.png?v=253" alt="${lb.name}" />
-          <span class="altar-buff-sec">${lb.label}</span>
-        </div>
-      `);
+      desired.push({
+        id: `live_${lb.img}`,
+        img: lb.img,
+        name: lb.name,
+        sub: `狀態：${lb.label}`,
+        tip: lb.tip,
+        col: lb.col || '#fbbf24',
+        label: lb.label,
+        isCombat: true,
+        footer: '實戰即時技能狀態',
+      });
     }
-    bar.innerHTML = active.join('');
-    bar.classList.toggle('is-empty', active.length === 0);
 
-    // 同步隱藏左上舊文字 BUFF 條，統一集中於底部祭壇 BUFF 圖示列
+    const activeIds = new Set(desired.map((d) => d.id));
+    // 移除已過期的節點（保留滑鼠懸停中的其他節點不重建，徹底消滅跳動！）
+    Array.from(bar.children).forEach((el) => {
+      const k = el.dataset?.buffKey;
+      if (!activeIds.has(k)) {
+        if (hoveredKey === k) { hoveredKey = null; UniversalTooltip.hide(); }
+        el.remove();
+      }
+    });
+
+    desired.forEach((d) => {
+      buffMetaMap.set(d.id, d);
+      let tile = bar.querySelector(`.v253-buff-tile[data-buff-key="${d.id}"]`);
+      if (!tile) {
+        tile = document.createElement('div');
+        tile.className = `altar-buff-tile v253-buff-tile${d.isCombat ? ' is-combat' : ''}`;
+        tile.dataset.buffKey = d.id;
+        tile.style.setProperty('--buff-col', d.col);
+        tile.innerHTML = `<img class="altar-buff-img" src="./assets/buffs/${d.img}.png?v=253" alt="${d.name}" /><span class="altar-buff-sec">${d.label}</span>`;
+        bar.appendChild(tile);
+      } else {
+        const secEl = tile.querySelector('.altar-buff-sec');
+        if (secEl && secEl.textContent !== d.label) secEl.textContent = d.label;
+      }
+    });
+
+    bar.classList.toggle('is-empty', desired.length === 0);
     const oldWrap = document.getElementById('hud-potion-buffs');
     if (oldWrap) oldWrap.style.display = 'none';
   };
