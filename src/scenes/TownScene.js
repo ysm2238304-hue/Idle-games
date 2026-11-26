@@ -44,9 +44,6 @@ export class TownScene extends Phaser.Scene {
     this.obstacles = [];
     this.rectObstacles = [];
     this.town3d = new Town3DBuildingLayer();
-    if (this.town3d.isReady()) {
-      this.town3d.bakeChapterToPhaser(this, td.chapterIdx ?? 0);
-    }
     this.interactables = [];
     this.patrolActors = [];
     this.roamNpcs = [];
@@ -124,6 +121,10 @@ export class TownScene extends Phaser.Scene {
   create() {
     const td = this.townData;
     this.obstacles = [];
+    this.rectObstacles = [];
+    if (this.town3d?.isReady?.()) {
+      this.town3d.bakeChapterToPhaser(this, td.chapterIdx ?? 0);
+    }
     this.interactables = [];
     this.patrolActors = [];
     this.roamNpcs = [];
