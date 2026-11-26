@@ -1,17 +1,16 @@
-import { Town3DBuildingLayer } from '../town/Town3DBuildingLayer.js?v=293';
 import { CameraZoomHelper } from './CameraZoomHelper.js?v=282';
-import { TOWN_CH1 } from '../data/towns/ch1.js?v=290';
+import { TOWN_CH1 } from '../data/towns/ch1.js?v=297';
 import { LivingNpcEngine } from '../town/LivingNpcEngine.js?v=273';
 import { TownMultiplayerSync } from '../net/TownMultiplayerSync.js?v=274';
-import { TOWN_CH2 } from '../data/towns/ch2.js?v=290';
-import { TOWN_CH3 } from '../data/towns/ch3.js?v=290';
-import { TOWN_CH4 } from '../data/towns/ch4.js?v=290';
-import { TOWN_CH5 } from '../data/towns/ch5.js?v=290';
-import { TOWN_CH6 } from '../data/towns/ch6.js?v=290';
-import { TOWN_CH7 } from '../data/towns/ch7.js?v=290';
-import { TOWN_CH8 } from '../data/towns/ch8.js?v=290';
-import { TOWN_CH9 } from '../data/towns/ch9.js?v=290';
-import { TOWN_CH10 } from '../data/towns/ch10.js?v=290';
+import { TOWN_CH2 } from '../data/towns/ch2.js?v=297';
+import { TOWN_CH3 } from '../data/towns/ch3.js?v=297';
+import { TOWN_CH4 } from '../data/towns/ch4.js?v=297';
+import { TOWN_CH5 } from '../data/towns/ch5.js?v=297';
+import { TOWN_CH6 } from '../data/towns/ch6.js?v=297';
+import { TOWN_CH7 } from '../data/towns/ch7.js?v=297';
+import { TOWN_CH8 } from '../data/towns/ch8.js?v=297';
+import { TOWN_CH9 } from '../data/towns/ch9.js?v=297';
+import { TOWN_CH10 } from '../data/towns/ch10.js?v=297';
 import { formatNum } from '../logic/statCalc.js?v=99';
 import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta } from '../data/pets.js?v=99';
 
@@ -43,7 +42,6 @@ export class TownScene extends Phaser.Scene {
     this.moveTarget = null;
     this.obstacles = [];
     this.rectObstacles = [];
-    this.town3d = new Town3DBuildingLayer();
     this.interactables = [];
     this.patrolActors = [];
     this.roamNpcs = [];
@@ -122,9 +120,6 @@ export class TownScene extends Phaser.Scene {
     const td = this.townData;
     this.obstacles = [];
     this.rectObstacles = [];
-    if (this.town3d?.isReady?.()) {
-      this.town3d.bakeChapterToPhaser(this, td.chapterIdx ?? 0);
-    }
     this.interactables = [];
     this.patrolActors = [];
     this.roamNpcs = [];
@@ -555,21 +550,8 @@ export class TownScene extends Phaser.Scene {
     });
   }
 
-  get3DBuildingTexKey(b) {
-    const ch = (this.townData?.chapterIdx ?? 0) + 1;
-    let role = 'smith';
-    const act = b.action || '';
-    const id = b.id || '';
-    if (act === 'drawer_upgrade' || id === 'smith') role = 'smith';
-    else if (act === 'modal_alchemy' || id === 'alchemy') role = 'alchemy';
-    else if (act === 'drawer_skills' || act === 'drawer_bag' || id === 'guild') role = 'guild';
-    else if (act === 'modal_market' || id === 'market') role = 'market';
-    else if (act === 'drawer_rebirth' || id === 'temple' || id === 'altar') role = 'temple';
-    else if (act === 'modal_bounty' || id === 'bounty') role = 'bounty';
-    else if (act === 'exit_battle' || act === 'modal_portal' || id === 'portal') role = 'portal';
-    else if (act.startsWith('gimmick_')) role = 'beacon';
-    const k = `t3d_ch${ch}_${role}`;
-    return this.textures.exists(k) ? k : null;
+  get3DBuildingTexKey() {
+    return null;
   }
 
   placeBuilding(atlasKey, b) {
@@ -579,11 +561,11 @@ export class TownScene extends Phaser.Scene {
       const useStandalone = b.imgKey && this.textures.exists(b.imgKey);
       const sc = tex3d ? Math.max(0.74, (b.scale || 0.80) * 0.96) : (b.scale || 0.78);
       // 3D 建築接地投影
-      this.add.ellipse(b.x, b.y + 6, (b.shadowW || 260) * sc, (b.shadowH || 110) * sc, 0x000000, 0.48).setDepth(2);
+      this.add.ellipse(b.x, b.y - 6, (b.shadowW || 250) * sc, (b.shadowH || 92) * sc, 0x000000, 0.42).setDepth(2);
       const spr = tex3d
         ? this.add.image(b.x, b.y, tex3d).setOrigin(0.5, 0.92).setScale(sc).setDepth(b.y - 20)
         : (useStandalone
-          ? this.add.image(b.x, b.y, b.imgKey).setOrigin(0.5, 0.94).setScale(sc).setDepth(b.y - 20)
+          ? this.add.image(b.x, b.y, b.imgKey).setOrigin(0.5, 0.96).setScale(sc).setDepth(b.y - 20)
           : this.add.image(b.x, b.y, atlasKey, b.frame).setOrigin(0.5, 0.92).setScale(sc).setDepth(b.y - 20));
       if (b.flipX && !tex3d) spr.setFlipX(true);
       if (b.radius > 0) {

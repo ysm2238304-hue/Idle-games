@@ -3,6 +3,7 @@
 // 特性：點擊標題列自由拖曳、視窗邊界安全鉗制、點擊自動置頂、自動忽略關閉／分頁／輸入按鈕
 
 const TARGET_SELECTORS = [
+  '.v294-multi-win',
   '#rpg-drawer',
   '#modal-town-facility .town-modal-card',
   '#modal-town-facility .modal-card',
@@ -126,7 +127,7 @@ export function initAllDraggableModals() {
     }
     // 同步維護 body.modal-open 讓常駐任務追蹤與小地圖在彈窗開啟時自動讓位
     const anyOpen = !!document.querySelector(
-      '#rpg-drawer:not(.hidden), .modal-overlay:not(.hidden), .npc-modal-backdrop:not(.hidden)'
+      '.v294-multi-win:not(.hidden), #rpg-drawer:not(.hidden), .modal-overlay:not(.hidden), .npc-modal-backdrop:not(.hidden)'
     );
     document.body.classList.toggle('v291-modal-open', anyOpen);
   };

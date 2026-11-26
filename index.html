@@ -108,6 +108,30 @@
       z-index: 230 !important;
     }
   </style>
+  <style id="v294-multi-window-css">
+    /* v294: 真正的多開彈窗並存模式 — 外層透明不攔截點擊，讓多個視窗可同時並排拖曳操作 */
+    .modal-overlay,
+    .npc-modal-backdrop,
+    #modal-town-facility,
+    #modal-settings,
+    #modal-shop,
+    #modal-ach-tower,
+    #modal-world-map {
+      background: transparent !important;
+      backdrop-filter: none !important;
+      pointer-events: none !important;
+    }
+    .modal-overlay > *,
+    .npc-modal-backdrop > *,
+    #modal-town-facility > *,
+    #modal-settings > *,
+    #modal-shop > *,
+    #modal-ach-tower > *,
+    #modal-world-map > * {
+      pointer-events: auto !important;
+      box-shadow: 0 18px 54px rgba(0, 0, 0, 0.86) !important;
+    }
+  </style>
 </head>
 <body>
   <section id="welcome-screen">
@@ -734,6 +758,6 @@
     </div>
   </div>
 
-  <script type="module" src="./src/main.js?v=293"></script>
+  <script type="module" src="./src/main.js?v=297"></script>
 </body>
 </html>

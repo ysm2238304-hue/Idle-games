@@ -101,11 +101,13 @@ export class DashboardUI {
   }
 
   bindDockAndDrawer() {
+    this._openWindows = new Map();
+    this._winZ = 240;
     document.querySelectorAll('[data-drawer]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const target = btn.dataset.drawer;
-        if (this.activeDrawer === target) {
-          this.closeDrawer();
+        if (this._openWindows?.has(target)) {
+          this.closeDrawer(target);
           return;
         }
         this.openDrawer(target);
@@ -118,15 +120,9 @@ export class DashboardUI {
   }
 
   openDrawer(tabName) {
+    if (!tabName) return;
+    if (!this._openWindows) this._openWindows = new Map();
     this.activeDrawer = tabName;
-    document.getElementById('rpg-drawer')?.classList.remove('hidden');
-
-    document.querySelectorAll('[data-drawer]').forEach((b) => {
-      b.classList.toggle('active', b.dataset.drawer === tabName);
-    });
-    document.querySelectorAll('.tab-panel').forEach((p) => {
-      p.classList.toggle('active', p.id === `tab-${tabName}`);
-    });
 
     const titles = {
       gear: '🛡️ 角色與裝備',
@@ -136,21 +132,96 @@ export class DashboardUI {
       skills: '⚡ 技能選擇配置',
       rebirth: '🌀 深淵輪迴',
       log: '📜 戰鬥日誌',
+      pets: '🐾 靈寵夥伴',
+      codex: '📖 深淵圖鑑',
     };
-    document.getElementById('drawer-title').textContent = titles[tabName] || '';
 
-    const insp = document.getElementById('item-inspector');
-    if (insp) insp.classList.toggle('hidden', tabName !== 'gear' && tabName !== 'bag');
+    // 若該分頁獨立視窗已開啟，直接置頂而不關閉其他視窗
+    if (this._openWindows.has(tabName)) {
+      const existing = this._openWindows.get(tabName);
+      this._winZ = (this._winZ || 240) + 1;
+      existing.style.zIndex = String(this._winZ);
+      existing.classList.remove('hidden');
+      return;
+    }
 
+    const panel = document.getElementById(`tab-${tabName}`);
+    if (!panel) {
+      // 兜底原單抽屜
+      document.getElementById('rpg-drawer')?.classList.remove('hidden');
+      return;
+    }
+
+    // 建立獨立多開浮動視窗，保留原 DOM 節點與所有事件綁定
+    const idx = this._openWindows.size;
+    const win = document.createElement('div');
+    win.id = `v294-win-${tabName}`;
+    win.className = 'v294-multi-win';
+    win.dataset.winTab = tabName;
+    this._winZ = (this._winZ || 240) + 1;
+    const vw = window.innerWidth || 1280;
+    const w = 468;
+    const startLeft = Math.max(16, Math.min(vw - w - 16, vw - w - 20 - (idx % 4) * 52));
+    const startTop = Math.min(180, 56 + (idx % 4) * 34);
+    win.style.cssText = `position:fixed;left:${startLeft}px;top:${startTop}px;width:${w}px;max-width:92vw;max-height:84vh;z-index:${this._winZ};display:flex;flex-direction:column;background:rgba(13,15,23,0.96);backdrop-filter:blur(14px);border:1.5px solid #c89b3c;border-radius:12px;box-shadow:0 16px 48px rgba(0,0,0,0.82);overflow:hidden;pointer-events:auto;`;
+
+    const head = document.createElement('div');
+    head.className = 'drawer-header modal-header';
+    head.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-bottom:1px solid rgba(200,155,60,0.32);background:rgba(24,20,16,0.92);cursor:grab;user-select:none;flex-shrink:0;';
+    head.innerHTML = `<span style="font-weight:800;font-size:15px;color:#fde68a;">${titles[tabName] || tabName}</span><button type="button" class="btn-close-multi" style="padding:3px 10px;border-radius:6px;border:1px solid rgba(200,155,60,0.45);background:rgba(30,24,18,0.85);color:#fef3c7;font-size:12px;font-weight:700;cursor:pointer;">✕ 關閉</button>`;
+
+    const body = document.createElement('div');
+    body.className = 'v294-multi-body';
+    body.style.cssText = 'flex:1;overflow-y:auto;padding:12px 14px;';
+
+    panel.classList.add('active');
+    panel.style.display = 'block';
+    body.appendChild(panel);
+    win.appendChild(head);
+    win.appendChild(body);
+    document.body.appendChild(win);
+
+    this._openWindows.set(tabName, win);
+
+    head.querySelector('.btn-close-multi')?.addEventListener('click', () => this.closeDrawer(tabName));
+    win.addEventListener('pointerdown', () => {
+      this._winZ = (this._winZ || 240) + 1;
+      win.style.zIndex = String(this._winZ);
+    }, { passive: true });
+
+    document.querySelectorAll('[data-drawer]').forEach((b) => {
+      b.classList.toggle('active', this._openWindows.has(b.dataset.drawer));
+    });
     if (tabName === 'bag') {
       document.getElementById('bag-dot')?.classList.add('hidden');
     }
   }
 
-  closeDrawer() {
-    this.activeDrawer = null;
-    document.getElementById('rpg-drawer')?.classList.add('hidden');
-    document.querySelectorAll('[data-drawer]').forEach((b) => b.classList.remove('active'));
+  closeDrawer(tabName = null) {
+    if (!this._openWindows || this._openWindows.size === 0) {
+      this.activeDrawer = null;
+      document.getElementById('rpg-drawer')?.classList.add('hidden');
+      document.querySelectorAll('[data-drawer]').forEach((b) => b.classList.remove('active'));
+      return;
+    }
+    const target = tabName || [...this._openWindows.keys()].pop();
+    const win = this._openWindows.get(target);
+    if (win) {
+      const panel = win.querySelector(`#tab-${target}`);
+      const drawerHost = document.querySelector('#rpg-drawer .drawer-body') || document.getElementById('rpg-drawer');
+      if (panel && drawerHost) {
+        panel.classList.remove('active');
+        panel.style.display = '';
+        drawerHost.appendChild(panel);
+      }
+      win.remove();
+      this._openWindows.delete(target);
+    }
+    const remain = [...this._openWindows.keys()];
+    this.activeDrawer = remain.length ? remain[remain.length - 1] : null;
+    document.querySelectorAll('[data-drawer]').forEach((b) => {
+      b.classList.toggle('active', this._openWindows.has(b.dataset.drawer));
+    });
   }
 
   markBagUpgradeDot() {
