@@ -229,19 +229,7 @@ export class MonsterVfxDirector {
 
   spawnDebrisBurst(x, y, color = 0xf97316, count = 10) {
     const pool = this.scene?.particlePool;
-    if (!pool) return;
-    for (let i = 0; i < count; i++) {
-      const ang = Math.random() * Math.PI * 2;
-      const spd = 75 + Math.random() * 145;
-      pool.spawn({
-        x,
-        y,
-        vx: Math.cos(ang) * spd,
-        vy: Math.sin(ang) * spd - 35,
-        color,
-        scale: 0.24 + Math.random() * 0.22,
-        lifeMs: 280 + Math.random() * 240,
-      });
-    }
+    if (!pool || typeof pool.burst !== 'function') return;
+    pool.burst(x, y, [color, 0xfef08a], Math.min(12, Math.max(4, count)));
   }
 }

@@ -1,16 +1,16 @@
 import { CameraZoomHelper } from './CameraZoomHelper.js?v=282';
-import { TOWN_CH1 } from '../data/towns/ch1.js?v=282';
+import { TOWN_CH1 } from '../data/towns/ch1.js?v=286';
 import { LivingNpcEngine } from '../town/LivingNpcEngine.js?v=273';
 import { TownMultiplayerSync } from '../net/TownMultiplayerSync.js?v=274';
-import { TOWN_CH2 } from '../data/towns/ch2.js?v=282';
-import { TOWN_CH3 } from '../data/towns/ch3.js?v=282';
-import { TOWN_CH4 } from '../data/towns/ch4.js?v=282';
-import { TOWN_CH5 } from '../data/towns/ch5.js?v=282';
-import { TOWN_CH6 } from '../data/towns/ch6.js?v=282';
-import { TOWN_CH7 } from '../data/towns/ch7.js?v=282';
-import { TOWN_CH8 } from '../data/towns/ch8.js?v=282';
-import { TOWN_CH9 } from '../data/towns/ch9.js?v=282';
-import { TOWN_CH10 } from '../data/towns/ch10.js?v=282';
+import { TOWN_CH2 } from '../data/towns/ch2.js?v=286';
+import { TOWN_CH3 } from '../data/towns/ch3.js?v=286';
+import { TOWN_CH4 } from '../data/towns/ch4.js?v=286';
+import { TOWN_CH5 } from '../data/towns/ch5.js?v=286';
+import { TOWN_CH6 } from '../data/towns/ch6.js?v=286';
+import { TOWN_CH7 } from '../data/towns/ch7.js?v=286';
+import { TOWN_CH8 } from '../data/towns/ch8.js?v=286';
+import { TOWN_CH9 } from '../data/towns/ch9.js?v=286';
+import { TOWN_CH10 } from '../data/towns/ch10.js?v=286';
 import { formatNum } from '../logic/statCalc.js?v=99';
 import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta } from '../data/pets.js?v=99';
 
@@ -84,9 +84,12 @@ export class TownScene extends Phaser.Scene {
       this.load.image(td.bgKey, td.bgUrl);
     }
     // v267: 載入新版暗黑 4 獨立地形融合 WebP 建築與地標
-    if (!td.integratedBuildings) {
+    if (td.modularBuildings || !td.integratedBuildings) {
       if (td.landmark?.imgKey && td.landmark?.imgUrl && !this.textures.exists(td.landmark.imgKey)) {
         this.load.image(td.landmark.imgKey, td.landmark.imgUrl);
+      }
+      if (td.portal?.imgKey && td.portal?.imgUrl && !this.textures.exists(td.portal.imgKey)) {
+        this.load.image(td.portal.imgKey, td.portal.imgUrl);
       }
       (td.facilities || []).forEach((fac) => {
         if (fac.imgKey && fac.imgUrl && !this.textures.exists(fac.imgKey)) {
@@ -154,7 +157,7 @@ export class TownScene extends Phaser.Scene {
       .setDisplaySize(td.mapWidth, td.mapHeight)
       .setDepth(0);
 
-    // 2. 主城章節地標（v282 場景一體化：不重複貼圖，改以 2.5D 地面發光符文陣＋動態光暈融入底圖）
+    // 2. 主城章節地標（v283 三層分離架構：獨立 2.5D 地標建築＋Y-Sort＋懸停微光）
     if (td.landmark) {
       const lm = td.landmark;
       if (td.integratedBuildings) {
@@ -175,10 +178,16 @@ export class TownScene extends Phaser.Scene {
           ? this.add.image(lm.x, lm.y, lm.imgKey).setOrigin(0.5, 0.72)
           : this.add.image(lm.x, lm.y, td.atlasKey, lm.frame);
         lmSpr.setScale(lm.scale).setDepth(lm.y);
-        this.beaconGlow = this.add.image(lm.x, lm.y - 18, 'fx_glow')
-          .setTint(td.ambientColor).setScale(2.2).setAlpha(0.32).setDepth(lm.y + 2);
-        this.tweens.add({ targets: this.beaconGlow, scale: 2.65, alpha: 0.48, duration: 1200, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-        this.obstacles.push({ x: lm.x, y: lm.y + 15, radius: lm.radius });
+        if (td.modularBuildings) {
+          lmSpr.setOrigin(0.5, 0.92).setInteractive({ useHandCursor: true });
+          lmSpr.on('pointerover', () => lmSpr.setTint(0xfff3c4));
+          lmSpr.on('pointerout', () => lmSpr.clearTint());
+          this.addNameplate(lm.x, lm.y - Math.round(240 * (lm.scale || 0.78)), `🔥 ${lm.name}`, '#fde68a', true);
+        }
+        this.beaconGlow = this.add.image(lm.x, lm.y - 42, 'fx_glow')
+          .setTint(td.ambientColor).setScale(1.8).setAlpha(0.24).setBlendMode(Phaser.BlendModes.ADD).setDepth(lm.y + 2);
+        this.tweens.add({ targets: this.beaconGlow, scale: 2.2, alpha: 0.38, duration: 1300, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
+        this.obstacles.push({ x: lm.x, y: lm.y - 10, radius: lm.radius || 58 });
       }
       this.interactables.push({
         id: lm.id,
@@ -533,7 +542,38 @@ export class TownScene extends Phaser.Scene {
   }
 
   placeBuilding(atlasKey, b) {
-    // v282: 暗黑 4 場景一體化設施系統 — 底圖已厚塗真實建築，不再硬貼迷你貼紙假房子，改為地面互動符文陣＋浮雕掛牌＋環境微粒
+    // v283: 正統 2.5D 三層分離式主城建築（純淨地基底圖 ＋ 獨立風格化 2.5D 建築本體 ＋ doorOffset 門口綁定 NPC，完全廢除粗糙發光圓陣）
+    if (this.townData?.modularBuildings) {
+      const useStandalone = b.imgKey && this.textures.exists(b.imgKey);
+      const sc = b.scale || 0.78;
+      // 自然接地柔和投影（非粗糙圓陣）
+      this.add.ellipse(b.x, b.y + 4, (b.shadowW || 240) * sc, (b.shadowH || 96) * sc, 0x000000, 0.46).setDepth(2);
+      const spr = useStandalone
+        ? this.add.image(b.x, b.y, b.imgKey).setOrigin(0.5, 0.94).setScale(sc).setDepth(b.y)
+        : this.add.image(b.x, b.y, atlasKey, b.frame).setOrigin(0.5, 0.92).setScale(sc).setDepth(b.y);
+      if (b.flipX) spr.setFlipX(true);
+      if (b.radius > 0) {
+        this.obstacles.push({ x: b.x, y: b.y - 18, radius: b.radius });
+      }
+      if (b.name && b.action) {
+        const icon = this.getActionIcon(b.action);
+        this.addNameplate(b.x, b.y - Math.round(285 * sc), `${icon} ${b.name}`, '#fde68a', true);
+      }
+      if (b.action) {
+        spr.setInteractive({ useHandCursor: true });
+        spr.on('pointerover', () => spr.setTint(0xfff1c9));
+        spr.on('pointerout', () => spr.clearTint());
+        spr.on('pointerdown', (pointer) => {
+          if (pointer?.leftButtonDown?.()) {
+            const dx = b.doorOffset?.x ?? 0;
+            const dy = b.doorOffset?.y ?? 74;
+            this.moveTarget = { x: b.x + dx, y: b.y + dy, triggerAction: b.action, triggerData: b };
+          }
+        });
+      }
+      return;
+    }
+
     if (this.townData?.integratedBuildings && b.action) {
       const tintMap = {
         drawer_upgrade: 0xf97316,

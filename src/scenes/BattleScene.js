@@ -1704,7 +1704,7 @@ export class BattleScene extends Phaser.Scene {
 
       const isMobAtk = time < (m.atkAnimUntil || 0);
       const wantAnim = `mob_${m.id}_${isMobAtk ? 'atk' : 'walk'}`;
-      if (m.sprite.anims.currentAnim?.key !== wantAnim) {
+      if (this.anims.exists(wantAnim) && m.sprite.anims.currentAnim?.key !== wantAnim) {
         m.sprite.play(wantAnim, true);
       }
       const t = time * 0.001 + (m.bobPhase || 0);
@@ -1762,7 +1762,7 @@ export class BattleScene extends Phaser.Scene {
         if (m.attackTimer >= m.atkIntervalMs) {
           m.attackTimer = 0;
           m.atkAnimUntil = time + 360;
-          m.sprite.play(`mob_${m.id}_atk`, true);
+          if (this.anims.exists(`mob_${m.id}_atk`)) m.sprite.play(`mob_${m.id}_atk`, true);
           if (m.isRanged) {
             this.time.delayedCall(140, () => {
               if (m.hp > 0 && !this.isTransitioning) this.fireEnemyBolt(m);

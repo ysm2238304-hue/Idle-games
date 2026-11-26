@@ -1,14 +1,14 @@
-// v282: 第 9 章主城「聖血薔薇修道院」— 全主城場景一體化建築重構＋全座標越界修正（4096x2560）
+// v286: 第 9 章主城「聖血薔薇修道院」— 三層建築重構（純淨底圖＋8棟專屬風格2.5D建築）
 export const TOWN_CH9 = {
   "chapterIdx": 8,
   "id": "town_ch9",
   "name": "聖血薔薇修道院",
   "subtitle": "第 9 章主城・文藝復興大理石四方迴廊與薔薇中庭",
-  "styleTag": "方形封閉哥德迴廊・血月玫瑰迷宮",
+  "styleTag": "三層建築重構・方形封閉哥德迴廊玫瑰迷宮",
   "mapWidth": 4096,
   "mapHeight": 2560,
-  "bgKey": "town_bg_ch9_v281",
-  "bgUrl": "./assets/bg/town_ch9.webp?v=281",
+  "bgKey": "town_bg_ch9_v286",
+  "bgUrl": "./assets/bg/town_ch9.webp?v=286",
   "atlasKey": "town_atlas_ch9",
   "atlasPng": "./assets/towns/atlas_town_ch9.png",
   "atlasJson": "./assets/towns/atlas_town_ch9.json",
@@ -16,7 +16,7 @@ export const TOWN_CH9 = {
   "particleColor": 16007006,
   "spawn": {
     "x": 2048,
-    "y": 1480
+    "y": 1280
   },
   "walkableZones": [
     {
@@ -31,11 +31,11 @@ export const TOWN_CH9 = {
     "name": "垂淚聖母血泉",
     "frame": "ch9_lm_fountain",
     "x": 2048,
-    "y": 1180,
-    "scale": 0.88,
-    "imgKey": "ch9_lm_fountain_v270",
-    "imgUrl": "./assets/towns/ch9_lm_fountain.webp?v=270",
-    "radius": 95,
+    "y": 1080,
+    "scale": 0.64,
+    "imgKey": "ch9_b_beacon_v286",
+    "imgUrl": "./assets/towns/ch9_b_beacon.webp?v=286",
+    "radius": 52,
     "action": "gimmick_blood_fountain",
     "tip": "沐浴垂淚聖母血泉（5 分鐘 攻擊+35% / 爆傷+25% / 吸血+5%）"
   },
@@ -44,189 +44,223 @@ export const TOWN_CH9 = {
       "id": "smith",
       "name": "聖光黃金錘洗煉聖台",
       "frame": "ch9_bld_smith",
-      "x": 1060,
-      "y": 760,
-      "scale": 1,
-      "imgKey": "ch9_bld_smith_v270",
-      "imgUrl": "./assets/towns/ch9_bld_smith.webp?v=270",
+      "x": 820,
+      "y": 420,
+      "scale": 0.82,
+      "imgKey": "ch9_b_smith_v286",
+      "imgUrl": "./assets/towns/ch9_b_smith.webp?v=286",
       "workStyle": "forge",
-      "radius": 112,
+      "radius": 82,
       "npc": {
         "frame": "ch9_npc_smith",
         "name": "奧古斯",
         "title": "聖光鍛造修士",
-        "x": 1180,
-        "y": 960,
+        "x": 840,
+        "y": 494,
         "scale": 0.62,
         "workStyle": "forge",
         "greeting": "以黃金聖錘與聖殿聖火洗煉的武器，能直接斬斷異端與惡魔的詛咒！"
       },
       "action": "drawer_upgrade",
-      "actionLabel": "開啟聖光洗煉"
+      "actionLabel": "開啟聖光洗煉",
+      "doorOffset": {
+        "x": 20,
+        "y": 74
+      }
     },
     {
       "id": "alchemy",
       "name": "血薔薇蒸餾聖藥房",
       "frame": "ch9_bld_alchemy",
-      "x": 3080,
-      "y": 760,
-      "scale": 1,
-      "imgKey": "ch9_bld_alchemy_v270",
-      "imgUrl": "./assets/towns/ch9_bld_alchemy.webp?v=270",
+      "x": 3220,
+      "y": 440,
+      "scale": 0.82,
+      "imgKey": "ch9_b_alchemy_v286",
+      "imgUrl": "./assets/towns/ch9_b_alchemy.webp?v=286",
       "workStyle": "alchemy",
-      "radius": 112,
+      "radius": 82,
       "npc": {
         "frame": "ch9_npc_alchemy",
         "name": "克萊兒",
         "title": "薔薇藥劑修女",
-        "x": 2920,
-        "y": 960,
+        "x": 3200,
+        "y": 514,
         "scale": 0.62,
         "workStyle": "alchemy",
         "greeting": "用紅薔薇晨露與聖水蒸餾的秘藥，能讓你在血戰中立於不敗之地。"
       },
       "action": "modal_alchemy",
-      "actionLabel": "調配薔薇聖藥"
+      "actionLabel": "調配薔薇聖藥",
+      "doorOffset": {
+        "x": -20,
+        "y": 74
+      }
     },
     {
       "id": "guild",
       "name": "修道院聖典珍寶庫",
       "frame": "ch9_bld_guild",
-      "x": 3180,
-      "y": 1960,
-      "scale": 0.96,
-      "imgKey": "ch9_bld_guild_v270",
-      "imgUrl": "./assets/towns/ch9_bld_guild.webp?v=270",
+      "x": 3020,
+      "y": 2020,
+      "scale": 0.82,
+      "imgKey": "ch9_b_guild_v286",
+      "imgUrl": "./assets/towns/ch9_b_guild.webp?v=286",
       "workStyle": "guild",
-      "radius": 115,
+      "radius": 82,
       "npc": {
         "frame": "ch9_npc_guild",
         "name": "格里高利",
         "title": "典藏院長",
-        "x": 2980,
-        "y": 1940,
+        "x": 3000,
+        "y": 2094,
         "scale": 0.62,
         "workStyle": "guild",
         "greeting": "修道院地窖珍藏著歷代聖騎士的裝備聖典，請隨時整理你的背包。"
       },
       "action": "drawer_bag",
-      "actionLabel": "打開聖典珍寶庫"
+      "actionLabel": "打開聖典珍寶庫",
+      "doorOffset": {
+        "x": -20,
+        "y": 74
+      }
     },
     {
       "id": "temple",
       "name": "聖殿十字軍演武迴廊",
       "frame": "ch9_bld_temple",
       "x": 2048,
-      "y": 520,
-      "scale": 1.04,
-      "imgKey": "ch9_bld_temple_v270",
-      "imgUrl": "./assets/towns/ch9_bld_temple.webp?v=270",
+      "y": 420,
+      "scale": 0.8,
+      "imgKey": "ch9_b_temple_v286",
+      "imgUrl": "./assets/towns/ch9_b_temple.webp?v=286",
       "workStyle": "prayer",
-      "radius": 115,
+      "radius": 82,
       "npc": {
         "frame": "ch9_npc_temple",
         "name": "羅蘭",
         "title": "血色聖騎士長",
         "x": 2048,
-        "y": 700,
+        "y": 494,
         "scale": 0.62,
         "workStyle": "prayer",
         "greeting": "聖戰士！踏入廢墟之前先在此調整好神聖戰技與天賦樹吧！"
       },
       "action": "drawer_skills",
-      "actionLabel": "配置職業技能"
+      "actionLabel": "配置職業技能",
+      "doorOffset": {
+        "x": 0,
+        "y": 74
+      }
     },
     {
       "id": "bounty",
       "name": "審判庭紅蠟懸賞聖碑",
       "frame": "ch9_bld_bounty",
-      "x": 1460,
-      "y": 1760,
-      "scale": 0.94,
-      "imgKey": "ch9_bld_bounty_v270",
-      "imgUrl": "./assets/towns/ch9_bld_bounty.webp?v=270",
+      "x": 1440,
+      "y": 680,
+      "scale": 0.62,
+      "imgKey": "ch9_b_bounty_v286",
+      "imgUrl": "./assets/towns/ch9_b_bounty.webp?v=286",
       "workStyle": "bounty",
-      "radius": 82,
+      "radius": 52,
       "npc": {
         "frame": "ch9_npc_bounty",
         "name": "託馬斯",
         "title": "紅衣審判官",
-        "x": 1620,
-        "y": 1740,
+        "x": 1452,
+        "y": 744,
         "scale": 0.62,
         "workStyle": "bounty",
         "greeting": "背叛聖光的墮落修女與審判劊子手正在廢墟徘徊，奉命將他們淨化！"
       },
       "action": "modal_bounty",
-      "actionLabel": "接取審判懸賞"
+      "actionLabel": "接取審判懸賞",
+      "doorOffset": {
+        "x": 12,
+        "y": 64
+      }
     },
     {
       "id": "market",
       "name": "聖物贖罪券黑市攤",
       "frame": "ch9_bld_market",
-      "x": 760,
-      "y": 1920,
-      "scale": 0.96,
-      "imgKey": "ch9_bld_market_v270",
-      "imgUrl": "./assets/towns/ch9_bld_market.webp?v=270",
+      "x": 560,
+      "y": 1960,
+      "scale": 0.8,
+      "imgKey": "ch9_b_market_v286",
+      "imgUrl": "./assets/towns/ch9_b_market.webp?v=286",
       "workStyle": "market",
-      "radius": 95,
+      "radius": 82,
       "npc": {
         "frame": "ch9_npc_market",
         "name": "盧卡",
         "title": "贖罪行商",
-        "x": 960,
-        "y": 1880,
+        "x": 580,
+        "y": 2034,
         "scale": 0.62,
         "workStyle": "market",
         "greeting": "只要捐獻一點金幣購買聖物盲盒，聖光便會賜予你神話級的奇蹟！"
       },
       "action": "modal_market",
-      "actionLabel": "進入聖物黑市"
+      "actionLabel": "進入聖物黑市",
+      "doorOffset": {
+        "x": 20,
+        "y": 74
+      }
     },
     {
       "id": "altar",
       "name": "垂淚聖母輪迴祭壇",
       "frame": "ch9_bld_altar",
-      "x": 2640,
-      "y": 1680,
-      "scale": 0.98,
-      "imgKey": "ch9_bld_altar_v270",
-      "imgUrl": "./assets/towns/ch9_bld_altar.webp?v=270",
+      "x": 2660,
+      "y": 680,
+      "scale": 0.72,
+      "imgKey": "ch9_b_temple_v286",
+      "imgUrl": "./assets/towns/ch9_b_temple.webp?v=286",
       "workStyle": "prayer",
-      "radius": 105,
+      "radius": 82,
       "npc": {
         "frame": "ch9_npc_altar",
         "name": "賽巴斯",
         "title": "血色大主教",
-        "x": 2520,
-        "y": 1660,
+        "x": 2648,
+        "y": 752,
         "scale": 0.62,
         "workStyle": "prayer",
         "greeting": "在聖母的垂淚注視下洗去塵埃，完成神聖的靈魂輪迴昇華。"
       },
       "action": "drawer_rebirth",
-      "actionLabel": "開啟聖母輪迴"
+      "actionLabel": "開啟聖母輪迴",
+      "doorOffset": {
+        "x": -12,
+        "y": 72
+      }
     },
     {
       "id": "portal",
       "name": "玫瑰花窗神聖光門",
       "frame": "ch9_bld_portal",
-      "x": 2048,
-      "y": 2220,
-      "scale": 0.92,
-      "radius": 105,
+      "x": 1060,
+      "y": 2080,
+      "scale": 0.62,
+      "radius": 52,
       "npc": {
         "frame": "ch9_npc_portal",
         "name": "米迦勒",
         "title": "黃金聖門守衛",
-        "x": 2048,
-        "y": 2040,
+        "x": 1075,
+        "y": 2148,
         "scale": 0.62,
         "greeting": "金色光門直通血色修道院廢墟深處，願聖薔薇之光護佑你凱旋！"
       },
       "action": "modal_portal",
-      "actionLabel": "傳送出征廢墟"
+      "actionLabel": "傳送出征廢墟",
+      "imgKey": "ch9_b_portal_v286",
+      "imgUrl": "./assets/towns/ch9_b_portal.webp?v=286",
+      "doorOffset": {
+        "x": 15,
+        "y": 68
+      }
     }
   ],
   "extraNpcs": [
@@ -235,8 +269,8 @@ export const TOWN_CH9 = {
       "frame": "ch9_npc_penitent",
       "name": "特蕾莎",
       "title": "苦行聖女",
-      "x": 1620,
-      "y": 680,
+      "x": 1680,
+      "y": 560,
       "scale": 0.64,
       "greeting": "願這串薔薇念珠與 80,000 金幣聖糧，支撐你渡過最黑暗的修道院長夜。",
       "action": "modal_penitent",
@@ -247,8 +281,8 @@ export const TOWN_CH9 = {
       "frame": "ch9_prop_bell",
       "name": "聖血修道院黃金大鐘",
       "title": "聖光機關",
-      "x": 2480,
-      "y": 680,
+      "x": 2420,
+      "y": 560,
       "scale": 0.78,
       "greeting": "敲響修道院黃金大鐘降下聖光洗禮，瞬間恢復全部生命與能量！",
       "action": "gimmick_abbey_bell",
@@ -259,7 +293,7 @@ export const TOWN_CH9 = {
     "id": "dummy",
     "name": "審判庭聖鎧靶偶",
     "frame": "ch9_prop_dummy",
-    "x": 3420,
+    "x": 3320,
     "y": 1920,
     "scale": 0.72,
     "radius": 42
@@ -340,5 +374,15 @@ export const TOWN_CH9 = {
       ]
     }
   ],
-  "integratedBuildings": true
+  "integratedBuildings": false,
+  "modularBuildings": true,
+  "portal": {
+    "x": 1060,
+    "y": 2080,
+    "imgKey": "ch9_b_portal_v286",
+    "imgUrl": "./assets/towns/ch9_b_portal.webp?v=286",
+    "scale": 0.62,
+    "name": "出城戰鬥傳送門",
+    "action": "exit_battle"
+  }
 };
