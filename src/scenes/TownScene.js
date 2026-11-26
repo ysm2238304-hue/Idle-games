@@ -1,16 +1,16 @@
 import { CameraZoomHelper } from './CameraZoomHelper.js?v=282';
-import { TOWN_CH1 } from '../data/towns/ch1.js?v=286';
+import { TOWN_CH1 } from '../data/towns/ch1.js?v=290';
 import { LivingNpcEngine } from '../town/LivingNpcEngine.js?v=273';
 import { TownMultiplayerSync } from '../net/TownMultiplayerSync.js?v=274';
-import { TOWN_CH2 } from '../data/towns/ch2.js?v=286';
-import { TOWN_CH3 } from '../data/towns/ch3.js?v=286';
-import { TOWN_CH4 } from '../data/towns/ch4.js?v=286';
-import { TOWN_CH5 } from '../data/towns/ch5.js?v=286';
-import { TOWN_CH6 } from '../data/towns/ch6.js?v=286';
-import { TOWN_CH7 } from '../data/towns/ch7.js?v=286';
-import { TOWN_CH8 } from '../data/towns/ch8.js?v=286';
-import { TOWN_CH9 } from '../data/towns/ch9.js?v=286';
-import { TOWN_CH10 } from '../data/towns/ch10.js?v=286';
+import { TOWN_CH2 } from '../data/towns/ch2.js?v=290';
+import { TOWN_CH3 } from '../data/towns/ch3.js?v=290';
+import { TOWN_CH4 } from '../data/towns/ch4.js?v=290';
+import { TOWN_CH5 } from '../data/towns/ch5.js?v=290';
+import { TOWN_CH6 } from '../data/towns/ch6.js?v=290';
+import { TOWN_CH7 } from '../data/towns/ch7.js?v=290';
+import { TOWN_CH8 } from '../data/towns/ch8.js?v=290';
+import { TOWN_CH9 } from '../data/towns/ch9.js?v=290';
+import { TOWN_CH10 } from '../data/towns/ch10.js?v=290';
 import { formatNum } from '../logic/statCalc.js?v=99';
 import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta } from '../data/pets.js?v=99';
 
@@ -84,6 +84,9 @@ export class TownScene extends Phaser.Scene {
       this.load.image(td.bgKey, td.bgUrl);
     }
     // v267: 載入新版暗黑 4 獨立地形融合 WebP 建築與地標
+    if (!this.textures.exists('town_dummy_v287')) {
+      this.load.image('town_dummy_v287', './assets/towns/town_dummy.webp?v=287');
+    }
     if (td.modularBuildings || !td.integratedBuildings) {
       if (td.landmark?.imgKey && td.landmark?.imgUrl && !this.textures.exists(td.landmark.imgKey)) {
         this.load.image(td.landmark.imgKey, td.landmark.imgUrl);
@@ -224,8 +227,9 @@ export class TownScene extends Phaser.Scene {
       const dm = td.trainingDummy;
       this.add.image(dm.x, dm.y + 38, 'fx_glow')
         .setTint(0x000000).setScale(1.1, 0.42).setAlpha(0.45).setDepth(2);
-      this.dummySprite = this.add.image(dm.x, dm.y, td.atlasKey, dm.frame)
-        .setScale(dm.scale)
+      this.dummySprite = (this.textures.exists('town_dummy_v287')
+        ? this.add.image(dm.x, dm.y, 'town_dummy_v287').setOrigin(0.5, 0.92).setScale(dm.scale || 0.62)
+        : this.add.image(dm.x, dm.y, td.atlasKey, dm.frame).setScale(dm.scale))
         .setDepth(dm.y);
       this.obstacles.push({ x: dm.x, y: dm.y + 16, radius: dm.radius });
       this.addNameplate(dm.x, dm.y - 78, `🎯 ${dm.name}`, '#facc15');
