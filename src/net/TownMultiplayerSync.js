@@ -1,5 +1,5 @@
-// v273: 多人共享主城同屏同步引擎（TownMultiplayerSync）
-// 批次預載全部六職業英雄圖集（徹底消除色球佔位）＋Firestore 即時同屏＋離線 AI 冒險者＋氣泡聊天／表情
+// v274: 公測專用多人共享主城即時同步引擎（TownMultiplayerSync）
+// 移除所有假 AI 冒險者，純粹同步 Firebase 真實線上玩家；同屏角色縮放統一為 0.42，附可折疊主城表情喊話條
 import { publishTownPresence, subscribeTownPresence, getCurrentUser } from '../auth/firebase.js?v=272';
 
 const CLASS_META = {
@@ -20,30 +20,11 @@ const QUICK_EMOTES = [
   { id: 'trade', label: '💰 交易', text: '💰 鐵匠鋪強化一波！' },
 ];
 
-const AI_ADVENTURER_POOL = [
-  { uid: 'ai_1', name: '灰燼騎士・雷恩', classId: 'paladin',  level: 42, power: 18420 },
-  { uid: 'ai_2', name: '霜月秘法・莉亞', classId: 'mage',     level: 38, power: 15900 },
-  { uid: 'ai_3', name: '暗夜行者・影牙', classId: 'assassin', level: 45, power: 21350 },
-  { uid: 'ai_4', name: '血怒戰神・巴爾', classId: 'warrior',  level: 40, power: 17680 },
-  { uid: 'ai_5', name: '幽魂行者・維克', classId: 'necro',    level: 36, power: 14210 },
-  { uid: 'ai_6', name: '蒼風獵手・艾琳', classId: 'ranger',   level: 41, power: 16890 },
-];
-
-const AI_CHAT_LINES = [
-  '這座主城的祝福效果超好用！',
-  '剛把武器衝上 +12，差點碎掉...',
-  '大家準備好挑戰下一章 Boss 了嗎？',
-  '這套暗黑 4 紙娃娃裝備看起來真帥。',
-  '煉金工坊的藥水記得補滿再出城！',
-  '👋 嗨！祝大家今天都掉傳奇裝備！',
-];
-
 export class TownMultiplayerSync {
   constructor(scene, townData) {
     this.scene = scene;
     this.townData = townData;
     this.remoteActors = new Map();
-    this.aiActors = [];
     this._unsub = null;
     this._lastPubAt = 0;
     this._lastPubX = 0;
@@ -54,66 +35,43 @@ export class TownMultiplayerSync {
     this._destroyed = false;
     this._heroBubble = null;
     this._heroBubbleTimer = null;
-    this._atlasesReady = false;
-    this._pendingRemotePlayers = null;
+    this._loadingAtlases = false;
   }
 
-  _ensureAllHeroAtlases(onReady) {
+  _ensureClassAtlas(cid, onReady) {
     const s = this.scene;
-    const allCids = ['warrior', 'ranger', 'mage', 'paladin', 'necro', 'assassin'];
-    const missing = allCids.filter((cid) => !s.textures.exists(`atlas_${cid}`));
-    if (missing.length === 0) {
-      allCids.forEach((cid) => s.registerHeroAnims?.(cid));
-      this._atlasesReady = true;
+    const key = `atlas_${cid}`;
+    if (s.textures.exists(key)) {
+      s.registerHeroAnims?.(cid);
       onReady?.();
       return;
     }
-    const queueAndStart = () => {
+    const startLoad = () => {
       if (this._destroyed) return;
-      const stillMissing = allCids.filter((cid) => !s.textures.exists(`atlas_${cid}`));
-      if (stillMissing.length === 0) {
-        allCids.forEach((cid) => s.registerHeroAnims?.(cid));
-        this._atlasesReady = true;
+      if (s.textures.exists(key)) {
+        s.registerHeroAnims?.(cid);
         onReady?.();
         return;
       }
-      stillMissing.forEach((cid) => {
-        s.load.atlas(`atlas_${cid}`, `./assets/heroes/atlas_${cid}.png?v=66`, `./assets/heroes/atlas_${cid}.json?v=66`);
-      });
+      s.load.atlas(key, `./assets/heroes/${key}.png?v=66`, `./assets/heroes/${key}.json?v=66`);
       s.load.once('complete', () => {
         if (this._destroyed) return;
-        allCids.forEach((cid) => s.registerHeroAnims?.(cid));
-        this._atlasesReady = true;
+        s.registerHeroAnims?.(cid);
         onReady?.();
       });
       s.load.start();
     };
-    if (s.load.isLoading()) {
-      s.load.once('complete', queueAndStart);
-    } else {
-      queueAndStart();
-    }
+    if (s.load.isLoading()) s.load.once('complete', startLoad);
+    else startLoad();
   }
 
   start() {
     this._mountSocialBar();
-    this._ensureAllHeroAtlases(() => {
-      if (this._destroyed) return;
-      this._spawnAiAdventurers(5);
-      if (this._pendingRemotePlayers) {
-        this._syncRemotePlayers(this._pendingRemotePlayers);
-        this._pendingRemotePlayers = null;
-      }
-    });
     const chIdx = this.townData?.chapterIdx || 0;
     subscribeTownPresence(
       chIdx,
       (players) => {
         if (this._destroyed) return;
-        if (!this._atlasesReady) {
-          this._pendingRemotePlayers = players;
-          return;
-        }
         this._syncRemotePlayers(players);
       },
       () => { this._updateOnlineBadge(); }
@@ -128,36 +86,42 @@ export class TownMultiplayerSync {
     return map[cid] || 'w';
   }
 
-  _createPlayerActor(info, isAi = false) {
+  _createRemoteActor(info) {
     const s = this.scene;
-    const meta = CLASS_META[info.classId] || CLASS_META.warrior;
+    const cid = info.classId || 'warrior';
+    const atlasKey = `atlas_${cid}`;
+    if (!s.textures.exists(atlasKey)) {
+      this._ensureClassAtlas(cid, () => {
+        if (this._destroyed || this.remoteActors.has(info.uid)) return;
+        const a = this._createRemoteActor(info);
+        if (a) this.remoteActors.set(info.uid, a);
+      });
+      return null;
+    }
+    const meta = CLASS_META[cid] || CLASS_META.warrior;
+    const pfx = this._getClassPrefix(cid);
     const cx = info.x || (this.townData.spawn?.x || 2048);
     const cy = info.y || (this.townData.spawn?.y || 1400);
-    const atlasKey = `atlas_${info.classId}`;
-    const pfx = this._getClassPrefix(info.classId);
-    if (!s.textures.exists(atlasKey)) return null;
 
-    const shadow = s.add.ellipse(cx, cy + 20, 42, 16, 0x000000, 0.45).setDepth(3);
+    const shadow = s.add.ellipse(cx, cy + 28, 34, 13, 0x000000, 0.45).setDepth(3);
     const body = s.add.sprite(cx, cy, atlasKey, `${pfx}f_down_walk_0`)
-      .setOrigin(0.5, 0.85)
-      .setScale(0.76)
+      .setScale(0.42)
       .setDepth(cy)
       .setInteractive({ useHandCursor: true });
     body.on('pointerdown', () => this._openPlayerPopover(info));
 
-    const label = s.add.text(cx, cy - 72, `${meta.badge} ${info.name} Lv.${info.level}`, {
+    const label = s.add.text(cx, cy - 54, `${meta.badge} ${info.name} Lv.${info.level}`, {
       fontFamily: '"Noto Sans TC", sans-serif',
       fontSize: '12px',
       fontStyle: 'bold',
-      color: isAi ? '#e2e8f0' : '#fef08a',
-      backgroundColor: 'rgba(15, 20, 30, 0.72)',
+      color: '#fef08a',
+      backgroundColor: 'rgba(15, 20, 30, 0.76)',
       padding: { x: 6, y: 2 },
     }).setOrigin(0.5).setDepth(cy + 120);
 
     return {
       uid: info.uid,
       info: { ...info },
-      isAi,
       body,
       shadow,
       label,
@@ -165,25 +129,8 @@ export class TownMultiplayerSync {
       bubbleUntil: 0,
       tx: cx,
       ty: cy,
-      nextAiMoveAt: (s.time?.now || 0) + 1200 + Math.random() * 2600,
-      nextAiChatAt: (s.time?.now || 0) + 4500 + Math.random() * 9000,
+      _lastBubbleText: '',
     };
-  }
-
-  _spawnAiAdventurers(count = 5) {
-    const td = this.townData;
-    const cx = td.landmark?.x || td.mapWidth / 2;
-    const cy = td.landmark?.y || td.mapHeight / 2;
-    const shuffled = [...AI_ADVENTURER_POOL].sort(() => Math.random() - 0.5).slice(0, count);
-    shuffled.forEach((p, idx) => {
-      const ang = (Math.PI * 2 * idx) / count + 0.4;
-      const rad = 250 + Math.random() * 180;
-      const x = Phaser.Math.Clamp(cx + Math.cos(ang) * rad, 480, td.mapWidth - 480);
-      const y = Phaser.Math.Clamp(cy + Math.sin(ang) * rad * 0.72, 480, td.mapHeight - 420);
-      const actor = this._createPlayerActor({ ...p, x, y }, true);
-      if (actor) this.aiActors.push(actor);
-    });
-    this._updateOnlineBadge();
   }
 
   _syncRemotePlayers(players) {
@@ -192,7 +139,7 @@ export class TownMultiplayerSync {
       activeIds.add(p.uid);
       let actor = this.remoteActors.get(p.uid);
       if (!actor) {
-        actor = this._createPlayerActor(p, false);
+        actor = this._createRemoteActor(p);
         if (actor) this.remoteActors.set(p.uid, actor);
       } else {
         actor.info = { ...p };
@@ -218,7 +165,7 @@ export class TownMultiplayerSync {
   _showActorBubble(actor, text, durationMs = 3600) {
     const s = this.scene;
     if (actor.bubble?.active) actor.bubble.destroy();
-    actor.bubble = s.add.text(actor.body.x, actor.body.y - 98, text, {
+    actor.bubble = s.add.text(actor.body.x, actor.body.y - 78, text, {
       fontFamily: '"Noto Sans TC", sans-serif',
       fontSize: '12px',
       color: '#fef3c7',
@@ -232,13 +179,13 @@ export class TownMultiplayerSync {
     const s = this.scene;
     if (!s.hero) return;
     if (this._heroBubble?.active) this._heroBubble.destroy();
-    this._heroBubble = s.add.text(s.hero.x, s.hero.y - 96, text, {
+    this._heroBubble = s.add.text(s.hero.x, s.hero.y - 78, text, {
       fontFamily: '"Noto Sans TC", sans-serif',
-      fontSize: '13px',
+      fontSize: '12px',
       fontStyle: 'bold',
       color: '#fef08a',
       backgroundColor: 'rgba(20, 16, 12, 0.90)',
-      padding: { x: 10, y: 5 },
+      padding: { x: 9, y: 4 },
     }).setOrigin(0.5).setDepth(2700);
     if (this._heroBubbleTimer) this._heroBubbleTimer.remove(false);
     this._heroBubbleTimer = s.time.delayedCall(durationMs, () => {
@@ -251,10 +198,7 @@ export class TownMultiplayerSync {
   }
 
   cheerAllNearby() {
-    const cheers = ['🔥 主城祝福！', '✨ 全員開刷！', '🫡 感謝點燃地標！', '⚔️ 戰力拉滿！'];
-    this.aiActors.forEach((a, i) => {
-      if (i % 2 === 0) this._showActorBubble(a, cheers[i % cheers.length], 3200);
-    });
+    // 預留公測全城真人祝福回應事件
   }
 
   _publishNow(force = false) {
@@ -287,73 +231,39 @@ export class TownMultiplayerSync {
     const s = this.scene;
 
     if (this._heroBubble?.active && s.hero) {
-      this._heroBubble.setPosition(s.hero.x, s.hero.y - 96);
+      this._heroBubble.setPosition(s.hero.x, s.hero.y - 78);
     }
     this._publishNow(false);
 
     for (const actor of this.remoteActors.values()) {
-      this._tickActorMovement(actor, dt, time, false);
-    }
-
-    const td = this.townData;
-    const showAiCount = Math.max(0, 5 - Math.floor(this.remoteActors.size / 2));
-    this.aiActors.forEach((actor, idx) => {
-      const visible = idx < showAiCount;
-      actor.body.setVisible(visible);
-      actor.shadow.setVisible(visible);
-      actor.label.setVisible(visible);
-      if (!visible) {
-        if (actor.bubble?.active) actor.bubble.setVisible(false);
-        return;
+      const b = actor.body;
+      if (!b?.active) continue;
+      const dx = actor.tx - b.x;
+      const dy = actor.ty - b.y;
+      const dist = Math.hypot(dx, dy);
+      if (dist > 6) {
+        const step = Math.min(dist, 260 * dt);
+        b.x += (dx / dist) * step;
+        b.y += (dy / dist) * step;
+        if (b.setFlipX) b.setFlipX(dx < -4);
+        const pfx = this._getClassPrefix(actor.info.classId);
+        const animKey = Math.abs(dx) > Math.abs(dy) ? `${pfx}_right_walk` : (dy < 0 ? `${pfx}_up_walk` : `${pfx}_down_walk`);
+        if (b.anims && s.anims.exists(animKey) && b.anims.currentAnim?.key !== animKey) {
+          b.play(animKey, true);
+        }
+      } else if (b.anims?.isPlaying) {
+        b.anims.stop();
       }
-      if (time >= actor.nextAiMoveAt) {
-        actor.nextAiMoveAt = time + 3400 + Math.random() * 4800;
-        const spots = [
-          { x: td.landmark?.x || td.mapWidth / 2, y: (td.landmark?.y || td.mapHeight / 2) + 230 },
-          ...(td.facilities || []).map((f) => ({ x: f.npc?.x || f.x, y: (f.npc?.y || f.y) + 88 })),
-        ];
-        const pick = spots[Math.floor(Math.random() * spots.length)];
-        actor.tx = Phaser.Math.Clamp(pick.x + (Math.random() - 0.5) * 140, 460, td.mapWidth - 460);
-        actor.ty = Phaser.Math.Clamp(pick.y + (Math.random() - 0.5) * 90, 460, td.mapHeight - 380);
-      }
-      if (time >= actor.nextAiChatAt) {
-        actor.nextAiChatAt = time + 12000 + Math.random() * 14000;
-        const line = AI_CHAT_LINES[Math.floor(Math.random() * AI_CHAT_LINES.length)];
-        this._showActorBubble(actor, line, 3600);
-      }
-      this._tickActorMovement(actor, dt, time, true);
-    });
-  }
-
-  _tickActorMovement(actor, dt, time, isAi) {
-    const b = actor.body;
-    if (!b?.active) return;
-    const dx = actor.tx - b.x;
-    const dy = actor.ty - b.y;
-    const dist = Math.hypot(dx, dy);
-    if (dist > 6) {
-      const spd = isAi ? 124 : 260;
-      const step = Math.min(dist, spd * dt);
-      b.x += (dx / dist) * step;
-      b.y += (dy / dist) * step;
-      if (b.setFlipX) b.setFlipX(dx < -4);
-      const pfx = this._getClassPrefix(actor.info.classId);
-      const animKey = Math.abs(dx) > Math.abs(dy) ? `${pfx}_right_walk` : (dy < 0 ? `${pfx}_up_walk` : `${pfx}_down_walk`);
-      if (b.anims && this.scene.anims.exists(animKey) && b.anims.currentAnim?.key !== animKey) {
-        b.play(animKey, true);
-      }
-    } else if (b.anims?.isPlaying) {
-      b.anims.stop();
-    }
-    b.setDepth(b.y);
-    actor.shadow.setPosition(b.x, b.y + 6).setDepth(3);
-    actor.label.setPosition(b.x, b.y - 72).setDepth(b.y + 120);
-    if (actor.bubble?.active) {
-      if (time >= actor.bubbleUntil) {
-        actor.bubble.destroy();
-        actor.bubble = null;
-      } else {
-        actor.bubble.setPosition(b.x, b.y - 98);
+      b.setDepth(b.y);
+      actor.shadow.setPosition(b.x, b.y + 28).setDepth(3);
+      actor.label.setPosition(b.x, b.y - 54).setDepth(b.y + 120);
+      if (actor.bubble?.active) {
+        if (time >= actor.bubbleUntil) {
+          actor.bubble.destroy();
+          actor.bubble = null;
+        } else {
+          actor.bubble.setPosition(b.x, b.y - 78);
+        }
       }
     }
   }
@@ -372,7 +282,7 @@ export class TownMultiplayerSync {
       </div>
       <div style="font-size:12px;color:#cbd5e1;margin-bottom:10px;line-height:1.6;">
         職業：<b>${meta.label}</b>　｜　等級：<b>Lv.${info.level || 1}</b><br/>
-        綜合戰力：<b>${(info.power || 12500).toLocaleString()}</b>
+        綜合戰力：<b>${(info.power || 0).toLocaleString()}</b>
       </div>
       <div style="display:flex;gap:8px;">
         <button id="v267-pop-wave" style="flex:1;padding:6px 8px;border-radius:6px;border:1px solid #854d0e;background:#292018;color:#fde68a;cursor:pointer;font-size:12px;">👋 揮手致意</button>
@@ -393,38 +303,45 @@ export class TownMultiplayerSync {
 
   _mountSocialBar() {
     this._unmountSocialBar();
-    const bar = document.createElement('div');
-    bar.id = 'v267-town-social-bar';
-    bar.style.cssText = 'position:fixed;left:16px;bottom:86px;z-index:8400;display:flex;flex-direction:column;gap:6px;background:rgba(15,13,18,0.84);border:1px solid rgba(184,138,68,0.55);border-radius:10px;padding:8px 10px;backdrop-filter:blur(6px);font-family:"Noto Sans TC",sans-serif;max-width:340px;';
-    bar.innerHTML = `
-      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
-        <span id="v267-online-badge" style="font-size:11px;color:#fde68a;font-weight:700;">🏰 主城同屏：1 位冒險者</span>
-        <span style="font-size:10px;color:#94a3b8;">點擊他人可互動</span>
-      </div>
-      <div style="display:flex;flex-wrap:wrap;gap:4px;">
-        ${QUICK_EMOTES.map((e) => `<button type="button" data-emote="${e.id}" style="padding:3px 7px;border-radius:5px;border:1px solid rgba(184,138,68,0.4);background:#221c18;color:#f3e8d2;font-size:11px;cursor:pointer;">${e.label}</button>`).join('')}
-      </div>
-      <div style="display:flex;gap:5px;">
-        <input id="v267-town-chat-input" type="text" maxlength="36" placeholder="輸入主城氣泡喊話..." style="flex:1;padding:4px 8px;border-radius:5px;border:1px solid #475569;background:#0f172a;color:#f8fafc;font-size:12px;outline:none;" />
-        <button id="v267-town-chat-send" type="button" style="padding:4px 10px;border-radius:5px;border:1px solid #b88a44;background:#451a03;color:#fde68a;font-size:12px;font-weight:700;cursor:pointer;">發送</button>
+    const wrap = document.createElement('div');
+    wrap.id = 'v267-town-social-bar';
+    // 預設收合在左上角頭像下方，絕不遮擋左下聊天室與底部技能列
+    wrap.style.cssText = 'position:fixed;left:16px;top:116px;z-index:8400;display:flex;flex-direction:column;gap:6px;font-family:"Noto Sans TC",sans-serif;max-width:300px;';
+    wrap.innerHTML = `
+      <button id="v274-social-toggle" type="button" style="align-self:flex-start;display:flex;align-items:center;gap:6px;padding:5px 10px;border-radius:8px;border:1px solid rgba(184,138,68,0.55);background:rgba(15,13,18,0.84);color:#fde68a;font-size:11.5px;font-weight:700;cursor:pointer;backdrop-filter:blur(6px);">
+        <span id="v267-online-badge">🏰 主城在線：1 人</span>
+        <span style="color:#94a3b8;font-size:10px;">▾ 表情/喊話</span>
+      </button>
+      <div id="v274-social-body" style="display:none;flex-direction:column;gap:6px;background:rgba(15,13,18,0.90);border:1px solid rgba(184,138,68,0.55);border-radius:10px;padding:8px 10px;backdrop-filter:blur(6px);">
+        <div style="display:flex;flex-wrap:wrap;gap:4px;">
+          ${QUICK_EMOTES.map((e) => `<button type="button" data-emote="${e.id}" style="padding:3px 7px;border-radius:5px;border:1px solid rgba(184,138,68,0.4);background:#221c18;color:#f3e8d2;font-size:11px;cursor:pointer;">${e.label}</button>`).join('')}
+        </div>
+        <div style="display:flex;gap:5px;">
+          <input id="v267-town-chat-input" type="text" maxlength="36" placeholder="輸入主城頭頂氣泡喊話..." style="flex:1;padding:4px 8px;border-radius:5px;border:1px solid #475569;background:#0f172a;color:#f8fafc;font-size:12px;outline:none;" />
+          <button id="v267-town-chat-send" type="button" style="padding:4px 10px;border-radius:5px;border:1px solid #b88a44;background:#451a03;color:#fde68a;font-size:12px;font-weight:700;cursor:pointer;">發送</button>
+        </div>
       </div>
     `;
-    document.body.appendChild(bar);
-    bar.querySelectorAll('button[data-emote]').forEach((btn) => {
+    document.body.appendChild(wrap);
+    const bodyEl = wrap.querySelector('#v274-social-body');
+    wrap.querySelector('#v274-social-toggle')?.addEventListener('click', () => {
+      bodyEl.style.display = bodyEl.style.display === 'none' ? 'flex' : 'none';
+    });
+    wrap.querySelectorAll('button[data-emote]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const em = QUICK_EMOTES.find((x) => x.id === btn.dataset.emote);
         if (em) this.showHeroBubble(em.text);
       });
     });
     const sendChat = () => {
-      const inp = bar.querySelector('#v267-town-chat-input');
+      const inp = wrap.querySelector('#v267-town-chat-input');
       const txt = (inp?.value || '').trim();
       if (!txt) return;
       this.showHeroBubble(`💬 ${txt}`);
       inp.value = '';
     };
-    bar.querySelector('#v267-town-chat-send')?.addEventListener('click', sendChat);
-    bar.querySelector('#v267-town-chat-input')?.addEventListener('keydown', (ev) => {
+    wrap.querySelector('#v267-town-chat-send')?.addEventListener('click', sendChat);
+    wrap.querySelector('#v267-town-chat-input')?.addEventListener('keydown', (ev) => {
       ev.stopPropagation();
       if (ev.key === 'Enter') sendChat();
     });
@@ -434,9 +351,7 @@ export class TownMultiplayerSync {
   _updateOnlineBadge() {
     const el = document.getElementById('v267-online-badge');
     if (!el) return;
-    const real = this._onlineCount;
-    const total = real + Math.max(0, 5 - Math.floor(this.remoteActors.size / 2));
-    el.textContent = `🏰 主城同屏：${total} 位冒險者（線上 ${real}）`;
+    el.textContent = `🏰 主城在線：${this._onlineCount} 人`;
   }
 
   _unmountSocialBar() {
@@ -459,7 +374,5 @@ export class TownMultiplayerSync {
     if (this._heroBubble?.active) this._heroBubble.destroy();
     for (const a of this.remoteActors.values()) this._destroyActor(a);
     this.remoteActors.clear();
-    this.aiActors.forEach((a) => this._destroyActor(a));
-    this.aiActors = [];
   }
 }

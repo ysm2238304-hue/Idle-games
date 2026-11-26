@@ -1,6 +1,6 @@
 import { TOWN_CH1 } from '../data/towns/ch1.js?v=273';
 import { LivingNpcEngine } from '../town/LivingNpcEngine.js?v=273';
-import { TownMultiplayerSync } from '../net/TownMultiplayerSync.js?v=273';
+import { TownMultiplayerSync } from '../net/TownMultiplayerSync.js?v=274';
 import { TOWN_CH2 } from '../data/towns/ch2.js?v=273';
 import { TOWN_CH3 } from '../data/towns/ch3.js?v=273';
 import { TOWN_CH4 } from '../data/towns/ch4.js?v=273';
@@ -303,14 +303,14 @@ export class TownScene extends Phaser.Scene {
     this.petLabel = this.add.text(td.spawn.x - 52, td.spawn.y - 46, '', { fontSize: '13px', color: '#fde68a', fontFamily: 'Noto Sans TC, sans-serif', fontStyle: 'bold', stroke: '#000', strokeThickness: 3 }).setOrigin(0.5).setDepth(td.spawn.y + 3);
     this._lastTownPetId = null;
     this._petTrailAt = 0;
-    this.heroShadow = this.add.image(td.spawn.x, td.spawn.y + 42, 'fx_glow')
-      .setTint(0x000000).setScale(1.15, 0.42).setAlpha(0.55).setDepth(3);
+    this.heroShadow = this.add.image(td.spawn.x, td.spawn.y + 30, 'fx_glow')
+      .setTint(0x000000).setScale(0.86, 0.32).setAlpha(0.50).setDepth(3);
     this.hero = this.add.sprite(td.spawn.x, td.spawn.y, atlasKey, initFrame)
-      .setScale(0.56)
+      .setScale(0.42)
       .setDepth(td.spawn.y);
     const initNick = (this.callbacks?.getState?.()?.nickname || window.__IDLE_ARPG_BRIDGE__?.getState?.()?.nickname || '冒險者').trim();
-    this.heroNameText = this.add.text(td.spawn.x, td.spawn.y - 72, initNick, {
-      fontSize: '19px',
+    this.heroNameText = this.add.text(td.spawn.x, td.spawn.y - 54, initNick, {
+      fontSize: '14px',
       fontFamily: 'Noto Sans TC, sans-serif',
       fontStyle: 'bold',
       color: '#fef08a',
@@ -321,6 +321,16 @@ export class TownScene extends Phaser.Scene {
 
     this.mpSync?.start();
     this.cameras.main.startFollow(this.hero, true, 0.14, 0.14);
+    // v274: 主城滑鼠滾輪縮放視角（0.55x 全景俯瞰 ↔ 1.45x 近距細看，按 [0] 重置）
+    this._targetZoom = 0.88;
+    this.cameras.main.setZoom(this._targetZoom);
+    this.input.on('wheel', (pointer, _objs, _dx, deltaY) => {
+      const targetEl = pointer?.event?.target;
+      if (targetEl && targetEl.tagName !== 'CANVAS') return;
+      const step = deltaY > 0 ? -0.09 : 0.09;
+      this._targetZoom = Phaser.Math.Clamp((this._targetZoom || 0.88) + step, 0.55, 1.45);
+    });
+    this._resetZoomKey = this.input.keyboard?.addKey(Phaser.Input.Keyboard.KeyCodes.ZERO);
 
     // 9.2 全 10 座主城地面動態「星門傳送魔法陣」（2.5D 透視雙層旋轉法陣 + 章節專屬色）
     const wpX = td.spawn.x + 165;
@@ -939,6 +949,15 @@ export class TownScene extends Phaser.Scene {
   update(time, delta) {
     if (!this.hero) return;
     const dt = Math.min(0.05, delta / 1000);
+    if (this._resetZoomKey && Phaser.Input.Keyboard.JustDown(this._resetZoomKey)) {
+      this._targetZoom = 0.88;
+    }
+    if (this._targetZoom && this.cameras?.main) {
+      const curZ = this.cameras.main.zoom;
+      if (Math.abs(curZ - this._targetZoom) > 0.002) {
+        this.cameras.main.setZoom(Phaser.Math.Linear(curZ, this._targetZoom, Math.min(1, dt * 10)));
+      }
+    }
     const td = this.townData;
 
     // 鍵盤移動優先
@@ -1002,10 +1021,10 @@ export class TownScene extends Phaser.Scene {
 
     this.hero.setDepth(this.hero.y);
     if (this.heroShadow) {
-      this.heroShadow.setPosition(this.hero.x, this.hero.y + 42);
+      this.heroShadow.setPosition(this.hero.x, this.hero.y + 30);
     }
     if (this.heroNameText) {
-      this.heroNameText.setPosition(this.hero.x, this.hero.y - 72);
+      this.heroNameText.setPosition(this.hero.x, this.hero.y - 54);
       const curNick = (this.callbacks?.getState?.()?.nickname || window.__IDLE_ARPG_BRIDGE__?.getState?.()?.nickname || '冒險者').trim();
       if (this.heroNameText.text !== curNick) this.heroNameText.setText(curNick);
     }

@@ -1,3 +1,4 @@
+import { renderTownFacilityModal } from './NpcModalRenderer.js?v=232';
 import { TEMPERING_MANUALS } from '../data/items.js?v=240';
 import { temperItem } from '../logic/lootGen.js?v=240';
 import { SKILL_BUILD_SPECS, KEYSTONE_PASSIVES, getActiveKeystone } from '../logic/buildEngine.js?v=263';
@@ -1688,6 +1689,15 @@ export class DashboardUI {
   }
 
   openTownFacilityModal(action, data, ctx) {
+    // v274: 原生直連新版暗黑 NPC 視窗（NpcModalRenderer），永不因 ?v= 升級退回舊版
+    if (typeof renderTownFacilityModal === 'function') {
+      return renderTownFacilityModal(this, action, data, ctx, {
+        getChapterIdx,
+        getStageLabel,
+        ZONE_POOLS,
+        MONSTER_TEMPLATES,
+      });
+    }
     const modal = document.getElementById('modal-town-facility');
     const titleEl = document.getElementById('town-modal-title');
     const bodyEl = document.getElementById('town-modal-body');
@@ -2062,6 +2072,7 @@ export class DashboardUI {
         const it = curTarget.item;
         const lv = it.upgradeLevel || 0;
         const rerollCost = Math.max(200, (it.level || 1) * 120 * (it.rarity === 'legendary' ? 2 : 1));
+        const refineDust = Math.max(0, Math.floor((lv || 0) * 15));
         const refineCost = Math.max(300, (it.level || 1) * 160 * (lv + 1));
         const bless = it.refineBless || 0;
         const succRate = Math.min(100, (lv < 3 ? 100 : (lv < 6 ? 80 : 60)) + bless);
