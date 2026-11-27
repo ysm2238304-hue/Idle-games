@@ -1,4 +1,4 @@
-// v284: 第 4 章主城「黑曜石熔爐要塞」— 三層建築重構（純淨底圖＋8棟專屬風格2.5D建築）
+// v312: 第 4 章主城「黑曜石熔爐要塞」— 演武場重構與 NPC 門口精準校準
 export const TOWN_CH4 = {
   "chapterIdx": 3,
   "id": "town_ch4",
@@ -85,8 +85,8 @@ export const TOWN_CH4 = {
         "frame": "ch4_npc_smith",
         "name": "伊格納",
         "title": "火元素鍛造師",
-        "x": 1084,
-        "y": 714,
+        "x": 980,
+        "y": 804,
         "scale": 0.62,
         "workStyle": "forge",
         "greeting": "只有龍息般的熔岩才能將神兵淬鍊至極限，把你的裝備放上巨砧吧！"
@@ -113,8 +113,8 @@ export const TOWN_CH4 = {
         "frame": "ch4_npc_guild",
         "name": "索林",
         "title": "鐵鬍倉庫長",
-        "x": 3060,
-        "y": 1994,
+        "x": 3140,
+        "y": 804,
         "scale": 0.62,
         "workStyle": "guild",
         "greeting": "黑曜石鐵門連火龍都撞不開，你的戰利品在這裡絕對萬無一失。"
@@ -141,8 +141,8 @@ export const TOWN_CH4 = {
         "frame": "ch4_npc_bounty",
         "name": "卡爾",
         "title": "屠龍獵團長",
-        "x": 1872,
-        "y": 1524,
+        "x": 1560,
+        "y": 2004,
         "scale": 0.62,
         "workStyle": "bounty",
         "greeting": "裂谷裡的炎魔與熔岩巨人正準備集結，去砍下它們的頭顱領賞！"
@@ -169,8 +169,8 @@ export const TOWN_CH4 = {
         "frame": "ch4_npc_altar",
         "name": "卡珊卓",
         "title": "餘燼先知",
-        "x": 2930,
-        "y": 1812,
+        "x": 2160,
+        "y": 2004,
         "scale": 0.62,
         "workStyle": "prayer",
         "greeting": "萬物皆於烈焰中化為灰燼，亦於灰燼中浴火重生。"
@@ -197,8 +197,8 @@ export const TOWN_CH4 = {
         "frame": "ch4_npc_alchemy",
         "name": "貝爾",
         "title": "灰燼煉金師",
-        "x": 2225,
-        "y": 1352,
+        "x": 1620,
+        "y": 764,
         "scale": 0.62,
         "workStyle": "alchemy",
         "greeting": "這鍋高純度火蜥蜴精華能讓你的戰鬥狂暴到連炎魔都害怕！"
@@ -225,8 +225,8 @@ export const TOWN_CH4 = {
         "frame": "ch4_npc_temple",
         "name": "布洛克",
         "title": "熔爐狂戰教頭",
-        "x": 1435,
-        "y": 794,
+        "x": 2480,
+        "y": 764,
         "scale": 0.62,
         "workStyle": "prayer",
         "greeting": "戰士的熱血必須比岩漿更滾燙！來調整你的技能配置再去劈開敵人！"
@@ -253,8 +253,8 @@ export const TOWN_CH4 = {
         "frame": "ch4_npc_market",
         "name": "拉茲",
         "title": "炎魔軍火商",
-        "x": 960,
-        "y": 2014,
+        "x": 2760,
+        "y": 2004,
         "scale": 0.62,
         "workStyle": "market",
         "greeting": "嘿嘿……這批黑曜石軍火箱裡可藏著不少好貨，要賭一發嗎？"
@@ -278,8 +278,8 @@ export const TOWN_CH4 = {
         "frame": "ch4_npc_portal",
         "name": "泰坦",
         "title": "閘門守衛長",
-        "x": 2640,
-        "y": 2148,
+        "x": 920,
+        "y": 2004,
         "scale": 0.62,
         "greeting": "烈焰傳送門已穩定開啟，踏過去便是焦土熔岩裂谷的最前線！"
       },
@@ -321,12 +321,14 @@ export const TOWN_CH4 = {
   ],
   "trainingDummy": {
     "id": "dummy",
-    "name": "黑曜石重甲靶人",
+    "name": "黑曜石熔岩演武場",
     "frame": "ch4_prop_dummy",
     "x": 2920,
     "y": 1320,
-    "scale": 0.74,
-    "radius": 44
+    "scale": 0.76,
+    "radius": 84,
+    "imgKey": "ch4_arena_v312",
+    "imgUrl": "./assets/towns/ch4_arena.webp?v=312"
   },
   "neighborhood": [],
   "props": [],

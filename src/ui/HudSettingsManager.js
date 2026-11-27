@@ -207,6 +207,14 @@ export class HudSettingsManager {
     this.applyAll();
   }
 
+  _selectEditPanel(id) {
+    this._selectedEditPanel = id || null;
+    for (const pid of Object.keys(PANEL_META)) {
+      const pel = document.getElementById(pid);
+      if (pel) pel.classList.toggle('hud-edit-selected', pid === id);
+    }
+  }
+
   _injectPanelHandles() {
     for (const [id, meta] of Object.entries(PANEL_META)) {
       const el = document.getElementById(id);
@@ -217,19 +225,22 @@ export class HudSettingsManager {
       bar.innerHTML = `
         <span class="hud-drag-grip" title="按住拖曳移動位置">✥ ${meta.label}</span>
         <div class="hud-edit-btns">
-          <button type="button" class="hud-ed-btn" data-act="minus" title="縮小">−</button>
+          <button type="button" class="hud-ed-btn" data-act="minus" title="縮小 (-5%)">−</button>
           <span class="hud-ed-scale">100%</span>
-          <button type="button" class="hud-ed-btn" data-act="plus" title="放大">+</button>
+          <button type="button" class="hud-ed-btn" data-act="plus" title="放大 (+5%)">+</button>
           <button type="button" class="hud-ed-btn" data-act="reset" title="重設此框">↺</button>
         </div>
       `;
       el.prepend(bar);
 
-      bar.addEventListener('pointerdown', (e) => {
+      // v312: 編輯模式下點選面板即選取展開迷你控制鈕，且按住面板任意處即可直接拖曳
+      el.addEventListener('pointerdown', (e) => {
         if (!this.settings.ui.editMode) return;
+        this._selectEditPanel(id);
         const actBtn = e.target.closest('[data-act]');
         if (actBtn) {
           e.stopPropagation();
+          e.preventDefault();
           const act = actBtn.dataset.act;
           const p = this.settings.ui.panels[id];
           if (act === 'minus') p.scale = Math.max(0.60, +(p.scale - 0.05).toFixed(2));
@@ -240,11 +251,25 @@ export class HudSettingsManager {
           if (this.modal && !this.modal.classList.contains('hidden')) this.renderModalBody();
           return;
         }
+        e.stopPropagation();
         e.preventDefault();
         const p = this.settings.ui.panels[id];
         this._dragState = { id, startX: e.clientX, startY: e.clientY, origDx: p.dx, origDy: p.dy };
         el.classList.add('hud-dragging');
-      });
+      }, true);
+
+      // v312: 編輯模式下支援滑鼠滾輪直接微調該框體縮放（±5%）
+      el.addEventListener('wheel', (e) => {
+        if (!this.settings.ui.editMode) return;
+        e.preventDefault();
+        e.stopPropagation();
+        this._selectEditPanel(id);
+        const p = this.settings.ui.panels[id];
+        const delta = e.deltaY < 0 ? 0.05 : -0.05;
+        p.scale = Math.max(0.60, Math.min(1.60, +(p.scale + delta).toFixed(2)));
+        this.applyAll();
+        this.save();
+      }, { passive: false });
     }
   }
 
@@ -315,6 +340,7 @@ export class HudSettingsManager {
     this.settings.ui.editMode = !!on;
     document.body.classList.toggle('hud-edit-active', !!on);
     if (this.banner) this.banner.classList.toggle('hidden', !on);
+    if (!on) this._selectEditPanel(null);
     this.applyAll();
     if (on) this.closeModal();
   }
@@ -339,6 +365,7 @@ export class HudSettingsManager {
     const baseTx = centered ? 'translateX(-50%) ' : '';
     el.style.transformOrigin = meta.origin;
     el.style.transform = `${baseTx}translate(${p.dx}px, ${p.dy}px) scale(${totalScale})`;
+    el.style.setProperty('--hud-inv-scale', String(+(1 / Math.max(0.5, totalScale)).toFixed(3)));
     el.classList.toggle('hud-panel-hidden', !p.visible && !this.settings.ui.editMode);
     const lbl = el.querySelector('.hud-ed-scale');
     if (lbl) lbl.textContent = `${Math.round(p.scale * 100)}%`;

@@ -1,4 +1,4 @@
-// v304-3: 第 7 章主城「翠玉樹冠水寨」— 全新開闊底圖＋建築／NPC／巡邏點重校
+// v312: 第 7 章主城「翠玉樹冠水寨」— 演武場重構與 NPC 門口精準校準
 export const TOWN_CH7 = {
   "chapterIdx": 6,
   "id": "town_ch7",
@@ -79,7 +79,9 @@ export const TOWN_CH7 = {
         "title": "沼澤甲殼匠",
         "scale": 0.62,
         "workStyle": "forge",
-        "greeting": "用沼澤巨龜甲殼跟毒牙淬鍊出來的護甲，連腐蝕酸液都咬不穿！"
+        "greeting": "用沼澤巨龜甲殼跟毒牙淬鍊出來的護甲，連腐蝕酸液都咬不穿！",
+        "x": 1380,
+        "y": 964
       },
       "action": "drawer_upgrade",
       "actionLabel": "開啟甲殼鍛造",
@@ -105,7 +107,9 @@ export const TOWN_CH7 = {
         "title": "巫醫草藥師",
         "scale": 0.62,
         "workStyle": "alchemy",
-        "greeting": "以毒攻毒才是沼澤的生存之道，來一瓶剛熬煮好的翡翠秘藥吧。"
+        "greeting": "以毒攻毒才是沼澤的生存之道，來一瓶剛熬煮好的翡翠秘藥吧。",
+        "x": 2680,
+        "y": 964
       },
       "action": "modal_alchemy",
       "actionLabel": "調配劇毒藥劑",
@@ -131,7 +135,9 @@ export const TOWN_CH7 = {
         "title": "水寨倉管長",
         "scale": 0.62,
         "workStyle": "guild",
-        "greeting": "東西全架在高腳竹屋上頭，沼澤水再怎麼漲也淹不到你的寶貝！"
+        "greeting": "東西全架在高腳竹屋上頭，沼澤水再怎麼漲也淹不到你的寶貝！",
+        "x": 3060,
+        "y": 1304
       },
       "action": "drawer_bag",
       "actionLabel": "打開水寨倉庫",
@@ -157,7 +163,9 @@ export const TOWN_CH7 = {
         "title": "吹箭獵手教頭",
         "scale": 0.62,
         "workStyle": "prayer",
-        "greeting": "在沼澤裡出手一定要又快又準！快調整好技能去實戰試試吧！"
+        "greeting": "在沼澤裡出手一定要又快又準！快調整好技能去實戰試試吧！",
+        "x": 2940,
+        "y": 1684
       },
       "action": "drawer_skills",
       "actionLabel": "配置職業技能",
@@ -183,7 +191,9 @@ export const TOWN_CH7 = {
         "title": "毒沼賞金獵人",
         "scale": 0.62,
         "workStyle": "bounty",
-        "greeting": "沼澤深處的多頭蛇九頭龍最近很不安分，替部族解決它們吧！"
+        "greeting": "沼澤深處的多頭蛇九頭龍最近很不安分，替部族解決它們吧！",
+        "x": 980,
+        "y": 1384
       },
       "action": "modal_bounty",
       "actionLabel": "接取沼澤懸賞",
@@ -209,7 +219,9 @@ export const TOWN_CH7 = {
         "title": "沼澤行商",
         "scale": 0.62,
         "workStyle": "market",
-        "greeting": "嘶嘶……我用竹筏從沈船裡撈上來一堆寶箱，要賭一把手氣嗎？"
+        "greeting": "嘶嘶……我用竹筏從沈船裡撈上來一堆寶箱，要賭一把手氣嗎？",
+        "x": 2680,
+        "y": 1964
       },
       "action": "modal_market",
       "actionLabel": "進入竹筏黑市",
@@ -235,7 +247,9 @@ export const TOWN_CH7 = {
         "title": "樹語大薩滿",
         "scale": 0.62,
         "workStyle": "prayer",
-        "greeting": "古樹根脈見證萬物枯榮，踏入翡翠法陣完成你的輪迴蛻變吧。"
+        "greeting": "古樹根脈見證萬物枯榮，踏入翡翠法陣完成你的輪迴蛻變吧。",
+        "x": 1980,
+        "y": 2024
       },
       "action": "drawer_rebirth",
       "actionLabel": "開啟樹壇輪迴",
@@ -257,7 +271,9 @@ export const TOWN_CH7 = {
         "name": "卡隆",
         "title": "渡口擺渡人",
         "scale": 0.62,
-        "greeting": "蓮花木筏已經靠岸，隨時都能載你直衝劇毒腐蝕沼澤前線！"
+        "greeting": "蓮花木筏已經靠岸，隨時都能載你直衝劇毒腐蝕沼澤前線！",
+        "x": 1320,
+        "y": 1964
       },
       "action": "modal_portal",
       "actionLabel": "乘筏出征沼澤",
@@ -297,12 +313,14 @@ export const TOWN_CH7 = {
   ],
   "trainingDummy": {
     "id": "dummy",
-    "name": "藤蔓稻草巫毒靶",
+    "name": "翡翠木棧演武擂台",
     "frame": "ch7_prop_dummy",
     "x": 2640,
     "y": 1300,
-    "scale": 0.72,
-    "radius": 42
+    "scale": 0.76,
+    "radius": 84,
+    "imgKey": "ch7_arena_v312",
+    "imgUrl": "./assets/towns/ch7_arena.webp?v=312"
   },
   "neighborhood": [],
   "props": [],

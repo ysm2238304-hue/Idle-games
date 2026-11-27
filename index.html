@@ -8,11 +8,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./style.css?v=311" />
+  <link rel="stylesheet" href="./style.css?v=312-1" />
   <link id="welcome-auth-v207-css" rel="stylesheet" href="./src/ui/welcomeAuth.css?v=215" />
   <link id="class-hall-v102-css" rel="stylesheet" href="./src/ui/classHall.css?v=215" />
   <link id="npc-modal-v100-css" rel="stylesheet" href="./src/ui/npcModal.css?v=231" />
-  <link id="hud-overhaul-v217-css" rel="stylesheet" href="./src/ui/hudOverhaul.css?v=224" />
+  <link id="hud-overhaul-v217-css" rel="stylesheet" href="./src/ui/hudOverhaul.css?v=312" />
   <link id="worldmap-25d-v222-css" rel="stylesheet" href="./src/ui/worldMap25d.css?v=222" />
 <link id="custom-cursor-v232-css" rel="stylesheet" href="./src/ui/customCursor.css?v=232" />
   <link id="skill-spec-v233-css" rel="stylesheet" href="./src/ui/skillSpec.css?v=258" />
@@ -118,7 +118,7 @@
     #modal-class,
     #modal-stage-clear,
     #modal-offline {
-      z-index: 230;
+      z-index: 600;
     }
   </style>
   <style id="v294-multi-window-css">
@@ -136,8 +136,9 @@
     }
     /* v310: 修復右上 7 顆系統按鈕擠出第 3 排破版 ＋ 過場層級高於裝備浮框 */
     .v80-matrix-dock .matrix-row {
-      grid-template-columns: repeat(7, 36px) !important;
-      justify-content: end;
+      display: flex !important;
+      justify-content: flex-end !important;
+      gap: 5px;
     }
     #cinematic-intro-overlay {
       z-index: 10050 !important;
@@ -278,6 +279,10 @@
         <span id="tower-timer-lbl" style="color:#fde047;font-weight:900;">⏱️ 60.0s</span>
         <span id="tower-mobs-lbl" style="color:#93c5fd;">剩餘 0 隻</span>
         <button type="button" id="btn-exit-tower" class="btn-ghost-sm" style="padding:2px 8px;font-size:11px;">撤退回城</button>
+      </div>
+      <div id="hud-combo-box" class="hud-combo-box hidden">
+        <div id="combo-num" class="combo-num">0<small>COMBO</small></div>
+        <div id="combo-bonus-txt" class="combo-bonus-txt">經驗 / 金幣 +0%</div>
       </div>
 
 
@@ -624,7 +629,7 @@
 
   
   <div id="hud-edit-banner" class="hud-edit-banner hidden">
-    <span>✥ <b>自由排版模式</b>：拖曳各框架標題移動位置，點擊 ± 調整單框大小</span>
+    <span>✥ <b>自由排版</b>：直接拖曳框體移動・點選展開 ± 縮放・滾輪微調大小</span>
     <button id="btn-reset-hud-edit" class="btn-ghost-sm">↺ 全部歸位</button>
     <button id="btn-finish-hud-edit" class="btn-gold-sm">✓ 完成並鎖定</button>
   </div>
@@ -777,6 +782,6 @@
     </div>
   </div>
 
-  <script type="module" src="./src/main.js?v=311"></script>
+  <script type="module" src="./src/main.js?v=312"></script>
 </body>
 </html>

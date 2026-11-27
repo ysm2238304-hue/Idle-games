@@ -1,4 +1,4 @@
-// v304-3: 第 5 章主城「緋紅魔獄王庭」— 全新開闊底圖＋建築／NPC／巡邏點重校
+// v312: 第 5 章主城「緋紅魔獄王庭」— 演武場重構與 NPC 門口精準校準
 export const TOWN_CH5 = {
   "chapterIdx": 4,
   "id": "town_ch5",
@@ -71,7 +71,9 @@ export const TOWN_CH5 = {
         "title": "血焰魔匠",
         "scale": 0.62,
         "workStyle": "forge",
-        "greeting": "以魔王之骨與紫獄冥火鍛出的神兵，連聖殿天使都會畏懼三分！"
+        "greeting": "以魔王之骨與紫獄冥火鍛出的神兵，連聖殿天使都會畏懼三分！",
+        "x": 960,
+        "y": 804
       },
       "action": "drawer_upgrade",
       "actionLabel": "開啟魔火鍛造",
@@ -97,7 +99,9 @@ export const TOWN_CH5 = {
         "title": "猩紅魅魔調劑師",
         "scale": 0.62,
         "workStyle": "alchemy",
-        "greeting": "小可愛，進聖殿前先喝一口我親手調配的猩紅秘藥吧～"
+        "greeting": "小可愛，進聖殿前先喝一口我親手調配的猩紅秘藥吧～",
+        "x": 1560,
+        "y": 764
       },
       "action": "modal_alchemy",
       "actionLabel": "調配猩紅魔藥",
@@ -123,7 +127,9 @@ export const TOWN_CH5 = {
         "title": "魔契典獄官",
         "scale": 0.62,
         "workStyle": "guild",
-        "greeting": "每一份戰利品都受黃金鎖鏈封印保護，隨時清點你的庫存。"
+        "greeting": "每一份戰利品都受黃金鎖鏈封印保護，隨時清點你的庫存。",
+        "x": 3140,
+        "y": 804
       },
       "action": "drawer_bag",
       "actionLabel": "打開珍寶背包",
@@ -149,7 +155,9 @@ export const TOWN_CH5 = {
         "title": "深淵角魔統帥",
         "scale": 0.62,
         "workStyle": "prayer",
-        "greeting": "弱者在王庭連一秒都活不下來！調整好你的技能連段再上吧！"
+        "greeting": "弱者在王庭連一秒都活不下來！調整好你的技能連段再上吧！",
+        "x": 2540,
+        "y": 764
       },
       "action": "drawer_skills",
       "actionLabel": "配置職業技能",
@@ -175,7 +183,9 @@ export const TOWN_CH5 = {
         "title": "暗夜血獵手",
         "scale": 0.62,
         "workStyle": "bounty",
-        "greeting": "聖殿深處的叛逆惡魔與深淵將軍正等著被獵殺，賞金豐厚得很。"
+        "greeting": "聖殿深處的叛逆惡魔與深淵將軍正等著被獵殺，賞金豐厚得很。",
+        "x": 1560,
+        "y": 1964
       },
       "action": "modal_bounty",
       "actionLabel": "接取血契懸賞",
@@ -201,7 +211,9 @@ export const TOWN_CH5 = {
         "title": "貪婪魔商",
         "scale": 0.62,
         "workStyle": "market",
-        "greeting": "金幣堆得越高，我的盲盒裡開出的神話奇珍就越亮眼，來賭一把？"
+        "greeting": "金幣堆得越高，我的盲盒裡開出的神話奇珍就越亮眼，來賭一把？",
+        "x": 3040,
+        "y": 1964
       },
       "action": "modal_market",
       "actionLabel": "進入魔王黑市",
@@ -227,7 +239,9 @@ export const TOWN_CH5 = {
         "title": "深淵大祭司",
         "scale": 0.62,
         "workStyle": "prayer",
-        "greeting": "踏入五芒星血陣，獻祭過往的羈絆，換取超越凡俗的深淵轉生。"
+        "greeting": "踏入五芒星血陣，獻祭過往的羈絆，換取超越凡俗的深淵轉生。",
+        "x": 2320,
+        "y": 1964
       },
       "action": "drawer_rebirth",
       "actionLabel": "開啟血祭輪迴",
@@ -249,7 +263,9 @@ export const TOWN_CH5 = {
         "name": "阿撒茲勒",
         "title": "裂隙守衛長",
         "scale": 0.62,
-        "greeting": "穿過紫焰裂隙便是深淵魔王聖殿戰場，願血獄之力隨行。"
+        "greeting": "穿過紫焰裂隙便是深淵魔王聖殿戰場，願血獄之力隨行。",
+        "x": 960,
+        "y": 1964
       },
       "action": "modal_portal",
       "actionLabel": "傳送出征聖殿",
@@ -289,12 +305,14 @@ export const TOWN_CH5 = {
   ],
   "trainingDummy": {
     "id": "dummy",
-    "name": "石像鬼魔鎧靶",
+    "name": "緋紅血鬥演武場",
     "frame": "ch5_prop_dummy",
     "x": 3100,
     "y": 1280,
-    "scale": 0.72,
-    "radius": 42
+    "scale": 0.76,
+    "radius": 84,
+    "imgKey": "ch5_arena_v312",
+    "imgUrl": "./assets/towns/ch5_arena.webp?v=312"
   },
   "neighborhood": [],
   "props": [],

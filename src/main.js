@@ -23,7 +23,7 @@ import {
   deleteCloudSave,
 } from './auth/firebase.js?v=272';
 import { BattleScene } from './scenes/BattleScene.js?v=311';
-import { TownScene } from './scenes/TownScene.js?v=309-all';
+import { TownScene } from './scenes/TownScene.js?v=312';
 import { TOWN_SPLASHES } from './data/towns/splashes.js?v=229';
 import { DashboardUI } from './ui/DashboardUI.js?v=301';
 import { hookWorldMap25D, openWorldMap25D, closeWorldMap25D, toggleWorldMap25D } from './ui/WorldMap25D.js?v=253';
@@ -35,7 +35,7 @@ import { MAGE_D4_PRESETS, NECRO_D4_PRESETS, WARRIOR_D4_PRESETS, RANGER_D4_PRESET
 import { EndgameModal } from './ui/EndgameModal.js?v=237';
 import { TownBgmEngine } from './audio/TownBgmEngine.js?v=99';
 import { BattleSfxEngine } from './audio/BattleSfxEngine.js?v=99';
-import { HudSettingsManager } from './ui/HudSettingsManager.js?v=257';
+import { HudSettingsManager } from './ui/HudSettingsManager.js?v=312';
 import { ShopModal } from './ui/ShopModal.js?v=99';
 import { AchievementTowerModal } from './ui/AchievementTowerModal.js?v=99';
 import { ACHIEVEMENTS } from './data/achievements.js?v=99';

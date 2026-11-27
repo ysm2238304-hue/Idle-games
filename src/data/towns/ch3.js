@@ -1,4 +1,4 @@
-// v284: 第 3 章主城「守夜人聖骨禮拜堂」— 三層建築重構（純淨底圖＋8棟專屬風格2.5D建築）
+// v312: 第 3 章主城「守夜人聖骨禮拜堂」— 演武場重構與 NPC 門口精準校準
 export const TOWN_CH3 = {
   "chapterIdx": 2,
   "id": "town_ch3",
@@ -55,8 +55,8 @@ export const TOWN_CH3 = {
         "frame": "ch3_npc_smith",
         "name": "莫德",
         "title": "魂火鍛匠",
-        "x": 1080,
-        "y": 894,
+        "x": 960,
+        "y": 744,
         "scale": 0.62,
         "workStyle": "forge",
         "greeting": "唯有幽藍魂火能淬鍊白骨與秘銀，把你的武器交給我重鑄吧。"
@@ -83,8 +83,8 @@ export const TOWN_CH3 = {
         "frame": "ch3_npc_alchemy",
         "name": "薇拉",
         "title": "守墓煉金修女",
-        "x": 900,
-        "y": 1834,
+        "x": 960,
+        "y": 2024,
         "scale": 0.62,
         "workStyle": "alchemy",
         "greeting": "墓穴深處瀰漫著腐屍毒霧，這瓶祝福聖水能保你性命。"
@@ -111,8 +111,8 @@ export const TOWN_CH3 = {
         "frame": "ch3_npc_guild",
         "name": "賽拉斯",
         "title": "聖物書記官",
-        "x": 3025,
-        "y": 894,
+        "x": 3180,
+        "y": 744,
         "scale": 0.62,
         "workStyle": "guild",
         "greeting": "每一件從墓穴回收的遺物都已登記造冊，請妥善整理你的背包。"
@@ -139,8 +139,8 @@ export const TOWN_CH3 = {
         "frame": "ch3_npc_temple",
         "name": "亞瑟",
         "title": "聖骨騎士團長",
-        "x": 2048,
-        "y": 994,
+        "x": 2600,
+        "y": 744,
         "scale": 0.62,
         "workStyle": "prayer",
         "greeting": "面對不死大軍，猶豫便意味著死亡。磨練你的戰技與天賦吧！"
@@ -167,8 +167,8 @@ export const TOWN_CH3 = {
         "frame": "ch3_npc_bounty",
         "name": "范倫鐵",
         "title": "獵魔守夜人",
-        "x": 1550,
-        "y": 1744,
+        "x": 940,
+        "y": 1424,
         "scale": 0.62,
         "workStyle": "bounty",
         "greeting": "墓穴裡的死靈法師與食屍鬼越來越猖狂，拿下它們的頭顱來領賞。"
@@ -195,8 +195,8 @@ export const TOWN_CH3 = {
         "frame": "ch3_npc_market",
         "name": "卡隆",
         "title": "掘墓走私商",
-        "x": 3100,
-        "y": 1814,
+        "x": 3160,
+        "y": 1424,
         "scale": 0.62,
         "workStyle": "market",
         "greeting": "死人可帶不走陪葬品……付點金幣，我就讓你開棺挑一件寶貝。"
@@ -223,8 +223,8 @@ export const TOWN_CH3 = {
         "frame": "ch3_npc_altar",
         "name": "伊萊亞斯",
         "title": "大教堂主教",
-        "x": 1155,
-        "y": 1252,
+        "x": 1520,
+        "y": 744,
         "scale": 0.62,
         "workStyle": "prayer",
         "greeting": "在天使聖像的見證下重塑靈魂，讓聖光賦予你超越生死的輪迴之力。"
@@ -249,7 +249,7 @@ export const TOWN_CH3 = {
         "name": "加百列",
         "title": "墓門守衛",
         "x": 2048,
-        "y": 2248,
+        "y": 2164,
         "scale": 0.62,
         "greeting": "穿過這道幽藍墓門便能直抵白骨墓穴前線，願守夜人榮光與你同在。"
       },
@@ -291,12 +291,14 @@ export const TOWN_CH3 = {
   ],
   "trainingDummy": {
     "id": "dummy",
-    "name": "骸骨騎士盔甲靶",
+    "name": "聖骨騎士演武台",
     "frame": "ch3_prop_dummy",
     "x": 2740,
     "y": 1280,
-    "scale": 0.72,
-    "radius": 42
+    "scale": 0.76,
+    "radius": 84,
+    "imgKey": "ch3_arena_v312",
+    "imgUrl": "./assets/towns/ch3_arena.webp?v=312"
   },
   "neighborhood": [],
   "props": [],

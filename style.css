@@ -3120,55 +3120,112 @@ button { font-family: inherit; }
   background: linear-gradient(90deg, #92400e, #eab308, #fef08a) !important;
 }
 
-/* 3. 全框架自由拖曳 & 個別縮放編輯模式 */
+/* 3. 全框架自由拖曳 & 個別縮放編輯模式 (v312 外部懸浮迷你膠囊＋反向縮放鎖定) */
 .hud-edit-bar {
   display: none;
+  position: absolute;
+  bottom: calc(100% + 4px);
+  left: 0;
+  width: max-content;
+  max-width: none;
+  height: 22px;
   align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 3px 8px;
-  margin-bottom: 4px;
-  background: linear-gradient(90deg, rgba(120, 53, 15, 0.95), rgba(69, 26, 3, 0.95));
-  border: 1px solid #fbbf24;
+  gap: 6px;
+  padding: 2px 7px;
+  background: rgba(24, 16, 12, 0.88);
+  border: 1px solid rgba(251, 191, 36, 0.72);
   border-radius: 6px;
   color: #fef3c7;
   font-size: 11px;
+  white-space: nowrap;
   cursor: grab;
   user-select: none;
   pointer-events: auto;
-  z-index: 50;
+  z-index: 120;
+  opacity: 0.80;
+  transform-origin: bottom left;
+  transform: scale(var(--hud-inv-scale, 1));
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.72);
+}
+[data-hud-panel^="hud-top"] > .hud-edit-bar,
+[data-hud-panel="hud-quest-panel"] > .hud-edit-bar,
+[data-hud-panel="hud-town-btn-panel"] > .hud-edit-bar,
+[data-hud-panel="hud-combo-box"] > .hud-edit-bar {
+  bottom: auto;
+  top: calc(100% + 4px);
+  transform-origin: top left;
+}
+[data-hud-panel="hud-top-right"] > .hud-edit-bar,
+[data-hud-panel="hud-combo-box"] > .hud-edit-bar,
+[data-hud-panel="hud-bottom-right-dock"] > .hud-edit-bar {
+  left: auto;
+  right: 0;
+  transform-origin: bottom right;
+}
+[data-hud-panel="hud-top-right"] > .hud-edit-bar,
+[data-hud-panel="hud-combo-box"] > .hud-edit-bar {
+  transform-origin: top right;
 }
 .hud-edit-bar:active { cursor: grabbing; }
+.hud-drag-grip {
+  white-space: nowrap;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
 .hud-edit-btns {
-  display: flex;
+  display: none;
   align-items: center;
-  gap: 4px;
+  gap: 3px;
+}
+[data-hud-panel].hud-edit-selected > .hud-edit-bar {
+  opacity: 1;
+  background: linear-gradient(90deg, rgba(120, 53, 15, 0.96), rgba(69, 26, 3, 0.96));
+  border-color: #fde047;
+  z-index: 200;
+}
+[data-hud-panel].hud-edit-selected > .hud-edit-bar .hud-edit-btns {
+  display: flex;
 }
 .hud-ed-btn {
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
+  padding: 0;
   border-radius: 4px;
-  border: 1px solid rgba(251, 191, 36, 0.6);
-  background: rgba(15, 12, 14, 0.85);
+  border: 1px solid rgba(251, 191, 36, 0.65);
+  background: rgba(15, 12, 14, 0.88);
   color: #fde68a;
+  font-size: 11px;
   font-weight: 700;
   cursor: pointer;
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 .hud-ed-scale {
-  min-width: 34px;
+  min-width: 32px;
   text-align: center;
   font-weight: 700;
+  font-size: 11px;
   color: #fde047;
 }
 body.hud-edit-active .hud-edit-bar {
-  display: flex !important;
+  display: inline-flex !important;
 }
 body.hud-edit-active [data-hud-panel] {
+  cursor: grab;
+  overflow: visible !important;
   outline: 1.5px dashed rgba(251, 191, 36, 0.78);
   outline-offset: 4px;
   border-radius: 10px;
   pointer-events: auto !important;
+}
+body.hud-edit-active [data-hud-panel] > *:not(.hud-edit-bar) {
+  pointer-events: none !important;
+}
+body.hud-edit-active [data-hud-panel].hud-edit-selected {
+  outline: 2px solid #fde047 !important;
+  z-index: 150 !important;
 }
 body.hud-edit-active #hud-top-center.hidden {
   display: block !important;
@@ -3784,8 +3841,8 @@ body.hud-edit-active #target-frame.hidden {
   gap: 5px;
 }
 .v80-matrix-dock .matrix-row {
-  display: grid;
-  grid-template-columns: repeat(7, 36px);
+  display: flex;
+  justify-content: flex-end;
   gap: 5px;
 }
 .v80-matrix-dock.collapsed .matrix-rows,

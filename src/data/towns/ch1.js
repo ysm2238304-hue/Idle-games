@@ -1,4 +1,4 @@
-// v287: 第 1 章主城「曙光哨站堡壘」— 無空台寫實底圖＋Flood-Fill 100%不透明建築＋寫實木人樁
+// v312: 第 1 章主城「曙光哨站堡壘」— 演武場重構與 NPC 門口精準校準
 export const TOWN_CH1 = {
   "chapterIdx": 0,
   "id": "town_ch1",
@@ -91,8 +91,8 @@ export const TOWN_CH1 = {
         "frame": "ch1_npc_smith",
         "name": "鐵砧・布魯",
         "title": "鍛造大師",
-        "x": 1580,
-        "y": 832,
+        "x": 1520,
+        "y": 824,
         "scale": 0.66,
         "workStyle": "forge",
         "greeting": "只要金幣和材料夠，再破的廢鐵都能敲成神兵！"
@@ -119,8 +119,8 @@ export const TOWN_CH1 = {
         "frame": "ch1_npc_alchemy",
         "name": "艾莉絲",
         "title": "祕法煉金師",
-        "x": 1135,
-        "y": 1092,
+        "x": 1100,
+        "y": 1164,
         "scale": 0.64,
         "workStyle": "alchemy",
         "greeting": "剛熬好的深淵抗性秘藥，出城前記得帶幾瓶！"
@@ -147,8 +147,8 @@ export const TOWN_CH1 = {
         "frame": "ch1_npc_guild",
         "name": "指揮官・加雷斯",
         "title": "邊境公會長",
-        "x": 2360,
-        "y": 714,
+        "x": 2420,
+        "y": 744,
         "scale": 0.66,
         "workStyle": "guild",
         "greeting": "邊境戰況吃緊，先整頓好流派技能再帶隊出征！"
@@ -175,8 +175,8 @@ export const TOWN_CH1 = {
         "frame": "ch1_npc_temple",
         "name": "修女・賽琳娜",
         "title": "聖光祭司",
-        "x": 3170,
-        "y": 1514,
+        "x": 3160,
+        "y": 1424,
         "scale": 0.64,
         "workStyle": "prayer",
         "greeting": "願聖光洗去你的疲憊，在此可進行輪迴轉生。"
@@ -203,8 +203,8 @@ export const TOWN_CH1 = {
         "frame": "ch1_npc_market",
         "name": "行商・馬爾科",
         "title": "黑市珍寶商",
-        "x": 3222,
-        "y": 1894,
+        "x": 2860,
+        "y": 1924,
         "scale": 0.64,
         "workStyle": "market",
         "greeting": "遠道而來的稀世奇珍，來賭一把手氣吧！"
@@ -231,8 +231,8 @@ export const TOWN_CH1 = {
         "frame": "ch1_npc_bounty",
         "name": "斥候・羅恩",
         "title": "懸賞管理官",
-        "x": 1530,
-        "y": 1284,
+        "x": 1560,
+        "y": 1344,
         "scale": 0.64,
         "workStyle": "bounty",
         "greeting": "今日懸賞名單更新了，擊殺目標賞金豐厚！"
@@ -251,12 +251,14 @@ export const TOWN_CH1 = {
     "action": "exit_battle"
   },
   "trainingDummy": {
-    "name": "邊境演武木人樁",
+    "name": "邊境演武校場",
     "frame": "ch1_prop_crate",
     "x": 2720,
     "y": 1220,
-    "scale": 0.62,
-    "radius": 34
+    "scale": 0.76,
+    "radius": 84,
+    "imgKey": "ch1_arena_v312",
+    "imgUrl": "./assets/towns/ch1_arena.webp?v=312"
   },
   "decorations": [],
   "patrols": [

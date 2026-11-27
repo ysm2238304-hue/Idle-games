@@ -1,4 +1,4 @@
-// v284: 第 2 章主城「地下菌菇黑市」— 三層建築重構（純淨底圖＋8棟專屬風格2.5D建築）
+// v312: 第 2 章主城「地下菌菇黑市」— 演武場重構與 NPC 門口精準校準
 export const TOWN_CH2 = {
   "chapterIdx": 1,
   "id": "town_ch2",
@@ -85,8 +85,8 @@ export const TOWN_CH2 = {
         "frame": "ch2_npc_smith",
         "name": "巴克",
         "title": "蒸汽鐵匠",
-        "x": 744,
-        "y": 1092,
+        "x": 1120,
+        "y": 804,
         "scale": 0.62,
         "workStyle": "forge",
         "greeting": "加壓到三百磅的蒸汽鐵錘，敲出來的裝備絕對比地面上那群老古董更猛！"
@@ -113,8 +113,8 @@ export const TOWN_CH2 = {
         "frame": "ch2_npc_guild",
         "name": "葛林",
         "title": "金庫總管",
-        "x": 3320,
-        "y": 1914,
+        "x": 2048,
+        "y": 644,
         "scale": 0.62,
         "workStyle": "guild",
         "greeting": "只要付得起保管費，整個地底最安全的大鐵門都為你的戰利品敞開。"
@@ -141,7 +141,7 @@ export const TOWN_CH2 = {
         "frame": "ch2_npc_bounty",
         "name": "維克斯",
         "title": "暗影通緝官",
-        "x": 1152,
+        "x": 880,
         "y": 1404,
         "scale": 0.62,
         "workStyle": "bounty",
@@ -169,8 +169,8 @@ export const TOWN_CH2 = {
         "frame": "ch2_npc_market",
         "name": "金牙",
         "title": "黑市拍賣師",
-        "x": 1435,
-        "y": 1754,
+        "x": 2520,
+        "y": 2024,
         "scale": 0.62,
         "workStyle": "market",
         "greeting": "歡迎光臨地底最大拍賣場！今天算你八折優惠，要不要賭一把傳奇盲盒？"
@@ -197,8 +197,8 @@ export const TOWN_CH2 = {
         "frame": "ch2_npc_altar",
         "name": "烏爾",
         "title": "盲眼菌語先知",
-        "x": 1095,
-        "y": 792,
+        "x": 1740,
+        "y": 2044,
         "scale": 0.62,
         "workStyle": "prayer",
         "greeting": "地底菌絲連結萬物生死，在此輪迴將讓你的靈魂與孢子共生。"
@@ -225,8 +225,8 @@ export const TOWN_CH2 = {
         "frame": "ch2_npc_alchemy",
         "name": "莫拉",
         "title": "孢子調劑師",
-        "x": 3100,
-        "y": 1112,
+        "x": 2980,
+        "y": 804,
         "scale": 0.62,
         "workStyle": "alchemy",
         "greeting": "紫光蘑菇萃取的精華可比地面草藥強效多了，來一瓶嗎？"
@@ -253,8 +253,8 @@ export const TOWN_CH2 = {
         "frame": "ch2_npc_temple",
         "name": "斯卡",
         "title": "獨眼角鬥教頭",
-        "x": 2720,
-        "y": 1194,
+        "x": 3240,
+        "y": 1404,
         "scale": 0.62,
         "workStyle": "prayer",
         "greeting": "在地底活下去靠的不是禮貌，是更狠的技能連招！去旁邊打打靶子熱身吧！"
@@ -278,8 +278,8 @@ export const TOWN_CH2 = {
         "frame": "ch2_npc_portal",
         "name": "托比",
         "title": "礦車調度員",
-        "x": 960,
-        "y": 2128,
+        "x": 1040,
+        "y": 2004,
         "scale": 0.62,
         "greeting": "軌道已上油、蒸汽已滿壓！隨時可以搭礦車直衝巢穴前線！"
       },
@@ -321,12 +321,14 @@ export const TOWN_CH2 = {
   ],
   "trainingDummy": {
     "id": "dummy",
-    "name": "地精鐵皮靶人",
+    "name": "地下蒸汽角鬥演武場",
     "frame": "ch2_prop_dummy",
     "x": 2780,
     "y": 1280,
-    "scale": 0.72,
-    "radius": 42
+    "scale": 0.76,
+    "radius": 84,
+    "imgKey": "ch2_arena_v312",
+    "imgUrl": "./assets/towns/ch2_arena.webp?v=312"
   },
   "neighborhood": [],
   "props": [],

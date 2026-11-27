@@ -1,17 +1,17 @@
 import { getHeroAtlasInfo, safeQueueAtlas, waitAtlasReady } from '../combat/HeroAnimRouter.js?v=309-1';
 import { CameraZoomHelper } from './CameraZoomHelper.js?v=282';
-import { TOWN_CH1 } from '../data/towns/ch1.js?v=303';
+import { TOWN_CH1 } from '../data/towns/ch1.js?v=312';
 import { LivingNpcEngine } from '../town/LivingNpcEngine.js?v=273';
 import { TownMultiplayerSync } from '../net/TownMultiplayerSync.js?v=274';
-import { TOWN_CH2 } from '../data/towns/ch2.js?v=304';
-import { TOWN_CH3 } from '../data/towns/ch3.js?v=304';
-import { TOWN_CH4 } from '../data/towns/ch4.js?v=304';
-import { TOWN_CH5 } from '../data/towns/ch5.js?v=304';
-import { TOWN_CH6 } from '../data/towns/ch6.js?v=304';
-import { TOWN_CH7 } from '../data/towns/ch7.js?v=304';
-import { TOWN_CH8 } from '../data/towns/ch8.js?v=304';
-import { TOWN_CH9 } from '../data/towns/ch9.js?v=304';
-import { TOWN_CH10 } from '../data/towns/ch10.js?v=304';
+import { TOWN_CH2 } from '../data/towns/ch2.js?v=312';
+import { TOWN_CH3 } from '../data/towns/ch3.js?v=312';
+import { TOWN_CH4 } from '../data/towns/ch4.js?v=312';
+import { TOWN_CH5 } from '../data/towns/ch5.js?v=312';
+import { TOWN_CH6 } from '../data/towns/ch6.js?v=312';
+import { TOWN_CH7 } from '../data/towns/ch7.js?v=312';
+import { TOWN_CH8 } from '../data/towns/ch8.js?v=312';
+import { TOWN_CH9 } from '../data/towns/ch9.js?v=312';
+import { TOWN_CH10 } from '../data/towns/ch10.js?v=312';
 import { formatNum } from '../logic/statCalc.js?v=99';
 import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta } from '../data/pets.js?v=99';
 
@@ -83,9 +83,19 @@ export class TownScene extends Phaser.Scene {
     if (!this.textures.exists(td.bgKey)) {
       this.load.image(td.bgKey, td.bgUrl);
     }
-    // v267: 載入新版暗黑 4 獨立地形融合 WebP 建築與地標
+    // v267/v312: 載入新版暗黑 4 獨立地形融合 WebP 建築、專屬演武場與建築式傳送陣
     if (!this.textures.exists('town_dummy_v287')) {
       this.load.image('town_dummy_v287', './assets/towns/town_dummy.webp?v=287');
+    }
+    const chNum = (td.chapterIdx ?? 0) + 1;
+    const arenaKey = td.trainingDummy?.imgKey || `ch${chNum}_arena_v312`;
+    const arenaUrl = td.trainingDummy?.imgUrl || `./assets/towns/ch${chNum}_arena.webp?v=312`;
+    if (!this.textures.exists(arenaKey)) {
+      this.load.image(arenaKey, arenaUrl);
+    }
+    const wpBldKey = `ch${chNum}_waypoint_v312`;
+    if (!this.textures.exists(wpBldKey)) {
+      this.load.image(wpBldKey, `./assets/towns/ch${chNum}_waypoint.webp?v=312`);
     }
     if (td.modularBuildings || !td.integratedBuildings) {
       if (td.landmark?.imgKey && td.landmark?.imgUrl && !this.textures.exists(td.landmark.imgKey)) {
@@ -227,22 +237,44 @@ export class TownScene extends Phaser.Scene {
       this.placeNpc(td.atlasKey, npc, npc.title, npc.action, npc.actionLabel, npc);
     }
 
-    // 6. 演武木人樁
+    // 6. 全 10 章專屬風格 2.5D 演武場建築（v312 重構皮靶人為主題演武場）
     if (td.trainingDummy) {
       const dm = td.trainingDummy;
-      // v298: 移除木人樁下方浮空黑橢圓陰影
-      this.dummySprite = (this.textures.exists('town_dummy_v287')
-        ? this.add.image(dm.x, dm.y, 'town_dummy_v287').setOrigin(0.5, 0.92).setScale(dm.scale || 0.62)
-        : this.add.image(dm.x, dm.y, td.atlasKey, dm.frame).setScale(dm.scale))
-        .setDepth(dm.y);
-      this.obstacles.push({ x: dm.x, y: dm.y + 16, radius: dm.radius });
-      this.addNameplate(dm.x, dm.y - 78, `🎯 ${dm.name}`, '#facc15');
+      const chNum = (td.chapterIdx ?? 0) + 1;
+      const arenaKey = dm.imgKey || `ch${chNum}_arena_v312`;
+      const hasArenaBld = this.textures.exists(arenaKey);
+      const arenaScale = hasArenaBld ? (dm.scale || 0.76) : (dm.scale || 0.62);
+      this.dummySprite = (hasArenaBld
+        ? this.add.image(dm.x, dm.y, arenaKey).setOrigin(0.5, 0.94).setScale(arenaScale).setDepth(dm.y - 18)
+        : (this.textures.exists('town_dummy_v287')
+          ? this.add.image(dm.x, dm.y, 'town_dummy_v287').setOrigin(0.5, 0.92).setScale(arenaScale).setDepth(dm.y)
+          : this.add.image(dm.x, dm.y, td.atlasKey, dm.frame).setScale(arenaScale).setDepth(dm.y)));
+      if (hasArenaBld) {
+        const dispW = Math.round(this.dummySprite.displayWidth || (420 * arenaScale));
+        const dispH = Math.round(this.dummySprite.displayHeight || (420 * arenaScale));
+        const hw = Math.max(75, Math.round(dispW * 0.25));
+        const hTop = Math.max(70, Math.round(dispH * 0.34));
+        this.rectObstacles.push({ x1: dm.x - hw, y1: dm.y - hTop, x2: dm.x + hw, y2: dm.y - 6 });
+        this.dummySprite.setInteractive({ useHandCursor: true });
+        this.dummySprite.on('pointerover', () => this.dummySprite.setTint(0xfff1c9));
+        this.dummySprite.on('pointerout', () => this.dummySprite.clearTint());
+        this.dummySprite.on('pointerdown', (pointer) => {
+          if (pointer?.leftButtonDown?.()) {
+            const safePos = this._pushOutOfObstacles(dm.x, dm.y + 72, 22);
+            this.moveTarget = { x: safePos.x, y: safePos.y, triggerAction: 'hit_dummy', triggerData: dm };
+          }
+        });
+        this.addNameplate(dm.x, dm.y - Math.round(270 * arenaScale), `⚔️ ${dm.name}`, '#facc15', true);
+      } else {
+        this.obstacles.push({ x: dm.x, y: dm.y + 16, radius: dm.radius || 46 });
+        this.addNameplate(dm.x, dm.y - 96, `⚔️ ${dm.name}`, '#facc15', true);
+      }
       this.interactables.push({
         id: 'dummy',
         x: dm.x,
-        y: dm.y,
-        radius: 135,
-        title: `🎯 ${dm.name}`,
+        y: dm.y + (hasArenaBld ? 48 : 0),
+        radius: 155,
+        title: `⚔️ ${dm.name}`,
         sub: '點擊或按 [F] 進入「2.5D 實戰演武場」（多木人＋自動攻擊＋DPS）',
         action: 'hit_dummy',
         data: dm,
@@ -351,45 +383,66 @@ export class TownScene extends Phaser.Scene {
     // v278: 全場景通用滑鼠滾輪縮放引擎（0.55x 全景俯瞰 ↔ 1.45x 近距細看，按 [0] 重置）
     this.cameraZoom = new CameraZoomHelper(this, { minZoom: 0.55, maxZoom: 1.45, defaultZoom: 0.88, step: 0.09, mapWidth: td.mapWidth, mapHeight: td.mapHeight });
 
-    // 9.2 全 10 座主城地面動態「星門傳送魔法陣」（2.5D 透視雙層旋轉法陣 + 章節專屬色）
-    const wpX = td.spawn.x + 165;
-    const wpY = td.spawn.y - 24;
+    // 9.2 全 10 座主城 2.5D「建築式主城傳送陣」（v312 專屬石柱/拱門建築＋地面微光魔法陣）
+    const wpX = td.waypoint?.x ?? (td.spawn.x + 225);
+    const wpY = td.waypoint?.y ?? (td.spawn.y - 38);
     const CH_WP_TINTS = [0xfbbf24, 0xa855f7, 0x38bdf8, 0xf97316, 0xe879f9, 0x22d3ee, 0x4ade80, 0xfacc15, 0xf43f5e, 0xc084fc];
     const chIdxNow = Math.max(0, Math.min(9, td.chapterIdx ?? 0));
     const wpTint = CH_WP_TINTS[chIdxNow] || 0x38bdf8;
     const wpTintHex = '#' + wpTint.toString(16).padStart(6, '0');
+    const wpBldKey = `ch${chIdxNow + 1}_waypoint_v312`;
+    const hasWpBld = this.textures.exists(wpBldKey);
 
-    const wpAura = this.add.image(wpX, wpY, 'fx_glow')
-      .setTint(wpTint).setScale(2.8, 1.35).setAlpha(0.32).setBlendMode(Phaser.BlendModes.ADD).setDepth(3);
-    this.tweens.add({ targets: wpAura, scaleX: 3.2, scaleY: 1.52, alpha: 0.52, duration: 1500, yoyo: true, repeat: -1 });
+    const wpAura = this.add.image(wpX, wpY - (hasWpBld ? 12 : 0), 'fx_glow')
+      .setTint(wpTint).setScale(hasWpBld ? 2.4 : 2.8, hasWpBld ? 1.1 : 1.35).setAlpha(0.28).setBlendMode(Phaser.BlendModes.ADD).setDepth(3);
+    this.tweens.add({ targets: wpAura, scaleX: 2.9, scaleY: 1.35, alpha: 0.46, duration: 1500, yoyo: true, repeat: -1 });
 
-    // 2.5D 壓扁容器，讓法陣貼合主城地板透視並平滑旋轉
-    const wpPad = this.add.container(wpX, wpY).setScale(1, 0.54).setDepth(4);
+    // 2.5D 壓扁容器，讓法陣貼合傳送陣底座透視並平滑旋轉
+    const wpPad = this.add.container(wpX, wpY + (hasWpBld ? 8 : 0)).setScale(1, 0.54).setDepth(4);
     const hasCircleTex = this.textures.exists('town_waypoint_circle');
     const wpOuter = this.add.image(0, 0, hasCircleTex ? 'town_waypoint_circle' : 'fx_glow')
-      .setTint(wpTint).setScale(hasCircleTex ? 0.44 : 1.75).setAlpha(0.92).setBlendMode(Phaser.BlendModes.ADD);
+      .setTint(wpTint).setScale(hasCircleTex ? 0.38 : 1.55).setAlpha(0.82).setBlendMode(Phaser.BlendModes.ADD);
     const wpInner = this.add.image(0, 0, hasCircleTex ? 'town_waypoint_circle' : 'fx_glow')
-      .setTint(0xf8fafc).setScale(hasCircleTex ? 0.27 : 0.95).setAlpha(0.75).setBlendMode(Phaser.BlendModes.ADD);
+      .setTint(0xf8fafc).setScale(hasCircleTex ? 0.24 : 0.85).setAlpha(0.68).setBlendMode(Phaser.BlendModes.ADD);
     wpPad.add([wpOuter, wpInner]);
     this.tweens.add({ targets: wpOuter, angle: 360, duration: 15000, repeat: -1 });
     this.tweens.add({ targets: wpInner, angle: -360, duration: 9500, repeat: -1 });
+
+    if (hasWpBld) {
+      const wpScale = 0.72;
+      const wpSpr = this.add.image(wpX, wpY, wpBldKey).setOrigin(0.5, 0.94).setScale(wpScale).setDepth(wpY - 18);
+      const dispW = Math.round(wpSpr.displayWidth || 280);
+      const dispH = Math.round(wpSpr.displayHeight || 280);
+      const hw = Math.max(58, Math.round(dispW * 0.23));
+      const hTop = Math.max(56, Math.round(dispH * 0.30));
+      this.rectObstacles.push({ x1: wpX - hw, y1: wpY - hTop, x2: wpX + hw, y2: wpY - 6 });
+      wpSpr.setInteractive({ useHandCursor: true });
+      wpSpr.on('pointerover', () => wpSpr.setTint(0xfff3c4));
+      wpSpr.on('pointerout', () => wpSpr.clearTint());
+      wpSpr.on('pointerdown', (pointer) => {
+        if (pointer?.leftButtonDown?.()) {
+          const safePos = this._pushOutOfObstacles(wpX, wpY + 56, 22);
+          this.moveTarget = { x: safePos.x, y: safePos.y, triggerAction: 'open_waypoint', triggerData: { chapterIdx: td.chapterIdx } };
+        }
+      });
+    }
 
     this.time.addEvent({
       delay: 340,
       loop: true,
       callback: () => {
         if (!this.scene.isActive('TownScene')) return;
-        const p = this.add.image(wpX + Phaser.Math.Between(-46, 46), wpY + Phaser.Math.Between(-18, 18), 'fx_glow')
+        const p = this.add.image(wpX + Phaser.Math.Between(-42, 42), wpY + Phaser.Math.Between(-16, 16), 'fx_glow')
           .setTint(wpTint).setScale(0.16).setAlpha(0.85).setBlendMode(Phaser.BlendModes.ADD).setDepth(wpY + 2);
         this.tweens.add({ targets: p, y: p.y - 54, alpha: 0, scale: 0.04, duration: 950, onComplete: () => p.destroy() });
       },
     });
-    this.addNameplate(wpX, wpY - 52, '🧭 主城傳送陣', wpTintHex);
+    this.addNameplate(wpX, wpY - (hasWpBld ? 205 : 64), '🧭 主城傳送陣', wpTintHex, true);
     this.interactables.push({
       id: 'town_waypoint_pad',
       x: wpX,
-      y: wpY,
-      radius: 115,
+      y: wpY + (hasWpBld ? 34 : 0),
+      radius: 135,
       title: '🧭 主城星門傳送陣',
       sub: '點擊或按 [F] 開啟城內瞬移／跨章傳送',
       action: 'open_waypoint',
@@ -713,8 +766,15 @@ export class TownScene extends Phaser.Scene {
   }
 
   resolveSafeNpcPos(nx, ny) {
-    let x = nx;
-    let y = ny;
+    let x = Number.isFinite(nx) ? nx : (this.townData?.spawn?.x || 2048);
+    let y = Number.isFinite(ny) ? ny : (this.townData?.spawn?.y || 1440);
+    // v312: 避開新版 2.5D 建築矩形碰撞盒，優先將 NPC 推往建築前方門口安全處
+    for (const r of this.rectObstacles || []) {
+      const pad = 26;
+      if (x >= r.x1 - pad && x <= r.x2 + pad && y >= r.y1 - 12 && y <= r.y2 + pad) {
+        y = r.y2 + pad + 6;
+      }
+    }
     for (const ob of this.obstacles) {
       const dx = x - ob.x;
       const dy = y - ob.y;
@@ -745,7 +805,16 @@ export class TownScene extends Phaser.Scene {
   }
 
   placeNpc(atlasKey, npc, facilityName, action, actionLabel, parentObj) {
-    const safePos = this.resolveSafeNpcPos(npc.x, npc.y);
+    let rawX = npc.x;
+    let rawY = npc.y;
+    if (parentObj && Number.isFinite(parentObj.x) && Number.isFinite(parentObj.y)) {
+      const needAnchor = !Number.isFinite(rawX) || !Number.isFinite(rawY) || Math.hypot(rawX - parentObj.x, rawY - parentObj.y) > 260;
+      if (needAnchor) {
+        rawX = parentObj.x + (parentObj.doorOffset?.x ?? 0);
+        rawY = parentObj.y + (parentObj.doorOffset?.y ?? 92);
+      }
+    }
+    const safePos = this.resolveSafeNpcPos(rawX, rawY);
     npc = { ...npc, x: safePos.x, y: safePos.y };
     const sh = this.add.image(npc.x, npc.y + 2, 'fx_glow')
       .setTint(action.startsWith('gimmick_') ? 0xf59e0b : 0x8b5cf6).setScale(1.05, 0.38).setAlpha(0.36).setDepth(2);
@@ -768,14 +837,16 @@ export class TownScene extends Phaser.Scene {
       });
     }
     this.attachNpcFacilityFx(npc.x, npc.y, action, spr);
-    const plate = this.addNameplate(npc.x, npc.y - 112, `${npc.title}・${npc.name}`, '#7dd3fc');
+    const fullNpcLabel = `${npc.title}・${npc.name}`;
+    const plate = this.addNameplate(npc.x, npc.y - 114, fullNpcLabel, '#7dd3fc', false);
     const iconStr = this.getActionIcon(action);
-    const icon = this.add.text(npc.x, npc.y - 138, iconStr, {
-      fontSize: '18px',
+    const iconBaseY = npc.y - (fullNpcLabel.includes('・') ? 172 : 148);
+    const icon = this.add.text(npc.x, iconBaseY, iconStr, {
+      fontSize: '22px',
     }).setOrigin(0.5, 1).setDepth(4550);
     this.tweens.add({
       targets: icon,
-      y: npc.y - 146,
+      y: iconBaseY - 8,
       duration: 900 + Math.random() * 300,
       yoyo: true,
       repeat: -1,
@@ -810,14 +881,14 @@ export class TownScene extends Phaser.Scene {
     const clean = label.includes('・') ? label.replace('・', '\n') : label;
     return this.add.text(x, y, clean, {
       fontFamily: 'Noto Sans TC, sans-serif',
-      fontSize: '15px',
+      fontSize: isBuilding ? '22px' : '19px',
       fontStyle: 'bold',
       align: 'center',
       color,
       stroke: '#000000',
-      strokeThickness: 4,
-      shadow: { offsetX: 0, offsetY: 1, color: '#000000', blur: 3, fill: true },
-    }).setOrigin(0.5, 1).setDepth(4500);
+      strokeThickness: isBuilding ? 5 : 4.5,
+      shadow: { offsetX: 0, offsetY: 2, color: '#000000', blur: isBuilding ? 5 : 4, fill: true },
+    }).setOrigin(0.5, 1).setDepth(isBuilding ? 4520 : 4500);
   }
 
   getHeroPrefix(cid) {

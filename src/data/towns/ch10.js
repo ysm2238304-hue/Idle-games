@@ -1,4 +1,4 @@
-// v304-4: 第 10 章主城「永恆星辰聖域」— 全新開闊底圖＋建築／NPC／巡邏點重校
+// v312: 第 10 章主城「永恆星辰聖域」— 演武場重構與 NPC 門口精準校準
 export const TOWN_CH10 = {
   "chapterIdx": 9,
   "id": "town_ch10",
@@ -71,7 +71,9 @@ export const TOWN_CH10 = {
         "title": "星辰鑄造師",
         "scale": 0.62,
         "workStyle": "forge",
-        "greeting": "以奇異點黑洞的重力與恆星碎片重鑄的神話裝備，足以撼動宇宙法則！"
+        "greeting": "以奇異點黑洞的重力與恆星碎片重鑄的神話裝備，足以撼動宇宙法則！",
+        "x": 960,
+        "y": 804
       },
       "action": "drawer_upgrade",
       "actionLabel": "開啟星辰重鑄",
@@ -97,7 +99,9 @@ export const TOWN_CH10 = {
         "title": "星界典藏官",
         "scale": 0.62,
         "workStyle": "guild",
-        "greeting": "所有星際征戰得來的神話遺物皆已收錄於此，請隨時檢視你的星庫。"
+        "greeting": "所有星際征戰得來的神話遺物皆已收錄於此，請隨時檢視你的星庫。",
+        "x": 3140,
+        "y": 804
       },
       "action": "drawer_bag",
       "actionLabel": "打開永恆星庫",
@@ -123,7 +127,9 @@ export const TOWN_CH10 = {
         "title": "星露煉金師",
         "scale": 0.62,
         "workStyle": "alchemy",
-        "greeting": "這瓶濃縮了超新星餘暉的星露靈藥，將帶給你超越極限的力量。"
+        "greeting": "這瓶濃縮了超新星餘暉的星露靈藥，將帶給你超越極限的力量。",
+        "x": 1560,
+        "y": 764
       },
       "action": "modal_alchemy",
       "actionLabel": "調配星雲靈藥",
@@ -149,7 +155,9 @@ export const TOWN_CH10 = {
         "title": "星界戰神",
         "scale": 0.62,
         "workStyle": "prayer",
-        "greeting": "迎接混沌星界虛空的最終決戰前，將你的技能與天賦調整至完美吧！"
+        "greeting": "迎接混沌星界虛空的最終決戰前，將你的技能與天賦調整至完美吧！",
+        "x": 2540,
+        "y": 764
       },
       "action": "drawer_skills",
       "actionLabel": "配置終極技能",
@@ -175,7 +183,9 @@ export const TOWN_CH10 = {
         "title": "星界獵手",
         "scale": 0.62,
         "workStyle": "bounty",
-        "greeting": "混沌虛空裡的星界吞噬者與墮落熾天使正在擴張，完成天命懸賞吧！"
+        "greeting": "混沌虛空裡的星界吞噬者與墮落熾天使正在擴張，完成天命懸賞吧！",
+        "x": 1560,
+        "y": 1884
       },
       "action": "modal_bounty",
       "actionLabel": "接取星圖懸賞",
@@ -201,7 +211,9 @@ export const TOWN_CH10 = {
         "title": "星界奇珍商",
         "scale": 0.62,
         "workStyle": "market",
-        "greeting": "來自平行宇宙的神秘星塵寶箱，這裡是神話裝備出現率最高的黑市！"
+        "greeting": "來自平行宇宙的神秘星塵寶箱，這裡是神話裝備出現率最高的黑市！",
+        "x": 3040,
+        "y": 1884
       },
       "action": "modal_market",
       "actionLabel": "進入星塵黑市",
@@ -227,7 +239,9 @@ export const TOWN_CH10 = {
         "title": "時間與星界大先知",
         "scale": 0.62,
         "workStyle": "prayer",
-        "greeting": "時間在此靜止、宇宙在此重啟，踏入星陣完成你的永恆輪迴超越。"
+        "greeting": "時間在此靜止、宇宙在此重啟，踏入星陣完成你的永恆輪迴超越。",
+        "x": 2340,
+        "y": 1884
       },
       "action": "drawer_rebirth",
       "actionLabel": "開啟永恆輪迴",
@@ -249,7 +263,9 @@ export const TOWN_CH10 = {
         "name": "諾瓦",
         "title": "星門守護神",
         "scale": 0.62,
-        "greeting": "宇宙蟲洞已鎖定混沌星界虛空終點，隨時準備展開最後一戰！"
+        "greeting": "宇宙蟲洞已鎖定混沌星界虛空終點，隨時準備展開最後一戰！",
+        "x": 960,
+        "y": 1884
       },
       "action": "modal_portal",
       "actionLabel": "穿越蟲洞出征",
@@ -289,12 +305,14 @@ export const TOWN_CH10 = {
   ],
   "trainingDummy": {
     "id": "dummy",
-    "name": "星界黃金構造體靶",
+    "name": "星界星軌演武神台",
     "frame": "ch10_prop_dummy",
     "x": 3100,
     "y": 1280,
-    "scale": 0.74,
-    "radius": 42
+    "scale": 0.76,
+    "radius": 84,
+    "imgKey": "ch10_arena_v312",
+    "imgUrl": "./assets/towns/ch10_arena.webp?v=312"
   },
   "neighborhood": [],
   "props": [],

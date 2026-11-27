@@ -1009,8 +1009,8 @@ body.hud-edit-active #hud-combo-box.hidden {
 }
 
 body.hud-edit-active .hud-edit-bar {
-  position: relative;
-  z-index: 99 !important;
+  position: absolute !important;
+  z-index: 150 !important;
   pointer-events: auto !important;
 }
 

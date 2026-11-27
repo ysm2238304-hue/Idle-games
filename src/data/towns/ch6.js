@@ -1,4 +1,4 @@
-// v304-3: 第 6 章主城「極光冰晶堡」— 全新開闊底圖＋建築／NPC／巡邏點重校
+// v312: 第 6 章主城「極光冰晶堡」— 演武場重構與 NPC 門口精準校準
 export const TOWN_CH6 = {
   "chapterIdx": 5,
   "id": "town_ch6",
@@ -71,7 +71,9 @@ export const TOWN_CH6 = {
         "title": "冰霜符文鐵匠",
         "scale": 0.62,
         "workStyle": "forge",
-        "greeting": "極地永凍冰鐵比鋼鐵更堅硬，刻上北歐符文後連冰龍都能劈開！"
+        "greeting": "極地永凍冰鐵比鋼鐵更堅硬，刻上北歐符文後連冰龍都能劈開！",
+        "x": 1460,
+        "y": 1004
       },
       "action": "drawer_upgrade",
       "actionLabel": "開啟符文鍛造",
@@ -97,7 +99,9 @@ export const TOWN_CH6 = {
         "title": "雪域草藥師",
         "scale": 0.62,
         "workStyle": "alchemy",
-        "greeting": "喝下這瓶極光雪蓮暖身藥劑，暴風雪就再也凍傷不了你。"
+        "greeting": "喝下這瓶極光雪蓮暖身藥劑，暴風雪就再也凍傷不了你。",
+        "x": 2640,
+        "y": 1004
       },
       "action": "modal_alchemy",
       "actionLabel": "調配冰晶藥劑",
@@ -123,7 +127,9 @@ export const TOWN_CH6 = {
         "title": "長屋大管家",
         "scale": 0.62,
         "workStyle": "guild",
-        "greeting": "所有戰利品與毛皮補給都妥善存放在龍首長屋裡，隨時取用！"
+        "greeting": "所有戰利品與毛皮補給都妥善存放在龍首長屋裡，隨時取用！",
+        "x": 2048,
+        "y": 704
       },
       "action": "drawer_bag",
       "actionLabel": "打開長屋倉庫",
@@ -149,7 +155,9 @@ export const TOWN_CH6 = {
         "title": "女武神教頭",
         "scale": 0.62,
         "workStyle": "prayer",
-        "greeting": "戰士！展現讓英靈殿都為之震顫的戰技吧，調整好天賦再出發！"
+        "greeting": "戰士！展現讓英靈殿都為之震顫的戰技吧，調整好天賦再出發！",
+        "x": 3060,
+        "y": 1364
       },
       "action": "drawer_skills",
       "actionLabel": "配置職業技能",
@@ -175,7 +183,9 @@ export const TOWN_CH6 = {
         "title": "雪原獵狼隊長",
         "scale": 0.62,
         "workStyle": "bounty",
-        "greeting": "雪原冰原狼與雪怪最近太囂張了，去獵殺它們領取北境賞金！"
+        "greeting": "雪原冰原狼與雪怪最近太囂張了，去獵殺它們領取北境賞金！",
+        "x": 1060,
+        "y": 1344
       },
       "action": "modal_bounty",
       "actionLabel": "接取雪原懸賞",
@@ -201,7 +211,9 @@ export const TOWN_CH6 = {
         "title": "極地行商",
         "scale": 0.62,
         "workStyle": "market",
-        "greeting": "剛從冰川裂縫撈出來的稀有寶箱，附帶極光結晶，想賭一發嗎？"
+        "greeting": "剛從冰川裂縫撈出來的稀有寶箱，附帶極光結晶，想賭一發嗎？",
+        "x": 2660,
+        "y": 1744
       },
       "action": "modal_market",
       "actionLabel": "進入極地黑市",
@@ -227,7 +239,9 @@ export const TOWN_CH6 = {
         "title": "霜語薩滿",
         "scale": 0.62,
         "workStyle": "prayer",
-        "greeting": "在世界樹枯根與極光的見證下，重塑你的魂魄迎向新生。"
+        "greeting": "在世界樹枯根與極光的見證下，重塑你的魂魄迎向新生。",
+        "x": 2060,
+        "y": 1984
       },
       "action": "drawer_rebirth",
       "actionLabel": "開啟世界樹輪迴",
@@ -249,7 +263,9 @@ export const TOWN_CH6 = {
         "name": "海姆達爾",
         "title": "彩虹冰門守衛",
         "scale": 0.62,
-        "greeting": "極光傳送門已對準永凍冰霜凍原深處，隨時準備出征！"
+        "greeting": "極光傳送門已對準永凍冰霜凍原深處，隨時準備出征！",
+        "x": 1480,
+        "y": 1744
       },
       "action": "modal_portal",
       "actionLabel": "傳送出征凍原",
@@ -289,12 +305,14 @@ export const TOWN_CH6 = {
   ],
   "trainingDummy": {
     "id": "dummy",
-    "name": "冰霜巨人木偶靶",
+    "name": "英靈殿冰霜演武場",
     "frame": "ch6_prop_dummy",
     "x": 2580,
     "y": 1300,
-    "scale": 0.72,
-    "radius": 42
+    "scale": 0.76,
+    "radius": 84,
+    "imgKey": "ch6_arena_v312",
+    "imgUrl": "./assets/towns/ch6_arena.webp?v=312"
   },
   "neighborhood": [],
   "props": [],

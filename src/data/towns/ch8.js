@@ -1,4 +1,4 @@
-// v304-4: 第 8 章主城「蒼穹電弧浮空城」— 全新開闊底圖＋建築／NPC／巡邏點重校
+// v312: 第 8 章主城「蒼穹電弧浮空城」— 演武場重構與 NPC 門口精準校準
 export const TOWN_CH8 = {
   "chapterIdx": 7,
   "id": "town_ch8",
@@ -71,7 +71,9 @@ export const TOWN_CH8 = {
         "title": "電弧鍛造技師",
         "scale": 0.62,
         "workStyle": "forge",
-        "greeting": "用百萬伏特蒼穹雷電淬火出的黃銅秘銀裝備，揮動時還會帶起電弧！"
+        "greeting": "用百萬伏特蒼穹雷電淬火出的黃銅秘銀裝備，揮動時還會帶起電弧！",
+        "x": 1540,
+        "y": 824
       },
       "action": "drawer_upgrade",
       "actionLabel": "開啟電弧鍛造",
@@ -97,7 +99,9 @@ export const TOWN_CH8 = {
         "title": "飛艇船長",
         "scale": 0.62,
         "workStyle": "guild",
-        "greeting": "浮空艦隊剛運回一批雲端戰利品，你的裝備全鎖在防雷金庫裡。"
+        "greeting": "浮空艦隊剛運回一批雲端戰利品，你的裝備全鎖在防雷金庫裡。",
+        "x": 3020,
+        "y": 1104
       },
       "action": "drawer_bag",
       "actionLabel": "打開飛艇金庫",
@@ -123,7 +127,9 @@ export const TOWN_CH8 = {
         "title": "雲端鍊金學者",
         "scale": 0.62,
         "workStyle": "alchemy",
-        "greeting": "這瓶高純度雷雲凝露能讓你的反應速度像閃電一樣快！"
+        "greeting": "這瓶高純度雷雲凝露能讓你的反應速度像閃電一樣快！",
+        "x": 2560,
+        "y": 824
       },
       "action": "modal_alchemy",
       "actionLabel": "調配雲端藥劑",
@@ -149,7 +155,9 @@ export const TOWN_CH8 = {
         "title": "雷霆女武神",
         "scale": 0.62,
         "workStyle": "prayer",
-        "greeting": "在雷鳴高塔前必須擁有閃電般的連招節奏，來調整你的技能配置吧！"
+        "greeting": "在雷鳴高塔前必須擁有閃電般的連招節奏，來調整你的技能配置吧！",
+        "x": 2048,
+        "y": 604
       },
       "action": "drawer_skills",
       "actionLabel": "配置職業技能",
@@ -175,7 +183,9 @@ export const TOWN_CH8 = {
         "title": "風暴獵鷹隊長",
         "scale": 0.62,
         "workStyle": "bounty",
-        "greeting": "雷鳴高塔頂端的風暴泰坦與電弧飛龍正在集結，接下懸賞去攔截它們！"
+        "greeting": "雷鳴高塔頂端的風暴泰坦與電弧飛龍正在集結，接下懸賞去攔截它們！",
+        "x": 1080,
+        "y": 1104
       },
       "action": "modal_bounty",
       "actionLabel": "接取蒼穹懸賞",
@@ -201,7 +211,9 @@ export const TOWN_CH8 = {
         "title": "機械地精商人",
         "scale": 0.62,
         "workStyle": "market",
-        "greeting": "嘻嘻！我從高塔廢墟撿到一堆發光奧術盲盒，敢不敢賭一把神話？"
+        "greeting": "嘻嘻！我從高塔廢墟撿到一堆發光奧術盲盒，敢不敢賭一把神話？",
+        "x": 2620,
+        "y": 1544
       },
       "action": "modal_market",
       "actionLabel": "進入飛艇黑市",
@@ -227,7 +239,9 @@ export const TOWN_CH8 = {
         "title": "蒼穹大祭司",
         "scale": 0.62,
         "workStyle": "prayer",
-        "greeting": "在萬雷轟鳴之上重塑靈魂，讓蒼穹電弧化為你永恆輪迴的烙印。"
+        "greeting": "在萬雷轟鳴之上重塑靈魂，讓蒼穹電弧化為你永恆輪迴的烙印。",
+        "x": 2048,
+        "y": 1864
       },
       "action": "drawer_rebirth",
       "actionLabel": "開啟蒼穹輪迴",
@@ -249,7 +263,9 @@ export const TOWN_CH8 = {
         "name": "洛克",
         "title": "傳送塔工程師",
         "scale": 0.62,
-        "greeting": "線圈電壓已達滿載，隨時可以將你瞬間彈射至雷鳴風暴高塔前線！"
+        "greeting": "線圈電壓已達滿載，隨時可以將你瞬間彈射至雷鳴風暴高塔前線！",
+        "x": 1460,
+        "y": 1544
       },
       "action": "modal_portal",
       "actionLabel": "電弧彈射出征",
@@ -289,12 +305,14 @@ export const TOWN_CH8 = {
   ],
   "trainingDummy": {
     "id": "dummy",
-    "name": "黃銅發條電弧靶偶",
+    "name": "蒼穹電弧演武穹台",
     "frame": "ch8_prop_dummy",
     "x": 2620,
     "y": 1080,
-    "scale": 0.72,
-    "radius": 42
+    "scale": 0.76,
+    "radius": 84,
+    "imgKey": "ch8_arena_v312",
+    "imgUrl": "./assets/towns/ch8_arena.webp?v=312"
   },
   "neighborhood": [],
   "props": [],

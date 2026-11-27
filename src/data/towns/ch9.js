@@ -1,4 +1,4 @@
-// v304-4: 第 9 章主城「聖血薔薇修道院」— 全新開闊底圖＋建築／NPC／巡邏點重校
+// v312: 第 9 章主城「聖血薔薇修道院」— 演武場重構與 NPC 門口精準校準
 export const TOWN_CH9 = {
   "chapterIdx": 8,
   "id": "town_ch9",
@@ -71,7 +71,9 @@ export const TOWN_CH9 = {
         "title": "聖光鍛造修士",
         "scale": 0.62,
         "workStyle": "forge",
-        "greeting": "以黃金聖錘與聖殿聖火洗煉的武器，能直接斬斷異端與惡魔的詛咒！"
+        "greeting": "以黃金聖錘與聖殿聖火洗煉的武器，能直接斬斷異端與惡魔的詛咒！",
+        "x": 1460,
+        "y": 964
       },
       "action": "drawer_upgrade",
       "actionLabel": "開啟聖光洗煉",
@@ -97,7 +99,9 @@ export const TOWN_CH9 = {
         "title": "薔薇藥劑修女",
         "scale": 0.62,
         "workStyle": "alchemy",
-        "greeting": "用紅薔薇晨露與聖水蒸餾的秘藥，能讓你在血戰中立於不敗之地。"
+        "greeting": "用紅薔薇晨露與聖水蒸餾的秘藥，能讓你在血戰中立於不敗之地。",
+        "x": 2640,
+        "y": 964
       },
       "action": "modal_alchemy",
       "actionLabel": "調配薔薇聖藥",
@@ -123,7 +127,9 @@ export const TOWN_CH9 = {
         "title": "典藏院長",
         "scale": 0.62,
         "workStyle": "guild",
-        "greeting": "修道院地窖珍藏著歷代聖騎士的裝備聖典，請隨時整理你的背包。"
+        "greeting": "修道院地窖珍藏著歷代聖騎士的裝備聖典，請隨時整理你的背包。",
+        "x": 2048,
+        "y": 664
       },
       "action": "drawer_bag",
       "actionLabel": "打開聖典珍寶庫",
@@ -149,7 +155,9 @@ export const TOWN_CH9 = {
         "title": "血色聖騎士長",
         "scale": 0.62,
         "workStyle": "prayer",
-        "greeting": "聖戰士！踏入廢墟之前先在此調整好神聖戰技與天賦樹吧！"
+        "greeting": "聖戰士！踏入廢墟之前先在此調整好神聖戰技與天賦樹吧！",
+        "x": 3080,
+        "y": 1304
       },
       "action": "drawer_skills",
       "actionLabel": "配置職業技能",
@@ -175,7 +183,9 @@ export const TOWN_CH9 = {
         "title": "紅衣審判官",
         "scale": 0.62,
         "workStyle": "bounty",
-        "greeting": "背叛聖光的墮落修女與審判劊子手正在廢墟徘徊，奉命將他們淨化！"
+        "greeting": "背叛聖光的墮落修女與審判劊子手正在廢墟徘徊，奉命將他們淨化！",
+        "x": 1020,
+        "y": 1304
       },
       "action": "modal_bounty",
       "actionLabel": "接取審判懸賞",
@@ -201,7 +211,9 @@ export const TOWN_CH9 = {
         "title": "贖罪行商",
         "scale": 0.62,
         "workStyle": "market",
-        "greeting": "只要捐獻一點金幣購買聖物盲盒，聖光便會賜予你神話級的奇蹟！"
+        "greeting": "只要捐獻一點金幣購買聖物盲盒，聖光便會賜予你神話級的奇蹟！",
+        "x": 2640,
+        "y": 1704
       },
       "action": "modal_market",
       "actionLabel": "進入聖物黑市",
@@ -227,7 +239,9 @@ export const TOWN_CH9 = {
         "title": "血色大主教",
         "scale": 0.62,
         "workStyle": "prayer",
-        "greeting": "在聖母的垂淚注視下洗去塵埃，完成神聖的靈魂輪迴昇華。"
+        "greeting": "在聖母的垂淚注視下洗去塵埃，完成神聖的靈魂輪迴昇華。",
+        "x": 2048,
+        "y": 2004
       },
       "action": "drawer_rebirth",
       "actionLabel": "開啟聖母輪迴",
@@ -249,7 +263,9 @@ export const TOWN_CH9 = {
         "name": "米迦勒",
         "title": "黃金聖門守衛",
         "scale": 0.62,
-        "greeting": "金色光門直通血色修道院廢墟深處，願聖薔薇之光護佑你凱旋！"
+        "greeting": "金色光門直通血色修道院廢墟深處，願聖薔薇之光護佑你凱旋！",
+        "x": 1460,
+        "y": 1704
       },
       "action": "modal_portal",
       "actionLabel": "傳送出征廢墟",
@@ -289,12 +305,14 @@ export const TOWN_CH9 = {
   ],
   "trainingDummy": {
     "id": "dummy",
-    "name": "審判庭聖鎧靶偶",
+    "name": "聖殿薔薇演武迴廊",
     "frame": "ch9_prop_dummy",
     "x": 2620,
     "y": 1240,
-    "scale": 0.72,
-    "radius": 42
+    "scale": 0.76,
+    "radius": 84,
+    "imgKey": "ch9_arena_v312",
+    "imgUrl": "./assets/towns/ch9_arena.webp?v=312"
   },
   "neighborhood": [],
   "props": [],
