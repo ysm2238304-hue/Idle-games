@@ -136,7 +136,7 @@ export const mageCombatMethods = {
     // 幾何 5：真實聚怪牽引（煉獄／黑洞把周圍非首領怪拉向中心）
     const _pullVortex = (cx, cy, rad, pullPx = 42) => {
       for (const m of this.monsters) {
-        if (!m || m.hp <= 0 || !m.sprite || m.isBoss) continue;
+        if (!m || m.hp <= 0 || !m.sprite || m.isBoss || m.isTrainingDummy) continue;
         const dist = Phaser.Math.Distance.Between(cx, cy, m.sprite.x, m.sprite.y);
         if (dist > 28 && dist <= rad) {
           const ang = Phaser.Math.Angle.Between(m.sprite.x, m.sprite.y, cx, cy);

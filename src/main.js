@@ -22,7 +22,7 @@ import {
   saveCloudData,
   deleteCloudSave,
 } from './auth/firebase.js?v=272';
-import { BattleScene } from './scenes/BattleScene.js?v=301';
+import { BattleScene } from './scenes/BattleScene.js?v=302';
 import { TownScene } from './scenes/TownScene.js?v=298';
 import { TOWN_SPLASHES } from './data/towns/splashes.js?v=229';
 import { DashboardUI } from './ui/DashboardUI.js?v=301';
@@ -40,7 +40,7 @@ import { ShopModal } from './ui/ShopModal.js?v=99';
 import { AchievementTowerModal } from './ui/AchievementTowerModal.js?v=99';
 import { ACHIEVEMENTS } from './data/achievements.js?v=99';
 import { rollEnhance, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEVEL } from './logic/enhanceSystem.js?v=99';
-import { HeroSkillShowcase, CLASS_SKILLS_MAP } from './ui/HeroSkillShowcase.js?v=301';
+import { HeroSkillShowcase, CLASS_SKILLS_MAP } from './ui/HeroSkillShowcase.js?v=302';
 
 let gameState = loadGame() || createInitialState('warrior');
 let computedStats = recalcPlayerStats(gameState);
@@ -224,7 +224,9 @@ const ui = new DashboardUI({
       battleScene.syncMaxHp();
     }
     if (phaserGame) {
-      if (phaserGame.scene.isActive('BattleScene')) phaserGame.scene.sleep('BattleScene');
+      if (battleScene?.trainingArena?.active) battleScene.exitTrainingArena();
+    battleScene?.miniDpsHud?.hide?.();
+    if (phaserGame.scene.isActive('BattleScene')) phaserGame.scene.sleep('BattleScene');
       battleScene?.setPaused?.(true);
       isInTown = false;
       isRecalling = false;

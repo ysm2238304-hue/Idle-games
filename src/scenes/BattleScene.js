@@ -19,15 +19,16 @@ import { AssassinVfxDirector } from '../vfx/AssassinVfxDirector.js?v=266';
 import { PaladinVfxDirector } from '../vfx/PaladinVfxDirector.js?v=266';
 import { FloatingTextPool } from '../vfx/FloatingTextPool.js?v=298';
 import { ParticlePool } from '../vfx/ParticlePool.js?v=266';
-import { TrainingArenaController } from '../combat/TrainingArenaController.js?v=301';
+import { TrainingArenaController } from '../combat/TrainingArenaController.js?v=302';
+import { BattleMiniDpsHud } from '../ui/BattleMiniDpsHud.js?v=302';
 import { CameraZoomHelper } from './CameraZoomHelper.js?v=282';
 import { MonsterVfxDirector } from '../vfx/MonsterVfxDirector.js?v=293';
 import { MonsterSkillEngine } from '../combat/MonsterSkillEngine.js?v=278';
 import { warriorCombatMethods } from '../combat/classes/warriorCombat.js?v=266';
 import { rangerCombatMethods } from '../combat/classes/rangerCombat.js?v=266';
-import { mageCombatMethods } from '../combat/classes/mageCombat.js?v=266';
+import { mageCombatMethods } from '../combat/classes/mageCombat.js?v=302';
 import { paladinCombatMethods } from '../combat/classes/paladinCombat.js?v=266';
-import { necroCombatMethods } from '../combat/classes/necroCombat.js?v=266';
+import { necroCombatMethods } from '../combat/classes/necroCombat.js?v=302';
 import { assassinCombatMethods } from '../combat/classes/assassinCombat.js?v=266';
 
 
@@ -365,6 +366,7 @@ export class BattleScene extends Phaser.Scene {
     this.floatingTextPool = new FloatingTextPool(this, 96);
     this.particlePool = new ParticlePool(this, 96);
     this.trainingArena = new TrainingArenaController(this);
+    this.miniDpsHud = new BattleMiniDpsHud(this);
     this.monsterVfx = new MonsterVfxDirector(this);
     this.monsterVfx.registerAnims();
     this.monsterSkills = new MonsterSkillEngine(this, this.monsterVfx);
@@ -433,20 +435,33 @@ export class BattleScene extends Phaser.Scene {
     this.playerMaxMp = stats.maxMp || 100;
     this.playerMp = Math.min(this.playerMaxMp, this.playerMp + Math.round(this.playerMaxMp * 0.30));
     // v298: 監聽 wake 事件接管待進入演武場請求，避免轉場競態誤刷章節怪
+    this.events.on('sleep', () => {
+      this.trainingArena?.exit?.();
+      this.miniDpsHud?.hide?.();
+    });
+    this.events.on('shutdown', () => {
+      this.trainingArena?.exit?.();
+      this.miniDpsHud?.destroy?.();
+    });
     this.events.on('wake', () => {
       if (window.__PENDING_TRAINING_ARENA__) {
         const req = window.__PENDING_TRAINING_ARENA__;
         window.__PENDING_TRAINING_ARENA__ = null;
         this.isTrainingMode = true;
+        this.miniDpsHud?.hide?.();
         this.enterTrainingArena(req.onExit);
+      } else {
+        this.miniDpsHud?.show?.();
       }
     });
     if (window.__PENDING_TRAINING_ARENA__) {
       const req = window.__PENDING_TRAINING_ARENA__;
       window.__PENDING_TRAINING_ARENA__ = null;
       this.isTrainingMode = true;
+      this.miniDpsHud?.hide?.();
       this.enterTrainingArena(req.onExit);
     } else {
+      this.miniDpsHud?.show?.();
       this.spawnWaveSquad();
     }
   }
@@ -1258,6 +1273,7 @@ export class BattleScene extends Phaser.Scene {
     this.floatingTextPool?.update(delta);
     this.particlePool?.update(delta);
     this.trainingArena?.update(time, delta);
+    this.miniDpsHud?.update(time);
     this.cameraZoom?.update(delta);
     this.monsterSkills?.update(time, delta, this.getStats());
     const stForMp = this.getStats();
@@ -1377,7 +1393,8 @@ export class BattleScene extends Phaser.Scene {
       const atkRange = (cid === 'warrior' || cid === 'paladin' || cid === 'assassin') ? 170 : (cid === 'ranger' ? 430 : 370);
       const dist = Phaser.Math.Distance.Between(this.hero.x, this.hero.y, nearest.sprite.x, nearest.sprite.y);
 
-      if (dist <= Math.max(260, atkRange)) {
+      // v302: 嚴格區分「自動」與「手動」— 手動模式下絕不自動施放技能（也不會誤放傳送術拉回中間）或自動普攻
+      if (this.autoMoveEnabled && dist <= Math.max(260, atkRange)) {
         const eqIds = this.getState()?.equippedSkillsByClass?.[cid] || [];
         const smartOrder = getSmartAutoSlotOrder(eqIds, this.monsters, time);
         const orderToTry = smartOrder.length ? smartOrder : [0, 1, 2, 3, 4, 5];
@@ -1391,7 +1408,7 @@ export class BattleScene extends Phaser.Scene {
       const lowBloodKey = cid === 'warrior' && (tree.w_key_blood || 0) > 0 && this.playerHp < this.playerMaxHp * 0.55;
       const spdMult = (time < this.warcryUntil ? 1.35 : 1) * (time < this.windwalkUntil ? 1.40 : 1) * (time < (this.lethalFangsUntil || 0) ? 1.45 : 1) * (lowBloodKey ? 1.45 : 1);
       const effInterval = Math.max(180, Math.round(stats.atkIntervalMs / spdMult));
-      if (this.heroAttackTimer >= effInterval && dist <= atkRange) {
+      if (this.autoMoveEnabled && this.heroAttackTimer >= effInterval && dist <= atkRange) {
         this.heroAttackTimer = 0;
         this.performHeroAttack(time, stats, cid, nearest);
       }
@@ -1926,8 +1943,10 @@ export class BattleScene extends Phaser.Scene {
               m.bleedDmg = Math.max(2, Math.round(stats.atk * 0.28));
             }
             const kb = m.isBoss ? 10 : (isFinisher ? 38 : 22);
-            m.sprite.x = Phaser.Math.Clamp(m.sprite.x + Math.cos(mobAng) * kb, 120, MAP_W - 120);
-            m.sprite.y = Phaser.Math.Clamp(m.sprite.y + Math.sin(mobAng) * kb, 120, MAP_H - 120);
+            if (!m.isTrainingDummy) {
+              m.sprite.x = Phaser.Math.Clamp(m.sprite.x + Math.cos(mobAng) * kb, 120, MAP_W - 120);
+              m.sprite.y = Phaser.Math.Clamp(m.sprite.y + Math.sin(mobAng) * kb, 120, MAP_H - 120);
+            }
             hitAny = true;
           }
         }
@@ -2693,14 +2712,22 @@ export class BattleScene extends Phaser.Scene {
       m.hpFill.width = (m.barW || 48) * ratio;
     }
 
+    const srcName = (prefix === '🩸') ? '流血 DoT'
+      : (prefix === '☠️') ? '劇毒 DoT'
+      : (prefix === '🔥') ? '灼燒 DoT'
+      : (prefix === '💀' || prefix === '👻') ? '亡靈召喚物'
+      : (isTap ? '點擊攻擊' : ((nowT <= (this._activeDamageSourceUntil || 0) && this._activeDamageSource) ? this._activeDamageSource : '普通攻擊'));
     if (m.isTrainingDummy && this.trainingArena?.active) {
-      const srcName = (prefix === '🩸') ? '流血 DoT'
-        : (prefix === '☠️') ? '劇毒 DoT'
-        : (prefix === '🔥') ? '灼燒 DoT'
-        : (prefix === '💀' || prefix === '👻') ? '亡靈召喚物'
-        : (isTap ? '點擊攻擊' : ((nowT <= (this._activeDamageSourceUntil || 0) && this._activeDamageSource) ? this._activeDamageSource : '普通攻擊'));
       this.trainingArena.recordHit({
         target: m,
+        dmg,
+        isCrit,
+        isOverpower,
+        sourceName: srcName,
+        timestamp: nowT,
+      });
+    } else if (!m.isTrainingDummy && !this.isTrainingMode) {
+      this.miniDpsHud?.recordHit?.({
         dmg,
         isCrit,
         isOverpower,
@@ -3421,8 +3448,10 @@ export class BattleScene extends Phaser.Scene {
         this.damageMonster(tm, dmg, true, false, sch.color, '✨');
       } else if (sch.derivative === 'void_pull') {
         this.spawnPetExclusiveFx(sch, px, py, mx, my, pet.tint);
-        tm.sprite.x = Phaser.Math.Linear(tm.sprite.x, targets[0].sprite.x, 0.32);
-        tm.sprite.y = Phaser.Math.Linear(tm.sprite.y, targets[0].sprite.y, 0.32);
+        if (!tm.isTrainingDummy) {
+          tm.sprite.x = Phaser.Math.Linear(tm.sprite.x, targets[0].sprite.x, 0.32);
+          tm.sprite.y = Phaser.Math.Linear(tm.sprite.y, targets[0].sprite.y, 0.32);
+        }
         this.damageMonster(tm, dmg, true, false, sch.color, '🌌');
       }
     }

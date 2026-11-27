@@ -27,6 +27,7 @@ export class TrainingArenaController {
     // v299: 進入瞬間即刻鎖定演武場模式並清場，杜絕任何章節怪物殘留或刷怪侵入
     this.active = true;
     s.isTrainingMode = true;
+    s.miniDpsHud?.hide?.();
     s.clearAllMonsters?.();
     this.meter.reset();
 
@@ -179,9 +180,13 @@ export class TrainingArenaController {
         padding: { x: 6, y: 2 },
       }).setOrigin(0.5).setDepth(spc.y + 120);
 
+      const nameOffY = Math.round(dispH * 0.90);
       const m = {
         id: `dummy_${Math.random().toString(36).slice(2, 7)}`,
         name: spc.name,
+        anchorX: spc.x,
+        anchorY: spc.y,
+        nameOffY,
         sprite: spr,
         scale: spc.scale,
         groundShadow: null,
@@ -243,6 +248,18 @@ export class TrainingArenaController {
   update(time, delta) {
     if (!this.active) return;
     const s = this.scene;
+
+    // 0. v302: 每幀強制鎖定所有演武木樁於錨點，杜絕任何聚怪/寵物拉扯/擊退位移
+    for (const m of s.monsters || []) {
+      if (m?.isTrainingDummy && m.sprite?.active && typeof m.anchorX === 'number') {
+        if (m.sprite.x !== m.anchorX || m.sprite.y !== m.anchorY) {
+          m.sprite.setPosition(m.anchorX, m.anchorY);
+        }
+        if (m.nameText?.active) {
+          m.nameText.setPosition(m.anchorX, m.anchorY - (m.nameOffY || 120));
+        }
+      }
+    }
 
     // 1. 無限能量模式鎖滿資源
     if (this.infiniteMp) {

@@ -722,7 +722,7 @@ export const necroCombatMethods = {
             if (Phaser.Math.Distance.Between(wx, wy, m.sprite.x, m.sprite.y) <= 235) {
               const kx = Phaser.Math.Clamp(m.sprite.x + Math.cos(_ang) * 115, 80, MAP_W - 80);
               const ky = Phaser.Math.Clamp(m.sprite.y + Math.sin(_ang) * 115, 80, MAP_H - 80);
-              this.tweens.add({ targets: m.sprite, x: kx, y: ky, duration: 220, ease: 'Quad.easeOut' });
+              if (!m.isTrainingDummy) this.tweens.add({ targets: m.sprite, x: kx, y: ky, duration: 220, ease: 'Quad.easeOut' });
               _hitOne(m, (2.15 + skillLvl * 0.34), '#f43f5e', '🌊血浪 ', ['bleed', 'chill'], { forceCrit: true });
             }
           }

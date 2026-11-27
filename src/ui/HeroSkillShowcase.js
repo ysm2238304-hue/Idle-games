@@ -52,7 +52,7 @@ const CLASS_V301_VFX = {
       w_rupture_impale:    { style: 'dash', seq: 'seq16_w_rend_burst',  decal: 'decal_w_blood',  scale: 1.32, trail: '#ef4444' },
       volcano_totem:       { style: 'aoe',  seq: 'seq16_w_fissure',     decal: 'decal_w_lava',   scale: 1.34, trail: '#f97316' },
       w_seismic_fissure:   { style: 'aoe',  seq: 'seq16_w_fissure',     decal: 'decal_w_lava',   scale: 1.36, trail: '#f97316' },
-      w_call_ancients:     { style: 'aoe',  seq: 'seq16_w_hammer_slam', decal: 'decal_w_rune',   scale: 1.36, trail: '#fde047' },
+      w_call_ancients:    { style: 'summon', summonType: 'clone', cloneCount: 3, seq: 'seq16_w_hammer_slam', decal: 'decal_w_rune', scale: 1.28, trail: '#fde047' },
       w_wrath_berserker:   { style: 'dash', seq: 'seq16_w_maelstrom',   decal: 'decal_w_lava',   scale: 1.38, trail: '#ef4444' },
       execute_cleave:      { style: 'dash', seq: 'seq16_w_execute',     decal: 'decal_w_blood',  scale: 1.36, trail: '#ef4444' },
       w_iron_maelstrom:    { style: 'dash', seq: 'seq16_w_maelstrom',   decal: 'decal_w_crater', scale: 1.38, trail: '#fb923c' },
@@ -81,7 +81,7 @@ const CLASS_V301_VFX = {
       r_shadow_imbue:  { style: 'proj', proj: 'proj_r_shadow_arrow',  decal: 'decal_r_shadow', seq: 'seq16_r_shadow_boom',  multiProj: 3, trail: '#a855f7', scale: 1.26 },
       shadowstep:      { style: 'dash', seq: 'seq16_r_smoke_bomb',    decal: 'decal_r_shadow', scale: 1.24, trail: '#a855f7' },
       windwalk:        { style: 'proj', proj: 'proj_r_emerald_arrow', decal: 'decal_r_arrows', multiProj: 3, trail: '#34d399', burstColor: '#6ee7b7' },
-      shadow_clones:   { style: 'proj', proj: 'proj_r_shadow_arrow',  decal: 'decal_r_shadow', seq: 'seq16_r_shadow_boom',  multiProj: 4, trail: '#a855f7', scale: 1.28 },
+      shadow_clones:   { style: 'summon', summonType: 'clone', cloneCount: 2, conjProj: 'proj_r_shadow_arrow', seq: 'seq16_r_shadow_boom', decal: 'decal_r_shadow', scale: 1.24, trail: '#a855f7' },
       death_mark:      { style: 'aoe',  seq: 'seq16_r_void_rift',     decal: 'decal_r_shadow', scale: 1.32, trail: '#c084fc' },
       r_void_hunter:   { style: 'aoe',  seq: 'seq16_r_void_rift',     decal: 'decal_r_shadow', scale: 1.36, trail: '#a855f7' },
       r_death_trap:    { style: 'aoe',  seq: 'seq16_r_death_trap',    decal: 'decal_r_trap',   scale: 1.32, trail: '#f87171' },
@@ -109,10 +109,10 @@ const CLASS_V301_VFX = {
       m_ice_armor:        { style: 'dash', seq: 'seq16_m_frost_nova', decal: 'decal_m_frost',     scale: 1.26, trail: '#38bdf8' },
       m_arcane_blink:     { style: 'dash', seq: 'seq16_m_supernova',  decal: 'decal_m_void',      scale: 1.26, trail: '#c084fc' },
       frost_nova:         { style: 'dash', seq: 'seq16_m_frost_nova', decal: 'decal_m_frost',     scale: 1.34, trail: '#38bdf8' },
-      m_flame_hydra:      { style: 'aoe',  seq: 'seq16_m_firewall',   decal: 'decal_m_scorch',    scale: 1.32, trail: '#f97316' },
-      m_ice_blades:       { style: 'proj', proj: 'proj_m_ice_lance',  decal: 'decal_m_frost',     multiProj: 4, trail: '#38bdf8', burstColor: '#7dd3fc' },
-      m_lightning_spear:  { style: 'aoe',  seq: 'seq16_m_lightning_strike', decal: 'decal_m_lightning', scale: 1.32, trail: '#facc15' },
-      m_familiar:         { style: 'proj', proj: 'proj_m_fire_bolt',  decal: 'decal_m_void',      multiProj: 3, trail: '#c084fc', burstColor: '#e9d5ff' },
+      m_flame_hydra:      { style: 'summon', summonType: 'mage_conj', conjKey: 'anim_conj_hydra', conjProj: 'proj_m_fire_bolt', seq: 'seq16_m_firewall', decal: 'decal_m_scorch', scale: 1.24, trail: '#f97316' },
+      m_ice_blades:       { style: 'summon', summonType: 'mage_conj', conjKey: 'anim_conj_ice_blades', conjMelee: true, seq: 'seq16_m_frost_nova', decal: 'decal_m_frost', scale: 1.20, trail: '#38bdf8' },
+      m_lightning_spear:  { style: 'summon', summonType: 'mage_conj', conjKey: 'anim_conj_lightning_spear', conjMelee: true, seq: 'seq16_m_lightning_strike', decal: 'decal_m_lightning', scale: 1.22, trail: '#facc15' },
+      m_familiar:         { style: 'summon', summonType: 'mage_conj', conjKey: 'anim_conj_familiar', conjProj: 'proj_m_frozen_orb', seq: 'seq16_m_supernova', decal: 'decal_m_void', scale: 1.18, trail: '#c084fc' },
       meteor:             { style: 'aoe',  seq: 'seq16_m_meteor',     decal: 'decal_m_scorch',    scale: 1.40, trail: '#f97316' },
       m_firewall:         { style: 'aoe',  seq: 'seq16_m_firewall',   decal: 'decal_m_scorch',    scale: 1.34, trail: '#f97316' },
       m_blizzard_field:   { style: 'aoe',  seq: 'seq16_m_blizzard',   decal: 'decal_m_frost',     scale: 1.38, trail: '#38bdf8' },
@@ -150,9 +150,9 @@ const CLASS_V301_VFX = {
       radiant_aura:       { style: 'aoe',  seq: 'seq16_p_divine_storm',   decal: 'decal_p_sanctuary',    scale: 1.30, trail: '#fde047' },
       p_thorns_aura:      { style: 'aoe',  seq: 'seq16_p_thorns_burst',   decal: 'decal_p_aegis_ring',   scale: 1.30, trail: '#fbbf24' },
       p_solar_beacon:     { style: 'aoe',  seq: 'seq16_p_heaven_pillar',  decal: 'decal_p_consecration', scale: 1.34, trail: '#fde047' },
-      p_seraph_descent:   { style: 'aoe',  seq: 'seq16_p_heaven_pillar',  decal: 'decal_p_cross_crater', scale: 1.38, trail: '#fde047' },
+      p_seraph_descent:   { style: 'summon', summonType: 'clone', cloneCount: 2, conjProj: 'proj_p_holy_bolt', seq: 'seq16_p_heaven_pillar', decal: 'decal_p_cross_crater', scale: 1.30, trail: '#fde047' },
       p_heavens_verdict:  { style: 'aoe',  seq: 'seq16_p_verdict_sword',  decal: 'decal_p_cross_crater', scale: 1.40, trail: '#fde047' },
-      p_valkyrie_avatar:  { style: 'aoe',  seq: 'seq16_p_divine_storm',   decal: 'decal_p_sanctuary',    scale: 1.36, trail: '#fde047' },
+      p_valkyrie_avatar:  { style: 'summon', summonType: 'clone', cloneCount: 2, seq: 'seq16_p_divine_storm', decal: 'decal_p_sanctuary', scale: 1.28, trail: '#fde047' },
       p_akarats_wrath:    { style: 'aoe',  seq: 'seq16_p_judgment_cross', decal: 'decal_p_cross_crater', scale: 1.38, trail: '#fde047' },
     },
   },
@@ -210,7 +210,7 @@ const CLASS_V301_VFX = {
       a_crimson_mist:    { style: 'aoe',  seq: 'seq16_a_venom_nova',   decal: 'decal_a_venom_pool',  scale: 1.32, trail: '#f43f5e' },
       a_garrote_bind:    { style: 'dash', seq: 'seq16_a_garrote',      decal: 'decal_a_blood_cross', scale: 1.30, trail: '#ef4444' },
       a_shadow_decoy_bomb:{ style: 'aoe', seq: 'seq16_a_smoke_veil',   decal: 'decal_a_eclipse',     scale: 1.32, trail: '#a855f7' },
-      shadow_clones:     { style: 'dash', seq: 'seq16_a_reaper_dance', decal: 'decal_a_eclipse',     scale: 1.34, trail: '#c084fc' },
+      shadow_clones:     { style: 'summon', summonType: 'clone', cloneCount: 2, seq: 'seq16_a_shadow_slash', decal: 'decal_a_eclipse', scale: 1.26, trail: '#c084fc' },
       a_death_lotus:     { style: 'aoe',  seq: 'seq16_a_reaper_dance', decal: 'decal_a_blood_cross', scale: 1.36, trail: '#f43f5e' },
       a_venom_imbue:     { style: 'dash', seq: 'seq16_a_venom_nova',   decal: 'decal_a_venom_pool',  scale: 1.28, trail: '#22c55e' },
       lethal_fangs:      { style: 'dash', seq: 'seq16_a_venom_nova',   decal: 'decal_a_venom_pool',  scale: 1.32, trail: '#22c55e' },
@@ -276,7 +276,32 @@ export class HeroSkillShowcase {
       .then((meta) => {
         if (!meta) return;
         rec.frames = meta.frames || {};
-        rec.img.onload = () => { rec.ready = true; };
+        rec.img.onload = () => {
+          if (pngUrl.includes('atlas_ranger')) {
+            try {
+              const oc = document.createElement('canvas');
+              oc.width = rec.img.naturalWidth;
+              oc.height = rec.img.naturalHeight;
+              const octx = oc.getContext('2d');
+              octx.drawImage(rec.img, 0, 0);
+              const idata = octx.getImageData(0, 0, oc.width, oc.height);
+              const d = idata.data;
+              for (let i = 0; i < d.length; i += 4) {
+                if (d[i + 3] > 20) {
+                  const r = d[i], g = d[i + 1], b = d[i + 2];
+                  const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+                  // v302: 移除遊俠弓身與背景殘留純白/近白低飽和色塊
+                  if (r > 230 && g > 230 && b > 230 && (mx - mn) < 20) {
+                    d[i + 3] = 0;
+                  }
+                }
+              }
+              octx.putImageData(idata, 0, 0);
+              rec.cleanCanvas = oc;
+            } catch {}
+          }
+          rec.ready = true;
+        };
         rec.img.src = pngUrl;
       })
       .catch(() => {});
@@ -294,6 +319,10 @@ export class HeroSkillShowcase {
     this._loadHeroAtlas(cid);
     if (cid === 'necro') {
       this._loadAtlas('./assets/heroes/atlas_summons.png', './assets/heroes/atlas_summons.json');
+    }
+    if (cid === 'mage') {
+      ['anim_conj_hydra', 'anim_conj_ice_blades', 'anim_conj_lightning_spear', 'anim_conj_familiar']
+        .forEach((k) => this._loadImg(`./assets/fx/${k}.webp`));
     }
     const cfg = CLASS_V301_VFX[cid] || CLASS_V301_VFX.warrior;
     cfg.seqs.forEach((k) => this._loadImg(`./assets/fx/${k}.webp`));
@@ -414,18 +443,67 @@ export class HeroSkillShowcase {
     }
 
     if (spec.style === 'summon') {
-      const kind = spec.summonKind || 'skel';
-      const cnt = kind === 'golem' ? 1 : 3;
-      for (let i = 0; i < cnt; i++) {
-        this.summons.push({
-          kind,
-          x: this.heroBaseX + 35 + i * 18,
-          y: this.heroBaseY - 12 + (i - 1) * 28,
-          tx: mainTgt.x - 42 + (i % 2) * 20,
-          ty: mainTgt.y - 10 + (i - 1) * 22,
-          bornAt: now,
-          dur: 1700,
-        });
+      this.nextCastAt = now + 4650; // 延長展示時間，完整演出召喚進場→多波攻擊→消散
+      this.summons = [];
+      const stype = spec.summonType || 'necro';
+      if (stype === 'mage_conj') {
+        const cnt = spec.conjKey === 'anim_conj_hydra' ? 2 : (spec.conjKey === 'anim_conj_ice_blades' ? 3 : 2);
+        for (let i = 0; i < cnt; i++) {
+          const isTurret = !spec.conjMelee;
+          const sx = isTurret ? (this.heroBaseX + 85 + i * 48) : (this.heroBaseX + 55 + i * 24);
+          const sy = isTurret ? (this.heroBaseY - 45 + i * 62) : (this.heroBaseY - 30 + (i - 1) * 34);
+          this.summons.push({
+            summonType: 'mage_conj',
+            conjKey: spec.conjKey,
+            conjProj: spec.conjProj || null,
+            conjMelee: !!spec.conjMelee,
+            trail: spec.trail || cfg.color,
+            x: sx, y: sy,
+            tx: isTurret ? sx : (mainTgt.x - 28 + (i - 1) * 28),
+            ty: isTurret ? sy : (mainTgt.y - 18 + (i - 1) * 24),
+            bornAt: now,
+            dur: 4300,
+            nextAtkAt: now + 520 + i * 180,
+            atkEveryMs: 850,
+          });
+        }
+      } else if (stype === 'clone') {
+        const cnt = spec.cloneCount || 2;
+        for (let i = 0; i < cnt; i++) {
+          const isRanged = !!spec.conjProj;
+          this.summons.push({
+            summonType: 'clone',
+            classId: this.classId,
+            conjProj: spec.conjProj || null,
+            trail: spec.trail || cfg.color,
+            x: this.heroBaseX + 35,
+            y: this.heroBaseY + (i === 0 ? -42 : 42),
+            tx: isRanged ? (this.heroBaseX + 95 + i * 24) : (mainTgt.x - 56 + i * 26),
+            ty: mainTgt.y + (i === 0 ? -36 : 36),
+            bornAt: now,
+            dur: 4200,
+            nextAtkAt: now + 620 + i * 200,
+            atkEveryMs: 900,
+          });
+        }
+      } else {
+        const kind = spec.summonKind || 'skel';
+        const cnt = kind === 'golem' ? 1 : 3;
+        for (let i = 0; i < cnt; i++) {
+          this.summons.push({
+            summonType: 'necro',
+            kind,
+            trail: spec.trail || '#2dd4bf',
+            x: this.heroBaseX + 42 + i * 18,
+            y: this.heroBaseY - 12 + (i - 1) * 32,
+            tx: mainTgt.x - 48 + (i % 2) * 22,
+            ty: mainTgt.y - 10 + (i - 1) * 28,
+            bornAt: now,
+            dur: 4400,
+            nextAtkAt: now + 680 + i * 210,
+            atkEveryMs: 920,
+          });
+        }
       }
     }
 
@@ -527,6 +605,44 @@ export class HeroSkillShowcase {
     this.projs = this.projs.filter((p) => now - p.bornAt < p.dur);
     this.sparks = this.sparks.filter((sp) => now - sp.bornAt < sp.dur);
     this.summons = this.summons.filter((s) => now - s.bornAt < s.dur);
+    for (const sm of this.summons) {
+      // 平滑移動至攻擊位置
+      sm.x += (sm.tx - sm.x) * 0.08;
+      sm.y += (sm.ty - sm.y) * 0.08;
+      if (now >= sm.nextAtkAt && now < sm.bornAt + sm.dur - 350) {
+        sm.nextAtkAt = now + (sm.atkEveryMs || 900);
+        sm.atkAnimUntil = now + 360;
+        const tgt = this.targets[Math.floor(Math.random() * this.targets.length)];
+        if (sm.conjProj) {
+          this.projs.push({
+            url: `./assets/fx/${sm.conjProj}.webp`,
+            sx: sm.x + 16,
+            sy: sm.y - 18,
+            tx: tgt.x,
+            ty: tgt.y - 18,
+            trailColor: sm.trail || '#fde047',
+            bornAt: now,
+            dur: 210,
+            scale: 0.26,
+          });
+        }
+        this._spawnImpactSparks(tgt.x, tgt.y - 16, sm.trail || '#fde047', 8);
+        tgt.wobbleUntil = now + 180;
+        tgt.punchUntil = now + 110;
+        const isCrit = Math.random() < 0.4;
+        const dmg = Math.round((1250 + Math.random() * 950) * (isCrit ? 2.0 : 1.0));
+        this.popups.push({
+          x: tgt.x + (Math.random() - 0.5) * 24,
+          y: tgt.y - 54,
+          text: isCrit ? `${dmg.toLocaleString()}!` : dmg.toLocaleString(),
+          color: isCrit ? '#fde047' : (sm.trail || '#ffffff'),
+          size: isCrit ? 20 : 16,
+          isCrit,
+          bornAt: now + (sm.conjProj ? 180 : 30),
+          dur: 820,
+        });
+      }
+    }
     this.popups = this.popups.filter((p) => now - p.bornAt < p.dur);
   }
 
@@ -581,22 +697,51 @@ export class HeroSkillShowcase {
 
     if (this.summons.length > 0) {
       const sRec = this._loadAtlas('./assets/heroes/atlas_summons.png', './assets/heroes/atlas_summons.json');
-      if (sRec.ready && sRec.frames && sRec.img.complete && sRec.img.naturalWidth > 0) {
-        const fKeys = Object.keys(sRec.frames);
-        for (const sm of this.summons) {
-          const p = Math.min(1, (now - sm.bornAt) / 650);
-          const sx = sm.x + (sm.tx - sm.x) * p;
-          const sy = sm.y + (sm.ty - sm.y) * p;
+      const hRecForClone = this._loadHeroAtlas(this.classId);
+      const pfClone = HERO_PREFIX[this.classId] || 'wf';
+      for (const sm of this.summons) {
+        const lifeP = (now - sm.bornAt) / sm.dur;
+        const fadeAlpha = lifeP < 0.08 ? (lifeP / 0.08) : (lifeP > 0.86 ? Math.max(0, (1 - lifeP) / 0.14) : 1.0);
+        const bob = Math.sin(now * 0.008 + sm.x) * 4;
+        ctx.save();
+        ctx.globalAlpha = fadeAlpha * (sm.summonType === 'clone' ? 0.72 : 1.0);
+        if (sm.summonType === 'mage_conj' && sm.conjKey) {
+          const cRec = this._loadImg(`./assets/fx/${sm.conjKey}.webp`);
+          if (cRec.ready && cRec.img.complete && cRec.img.naturalWidth > 0) {
+            const frame = Math.floor((now / 120) % 4);
+            const fw = Math.floor(cRec.img.width / 2);
+            const fh = Math.floor(cRec.img.height / 2);
+            const col = frame % 2, row = Math.floor(frame / 2);
+            const dw = 84, dh = 84;
+            ctx.drawImage(cRec.img, col * fw, row * fh, fw, fh, sm.x - dw / 2, sm.y - dh + 16 + bob, dw, dh);
+          }
+        } else if (sm.summonType === 'clone' && hRecForClone.ready && hRecForClone.frames) {
+          const srcImg = hRecForClone.cleanCanvas || hRecForClone.img;
+          const fIdx = Math.floor((now / 105) % 4);
+          const ck = now < (sm.atkAnimUntil || 0) ? `${pfClone}_right_atk_${fIdx}` : `${pfClone}_right_idle_${fIdx}`;
+          const fr = hRecForClone.frames[ck]?.frame || hRecForClone.frames[`${pfClone}_right_walk_${fIdx}`]?.frame;
+          if (fr && fr.w > 0 && fr.h > 0) {
+            const sc = 92 / Math.max(40, fr.h);
+            const dw = fr.w * sc, dh = fr.h * sc;
+            ctx.drawImage(srcImg, fr.x, fr.y, fr.w, fr.h, sm.x - dw / 2, sm.y - dh + 10, dw, dh);
+          }
+        } else if (sRec.ready && sRec.frames && sRec.img.complete && sRec.img.naturalWidth > 0) {
+          const fKeys = Object.keys(sRec.frames);
           const fIdx = Math.floor((now / 110) % 4);
           const pref = sm.kind === 'golem' ? 'golem' : (sm.kind === 'wraith' ? 'wraith' : 'skel');
-          const key = [`${pref}_right_atk_${fIdx}`, `${pref}_right_walk_${fIdx}`, `${pref}_walk_${fIdx}`, fKeys.find((k) => k.includes(pref)) || fKeys[0]].find((k) => sRec.frames[k]);
+          const key = [
+            now < (sm.atkAnimUntil || 0) ? `${pref}_right_atk_${fIdx}` : `${pref}_right_walk_${fIdx}`,
+            `${pref}_right_walk_${fIdx}`, `${pref}_walk_${fIdx}`,
+            fKeys.find((k) => k.includes(pref)) || fKeys[0],
+          ].find((k) => sRec.frames[k]);
           const fr = key ? sRec.frames[key].frame : null;
           if (fr && fr.w > 0 && fr.h > 0) {
-            const sc = (sm.kind === 'golem' ? 88 : 66) / Math.max(32, fr.h);
+            const sc = (sm.kind === 'golem' ? 92 : 70) / Math.max(32, fr.h);
             const dw = fr.w * sc, dh = fr.h * sc;
-            ctx.drawImage(sRec.img, fr.x, fr.y, fr.w, fr.h, sx - dw / 2, sy - dh + 8, dw, dh);
+            ctx.drawImage(sRec.img, fr.x, fr.y, fr.w, fr.h, sm.x - dw / 2, sm.y - dh + 10, dw, dh);
           }
         }
+        ctx.restore();
       }
     }
 
@@ -634,7 +779,7 @@ export class HeroSkillShowcase {
         const sc = targetH / Math.max(40, fr.h);
         const dw = fr.w * sc;
         const dh = fr.h * sc;
-        ctx.drawImage(hRec.img, fr.x, fr.y, fr.w, fr.h, this.heroX - dw / 2, this.heroY - dh + 10, dw, dh);
+        ctx.drawImage(hRec.cleanCanvas || hRec.img, fr.x, fr.y, fr.w, fr.h, this.heroX - dw / 2, this.heroY - dh + 10, dw, dh);
         ctx.restore();
       }
     }
