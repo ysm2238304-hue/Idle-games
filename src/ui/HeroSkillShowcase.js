@@ -934,21 +934,47 @@ export class HeroSkillShowcase {
       }
     }
 
-    // Layer B: 自身疊加中層・全新 2.5D 立體護盾／氣場貼圖（跟隨英雄身軀，零白塊）
+    // Layer B (v308-3): 2.5D 三層立體自身 BUFF 光環（腳底透視法陣＋螺旋上升微粒＋極輕透弧光，零遮擋英雄）
     for (const hb of this.heroBuffs) {
-      const rec = this._loadImg(hb.url);
-      if (!rec.ready || !rec.img.complete || rec.img.naturalWidth <= 0) continue;
       const elapsed = now - hb.bornAt;
       const p = elapsed / hb.dur;
-      const fade = p < 0.08 ? (p / 0.08) : (p > 0.86 ? Math.max(0, (1 - p) / 0.14) : 1.0);
-      const popSc = elapsed < 240 ? (0.45 + (elapsed / 240) * 0.65) : (1.0 + Math.sin(now * 0.006) * 0.045);
-      const rot = (now - hb.bornAt) * 0.00055;
-      const size = 156 * popSc;
+      const fade = p < 0.08 ? (p / 0.08) : (p > 0.84 ? Math.max(0, (1 - p) / 0.16) : 1.0);
+      const pulse = 1 + Math.sin(now * 0.007) * 0.05;
+      const col = hb.color || '#38bdf8';
       ctx.save();
-      ctx.globalAlpha = fade * 0.92;
-      ctx.translate(this.heroX, this.heroY - 40);
-      ctx.rotate(rot);
-      ctx.drawImage(rec.img, -size / 2, -size / 2, size, size);
+      ctx.globalCompositeOperation = 'lighter';
+      // 1. 腳底 2.5D 橢圓透視法陣
+      ctx.globalAlpha = fade * 0.48;
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.ellipse(this.heroX, this.heroY + 4, 44 * pulse, 17 * pulse, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = fade * 0.28;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.ellipse(this.heroX, this.heroY + 4, 31 * pulse, 12 * pulse, 0, 0, Math.PI * 2);
+      ctx.stroke();
+      // 2. 螺旋上升元素微粒
+      for (let i = 0; i < 8; i++) {
+        const ang = (now * 0.0032) + (i / 8) * Math.PI * 2;
+        const rise = ((now * 0.00065) + i / 8) % 1.0;
+        const mx = this.heroX + Math.cos(ang) * 32;
+        const my = (this.heroY + 2) - rise * 78 + Math.sin(ang) * 8;
+        const mf = rise < 0.15 ? (rise / 0.15) : (rise > 0.78 ? (1 - rise) / 0.22 : 1);
+        ctx.globalAlpha = fade * mf * 0.72;
+        ctx.fillStyle = col;
+        ctx.beginPath();
+        ctx.arc(mx, my, 2.6 + (i % 2), 0, Math.PI * 2);
+        ctx.fill();
+      }
+      // 3. 極輕透邊緣護盾弧光（不糊臉）
+      ctx.globalAlpha = fade * 0.22;
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 1.8;
+      ctx.beginPath();
+      ctx.ellipse(this.heroX, this.heroY - 38, 34 * pulse, 48 * pulse, 0, 0, Math.PI * 2);
+      ctx.stroke();
       ctx.restore();
     }
 

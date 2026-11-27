@@ -19,7 +19,7 @@ import { AssassinVfxDirector } from '../vfx/AssassinVfxDirector.js?v=266';
 import { PaladinVfxDirector } from '../vfx/PaladinVfxDirector.js?v=266';
 import { FloatingTextPool } from '../vfx/FloatingTextPool.js?v=298';
 import { ParticlePool } from '../vfx/ParticlePool.js?v=266';
-import { TrainingArenaController } from '../combat/TrainingArenaController.js?v=305';
+import { TrainingArenaController } from '../combat/TrainingArenaController.js?v=308-2';
 import { HERO_V307_READY, getHeroAtlasInfo, getSkillAnimAction, getActionAnimDurationMs, resolveHeroAnimKey } from '../combat/HeroAnimRouter.js?v=307';
 import { BattleMiniDpsHud } from '../ui/BattleMiniDpsHud.js?v=302';
 import { CameraZoomHelper } from './CameraZoomHelper.js?v=282';
@@ -501,52 +501,66 @@ export class BattleScene extends Phaser.Scene {
     if (!def) return;
     const hInfo = getHeroAtlasInfo(cid);
     const atlasKey = hInfo.baseKey;
-    const tex = this.textures.get(atlasKey);
+    const tex = this.textures.exists(atlasKey) ? this.textures.get(atlasKey) : null;
     const skillsTex = (hInfo.skillsReady && this.textures.exists(hInfo.skillsKey)) ? this.textures.get(hInfo.skillsKey) : null;
-    ['down', 'up', 'right'].forEach((d) => {
-      if (tex && tex.has(`${def.tex}_${d}_walk_7`) && !this.anims.exists(`${def.prefix}_${d}_walk`)) {
-        this.anims.create({
-          key: `${def.prefix}_${d}_walk`,
-          frames: [0, 1, 2, 3, 4, 5, 6, 7].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_walk_${i}` })),
-          frameRate: Math.max(14, def.walkFps + 4),
-          repeat: -1,
-        });
+    const ensureAnim = (animKey, expectedTexKey, frames, frameRate, repeat) => {
+      if (this.anims.exists(animKey)) {
+        const cur = this.anims.get(animKey);
+        const curTex = cur?.frames?.[0]?.textureKey;
+        if (curTex === expectedTexKey) return;
+        this.anims.remove(animKey);
       }
-      if (tex && tex.has(`${def.tex}_${d}_idle_0`) && !this.anims.exists(`${def.prefix}_${d}_idle`)) {
-        this.anims.create({
-          key: `${def.prefix}_${d}_idle`,
-          frames: [0, 1, 2, 3].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_idle_${i}` })),
-          frameRate: 5,
-          repeat: -1,
-        });
+      this.anims.create({ key: animKey, frames, frameRate, repeat });
+    };
+    ['down', 'up', 'right'].forEach((d) => {
+      if (tex && tex.has(`${def.tex}_${d}_walk_7`)) {
+        ensureAnim(
+          `${def.prefix}_${d}_walk`,
+          atlasKey,
+          [0, 1, 2, 3, 4, 5, 6, 7].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_walk_${i}` })),
+          Math.max(11, def.walkFps + 1),
+          -1,
+        );
+      }
+      if (tex && tex.has(`${def.tex}_${d}_idle_0`)) {
+        ensureAnim(
+          `${def.prefix}_${d}_idle`,
+          atlasKey,
+          [0, 1, 2, 3].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_idle_${i}` })),
+          5,
+          -1,
+        );
       }
       const hasAtk1 = tex && tex.has(`${def.tex}_${d}_atk1_0`);
       const hasAtk2 = tex && tex.has(`${def.tex}_${d}_atk2_0`);
       const hasLegacyAtk = tex && tex.has(`${def.tex}_${d}_atk_0`);
-      if (hasAtk1 && !this.anims.exists(`${def.prefix}_${d}_atk1`)) {
-        this.anims.create({
-          key: `${def.prefix}_${d}_atk1`,
-          frames: [0, 1, 2, 3].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_atk1_${i}` })),
-          frameRate: def.atkFps,
-          repeat: 0,
-        });
+      if (hasAtk1) {
+        ensureAnim(
+          `${def.prefix}_${d}_atk1`,
+          atlasKey,
+          [0, 1, 2, 3].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_atk1_${i}` })),
+          def.atkFps,
+          0,
+        );
       }
-      if (hasAtk2 && !this.anims.exists(`${def.prefix}_${d}_atk2`)) {
-        this.anims.create({
-          key: `${def.prefix}_${d}_atk2`,
-          frames: [0, 1, 2, 3].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_atk2_${i}` })),
-          frameRate: Math.max(12, def.atkFps - 2),
-          repeat: 0,
-        });
+      if (hasAtk2) {
+        ensureAnim(
+          `${def.prefix}_${d}_atk2`,
+          atlasKey,
+          [0, 1, 2, 3].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_atk2_${i}` })),
+          Math.max(12, def.atkFps - 2),
+          0,
+        );
       }
-      if ((hasLegacyAtk || hasAtk1) && !this.anims.exists(`${def.prefix}_${d}_atk`)) {
+      if (hasLegacyAtk || hasAtk1) {
         const atkName = hasAtk1 ? 'atk1' : 'atk';
-        this.anims.create({
-          key: `${def.prefix}_${d}_atk`,
-          frames: [0, 1, 2, 3].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_${atkName}_${i}` })),
-          frameRate: def.atkFps,
-          repeat: 0,
-        });
+        ensureAnim(
+          `${def.prefix}_${d}_atk`,
+          atlasKey,
+          [0, 1, 2, 3].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_${atkName}_${i}` })),
+          def.atkFps,
+          0,
+        );
       }
       if (skillsTex) {
         [
@@ -555,13 +569,14 @@ export class BattleScene extends Phaser.Scene {
           { name: 'dash', fps: 16 },
           { name: 'special', fps: 14 },
         ].forEach(({ name, fps }) => {
-          if (skillsTex.has(`${def.tex}_${d}_${name}_0`) && !this.anims.exists(`${def.prefix}_${d}_${name}`)) {
-            this.anims.create({
-              key: `${def.prefix}_${d}_${name}`,
-              frames: [0, 1, 2, 3].map((i) => ({ key: hInfo.skillsKey, frame: `${def.tex}_${d}_${name}_${i}` })),
-              frameRate: fps,
-              repeat: 0,
-            });
+          if (skillsTex.has(`${def.tex}_${d}_${name}_0`)) {
+            ensureAnim(
+              `${def.prefix}_${d}_${name}`,
+              hInfo.skillsKey,
+              [0, 1, 2, 3].map((i) => ({ key: hInfo.skillsKey, frame: `${def.tex}_${d}_${name}_${i}` })),
+              fps,
+              0,
+            );
           }
         });
       }
@@ -1032,6 +1047,16 @@ export class BattleScene extends Phaser.Scene {
     return true;
   }
 
+  resetAllSlotCdsReady() {
+    for (let i = 0; i < 6; i++) {
+      const info = this.getSlotSkillInfo(i);
+      this.slotCdTimers[i] = info ? info.cooldownMs : 0;
+    }
+    this._lastLuckyCdRefundAt = 0;
+    this._lastPrepRefundAt = 0;
+    this._nextAutoCastAt = 0;
+  }
+
   castSkillSlot(slotIdx, isManual = false) {
     if (this.isPaused || this.isTransitioning || this.monsters.length === 0) return false;
     const info = this.getSlotSkillInfo(slotIdx);
@@ -1081,7 +1106,9 @@ export class BattleScene extends Phaser.Scene {
     const trainCdMult = 1.0; // v305: 演武場遵循實戰正常技能冷卻
     const effCd = Math.max(300, Math.round(info.cooldownMs * (buildMods.cdMult || 1) * trainCdMult));
     const cdSaved = Math.max(0, info.cooldownMs - effCd);
-    this.slotCdTimers[slotIdx] = freeAstral ? Math.round(info.cooldownMs * 0.3) : (echoRefund ? Math.round(info.cooldownMs * 0.5) : cdSaved);
+    const bonusRefund = freeAstral ? Math.round(info.cooldownMs * 0.30) : (echoRefund ? Math.round(info.cooldownMs * 0.45) : 0);
+    const maxCdSaved = Math.round(info.cooldownMs * 0.65);
+    this.slotCdTimers[slotIdx] = Math.min(maxCdSaved, Math.max(cdSaved, bonusRefund));
 
     const stNow = this.getStats();
     const mechCfg = getClassMechanicConfig(this.getState(), curCid);
@@ -1102,7 +1129,14 @@ export class BattleScene extends Phaser.Scene {
         this._rSpentStarsUntil = nowCastT + 1200;
         this.spawnFloatingText(this.hero.x, this.hero.y - 102, `★消耗 ${this._rSpentStars} 星連擊爆發!`, '#4ade80', 14);
       } else if (mechCfg.specialization === 'preparation') {
-        this.slotCdTimers = this.slotCdTimers.map((t, idx) => (idx === slotIdx ? t : t + 1100));
+        if (nowCastT >= (this._lastPrepRefundAt || 0) + 900) {
+          this._lastPrepRefundAt = nowCastT;
+          for (let ci = 0; ci < 6; ci++) {
+            if (ci === slotIdx) continue;
+            const cInfo = this.getSlotSkillInfo(ci);
+            if (cInfo) this.slotCdTimers[ci] = Math.min(cInfo.cooldownMs, (this.slotCdTimers[ci] || 0) + 1100);
+          }
+        }
       }
     } else if (curCid === 'mage') {
       const ench = mechCfg.enchants || [];
@@ -1488,12 +1522,15 @@ export class BattleScene extends Phaser.Scene {
 
       // v302: 嚴格區分「自動」與「手動」— 手動模式下絕不自動施放技能（也不會誤放傳送術拉回中間）或自動普攻
       const autoCastRange = this.isTrainingMode ? Math.max(520, atkRange) : Math.max(260, atkRange);
-      if (this.isAutoAttackEnabled() && dist <= autoCastRange) {
+      if (this.isAutoAttackEnabled() && dist <= autoCastRange && time >= (this._nextAutoCastAt || 0)) {
         const eqIds = this.getState()?.equippedSkillsByClass?.[cid] || [];
         const smartOrder = getSmartAutoSlotOrder(eqIds, this.monsters, time);
         const orderToTry = smartOrder.length ? smartOrder : [0, 1, 2, 3, 4, 5];
         for (const sIdx of orderToTry) {
-          if (this.castSkillSlot(sIdx)) break;
+          if (this.castSkillSlot(sIdx)) {
+            this._nextAutoCastAt = time + 320;
+            break;
+          }
         }
       }
 
@@ -2694,22 +2731,17 @@ export class BattleScene extends Phaser.Scene {
     }
   }
 
-  // v242: 啟動秘法師屏障護盾（寒冰護甲／烈焰護盾／深度凍結）與視覺跟隨光環
+  // v308-3: 啟動屏障護盾數值（移除舊版實心冰圈貼紙，視覺統一交由 2.5D 三層立體光環呈現）
   activateHeroBarrier(amount, durationMs, vfxKey = 'ent_m_ice_armor') {
     this.heroBarrierHp = Math.max(this.heroBarrierHp || 0, amount);
     this.heroBarrierUntil = Math.max(this.heroBarrierUntil || 0, this.time.now + durationMs);
-    const key = this.textures.exists(vfxKey) ? vfxKey : 'ent_m_ice_armor';
-    if (this.heroBarrierSprite && this.heroBarrierKey !== key) {
+    if (this.heroBarrierSprite) {
       this.heroBarrierSprite.destroy();
       this.heroBarrierSprite = null;
+      this.heroBarrierKey = '';
     }
-    if (!this.heroBarrierSprite && this.hero && this.textures.exists(key)) {
-      this.heroBarrierKey = key;
-      this.heroBarrierSprite = this.add.image(this.hero.x, this.hero.y - 4, key)
-        .setScale(0.58)
-        .setAlpha(0.92)
-        .setDepth(Math.max(120, Math.round(this.hero.y + 10)));
-    }
+    const inferredSkill = vfxKey.includes('flame') ? 'm_flame_shield' : 'm_ice_armor';
+    this._triggerHeroSelfBuffVfx?.(inferredSkill);
   }
 
   // v242: 生成地面劈啪電花能量球（靠近自動磁吸拾取回魔＋減冷卻＋放電）
@@ -3044,7 +3076,13 @@ export class BattleScene extends Phaser.Scene {
         this.playAdditiveVfx('vfx_proc_luckyhit', m.sprite.x, m.sprite.y - 18, 0.56, 340);
         const eff = activeMods?.luckyEffect;
         if (eff?.mpRefund) this.playerMp = Math.min(this.playerMaxMp, this.playerMp + eff.mpRefund);
-        if (eff?.cdRefundMs) this.slotCdTimers = this.slotCdTimers.map((t) => t + eff.cdRefundMs);
+        if (eff?.cdRefundMs && (this.time?.now || 0) >= (this._lastLuckyCdRefundAt || 0) + 1500) {
+          this._lastLuckyCdRefundAt = this.time?.now || 0;
+          for (let ci = 0; ci < 6; ci++) {
+            const cInfo = this.getSlotSkillInfo(ci);
+            if (cInfo) this.slotCdTimers[ci] = Math.min(cInfo.cooldownMs, (this.slotCdTimers[ci] || 0) + eff.cdRefundMs);
+          }
+        }
         if (eff?.bonusMult && m.hp > 0) {
           this.damageMonster(m, Math.max(1, Math.round(dmg * eff.bonusMult)), true, false, '#fde047', '✦幸運 ', true);
         } else {
@@ -3670,67 +3708,164 @@ export class BattleScene extends Phaser.Scene {
     this.groundLoot = [];
   }
 
+  _clearHeroSelfBuffAura() {
+    if (this._activeHeroBuffEv) {
+      try { this._activeHeroBuffEv.remove(false); } catch {}
+      this._activeHeroBuffEv = null;
+    }
+    if (this._activeHeroBuffFadeTimer) {
+      try { this._activeHeroBuffFadeTimer.remove(false); } catch {}
+      this._activeHeroBuffFadeTimer = null;
+    }
+    if (this._activeHeroBuffObjs) {
+      for (const o of this._activeHeroBuffObjs) {
+        if (o?.active) o.destroy();
+      }
+      this._activeHeroBuffObjs = null;
+    }
+    if (this._activeHeroBuffSpr?.active) {
+      this._activeHeroBuffSpr.destroy();
+      this._activeHeroBuffSpr = null;
+    }
+  }
+
   _triggerHeroSelfBuffVfx(skillId) {
     if (!skillId || !this.hero?.active) return;
-    const map = {
-      w_iron_skin: 'buff_w_iron_skin_v303',
-      w_challenging_shout: 'buff_w_iron_skin_v303',
-      warcry: 'buff_w_berserk_roar_v303',
-      w_rallying_cry: 'buff_w_berserk_roar_v303',
-      w_wrath_berserker: 'buff_w_berserk_roar_v303',
-      windwalk: 'buff_r_wind_step_v303',
-      r_dark_shroud: 'buff_r_shadow_shroud_v303',
-      r_shadow_imbue: 'buff_r_shadow_shroud_v303',
-      m_flame_shield: 'buff_m_flame_shield_v303',
-      m_ice_armor: 'buff_m_ice_armor_v303',
-      m_unstable_currents: 'buff_m_ice_armor_v303',
-      holy_aegis: 'buff_p_holy_aegis_v303',
-      p_redemption_prayer: 'buff_p_holy_aegis_v303',
-      p_sanctuary_ward: 'buff_p_holy_aegis_v303',
-      radiant_aura: 'buff_p_divine_aura_v303',
-      p_thorns_aura: 'buff_p_divine_aura_v303',
-      p_akarats_wrath: 'buff_p_divine_aura_v303',
-      n_bone_shield: 'buff_n_bone_shield_v303',
-      n_blood_mist: 'buff_n_blood_frenzy_v303',
-      undead_frenzy: 'buff_n_blood_frenzy_v303',
-      a_venom_imbue: 'buff_a_venom_imbue_v303',
-      lethal_fangs: 'buff_a_venom_imbue_v303',
-      smoke_veil: 'buff_a_blood_cloak_v303',
-      a_blood_cloak: 'buff_a_blood_cloak_v303',
+    const PALETTES = {
+      w_iron_skin:         { primary: 0xf59e0b, accent: 0xfde68a, isShield: true },
+      w_challenging_shout: { primary: 0xfb923c, accent: 0xfef08a, isShield: true },
+      warcry:              { primary: 0xef4444, accent: 0xfb923c, isShield: false },
+      w_rallying_cry:      { primary: 0xfacc15, accent: 0xfef08a, isShield: false },
+      w_wrath_berserker:   { primary: 0xdc2626, accent: 0xf97316, isShield: false },
+      windwalk:            { primary: 0x34d399, accent: 0xa7f3d0, isShield: false },
+      r_dark_shroud:       { primary: 0xa855f7, accent: 0xe879f9, isShield: true },
+      r_shadow_imbue:      { primary: 0x9333ea, accent: 0xd8b4fe, isShield: false },
+      m_flame_shield:      { primary: 0xf97316, accent: 0xfef08a, isShield: true },
+      m_ice_armor:         { primary: 0x38bdf8, accent: 0xe0f2fe, isShield: true },
+      m_unstable_currents: { primary: 0xa855f7, accent: 0x67e8f9, isShield: false },
+      holy_aegis:          { primary: 0xfacc15, accent: 0xfef9c3, isShield: true },
+      p_redemption_prayer: { primary: 0xfde047, accent: 0xffffff, isShield: true },
+      p_sanctuary_ward:    { primary: 0xfbbf24, accent: 0xfef3c7, isShield: true },
+      radiant_aura:        { primary: 0xfde047, accent: 0xffffff, isShield: false },
+      p_thorns_aura:       { primary: 0xf59e0b, accent: 0xfef08a, isShield: false },
+      p_akarats_wrath:     { primary: 0xfacc15, accent: 0xfb923c, isShield: false },
+      n_bone_shield:       { primary: 0x2dd4bf, accent: 0xcffafe, isShield: true },
+      n_blood_mist:        { primary: 0xdc2626, accent: 0xfca5a5, isShield: false },
+      undead_frenzy:       { primary: 0x10b981, accent: 0x6ee7b7, isShield: false },
+      a_venom_imbue:       { primary: 0x22c55e, accent: 0x86efac, isShield: false },
+      lethal_fangs:        { primary: 0x16a34a, accent: 0xbef264, isShield: false },
+      smoke_veil:          { primary: 0x9333ea, accent: 0xc084fc, isShield: true },
+      a_blood_cloak:       { primary: 0xbe123c, accent: 0xfda4af, isShield: true },
     };
-    const key = map[skillId];
-    if (!key) return;
-    const spawnAura = () => {
-      if (!this.hero?.active || !this.textures.exists(key)) return;
-      if (this._activeHeroBuffSpr?.active) this._activeHeroBuffSpr.destroy();
-      const spr = this.add.image(this.hero.x, this.hero.y - 20, key)
-        .setScale(0.20)
-        .setAlpha(0.92)
-        .setDepth(this.hero.y + 18);
-      this._activeHeroBuffSpr = spr;
-      this.tweens.add({ targets: spr, scale: 0.44, duration: 240, ease: 'Back.easeOut' });
-      const followEv = this.time.addEvent({
-        delay: 16,
-        repeat: 165,
-        callback: () => {
-          if (!spr.active || !this.hero?.active) return;
-          spr.setPosition(this.hero.x, this.hero.y - 20).setDepth(this.hero.y + 18);
-          spr.angle += 0.85;
-        },
-      });
-      this.time.delayedCall(2550, () => {
-        followEv?.remove?.();
-        if (!spr.active) return;
-        this.tweens.add({ targets: spr, alpha: 0, scale: 0.52, duration: 360, onComplete: () => spr.destroy() });
-      });
-    };
-    if (this.textures.exists(key)) {
-      spawnAura();
-    } else {
-      this.load.image(key, `./assets/fx/${key}.webp?v=303`);
-      this.load.once(`filecomplete-image-${key}`, spawnAura);
-      this.load.start();
+    const cfg = PALETTES[skillId];
+    if (!cfg) return;
+
+    this._clearHeroSelfBuffAura();
+    const hx = this.hero.x;
+    const hy = this.hero.y;
+    const objs = [];
+
+    // Layer 1: 腳底 2.5D 橢圓透視符文法陣（壓在英雄腳下 depth = hero.y - 4，100% 不遮擋英雄）
+    const groundGlow = this.add.image(hx, hy + 26, 'fx_glow')
+      .setTint(cfg.primary)
+      .setScale(1.65, 0.72)
+      .setAlpha(0.26)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setDepth(Math.max(4, Math.round(hy - 5)));
+    objs.push(groundGlow);
+
+    const groundRing = this.add.graphics()
+      .setPosition(hx, hy + 26)
+      .setBlendMode(Phaser.BlendModes.ADD)
+      .setDepth(Math.max(5, Math.round(hy - 4)));
+    groundRing.lineStyle(2.6, cfg.primary, 0.56);
+    groundRing.strokeEllipse(0, 0, 92, 38);
+    groundRing.lineStyle(1.4, cfg.accent, 0.42);
+    groundRing.strokeEllipse(0, 0, 68, 28);
+    objs.push(groundRing);
+
+    // Layer 2: 8 顆螺旋上升元素微粒（只環繞外圍、絕不擋臉與鎧甲）
+    const motes = [];
+    for (let i = 0; i < 8; i++) {
+      const m = this.add.image(hx, hy, 'fx_glow')
+        .setTint(i % 2 === 0 ? cfg.primary : cfg.accent)
+        .setScale(0.16 + (i % 3) * 0.03)
+        .setAlpha(0.72)
+        .setBlendMode(Phaser.BlendModes.ADD)
+        .setDepth(Math.round(hy + 4));
+      m._phase = (i / 8) * Math.PI * 2;
+      m._rise = (i / 8);
+      motes.push(m);
+      objs.push(m);
     }
+
+    // Layer 3: 防禦護盾專屬極輕透邊緣弧光（不旋轉、不糊人）
+    let shieldRim = null;
+    if (cfg.isShield) {
+      shieldRim = this.add.graphics()
+        .setPosition(hx, hy - 8)
+        .setBlendMode(Phaser.BlendModes.ADD)
+        .setDepth(Math.round(hy + 5));
+      shieldRim.lineStyle(2.2, cfg.primary, 0.28);
+      shieldRim.strokeEllipse(0, 0, 74, 96);
+      shieldRim.lineStyle(1.0, cfg.accent, 0.20);
+      shieldRim.strokeEllipse(0, 0, 64, 86);
+      objs.push(shieldRim);
+    }
+
+    this._activeHeroBuffObjs = objs;
+    let tick = 0;
+    this._activeHeroBuffEv = this.time.addEvent({
+      delay: 16,
+      repeat: 195,
+      callback: () => {
+        if (!this.hero?.active) return;
+        tick += 1;
+        const cx = this.hero.x;
+        const cy = this.hero.y;
+        const pulse = 1 + Math.sin(tick * 0.11) * 0.06;
+        if (groundGlow.active) {
+          groundGlow.setPosition(cx, cy + 26).setScale(1.65 * pulse, 0.72 * pulse).setDepth(Math.max(4, Math.round(cy - 5)));
+        }
+        if (groundRing.active) {
+          groundRing.setPosition(cx, cy + 26).setScale(pulse, pulse).setDepth(Math.max(5, Math.round(cy - 4)));
+        }
+        if (shieldRim?.active) {
+          shieldRim.setPosition(cx, cy - 8).setAlpha(0.85 + Math.sin(tick * 0.14) * 0.15).setDepth(Math.round(cy + 5));
+        }
+        for (const m of motes) {
+          if (!m.active) continue;
+          m._phase += 0.055;
+          m._rise = (m._rise + 0.012) % 1.0;
+          const mx = cx + Math.cos(m._phase) * 34;
+          const my = (cy + 24) - m._rise * 74 + Math.sin(m._phase) * 9;
+          const front = Math.sin(m._phase) >= 0;
+          const fadeA = m._rise < 0.15 ? (m._rise / 0.15) : (m._rise > 0.78 ? (1 - m._rise) / 0.22 : 1);
+          m.setPosition(mx, my)
+            .setAlpha(0.70 * fadeA)
+            .setDepth(Math.round(cy + (front ? 6 : -3)));
+        }
+      },
+    });
+
+    this._activeHeroBuffFadeTimer = this.time.delayedCall(3050, () => {
+      if (this._activeHeroBuffEv) {
+        try { this._activeHeroBuffEv.remove(false); } catch {}
+        this._activeHeroBuffEv = null;
+      }
+      const alive = (this._activeHeroBuffObjs || []).filter((o) => o?.active);
+      if (alive.length) {
+        this.tweens.add({
+          targets: alive,
+          alpha: 0,
+          duration: 360,
+          onComplete: () => {
+            for (const o of alive) if (o?.active) o.destroy();
+          },
+        });
+      }
+      this._activeHeroBuffObjs = null;
+    });
   }
 
   spawnFloatingText(x, y, text, color = '#ffffff', size = 19, opts = null) {

@@ -22,8 +22,8 @@ import {
   saveCloudData,
   deleteCloudSave,
 } from './auth/firebase.js?v=272';
-import { BattleScene } from './scenes/BattleScene.js?v=307-all';
-import { TownScene } from './scenes/TownScene.js?v=307-all';
+import { BattleScene } from './scenes/BattleScene.js?v=308-all';
+import { TownScene } from './scenes/TownScene.js?v=308-all';
 import { TOWN_SPLASHES } from './data/towns/splashes.js?v=229';
 import { DashboardUI } from './ui/DashboardUI.js?v=301';
 import { hookWorldMap25D, openWorldMap25D, closeWorldMap25D, toggleWorldMap25D } from './ui/WorldMap25D.js?v=253';
@@ -40,7 +40,7 @@ import { ShopModal } from './ui/ShopModal.js?v=99';
 import { AchievementTowerModal } from './ui/AchievementTowerModal.js?v=99';
 import { ACHIEVEMENTS } from './data/achievements.js?v=99';
 import { rollEnhance, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEVEL } from './logic/enhanceSystem.js?v=99';
-import { HeroSkillShowcase, CLASS_SKILLS_MAP } from './ui/HeroSkillShowcase.js?v=307-all';
+import { HeroSkillShowcase, CLASS_SKILLS_MAP } from './ui/HeroSkillShowcase.js?v=308-all';
 
 let gameState = loadGame() || createInitialState('warrior');
 let computedStats = recalcPlayerStats(gameState);

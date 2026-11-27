@@ -107,8 +107,13 @@ export class TrainingArenaController {
       // 進演武場滿血滿魔、重置技能冷卻為就緒狀態
       s.playerHp = s.playerMaxHp;
       s.playerMp = s.playerMaxMp;
-      if (Array.isArray(s.slotCdTimers)) {
-        for (let i = 0; i < s.slotCdTimers.length; i++) s.slotCdTimers[i] = 999999;
+      if (s.resetAllSlotCdsReady) {
+        s.resetAllSlotCdsReady();
+      } else if (Array.isArray(s.slotCdTimers)) {
+        for (let i = 0; i < s.slotCdTimers.length; i++) {
+          const info = s.getSlotSkillInfo?.(i);
+          s.slotCdTimers[i] = info ? info.cooldownMs : 0;
+        }
       }
       s.updateHeroHpBar?.();
 
@@ -162,8 +167,13 @@ export class TrainingArenaController {
     }
     s.playerHp = s.playerMaxHp;
     s.playerMp = s.playerMaxMp;
-    if (Array.isArray(s.slotCdTimers)) {
-      for (let i = 0; i < s.slotCdTimers.length; i++) s.slotCdTimers[i] = 999999;
+    if (s.resetAllSlotCdsReady) {
+      s.resetAllSlotCdsReady();
+    } else if (Array.isArray(s.slotCdTimers)) {
+      for (let i = 0; i < s.slotCdTimers.length; i++) {
+        const info = s.getSlotSkillInfo?.(i);
+        s.slotCdTimers[i] = info ? info.cooldownMs : 0;
+      }
     }
     s.updateHeroHpBar?.();
     this._syncAutoBtnUi(s.autoMode || (s.autoMoveEnabled ? 'move' : 'manual'));

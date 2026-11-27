@@ -333,8 +333,10 @@ export class TownScene extends Phaser.Scene {
     this.heroShadow = this.add.image(td.spawn.x, td.spawn.y + 30, 'fx_glow')
       .setTint(0x000000).setScale(0.86, 0.32).setAlpha(0.50).setDepth(3);
     this.hero = this.add.sprite(td.spawn.x, td.spawn.y, atlasKey, initFrame)
-      .setScale(0.42)
+      .setScale(0.56)
       .setDepth(td.spawn.y);
+    const initIdleKey = `${this.getHeroPrefix(cid)}_down_idle`;
+    if (this.anims.exists(initIdleKey)) this.hero.play(initIdleKey, true);
     const initNick = (this.callbacks?.getState?.()?.nickname || window.__IDLE_ARPG_BRIDGE__?.getState?.()?.nickname || '冒險者').trim();
     this.heroNameText = this.add.text(td.spawn.x, td.spawn.y - 54, initNick, {
       fontSize: '14px',
@@ -840,42 +842,52 @@ export class TownScene extends Phaser.Scene {
 
   registerHeroAnims(cid) {
     const map = {
-      warrior: { prefix: 'w', tex: 'wf', walkFps: 15, atkFps: 15 },
-      ranger:  { prefix: 'r', tex: 'rf', walkFps: 16, atkFps: 16 },
-      mage:    { prefix: 'm', tex: 'mf', walkFps: 14, atkFps: 15 },
-      paladin: { prefix: 'p', tex: 'pf', walkFps: 14, atkFps: 15 },
-      necro:   { prefix: 'n', tex: 'nf', walkFps: 14, atkFps: 15 },
-      assassin:{ prefix: 'a', tex: 'af', walkFps: 17, atkFps: 18 },
+      warrior: { prefix: 'w', tex: 'wf', walkFps: 11, atkFps: 14 },
+      ranger:  { prefix: 'r', tex: 'rf', walkFps: 12, atkFps: 15 },
+      mage:    { prefix: 'm', tex: 'mf', walkFps: 11, atkFps: 14 },
+      paladin: { prefix: 'p', tex: 'pf', walkFps: 11, atkFps: 14 },
+      necro:   { prefix: 'n', tex: 'nf', walkFps: 11, atkFps: 14 },
+      assassin:{ prefix: 'a', tex: 'af', walkFps: 13, atkFps: 16 },
     };
     const def = map[cid];
-    const atlasKey = `atlas_${cid}`;
+    const hInfo = getHeroAtlasInfo(cid);
+    const atlasKey = hInfo.baseKey;
     if (!def || !this.textures.exists(atlasKey)) return;
     const tex = this.textures.get(atlasKey);
+    const ensureAnim = (animKey, frames, frameRate, repeat) => {
+      if (this.anims.exists(animKey)) {
+        const cur = this.anims.get(animKey);
+        const curTex = cur?.frames?.[0]?.textureKey;
+        if (curTex === atlasKey) return;
+        this.anims.remove(animKey);
+      }
+      this.anims.create({ key: animKey, frames, frameRate, repeat });
+    };
     ['down', 'up', 'right'].forEach((d) => {
-      if (!tex.has(`${def.tex}_${d}_walk_7`)) return;
-      if (!this.anims.exists(`${def.prefix}_${d}_walk`)) {
-        this.anims.create({
-          key: `${def.prefix}_${d}_walk`,
-          frames: [0, 1, 2, 3, 4, 5, 6, 7].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_walk_${i}` })),
-          frameRate: def.walkFps,
-          repeat: -1,
-        });
+      if (tex.has(`${def.tex}_${d}_walk_7`)) {
+        ensureAnim(
+          `${def.prefix}_${d}_walk`,
+          [0, 1, 2, 3, 4, 5, 6, 7].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_walk_${i}` })),
+          def.walkFps,
+          -1,
+        );
       }
-      if (!this.anims.exists(`${def.prefix}_${d}_idle`)) {
-        this.anims.create({
-          key: `${def.prefix}_${d}_idle`,
-          frames: [0, 1, 2, 3].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_idle_${i}` })),
-          frameRate: 5,
-          repeat: -1,
-        });
+      if (tex.has(`${def.tex}_${d}_idle_0`)) {
+        ensureAnim(
+          `${def.prefix}_${d}_idle`,
+          [0, 1, 2, 3].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_idle_${i}` })),
+          5,
+          -1,
+        );
       }
-      if (!this.anims.exists(`${def.prefix}_${d}_atk`)) {
-        this.anims.create({
-          key: `${def.prefix}_${d}_atk`,
-          frames: [0, 1, 2, 3].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_atk_${i}` })),
-          frameRate: def.atkFps,
-          repeat: 0,
-        });
+      const atkName = tex.has(`${def.tex}_${d}_atk1_0`) ? 'atk1' : (tex.has(`${def.tex}_${d}_atk_0`) ? 'atk' : null);
+      if (atkName) {
+        ensureAnim(
+          `${def.prefix}_${d}_atk`,
+          [0, 1, 2, 3].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_${atkName}_${i}` })),
+          def.atkFps,
+          0,
+        );
       }
     });
   }
@@ -925,19 +937,23 @@ export class TownScene extends Phaser.Scene {
   syncHeroAppearance() {
     if (!this.hero) return;
     const cid = (this.callbacks?.getState?.()?.classId || window.__IDLE_ARPG_BRIDGE__?.getState?.()?.classId || 'warrior');
-    const atlasKey = `atlas_${cid}`;
+    const hInfo = getHeroAtlasInfo(cid);
+    const atlasKey = hInfo.baseKey;
     const fp = this.getHeroFramePrefix(cid);
+    const prefix = this.getHeroPrefix(cid);
     this.registerHeroAnims(cid);
     const dir = this.heroDir === 'left' ? 'right' : (this.heroDir || 'down');
     if (this.hero.texture.key !== atlasKey) {
       if (this.textures.exists(atlasKey)) {
         this.hero.setTexture(atlasKey, `${fp}_${dir}_idle_0`);
+        if (this.anims.exists(`${prefix}_${dir}_idle`)) this.hero.play(`${prefix}_${dir}_idle`, true);
       } else if (this.load) {
-        this.load.atlas(atlasKey, `./assets/heroes/atlas_${cid}.png?v=66`, `./assets/heroes/atlas_${cid}.json?v=66`);
+        this.load.atlas(atlasKey, hInfo.basePng, hInfo.baseJson);
         this.load.once('complete', () => {
           this.registerHeroAnims(cid);
           if (this.hero && this.textures.exists(atlasKey)) {
             this.hero.setTexture(atlasKey, `${fp}_${dir}_idle_0`);
+            if (this.anims.exists(`${prefix}_${dir}_idle`)) this.hero.play(`${prefix}_${dir}_idle`, true);
           }
         });
         this.load.start();
