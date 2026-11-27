@@ -198,7 +198,7 @@ export function renderTownFacilityModal(ui, action, data, ctx, deps = {}) {
     modal_alchemy:    './assets/ui/npc_bg_alchemy.jpg?v=227',
     modal_market:     './assets/ui/npc_bg_market.jpg?v=227',
     modal_bounty:     './assets/ui/npc_bg_bounty.jpg?v=227',
-    modal_trainer:    './assets/ui/npc_bg_trainer.jpg?v=227',
+    modal_trainer:    './assets/bg/arena_training_v299.webp?v=299',
     modal_sanctum:    './assets/ui/npc_bg_sanctum.jpg?v=227',
     modal_vault:      './assets/ui/npc_bg_vault.jpg?v=227',
     modal_tavern:     './assets/ui/npc_bg_tavern.jpg?v=227',
@@ -429,9 +429,9 @@ function buildWorkspaceHtml(ui, action, data, ctx, deps, st, chIdx, chapter) {
         <button id="btn-tr-drawer" class="npc-btn-secondary"><span>開啟天賦與技能面板 (K)</span>${SVG.arrow}</button>
       </div>
       <div class="trainer-arena">
-        <div id="dummy-target-box" class="dummy-target-box">
-          ${SVG.dummy}
-          <span style="font-size:11px;color:#fde68a;margin-top:6px;">演武木樁（實戰測試）</span>
+        <div id="dummy-target-box" class="dummy-target-box" style="background:rgba(8,10,16,0.72);border:1.5px solid rgba(212,175,55,0.45);border-radius:10px;padding:10px;">
+          <img src="./assets/fx/dummy_boss_v299.webp?v=299" alt="演武傀儡" style="width:74px;height:74px;object-fit:contain;filter:drop-shadow(0 6px 10px rgba(0,0,0,0.85));" />
+          <span style="font-size:11px;color:#fde68a;margin-top:4px;font-weight:800;">獨立演武校場・實戰測傷</span>
         </div>
         <div style="display:flex;flex-direction:column;justify-content:space-between;gap:8px;">
           <div>

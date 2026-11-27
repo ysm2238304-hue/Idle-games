@@ -1,4 +1,4 @@
-import { renderTownFacilityModal } from './NpcModalRenderer.js?v=282';
+import { renderTownFacilityModal } from './NpcModalRenderer.js?v=301';
 import { TEMPERING_MANUALS } from '../data/items.js?v=240';
 import { temperItem } from '../logic/lootGen.js?v=240';
 import { SKILL_BUILD_SPECS, KEYSTONE_PASSIVES, getActiveKeystone } from '../logic/buildEngine.js?v=263';

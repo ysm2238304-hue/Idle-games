@@ -19,7 +19,7 @@ import { AssassinVfxDirector } from '../vfx/AssassinVfxDirector.js?v=266';
 import { PaladinVfxDirector } from '../vfx/PaladinVfxDirector.js?v=266';
 import { FloatingTextPool } from '../vfx/FloatingTextPool.js?v=298';
 import { ParticlePool } from '../vfx/ParticlePool.js?v=266';
-import { TrainingArenaController } from '../combat/TrainingArenaController.js?v=299';
+import { TrainingArenaController } from '../combat/TrainingArenaController.js?v=301';
 import { CameraZoomHelper } from './CameraZoomHelper.js?v=282';
 import { MonsterVfxDirector } from '../vfx/MonsterVfxDirector.js?v=293';
 import { MonsterSkillEngine } from '../combat/MonsterSkillEngine.js?v=278';
@@ -940,7 +940,7 @@ export class BattleScene extends Phaser.Scene {
     if (!info) return false;
     if (this.slotCdTimers[slotIdx] < info.cooldownMs) return false;
     if (!isManual && !this.shouldAutoCastSkill(info.id)) return false;
-    const cost = typeof info.mpCost === 'number' ? info.mpCost : 18;
+    let cost = typeof info.mpCost === 'number' ? info.mpCost : 18;
     const hpCostPct = info.hpCostPct || 0;
     const tree = this.getState().skillTree || {};
     const freeAstral = ((this.getState().classId === 'mage' && (tree.m_key_astral || 0) > 0 && Math.random() < 0.25) || (this.getState().classId === 'ranger' && (this.time?.now || 0) < (this._rInnerSightUntil || 0)));

@@ -500,3 +500,21 @@
   padding-top: 6px;
   margin-top: 2px;
 }
+
+/* v301: 移除內側粗框疊層，放大 16:9 技能演武舞台可視區域 */
+#welcome-step-class .v299-stage-frame-overlay {
+  display: none !important;
+}
+#welcome-step-class .theater-canvas-wrap {
+  max-height: 62vh !important;
+  border: 1.5px solid rgba(212, 175, 55, 0.58) !important;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.85), inset 0 0 18px rgba(245, 158, 11, 0.14) !important;
+}
+#welcome-step-class .theater-cast-pill {
+  left: 14px !important;
+  top: 12px !important;
+}
+#welcome-step-class .v299-autoplay-btn {
+  right: 14px !important;
+  top: 12px !important;
+}

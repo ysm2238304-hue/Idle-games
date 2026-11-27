@@ -42,9 +42,17 @@ export class TrainingArenaController {
       this.active = true;
       s.isTrainingMode = true;
       this.meter.reset();
-      if (s.bgImage?.active && s.textures.exists('arena_training_v299')) {
-        s.bgImage.setTexture('arena_training_v299').setDisplaySize(4096, 2304);
+      if (s.textures.exists('arena_training_v299')) {
+        if (s.bgImage?.active) {
+          s.bgImage.setTexture('arena_training_v299').setDisplaySize(4096, 2304).setDepth(0).setVisible(true);
+        } else {
+          s.bgImage = s.add.image(2048, 1152, 'arena_training_v299').setDisplaySize(4096, 2304).setDepth(0);
+        }
       }
+      document.querySelectorAll('#town-online-badge, .town-online-badge, .town-online-pill').forEach((n) => {
+        n.dataset.v301Hidden = '1';
+        n.style.display = 'none';
+      });
       s.clearAllMonsters?.();
       if (s.hero?.active) {
         s.hero.setPosition(1860, 1152);
@@ -76,6 +84,10 @@ export class TrainingArenaController {
     this.autoAttack = false;
     this._unmountHud();
     this._setMinimapArenaMode(false);
+    document.querySelectorAll('[data-v301-hidden="1"]').forEach((n) => {
+      n.style.display = '';
+      delete n.dataset.v301Hidden;
+    });
     s.clearAllMonsters?.();
     if (s.bgImage?.active && s.getZoneIdx) {
       const z = s.getZoneIdx();
@@ -302,7 +314,7 @@ export class TrainingArenaController {
     const el = document.createElement('div');
     el.id = 'v299-training-hud';
     // v299: 預設停靠於右上角小地圖正下方（top: 242px），完全不遮擋小地圖且支援拖曳與折疊
-    el.style.cssText = 'position:fixed;right:14px;top:242px;z-index:8600;width:320px;background:rgba(10,12,18,0.94);border:1.5px solid rgba(245,158,11,0.65);border-radius:12px;padding:10px 12px;color:#f3e8d2;font-family:"Noto Sans TC",sans-serif;box-shadow:0 14px 40px rgba(0,0,0,0.85);backdrop-filter:blur(6px);user-select:none;';
+    el.style.cssText = 'position:fixed;right:14px;top:242px;z-index:8600;width:328px;background:linear-gradient(rgba(8,10,16,0.62),rgba(8,10,16,0.78)),url("./assets/ui/lobby_panel_bg_v299.webp?v=299") center/100% 100% no-repeat;border:1.5px solid rgba(212,175,55,0.58);border-radius:12px;padding:12px 14px;color:#f3e8d2;font-family:"Noto Sans TC",sans-serif;box-shadow:0 16px 44px rgba(0,0,0,0.88);user-select:none;';
     el.innerHTML = `
       <div id="v299-hud-drag" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;cursor:move;padding-bottom:6px;border-bottom:1px solid rgba(245,158,11,0.22);">
         <b style="font-size:13.5px;color:#fde047;">⚔️ 獨立演武場・DPS 儀表</b>
@@ -354,7 +366,34 @@ export class TrainingArenaController {
         </div>
       </div>
     `;
+    if (!document.getElementById('v301-training-gothic-css')) {
+      const stEl = document.createElement('style');
+      stEl.id = 'v301-training-gothic-css';
+      stEl.textContent = `
+        #v299-training-hud button {
+          border: none !important;
+          background: url('./assets/ui/lobby_btn_skill_v300.webp?v=300') center/100% 100% no-repeat !important;
+          color: #e2e8f0 !important;
+          text-shadow: 0 2px 4px #000 !important;
+          transition: filter 0.14s ease, transform 0.12s ease !important;
+        }
+        #v299-training-hud button:hover { filter: brightness(1.16); transform: translateY(-1px); }
+        #v299-training-hud button.is-on {
+          background: url('./assets/ui/lobby_btn_skill_active_v300.webp?v=300') center/100% 100% no-repeat !important;
+          color: #fef08a !important;
+        }
+        #v299-training-hud #v299-btn-exit {
+          background: url('./assets/ui/lobby_btn_top_danger_v300.webp?v=300') center/100% 100% no-repeat !important;
+          color: #fecaca !important;
+          padding: 4px 12px !important;
+        }
+      `;
+      document.head.appendChild(stEl);
+    }
     document.body.appendChild(el);
+    el.querySelector('#v299-btn-auto')?.classList.add('is-on');
+    el.querySelector('#v299-btn-mp')?.classList.add('is-on');
+    el.querySelector('button[data-form="trio"]')?.classList.add('is-on');
     this._hudEl = el;
 
     // 自由拖曳標題列
@@ -394,23 +433,23 @@ export class TrainingArenaController {
       this.autoAttack = !this.autoAttack;
       this.scene.autoMoveEnabled = this.autoAttack;
       ev.currentTarget.textContent = this.autoAttack ? '🤖 自動: 開' : '🤖 自動: 關';
-      ev.currentTarget.style.background = this.autoAttack ? '#14532d' : '#334155';
+      ev.currentTarget.classList.toggle('is-on', this.autoAttack);
       ev.currentTarget.style.borderColor = this.autoAttack ? '#22c55e' : '#64748b';
     });
     el.querySelector('#v299-btn-mp')?.addEventListener('click', (ev) => {
       this.infiniteMp = !this.infiniteMp;
       ev.currentTarget.textContent = this.infiniteMp ? '♾️ 能量: 滿' : '💧 實戰耗魔';
-      ev.currentTarget.style.background = this.infiniteMp ? '#0c4a6e' : '#334155';
+      ev.currentTarget.classList.toggle('is-on', this.infiniteMp);
     });
     el.querySelector('#v299-btn-cd')?.addEventListener('click', (ev) => {
       this.fastCd = !this.fastCd;
       ev.currentTarget.textContent = this.fastCd ? '⚡ 極速-80%' : '⏱️ 標準CD';
-      ev.currentTarget.style.background = this.fastCd ? '#78350f' : '#1e293b';
+      ev.currentTarget.classList.toggle('is-on', this.fastCd);
     });
     el.querySelectorAll('button[data-form]').forEach((btn) => {
       btn.addEventListener('click', () => {
-        el.querySelectorAll('button[data-form]').forEach((b) => { b.style.background = '#1e293b'; b.style.borderColor = '#475569'; });
-        btn.style.background = '#78350f'; btn.style.borderColor = '#f59e0b';
+        el.querySelectorAll('button[data-form]').forEach((b) => b.classList.remove('is-on'));
+        btn.classList.add('is-on');
         this.spawnFormation(btn.dataset.form);
       });
     });
