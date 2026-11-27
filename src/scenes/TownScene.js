@@ -1,3 +1,4 @@
+import { getHeroAtlasInfo } from '../combat/HeroAnimRouter.js?v=307';
 import { CameraZoomHelper } from './CameraZoomHelper.js?v=282';
 import { TOWN_CH1 } from '../data/towns/ch1.js?v=303';
 import { LivingNpcEngine } from '../town/LivingNpcEngine.js?v=273';
@@ -74,9 +75,9 @@ export class TownScene extends Phaser.Scene {
     });
     const td = this.townData;
     const cid = (this.callbacks?.getState?.()?.classId || window.__IDLE_ARPG_BRIDGE__?.getState?.()?.classId || 'warrior');
-    const heroAtlas = `atlas_${cid}`;
-    if (!this.textures.exists(heroAtlas)) {
-      this.load.atlas(heroAtlas, `./assets/heroes/atlas_${cid}.png?v=66`, `./assets/heroes/atlas_${cid}.json?v=66`);
+    const hInfo = getHeroAtlasInfo(cid);
+    if (!this.textures.exists(hInfo.baseKey)) {
+      this.load.atlas(hInfo.baseKey, hInfo.basePng, hInfo.baseJson);
     }
     if (!this.textures.exists('town_waypoint_circle')) {
       this.load.image('town_waypoint_circle', './assets/ui/town_waypoint_circle.png?v=227');
@@ -320,7 +321,7 @@ export class TownScene extends Phaser.Scene {
     // 9. 建立玩家英雄角色（使用與 BattleScene 一致的 atlas_${cid} 與專屬幀前綴）
     const cid = (this.callbacks?.getState?.()?.classId || window.__IDLE_ARPG_BRIDGE__?.getState?.()?.classId || 'warrior');
     const framePrefix = this.getHeroFramePrefix(cid);
-    const atlasKey = `atlas_${cid}`;
+    const atlasKey = getHeroAtlasInfo(cid).baseKey;
     const initFrame = `${framePrefix}_down_walk_0`;
 
     this.petShadow = this.add.image(td.spawn.x - 52, td.spawn.y + 28, 'fx_glow').setTint(0x000000).setScale(0.65, 0.26).setAlpha(0.42).setDepth(2);

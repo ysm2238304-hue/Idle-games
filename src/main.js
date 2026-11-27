@@ -22,8 +22,8 @@ import {
   saveCloudData,
   deleteCloudSave,
 } from './auth/firebase.js?v=272';
-import { BattleScene } from './scenes/BattleScene.js?v=305';
-import { TownScene } from './scenes/TownScene.js?v=304-all';
+import { BattleScene } from './scenes/BattleScene.js?v=307-all';
+import { TownScene } from './scenes/TownScene.js?v=307-all';
 import { TOWN_SPLASHES } from './data/towns/splashes.js?v=229';
 import { DashboardUI } from './ui/DashboardUI.js?v=301';
 import { hookWorldMap25D, openWorldMap25D, closeWorldMap25D, toggleWorldMap25D } from './ui/WorldMap25D.js?v=253';
@@ -40,7 +40,7 @@ import { ShopModal } from './ui/ShopModal.js?v=99';
 import { AchievementTowerModal } from './ui/AchievementTowerModal.js?v=99';
 import { ACHIEVEMENTS } from './data/achievements.js?v=99';
 import { rollEnhance, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEVEL } from './logic/enhanceSystem.js?v=99';
-import { HeroSkillShowcase, CLASS_SKILLS_MAP } from './ui/HeroSkillShowcase.js?v=303b';
+import { HeroSkillShowcase, CLASS_SKILLS_MAP } from './ui/HeroSkillShowcase.js?v=307-all';
 
 let gameState = loadGame() || createInitialState('warrior');
 let computedStats = recalcPlayerStats(gameState);
@@ -2198,7 +2198,7 @@ function renderWelcomeClasses() {
     item.style.setProperty('--cls-accent', cls.color || '#f59e0b');
     const roleShort = (CLASS_META_EXT[cls.id]?.tag || cls.title || '').split('・')[0];
     item.innerHTML = `
-      <img class="v299-card-portrait" src="./assets/ui/card_class_${cls.id}_v299.webp?v=299" onerror="this.src='${cls.spritePath}'" alt="${cls.name}" />
+      <img class="v299-card-portrait" src="./assets/ui/card_class_${cls.id}_v306.webp?v=306" onerror="this.src='${cls.spritePath}'" alt="${cls.name}" />
       <div class="tcard-meta">
         <div class="tcard-row">
           <span class="tcard-name" style="color:${cls.color}">${cls.name}</span>
@@ -2959,3 +2959,20 @@ if (typeof document !== 'undefined') {
 // v253: 啟動新版 22 款暗黑手繪 Buff 圖示列
 initHudOverhaulV217();
 initAllDraggableModals();
+
+
+// v306: 自動將左上角英雄頭像指向全新暗黑史詩頭像 (v306)
+(function initV306AvatarSync() {
+  const img = document.getElementById('hud-hero-avatar');
+  if (!img) return;
+  const rewrite = () => {
+    const cur = img.getAttribute('src') || '';
+    const m = cur.match(/assets\/heroes\/(warrior|ranger|mage|paladin|necro|assassin)\.png/);
+    if (m) {
+      const target = `./assets/ui/avatar_class_${m[1]}_v306.webp?v=306`;
+      if (cur !== target) img.setAttribute('src', target);
+    }
+  };
+  rewrite();
+  new MutationObserver(rewrite).observe(img, { attributes: true, attributeFilter: ['src'] });
+})();

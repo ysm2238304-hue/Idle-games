@@ -20,6 +20,7 @@ import { PaladinVfxDirector } from '../vfx/PaladinVfxDirector.js?v=266';
 import { FloatingTextPool } from '../vfx/FloatingTextPool.js?v=298';
 import { ParticlePool } from '../vfx/ParticlePool.js?v=266';
 import { TrainingArenaController } from '../combat/TrainingArenaController.js?v=305';
+import { HERO_V307_READY, getHeroAtlasInfo, getSkillAnimAction, getActionAnimDurationMs, resolveHeroAnimKey } from '../combat/HeroAnimRouter.js?v=307';
 import { BattleMiniDpsHud } from '../ui/BattleMiniDpsHud.js?v=302';
 import { CameraZoomHelper } from './CameraZoomHelper.js?v=282';
 import { MonsterVfxDirector } from '../vfx/MonsterVfxDirector.js?v=293';
@@ -194,7 +195,11 @@ export class BattleScene extends Phaser.Scene {
     this.loadedChapters = new Set([initCh]);
     this.isLoadingAssets = false;
 
-    this.load.atlas(`atlas_${initCid}`, `./assets/heroes/atlas_${initCid}.png?v=66`, `./assets/heroes/atlas_${initCid}.json?v=66`);
+    const initHeroInfo = getHeroAtlasInfo(initCid);
+    this.load.atlas(initHeroInfo.baseKey, initHeroInfo.basePng, initHeroInfo.baseJson);
+    if (initHeroInfo.skillsReady) {
+      this.load.atlas(initHeroInfo.skillsKey, initHeroInfo.skillsPng, initHeroInfo.skillsJson);
+    }
     if (initCid === 'necro') {
       this.loadedSummons = true;
       this.load.atlas('atlas_summons', './assets/heroes/atlas_summons.png', './assets/heroes/atlas_summons.json');
@@ -286,7 +291,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   getHeroAtlasKey(cid) {
-    return `atlas_${cid || 'warrior'}`;
+    return getHeroAtlasInfo(cid || 'warrior').baseKey;
   }
 
   getMobAtlasKey(mid) {
@@ -298,7 +303,8 @@ export class BattleScene extends Phaser.Scene {
 
   ensureClassLoaded(cid, cb) {
     const needSummons = cid === 'necro' && !this.loadedSummons;
-    const needClass = !this.loadedClasses.has(cid) || !this.textures.exists(`atlas_${cid}`);
+    const hInfo = getHeroAtlasInfo(cid);
+    const needClass = !this.loadedClasses.has(cid) || !this.textures.exists(hInfo.baseKey) || (hInfo.skillsReady && !this.textures.exists(hInfo.skillsKey));
     const needVfx = !this.loadedVfxClasses || !this.loadedVfxClasses.has(cid);
     if (!needClass && !needSummons && !needVfx) {
       this.unloadOtherClassVfx(cid);
@@ -307,7 +313,12 @@ export class BattleScene extends Phaser.Scene {
     }
     this.isLoadingAssets = true;
     if (needClass) {
-      this.load.atlas(`atlas_${cid}`, `./assets/heroes/atlas_${cid}.png?v=66`, `./assets/heroes/atlas_${cid}.json?v=66`);
+      if (!this.textures.exists(hInfo.baseKey)) {
+        this.load.atlas(hInfo.baseKey, hInfo.basePng, hInfo.baseJson);
+      }
+      if (hInfo.skillsReady && !this.textures.exists(hInfo.skillsKey)) {
+        this.load.atlas(hInfo.skillsKey, hInfo.skillsPng, hInfo.skillsJson);
+      }
     }
     if (needSummons) {
       this.load.atlas('atlas_summons', './assets/heroes/atlas_summons.png', './assets/heroes/atlas_summons.json');
@@ -488,11 +499,12 @@ export class BattleScene extends Phaser.Scene {
     };
     const def = map[cid];
     if (!def) return;
-    const atlasKey = `atlas_${cid}`;
+    const hInfo = getHeroAtlasInfo(cid);
+    const atlasKey = hInfo.baseKey;
     const tex = this.textures.get(atlasKey);
+    const skillsTex = (hInfo.skillsReady && this.textures.exists(hInfo.skillsKey)) ? this.textures.get(hInfo.skillsKey) : null;
     ['down', 'up', 'right'].forEach((d) => {
-      if (!tex.has(`${def.tex}_${d}_walk_7`)) return;
-      if (!this.anims.exists(`${def.prefix}_${d}_walk`)) {
+      if (tex && tex.has(`${def.tex}_${d}_walk_7`) && !this.anims.exists(`${def.prefix}_${d}_walk`)) {
         this.anims.create({
           key: `${def.prefix}_${d}_walk`,
           frames: [0, 1, 2, 3, 4, 5, 6, 7].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_walk_${i}` })),
@@ -500,7 +512,7 @@ export class BattleScene extends Phaser.Scene {
           repeat: -1,
         });
       }
-      if (!this.anims.exists(`${def.prefix}_${d}_idle`)) {
+      if (tex && tex.has(`${def.tex}_${d}_idle_0`) && !this.anims.exists(`${def.prefix}_${d}_idle`)) {
         this.anims.create({
           key: `${def.prefix}_${d}_idle`,
           frames: [0, 1, 2, 3].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_idle_${i}` })),
@@ -508,12 +520,49 @@ export class BattleScene extends Phaser.Scene {
           repeat: -1,
         });
       }
-      if (!this.anims.exists(`${def.prefix}_${d}_atk`)) {
+      const hasAtk1 = tex && tex.has(`${def.tex}_${d}_atk1_0`);
+      const hasAtk2 = tex && tex.has(`${def.tex}_${d}_atk2_0`);
+      const hasLegacyAtk = tex && tex.has(`${def.tex}_${d}_atk_0`);
+      if (hasAtk1 && !this.anims.exists(`${def.prefix}_${d}_atk1`)) {
         this.anims.create({
-          key: `${def.prefix}_${d}_atk`,
-          frames: [0, 1, 2, 3].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_atk_${i}` })),
+          key: `${def.prefix}_${d}_atk1`,
+          frames: [0, 1, 2, 3].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_atk1_${i}` })),
           frameRate: def.atkFps,
           repeat: 0,
+        });
+      }
+      if (hasAtk2 && !this.anims.exists(`${def.prefix}_${d}_atk2`)) {
+        this.anims.create({
+          key: `${def.prefix}_${d}_atk2`,
+          frames: [0, 1, 2, 3].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_atk2_${i}` })),
+          frameRate: Math.max(12, def.atkFps - 2),
+          repeat: 0,
+        });
+      }
+      if ((hasLegacyAtk || hasAtk1) && !this.anims.exists(`${def.prefix}_${d}_atk`)) {
+        const atkName = hasAtk1 ? 'atk1' : 'atk';
+        this.anims.create({
+          key: `${def.prefix}_${d}_atk`,
+          frames: [0, 1, 2, 3].map((i) => ({ key: atlasKey, frame: `${def.tex}_${d}_${atkName}_${i}` })),
+          frameRate: def.atkFps,
+          repeat: 0,
+        });
+      }
+      if (skillsTex) {
+        [
+          { name: 'cast', fps: 12 },
+          { name: 'buff', fps: 10 },
+          { name: 'dash', fps: 16 },
+          { name: 'special', fps: 14 },
+        ].forEach(({ name, fps }) => {
+          if (skillsTex.has(`${def.tex}_${d}_${name}_0`) && !this.anims.exists(`${def.prefix}_${d}_${name}`)) {
+            this.anims.create({
+              key: `${def.prefix}_${d}_${name}`,
+              frames: [0, 1, 2, 3].map((i) => ({ key: hInfo.skillsKey, frame: `${def.tex}_${d}_${name}_${i}` })),
+              frameRate: fps,
+              repeat: 0,
+            });
+          }
         });
       }
     });
@@ -1027,6 +1076,8 @@ export class BattleScene extends Phaser.Scene {
     this._activeDamageSource = info?.name || info?.id || '技能';
     this._activeDamageSourceUntil = (this.time?.now || 0) + 1100;
     this._triggerHeroSelfBuffVfx?.(info?.id);
+    const routedAction = getSkillAnimAction(curCid, info?.id);
+    this.triggerHeroAttackAnim(getActionAnimDurationMs(routedAction), routedAction);
     const trainCdMult = 1.0; // v305: 演武場遵循實戰正常技能冷卻
     const effCd = Math.max(300, Math.round(info.cooldownMs * (buildMods.cdMult || 1) * trainCdMult));
     const cdSaved = Math.max(0, info.cooldownMs - effCd);
@@ -1634,13 +1685,12 @@ export class BattleScene extends Phaser.Scene {
     this.updateCombatFeel?.(time);
   }
 
-  triggerHeroAttackAnim(durationMs = 340) {
-    const now = this.time?.now || 0;
-    this.heroAttackAnimUntil = now + durationMs;
+  triggerHeroAttackAnim(durationMs = 340, action = 'atk1') {
+    this.heroAttackAnimUntil = Math.max(this.heroAttackAnimUntil || 0, (this.time?.now || 0) + durationMs);
+    this._heroActiveAction = action || 'atk1';
     if (!this.hero) return;
     const cid = this.getState().classId || 'warrior';
-    const prefix = cid === 'warrior' ? 'w' : (cid === 'ranger' ? 'r' : (cid === 'paladin' ? 'p' : (cid === 'necro' ? 'n' : (cid === 'assassin' ? 'a' : 'm'))));
-    const atkKey = `${prefix}_${this.heroDir || 'down'}_atk`;
+    const atkKey = resolveHeroAnimKey(this, cid, this.heroDir || 'down', this._heroActiveAction);
     if (this.anims.exists(atkKey)) {
       this.hero.anims.timeScale = 1;
       if (this.hero.anims.isPaused) this.hero.anims.resume();
@@ -1702,8 +1752,7 @@ export class BattleScene extends Phaser.Scene {
     }
 
     if (cid === 'warrior' || cid === 'ranger' || cid === 'mage' || cid === 'paladin' || cid === 'necro' || cid === 'assassin') {
-      const prefix = cid === 'warrior' ? 'w' : (cid === 'ranger' ? 'r' : (cid === 'paladin' ? 'p' : (cid === 'necro' ? 'n' : (cid === 'assassin' ? 'a' : 'm'))));
-      const animKey = `${prefix}_${this.heroDir}_${isAttacking ? 'atk' : (isMoving ? 'walk' : 'idle')}`;
+      const animKey = resolveHeroAnimKey(this, cid, this.heroDir, isAttacking ? (this._heroActiveAction || 'atk1') : (isMoving ? 'walk' : 'idle'));
       if (isAttacking) {
         if (this.hero.anims.currentAnim?.key !== animKey) {
           this.hero.play(animKey, false);
@@ -1940,10 +1989,10 @@ export class BattleScene extends Phaser.Scene {
 
   performHeroAttack(time, stats, classId, target) {
     this.faceHeroToward(target.sprite.x, target.sprite.y);
-    this.triggerHeroAttackAnim(340);
-    this.lungeHeroJuice(1.07, 0.94);
-    const atkPrefix = classId === 'warrior' ? 'w' : (classId === 'ranger' ? 'r' : (classId === 'paladin' ? 'p' : (classId === 'necro' ? 'n' : (classId === 'assassin' ? 'a' : 'm'))));
-    this.hero.play(`${atkPrefix}_${this.heroDir}_atk`, false);
+    const isHeavyStep = (classId === 'ranger') ? (this.basicComboStep % 4 === 3) : (this.basicComboStep % 3 === 2);
+    const atkAction = isHeavyStep ? 'atk2' : 'atk1';
+    this.triggerHeroAttackAnim(getActionAnimDurationMs(atkAction), atkAction);
+    this.lungeHeroJuice(isHeavyStep ? 1.11 : 1.07, isHeavyStep ? 0.91 : 0.94);
     const mpGain = classId === 'warrior' ? 8 : (classId === 'assassin' || classId === 'paladin' ? 6 : (classId === 'ranger' || classId === 'necro' ? 5 : 4));
     this.playerMp = Math.min(this.playerMaxMp, this.playerMp + mpGain);
     const baseAngle = Math.atan2(target.sprite.y - this.hero.y, target.sprite.x - this.hero.x);

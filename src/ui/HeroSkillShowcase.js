@@ -1,3 +1,4 @@
+import { getHeroAtlasInfo, getSkillAnimAction } from '../combat/HeroAnimRouter.js?v=307';
 // v301: 創角大廳 2.5D 三層景深實戰技能演武引擎（HeroSkillShowcase）
 // 徹底廢除 ctx.filter 杜絕白色色塊、對齊英雄真實動畫幀名、全 6 職業精準元素配對＋4 種真實演出模式
 import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=235';
@@ -311,7 +312,13 @@ export class HeroSkillShowcase {
   }
 
   _loadHeroAtlas(cid) {
-    return this._loadAtlas(`./assets/heroes/atlas_${cid}.png?v=66`, `./assets/heroes/atlas_${cid}.json?v=66`);
+    const hInfo = getHeroAtlasInfo(cid);
+    return this._loadAtlas(hInfo.basePng, hInfo.baseJson);
+  }
+  _loadHeroSkillsAtlas(cid) {
+    const hInfo = getHeroAtlasInfo(cid);
+    if (!hInfo.skillsReady) return null;
+    return this._loadAtlas(hInfo.skillsPng, hInfo.skillsJson);
   }
 
   _preloadClassAssets(cid) {
@@ -878,23 +885,34 @@ export class HeroSkillShowcase {
     }
 
     const hRec = this._loadHeroAtlas(this.classId);
+    const sSkillRec = this._loadHeroSkillsAtlas?.(this.classId);
     const pf = HERO_PREFIX[this.classId] || 'wf';
+    let drawRec = hRec;
     if (hRec.ready && hRec.frames && hRec.img.complete && hRec.img.naturalWidth > 0) {
       const isDash = now < this.dashUntil;
       const isCast = now < this.castAnimUntil;
       const fAtk = Math.floor((now / 105) % 4);
       const fWalk = Math.floor((now / 85) % 8);
       const fIdle = Math.floor((now / 180) % 4);
-
-      const candidates = isCast
-        ? [`${pf}_right_atk_${fAtk}`, `${pf}_right_walk_${fWalk % 4}`, `${pf}_right_idle_${fIdle}`]
-        : (isDash
-          ? [`${pf}_right_walk_${fWalk}`, `${pf}_right_walk_${fWalk % 4}`]
-          : [`${pf}_right_idle_${fIdle}`, `${pf}_right_walk_${fIdle}`]);
+      const actName = this.skillId ? getSkillAnimAction(this.classId, this.skillId) : 'atk1';
 
       let fr = null;
-      for (const ck of candidates) {
-        if (hRec.frames[ck]?.frame) { fr = hRec.frames[ck].frame; break; }
+      if (isCast && sSkillRec?.ready && sSkillRec.frames && sSkillRec.img.complete && sSkillRec.img.naturalWidth > 0) {
+        const skKey = `${pf}_right_${actName}_${fAtk}`;
+        if (sSkillRec.frames[skKey]?.frame) {
+          drawRec = sSkillRec;
+          fr = sSkillRec.frames[skKey].frame;
+        }
+      }
+      if (!fr) {
+        const candidates = isCast
+          ? [`${pf}_right_${actName}_${fAtk}`, `${pf}_right_atk1_${fAtk}`, `${pf}_right_atk_${fAtk}`, `${pf}_right_walk_${fWalk % 4}`, `${pf}_right_idle_${fIdle}`]
+          : (isDash
+            ? [`${pf}_right_dash_${fAtk}`, `${pf}_right_walk_${fWalk}`, `${pf}_right_walk_${fWalk % 4}`]
+            : [`${pf}_right_idle_${fIdle}`, `${pf}_right_walk_${fIdle}`]);
+        for (const ck of candidates) {
+          if (hRec.frames[ck]?.frame) { fr = hRec.frames[ck].frame; break; }
+        }
       }
       if (!fr) {
         const keys = Object.keys(hRec.frames);
@@ -911,7 +929,7 @@ export class HeroSkillShowcase {
         const sc = targetH / Math.max(40, fr.h);
         const dw = fr.w * sc;
         const dh = fr.h * sc;
-        ctx.drawImage(hRec.cleanCanvas || hRec.img, fr.x, fr.y, fr.w, fr.h, this.heroX - dw / 2, this.heroY - dh + 10, dw, dh);
+        ctx.drawImage(drawRec.cleanCanvas || drawRec.img, fr.x, fr.y, fr.w, fr.h, this.heroX - dw / 2, this.heroY - dh + 10, dw, dh);
         ctx.restore();
       }
     }
