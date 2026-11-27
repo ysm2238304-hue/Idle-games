@@ -1,4 +1,5 @@
-// 創角大廳：全 6 職業 × 全 8 技能 (48 招) 實戰貼圖特效、真實召喚物/分身與戰鬥背景演武預覽模組 (v77)
+// v299: 創角大廳 2.5D 三層景深實戰技能演武引擎（HeroSkillShowcase）
+// 全面同步六大職業最新 4×4 十六幀手繪 RGBA 序列幀（seq16_*）、地表貼花（decal_*）、手繪投射物（proj_*）與頭頂高對比暴擊數字
 import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=235';
 import { RANGER_SKILLS } from '../data/rangerSkills.js?v=236';
 import { MAGE_SKILLS } from '../data/mageSkills.js?v=241';
@@ -24,22 +25,98 @@ const HERO_PREFIX = {
   assassin: 'af',
 };
 
-const CLASS_BG_MAP = {
-  warrior: './assets/bg/map_4.jpg',
-  ranger: './assets/bg/map_0.jpg',
-  mage: './assets/bg/map_5.jpg',
-  paladin: './assets/bg/map_3.jpg',
-  necro: './assets/bg/map_2.jpg',
-  assassin: './assets/bg/map_7.jpg',
-};
-
-const CLASS_FX_PRELOAD = {
-  warrior: ['wfx_whirl_outer', 'wfx_whirl_inner', 'wfx_whirl_wind', 'wfx_lava_crack', 'wfx_slam_pillar', 'wfx_lava_ring', 'wfx_rubble', 'wfx_charge_aura', 'wfx_fire_trail', 'wfx_blood_ring', 'wfx_blade_wave', 'wfx_wave_trail', 'nfx_warcry', 'wfx_cleave', 'wfx_sparks', 'nfx_totem', 'wfx_slam_pillar'],
-  ranger: ['rfx_wind_trail', 'rfx_arrow', 'rfx_pierce_flash', 'rfx_rain_sigil', 'rfx_rain_fall', 'rfx_rain_impact', 'rfx_leaf_sparks', 'rfx_shadow_smoke', 'rfx_trap_rune', 'rfx_poison_burst', 'rfx_charge_bow', 'rfx_sonic_ring', 'rfx_phantom_dragon', 'rfx_dodge_aura', 'rfx_emerald_star', 'nfx_caltrops', 'rfx_beam', 'nfx_deathmark'],
-  mage: ['mfx_nova_ring', 'mfx_meteor_rock', 'mfx_meteor_crater', 'mfx_meteor_blast', 'wfx_slam_pillar', 'mfx_star_sigil', 'mfx_orb', 'mfx_spark', 'mfx_frost_ring', 'mfx_frost_shard', 'mfx_frost_burst', 'mfx_void_core', 'mfx_void_beam', 'mfx_void_slash', 'nfx_overload', 'mfx_arcane_shield', 'nfx_lightning', 'nfx_icicles', 'nfx_blackhole'],
-  paladin: ['pfx_hammer', 'pfx_heaven', 'pfx_judgment', 'pfx_slash', 'pfx_storm', 'pfx_bash', 'pfx_aegis', 'pfx_consecration'],
-  necro: ['sfx_skel_summon', 'nfx_p_summon', 'sfx_skel_slash', 'sfx_golem_summon', 'nfx_p_golem', 'sfx_golem_slam', 'sfx_frenzy', 'nfx_p_wraith', 'sfx_wraith_boom', 'nfx_p_spear', 'nfx_p_slash', 'nfx_p_corpse', 'nfx_p_prison', 'nfx_p_curse', 'sfx_blood_leech'],
-  assassin: ['afx_dash', 'afx_slash', 'afx_smoke', 'afx_flurry', 'afx_execute', 'afx_kunai', 'afx_venom', 'afx_fangs'],
+// 六大職業實戰最新 2.5D seq16 + decal + proj 精確映射（100% 對齊實戰 VfxDirector 資產）
+const CLASS_V299_VFX = {
+  warrior: {
+    color: '#fb923c',
+    seqs: ['seq16_w_whirlwind', 'seq16_w_hammer_slam', 'seq16_w_rend_burst', 'seq16_w_earth_stomp', 'seq16_w_fissure', 'seq16_w_warcry', 'seq16_w_maelstrom', 'seq16_w_execute'],
+    decals: ['decal_w_crater', 'decal_w_lava', 'decal_w_blood', 'decal_w_rune'],
+    projs: ['proj_w_flame_wave', 'proj_w_rock_shard', 'proj_w_chain_hook'],
+    bySkillId: {
+      whirlwind:  { seq: 'seq16_w_whirlwind',  decal: 'decal_w_crater', selfCentered: true, scale: 1.35 },
+      earthquake: { seq: 'seq16_w_fissure',    decal: 'decal_w_lava',   scale: 1.40 },
+      warcry:     { seq: 'seq16_w_warcry',     decal: 'decal_w_rune',   selfCentered: true, scale: 1.30 },
+      bleed_slash:{ seq: 'seq16_w_rend_burst', decal: 'decal_w_blood',  proj: 'proj_w_flame_wave', scale: 1.25 },
+      charge:     { seq: 'seq16_w_earth_stomp',decal: 'decal_w_crater', dash: true, scale: 1.28 },
+      ancients:   { seq: 'seq16_w_hammer_slam',decal: 'decal_w_lava',   scale: 1.45 },
+    },
+  },
+  ranger: {
+    color: '#4ade80',
+    seqs: ['seq16_r_arrow_storm', 'seq16_r_venom_burst', 'seq16_r_shadow_boom', 'seq16_r_frost_barrage', 'seq16_r_phantom_beam', 'seq16_r_death_trap', 'seq16_r_smoke_bomb', 'seq16_r_void_rift'],
+    decals: ['decal_r_arrows', 'decal_r_venom', 'decal_r_shadow', 'decal_r_trap'],
+    projs: ['proj_r_emerald_arrow', 'proj_r_shadow_arrow', 'proj_r_venom_spear'],
+    bySkillId: {
+      volley:        { seq: 'seq16_r_frost_barrage', decal: 'decal_r_arrows', proj: 'proj_r_emerald_arrow', multiProj: 3, scale: 1.25 },
+      arrowrain:     { seq: 'seq16_r_arrow_storm',   decal: 'decal_r_arrows', scale: 1.45 },
+      phantombow:    { seq: 'seq16_r_phantom_beam',  decal: 'decal_r_shadow', proj: 'proj_r_shadow_arrow', scale: 1.42 },
+      r_venom_pierce:{ seq: 'seq16_r_venom_burst',   decal: 'decal_r_venom',  proj: 'proj_r_venom_spear', scale: 1.30 },
+      caltrops:      { seq: 'seq16_r_death_trap',    decal: 'decal_r_trap',   scale: 1.28 },
+      death_mark:    { seq: 'seq16_r_void_rift',     decal: 'decal_r_shadow', scale: 1.38 },
+      shadowstep:    { seq: 'seq16_r_smoke_bomb',    decal: 'decal_r_shadow', dash: true, scale: 1.25 },
+      shadow_clones: { seq: 'seq16_r_shadow_boom',   decal: 'decal_r_shadow', scale: 1.35 },
+    },
+  },
+  mage: {
+    color: '#38bdf8',
+    seqs: ['seq16_m_meteor', 'seq16_m_frost_nova', 'seq16_m_lightning_strike', 'seq16_m_inferno', 'seq16_m_fireball_blast', 'seq16_m_blizzard', 'seq16_m_firewall', 'seq16_m_ball_lightning', 'seq16_m_supernova'],
+    decals: ['decal_m_scorch', 'decal_m_frost', 'decal_m_lightning', 'decal_m_void'],
+    projs: ['proj_m_fireball', 'proj_m_frozen_orb', 'proj_m_ice_lance', 'proj_m_fire_bolt'],
+    bySkillId: {
+      m_frozen_orb:       { seq: 'seq16_m_blizzard',         decal: 'decal_m_frost',     proj: 'proj_m_frozen_orb', scale: 1.38 },
+      frost_nova:         { seq: 'seq16_m_frost_nova',       decal: 'decal_m_frost',     selfCentered: true, scale: 1.42 },
+      m_deep_freeze:      { seq: 'seq16_m_blizzard',         decal: 'decal_m_frost',     proj: 'proj_m_ice_lance', scale: 1.45 },
+      m_fireball:         { seq: 'seq16_m_fireball_blast',   decal: 'decal_m_scorch',    proj: 'proj_m_fireball', scale: 1.36 },
+      m_flame_hydra:      { seq: 'seq16_m_firewall',         decal: 'decal_m_scorch',    proj: 'proj_m_fire_bolt', scale: 1.35 },
+      m_inferno:          { seq: 'seq16_m_inferno',          decal: 'decal_m_scorch',    scale: 1.48 },
+      chain_lightning:    { seq: 'seq16_m_lightning_strike', decal: 'decal_m_lightning', scale: 1.40 },
+      m_ball_lightning:   { seq: 'seq16_m_ball_lightning',   decal: 'decal_m_lightning', scale: 1.36 },
+      m_unstable_currents:{ seq: 'seq16_m_supernova',        decal: 'decal_m_void',      scale: 1.50 },
+      meteor:             { seq: 'seq16_m_meteor',           decal: 'decal_m_scorch',    scale: 1.50 },
+    },
+  },
+  paladin: {
+    color: '#fde047',
+    seqs: ['seq16_p_holy_slash', 'seq16_p_heaven_pillar', 'seq16_p_divine_storm', 'seq16_p_judgment_cross', 'seq16_p_shield_bash', 'seq16_p_condemn_vortex', 'seq16_p_thorns_burst', 'seq16_p_verdict_sword'],
+    decals: ['decal_p_consecration', 'decal_p_cross_crater', 'decal_p_sanctuary', 'decal_p_aegis_ring'],
+    projs: ['proj_p_justice_hammer', 'proj_p_holy_lance', 'proj_p_holy_bolt'],
+    bySkillId: {
+      hammer:       { seq: 'seq16_p_divine_storm',   decal: 'decal_p_consecration', proj: 'proj_p_justice_hammer', multiProj: 2, scale: 1.35 },
+      consecration: { seq: 'seq16_p_condemn_vortex', decal: 'decal_p_consecration', scale: 1.40 },
+      judgment:     { seq: 'seq16_p_judgment_cross', decal: 'decal_p_cross_crater', scale: 1.45 },
+      aegis:        { seq: 'seq16_p_thorns_burst',   decal: 'decal_p_aegis_ring',   selfCentered: true, scale: 1.32 },
+      holy_storm:   { seq: 'seq16_p_holy_slash',     decal: 'decal_p_sanctuary',    proj: 'proj_p_holy_lance', scale: 1.36 },
+      heaven_fury:  { seq: 'seq16_p_heaven_pillar',  decal: 'decal_p_cross_crater', scale: 1.50 },
+    },
+  },
+  necro: {
+    color: '#2dd4bf',
+    seqs: ['seq16_n_corpse_boom', 'seq16_n_bone_burst', 'seq16_n_tendrils', 'seq16_n_blight_pool', 'seq16_n_blood_surge', 'seq16_n_blood_wave', 'seq16_n_bone_storm', 'seq16_n_soul_rift'],
+    decals: ['decal_n_bone', 'decal_n_blood', 'decal_n_plague', 'decal_n_rift'],
+    projs: ['proj_n_bone_spear', 'proj_n_blood_lance'],
+    bySkillId: {
+      skeleton:       { seq: 'seq16_n_soul_rift',   decal: 'decal_n_rift',   scale: 1.36 },
+      golem:          { seq: 'seq16_n_bone_storm',  decal: 'decal_n_bone',   scale: 1.42 },
+      frenzy:         { seq: 'seq16_n_blood_surge', decal: 'decal_n_blood',  selfCentered: true, scale: 1.32 },
+      corpse_explode: { seq: 'seq16_n_corpse_boom', decal: 'decal_n_blood',  scale: 1.48 },
+      bone_spear:     { seq: 'seq16_n_bone_burst',  decal: 'decal_n_bone',   proj: 'proj_n_bone_spear', scale: 1.34 },
+      blood_curse:    { seq: 'seq16_n_blight_pool', decal: 'decal_n_plague', proj: 'proj_n_blood_lance', scale: 1.40 },
+    },
+  },
+  assassin: {
+    color: '#c084fc',
+    seqs: ['seq16_a_shadow_slash', 'seq16_a_blade_flurry', 'seq16_a_venom_nova', 'seq16_a_smoke_veil', 'seq16_a_garrote', 'seq16_a_execute', 'seq16_a_eclipse', 'seq16_a_reaper_dance'],
+    decals: ['decal_a_blood_cross', 'decal_a_venom_pool', 'decal_a_eclipse', 'decal_a_kunai'],
+    projs: ['proj_a_kunai', 'proj_a_shuriken', 'proj_a_boomerang'],
+    bySkillId: {
+      shadow_dash: { seq: 'seq16_a_shadow_slash', decal: 'decal_a_eclipse',     dash: true, scale: 1.34 },
+      flurry:      { seq: 'seq16_a_blade_flurry', decal: 'decal_a_blood_cross', dash: true, scale: 1.38 },
+      execute:     { seq: 'seq16_a_execute',      decal: 'decal_a_blood_cross', dash: true, scale: 1.48 },
+      kunai:       { seq: 'seq16_a_garrote',      decal: 'decal_a_kunai',       proj: 'proj_a_kunai', multiProj: 3, scale: 1.28 },
+      venom_blade: { seq: 'seq16_a_venom_nova',   decal: 'decal_a_venom_pool',  proj: 'proj_a_shuriken', scale: 1.38 },
+      smoke_bomb:  { seq: 'seq16_a_smoke_veil',   decal: 'decal_a_eclipse',     scale: 1.40 },
+    },
+  },
 };
 
 export class HeroSkillShowcase {
@@ -49,44 +126,31 @@ export class HeroSkillShowcase {
     this.rafId = null;
     this.classId = 'warrior';
     this.skillIdx = 0;
-    this.autoSwitchAt = 0;
+    this.autoPlay = true;
+    this.nextCastAt = 0;
     this.castAnimUntil = 0;
-    this.heroX = 84;
-    this.heroBaseX = 84;
-    this.heroY = 138;
-    this.afterimages = [];
-    this.summons = [];
-    this.clones = [];
-    this.mobs = [];
-    this.fx = [];
-    this.popups = [];
-    this.atlasCache = new Map();
+    this.heroBaseX = 190;
+    this.heroBaseY = 262;
+    this.heroX = 190;
+    this.heroY = 262;
+    this.dashUntil = 0;
+    this.dashTargetX = 480;
+
     this.imgCache = new Map();
-    this.mobAtlas = null;
-    this.summonAtlas = null;
+    this.atlasCache = new Map();
+    this.decals = [];
+    this.seqAnims = [];
+    this.projs = [];
+    this.popups = [];
     this.onSkillChange = null;
-    this._pendingSkillIdx = 0;
-    this._heroReadyStarted = false;
-    this._ensureMobAtlas();
-    this._ensureSummonAtlas();
+    this.targets = [
+      { x: 540, y: 248, key: 'dummy_boss_v299',     scale: 0.34, wobbleUntil: 0, flashUntil: 0 },
+      { x: 632, y: 205, key: 'dummy_standard_v299', scale: 0.28, wobbleUntil: 0, flashUntil: 0 },
+      { x: 625, y: 304, key: 'dummy_standard_v299', scale: 0.28, wobbleUntil: 0, flashUntil: 0 },
+    ];
   }
 
-  _loadAtlas(pngUrl, jsonUrl) {
-    if (this.atlasCache.has(pngUrl)) return this.atlasCache.get(pngUrl);
-    const rec = { img: new Image(), frames: null, ready: false };
-    this.atlasCache.set(pngUrl, rec);
-    fetch(jsonUrl)
-      .then((r) => r.json())
-      .then((meta) => {
-        rec.frames = meta.frames || {};
-        rec.img.onload = () => { rec.ready = true; };
-        rec.img.src = pngUrl;
-      })
-      .catch(() => {});
-    return rec;
-  }
-
-  _getImg(url) {
+  _loadImg(url) {
     if (this.imgCache.has(url)) return this.imgCache.get(url);
     const rec = { img: new Image(), ready: false };
     rec.img.onload = () => { rec.ready = true; };
@@ -95,629 +159,318 @@ export class HeroSkillShowcase {
     return rec;
   }
 
-  _getFxImg(key) {
-    return this._getImg(`./assets/fx/${key}.png?v=77`);
+  _loadHeroAtlas(cid) {
+    const pref = HERO_PREFIX[cid] || 'wf';
+    const key = `hero_${pref}`;
+    if (this.atlasCache.has(key)) return this.atlasCache.get(key);
+    const rec = { img: new Image(), frames: null, ready: false };
+    this.atlasCache.set(key, rec);
+    fetch(`./assets/hero/atlas_${pref}.json`)
+      .then((r) => r.json())
+      .then((meta) => {
+        rec.frames = meta.frames || {};
+        rec.img.onload = () => { rec.ready = true; };
+        rec.img.src = `./assets/hero/atlas_${pref}.png`;
+      })
+      .catch(() => {});
+    return rec;
   }
 
-  _preloadClassFx(classId) {
-    const keys = CLASS_FX_PRELOAD[classId] || [];
-    keys.forEach((k) => this._getFxImg(k));
+  _preloadClassAssets(cid) {
+    this._loadImg('./assets/bg/arena_training_v299.webp?v=299');
+    this._loadImg('./assets/fx/dummy_boss_v299.webp?v=299');
+    this._loadImg('./assets/fx/dummy_standard_v299.webp?v=299');
+    this._loadHeroAtlas(cid);
+    const cfg = CLASS_V299_VFX[cid] || CLASS_V299_VFX.warrior;
+    cfg.seqs.forEach((k) => this._loadImg(`./assets/fx/${k}.webp`));
+    cfg.decals.forEach((k) => this._loadImg(`./assets/fx/${k}.webp`));
+    cfg.projs.forEach((k) => this._loadImg(`./assets/fx/${k}.webp`));
   }
 
-  _ensureMobAtlas() {
-    this.mobAtlas = this._loadAtlas('./assets/monsters/atlas_ch1.png', './assets/monsters/atlas_ch1.json');
-  }
-
-  _ensureSummonAtlas() {
-    this.summonAtlas = this._loadAtlas('./assets/heroes/atlas_summons.png', './assets/heroes/atlas_summons.json');
+  setAutoPlay(flag) {
+    this.autoPlay = !!flag;
   }
 
   attach(canvas, classId, onSkillChange) {
-    this.stop();
+    this.detach();
     this.canvas = canvas;
-    this.ctx = canvas?.getContext('2d');
+    this.ctx = canvas?.getContext('2d') || null;
     this.classId = classId || 'warrior';
+    this.onSkillChange = onSkillChange || null;
     this.skillIdx = 0;
-    this.fx = [];
+    this.decals = [];
+    this.seqAnims = [];
+    this.projs = [];
     this.popups = [];
-    this.afterimages = [];
-    this.summons = [];
-    this.clones = [];
-    this.onSkillChange = onSkillChange;
-    this._getImg(CLASS_BG_MAP[this.classId] || CLASS_BG_MAP.warrior);
-    this._loadAtlas(`./assets/heroes/atlas_${this.classId}.png?v=66`, `./assets/heroes/atlas_${this.classId}.json?v=66`);
-    this._preloadClassFx(this.classId);
-    this._spawnMobs();
-    this._heroReadyStarted = false;
-    this._pendingSkillIdx = 0;
-    this.autoSwitchAt = Number.MAX_SAFE_INTEGER;
-    const initAtlas = this.atlasCache.get(`./assets/heroes/atlas_${this.classId}.png?v=66`);
-    if (initAtlas?.ready) {
-      this._heroReadyStarted = true;
-      this.triggerSkill(0);
-    }
-    const loop = (ts) => {
-      this._tick(ts);
+    this.heroX = this.heroBaseX;
+    this.heroY = this.heroBaseY;
+    this._preloadClassAssets(this.classId);
+
+    this.triggerSkill(0);
+    const loop = (now) => {
+      this._update(now);
+      this._render(now);
       this.rafId = requestAnimationFrame(loop);
     };
     this.rafId = requestAnimationFrame(loop);
   }
 
-  stop() {
-    if (this.rafId) {
-      cancelAnimationFrame(this.rafId);
-      this.rafId = null;
-    }
-    this.canvas = null;
-    this.ctx = null;
+  detach() {
+    if (this.rafId) cancelAnimationFrame(this.rafId);
+    this.rafId = null;
   }
 
-  _spawnMobs() {
-    const types = ['mob_ch1_wolf', 'mob_ch1_bandit', 'mob_ch1_boar'];
-    const spots = [{ x: 258, y: 112 }, { x: 312, y: 136 }, { x: 270, y: 162 }];
-    this.mobs = spots.map((sp, i) => ({
-      type: types[i % types.length],
-      x: sp.x,
-      baseX: sp.x,
-      y: sp.y,
-      hp: 100,
-      maxHp: 100,
-      flashUntil: 0,
-      deadUntil: 0,
-    }));
-  }
-
-  _addSpriteFx(key, opts) {
-    this._getFxImg(key);
-    this.fx.push({
-      kind: 'sprite',
-      key,
-      x: opts.x ?? 272,
-      y: opts.y ?? 132,
-      vx: opts.vx ?? 0,
-      vy: opts.vy ?? 0,
-      size: opts.size ?? 88,
-      scaleStart: opts.scaleStart ?? 0.65,
-      scaleEnd: opts.scaleEnd ?? 1.25,
-      rot: opts.rot ?? 0,
-      rotSpeed: opts.rotSpeed ?? 0,
-      alpha: opts.alpha ?? 1,
-      add: opts.add !== false,
-      delay: opts.delay ?? 0,
-      life: 0,
-      waitMs: 0,
-      maxLife: opts.maxLife ?? 720,
-      orbit: opts.orbit || null,
-    });
-  }
-
-  _spawnSummon(kind, x, y, tx, ty, lifeMs, frenzy = false) {
-    this.summons.push({
-      kind,
-      x,
-      y,
-      tx,
-      ty,
-      life: 0,
-      maxLife: lifeMs,
-      frenzy,
-      exploded: false,
-    });
+  _getSkills() {
+    const raw = CLASS_SKILLS_MAP[this.classId] || [];
+    return Array.isArray(raw) ? raw : Object.values(raw);
   }
 
   triggerSkill(idx) {
-    const rawMap = CLASS_SKILLS_MAP[this.classId] || WARRIOR_SKILLS;
-    const skills = Array.isArray(rawMap) ? rawMap : Object.values(rawMap);
+    const skills = this._getSkills();
     if (!skills.length) return;
-    const normIdx = ((idx % skills.length) + skills.length) % skills.length;
-    const heroAtlasCheck = this.atlasCache.get(`./assets/heroes/atlas_${this.classId}.png?v=66`);
-    if (!heroAtlasCheck?.ready) {
-      this._pendingSkillIdx = normIdx;
-      this.skillIdx = normIdx;
-      this.onSkillChange?.(normIdx, skills[normIdx]);
-      return;
-    }
-    this._heroReadyStarted = true;
-    this.skillIdx = normIdx;
-    const sk = skills[this.skillIdx];
+    const safeIdx = ((idx % skills.length) + skills.length) % skills.length;
+    this.skillIdx = safeIdx;
+    const sk = skills[safeIdx];
     const now = performance.now();
-    this.castAnimUntil = now + 950;
-    this.autoSwitchAt = now + 2900;
-    this.onSkillChange?.(this.skillIdx, sk);
+    this.castAnimUntil = now + 520;
+    this.nextCastAt = now + 2600;
 
-    const id = sk?.id || '';
-    const cx = 276;
-    const cy = 132;
-    const hx = this.heroBaseX;
-    const hy = this.heroY;
-    this.clones = [];
+    if (this.onSkillChange) this.onSkillChange(safeIdx, sk);
 
-    if (/bloodcharge|shadowstep|shield_bash|shadow_blitz/.test(id)) {
-      this.afterimages = [
-        { x: 118, y: hy, alpha: 0.6 },
-        { x: 158, y: hy, alpha: 0.78 },
-        { x: 196, y: hy, alpha: 0.9 },
-      ];
-      this.heroX = 212;
-    } else {
-      this.heroX = hx;
+    const cfg = CLASS_V299_VFX[this.classId] || CLASS_V299_VFX.warrior;
+    const spec = (sk && cfg.bySkillId?.[sk.id]) || {
+      seq: cfg.seqs[safeIdx % cfg.seqs.length],
+      decal: cfg.decals[safeIdx % cfg.decals.length],
+      proj: (safeIdx % 2 === 1 && cfg.projs.length) ? cfg.projs[safeIdx % cfg.projs.length] : null,
+      scale: 1.35,
+    };
+
+    const mainTgt = this.targets[0];
+    const fxX = spec.selfCentered ? this.heroBaseX + 35 : mainTgt.x;
+    const fxY = spec.selfCentered ? this.heroBaseY - 12 : mainTgt.y - 14;
+
+    if (spec.dash) {
+      this.dashUntil = now + 380;
+      this.dashTargetX = mainTgt.x - 86;
     }
 
-    if (this.classId === 'warrior') {
-      if (id === 'whirlwind') {
-        this._addSpriteFx('wfx_whirl_outer', { x: cx - 22, y: cy, size: 155, scaleStart: 0.85, scaleEnd: 1.15, rotSpeed: 7, maxLife: 1150 });
-        this._addSpriteFx('wfx_whirl_inner', { x: cx - 22, y: cy, size: 122, scaleStart: 0.8, scaleEnd: 1.1, rotSpeed: -9, maxLife: 1150 });
-        this._addSpriteFx('wfx_whirl_wind', { x: cx - 22, y: cy + 12, size: 160, scaleStart: 0.9, scaleEnd: 1.2, rotSpeed: 5, maxLife: 1150, alpha: 0.85 });
-      } else if (id === 'earthshatter') {
-        this._addSpriteFx('wfx_lava_crack', { x: cx, y: cy + 16, size: 140, scaleStart: 0.8, scaleEnd: 1.1, maxLife: 1150, add: false });
-        this._addSpriteFx('wfx_slam_pillar', { x: cx, y: cy - 30, size: 135, scaleStart: 0.7, scaleEnd: 1.2, maxLife: 820 });
-        this._addSpriteFx('wfx_lava_ring', { x: cx, y: cy + 10, size: 150, scaleStart: 0.45, scaleEnd: 1.3, maxLife: 900 });
-        this._addSpriteFx('wfx_rubble', { x: cx, y: cy, size: 125, scaleStart: 0.7, scaleEnd: 1.2, maxLife: 820, add: false });
-      } else if (id === 'bloodcharge') {
-        this._addSpriteFx('wfx_charge_aura', { x: 165, y: hy - 10, size: 120, scaleStart: 0.9, scaleEnd: 1.15, maxLife: 720 });
-        this._addSpriteFx('wfx_fire_trail', { x: 185, y: hy, size: 130, scaleStart: 0.9, scaleEnd: 1.1, maxLife: 750 });
-        this._addSpriteFx('wfx_blood_ring', { x: cx - 20, y: cy, size: 140, scaleStart: 0.5, scaleEnd: 1.25, maxLife: 860, delay: 120 });
-      } else if (id === 'bladestorm') {
-        for (let i = -1; i <= 1; i++) {
-          this._addSpriteFx('wfx_blade_wave', { x: hx + 28, y: hy - 14 + i * 16, vx: 290, vy: i * 32, size: 90, scaleStart: 0.85, scaleEnd: 1.15, rot: i * 0.14, maxLife: 800 });
-        }
-        this._addSpriteFx('wfx_wave_trail', { x: hx + 60, y: hy - 10, vx: 220, size: 100, scaleStart: 0.8, scaleEnd: 1.1, maxLife: 700 });
-      } else if (id === 'warcry') {
-        this._addSpriteFx('nfx_warcry', { x: hx + 10, y: hy - 12, size: 150, scaleStart: 0.55, scaleEnd: 1.35, maxLife: 950 });
-        this._addSpriteFx('wfx_blood_ring', { x: hx + 10, y: hy, size: 140, scaleStart: 0.4, scaleEnd: 1.35, maxLife: 900 });
-      } else if (id === 'execute_cleave') {
-        this._addSpriteFx('wfx_cleave', { x: cx - 10, y: cy - 8, size: 150, scaleStart: 0.75, scaleEnd: 1.25, rot: -0.35, maxLife: 720 });
-        this._addSpriteFx('wfx_blood_ring', { x: cx, y: cy + 8, size: 135, scaleStart: 0.5, scaleEnd: 1.2, maxLife: 850 });
-        this._addSpriteFx('wfx_sparks', { x: cx, y: cy - 8, size: 120, scaleStart: 0.7, scaleEnd: 1.3, maxLife: 720 });
-      } else if (id === 'volcano_totem') {
-        this._addSpriteFx('nfx_totem', { x: cx - 22, y: cy, size: 110, scaleStart: 0.85, scaleEnd: 1.05, maxLife: 1350 });
-        this._addSpriteFx('wfx_lava_ring', { x: cx, y: cy + 12, size: 150, scaleStart: 0.5, scaleEnd: 1.25, maxLife: 980, delay: 140 });
-        this._addSpriteFx('wfx_slam_pillar', { x: cx, y: cy - 18, size: 125, scaleStart: 0.7, scaleEnd: 1.2, maxLife: 950, delay: 180 });
-      } else {
-        // earth_stomp
-        this._addSpriteFx('wfx_lava_crack', { x: cx, y: cy + 14, size: 155, scaleStart: 0.7, scaleEnd: 1.2, maxLife: 1100, add: false });
-        this._addSpriteFx('wfx_lava_ring', { x: cx, y: cy + 10, size: 170, scaleStart: 0.45, scaleEnd: 1.35, maxLife: 950 });
-        this._addSpriteFx('wfx_rubble', { x: cx, y: cy, size: 145, scaleStart: 0.7, scaleEnd: 1.2, maxLife: 880, add: false });
+    const triggerImpact = (impactAt) => {
+      // Layer 1: Ground Decal
+      if (spec.decal) {
+        this.decals.push({
+          url: `./assets/fx/${spec.decal}.webp`,
+          x: fxX,
+          y: fxY + 26,
+          scale: (spec.scale || 1.3) * 0.44,
+          bornAt: impactAt,
+          dur: 1850,
+        });
       }
-    } else if (this.classId === 'ranger') {
-      if (id === 'volley') {
-        this._addSpriteFx('rfx_wind_trail', { x: hx + 25, y: hy - 14, size: 100, scaleStart: 0.8, scaleEnd: 1.15, maxLife: 680 });
-        for (let i = -2; i <= 2; i++) {
-          this._addSpriteFx('rfx_arrow', { x: hx + 24, y: hy - 16 + i * 7, vx: 340, vy: i * 36, size: 62, scaleStart: 0.9, scaleEnd: 1.05, rot: i * 0.11, maxLife: 680 });
-        }
-        this._addSpriteFx('rfx_pierce_flash', { x: cx, y: cy - 8, size: 110, scaleStart: 0.6, scaleEnd: 1.2, maxLife: 650, delay: 180 });
-      } else if (id === 'arrowrain') {
-        this._addSpriteFx('rfx_rain_sigil', { x: cx, y: cy + 16, size: 155, scaleStart: 0.7, scaleEnd: 1.15, maxLife: 1200 });
-        for (let i = 0; i < 4; i++) {
-          const ox = cx - 42 + i * 28;
-          this._addSpriteFx('rfx_rain_fall', { x: ox, y: 20, vy: 210, size: 98, scaleStart: 0.9, scaleEnd: 1.05, delay: i * 90, maxLife: 660 });
-          this._addSpriteFx('rfx_rain_impact', { x: ox, y: cy + 12, size: 98, scaleStart: 0.5, scaleEnd: 1.2, delay: 190 + i * 90, maxLife: 620 });
-        }
-        this._addSpriteFx('rfx_leaf_sparks', { x: cx, y: cy, size: 135, scaleStart: 0.6, scaleEnd: 1.25, delay: 200, maxLife: 900 });
-      } else if (id === 'shadowstep') {
-        this._addSpriteFx('rfx_shadow_smoke', { x: hx + 20, y: hy, size: 115, scaleStart: 0.7, scaleEnd: 1.2, maxLife: 760, add: false });
-        this._addSpriteFx('rfx_trap_rune', { x: cx - 30, y: cy + 12, size: 120, scaleStart: 0.8, scaleEnd: 1.1, maxLife: 1100 });
-        this._addSpriteFx('rfx_poison_burst', { x: cx, y: cy, size: 140, scaleStart: 0.5, scaleEnd: 1.25, delay: 180, maxLife: 850 });
-      } else if (id === 'phantombow') {
-        this._addSpriteFx('rfx_charge_bow', { x: hx + 18, y: hy - 14, size: 110, scaleStart: 0.8, scaleEnd: 1.15, maxLife: 680 });
-        this._addSpriteFx('rfx_sonic_ring', { x: hx + 60, y: hy - 14, size: 105, scaleStart: 0.5, scaleEnd: 1.3, maxLife: 700, delay: 120 });
-        this._addSpriteFx('rfx_phantom_dragon', { x: hx + 40, y: hy - 14, vx: 280, size: 140, scaleStart: 0.9, scaleEnd: 1.15, maxLife: 820, delay: 140 });
-      } else if (id === 'windwalk') {
-        this._addSpriteFx('rfx_dodge_aura', { x: hx + 15, y: hy - 10, size: 130, scaleStart: 0.7, scaleEnd: 1.25, maxLife: 980 });
-        this._addSpriteFx('rfx_wind_trail', { x: cx - 30, y: cy, size: 135, scaleStart: 0.8, scaleEnd: 1.2, maxLife: 850 });
-        this._addSpriteFx('rfx_emerald_star', { x: cx, y: cy - 8, size: 120, scaleStart: 0.5, scaleEnd: 1.3, maxLife: 850, delay: 100 });
-      } else if (id === 'caltrops') {
-        this._addSpriteFx('nfx_caltrops', { x: cx, y: cy + 12, size: 150, scaleStart: 0.75, scaleEnd: 1.15, maxLife: 1300 });
-        this._addSpriteFx('rfx_poison_burst', { x: cx, y: cy, size: 130, scaleStart: 0.5, scaleEnd: 1.2, delay: 160, maxLife: 860 });
-      } else if (id === 'shadow_clones') {
-        this.clones = [
-          { x: hx + 16, y: hy - 34, life: 0, maxLife: 1400 },
-          { x: hx + 20, y: hy + 24, life: 0, maxLife: 1400 },
-        ];
-        this._addSpriteFx('rfx_shadow_smoke', { x: hx + 25, y: hy - 10, size: 115, scaleStart: 0.7, scaleEnd: 1.2, maxLife: 780, add: false });
-        for (let i = -1; i <= 1; i++) {
-          this._addSpriteFx('rfx_beam', { x: hx + 45, y: hy - 14 + i * 24, vx: 330, vy: i * 16, size: 80, scaleStart: 0.9, scaleEnd: 1.05, maxLife: 700, delay: 80 });
-        }
-      } else {
-        // death_mark
-        this._addSpriteFx('nfx_deathmark', { x: cx, y: cy - 28, size: 115, scaleStart: 0.65, scaleEnd: 1.2, maxLife: 1100 });
-        this._addSpriteFx('rfx_beam', { x: hx + 25, y: hy - 16, vx: 360, size: 85, scaleStart: 0.9, scaleEnd: 1.1, maxLife: 680 });
-        this._addSpriteFx('rfx_emerald_star', { x: cx, y: cy - 6, size: 115, scaleStart: 0.5, scaleEnd: 1.25, delay: 180, maxLife: 750 });
+      // Layer 2: 4x4 16-frame hand-drawn RGBA sequence
+      if (spec.seq) {
+        this.seqAnims.push({
+          url: `./assets/fx/${spec.seq}.webp`,
+          x: fxX,
+          y: fxY - 6,
+          scale: spec.scale || 1.35,
+          bornAt: impactAt,
+          fps: 19,
+        });
       }
-    } else if (this.classId === 'mage') {
-      if (id === 'meteor') {
-        this._addSpriteFx('mfx_nova_ring', { x: cx, y: cy + 16, size: 155, scaleStart: 0.6, scaleEnd: 1.25, maxLife: 1000 });
-        this._addSpriteFx('mfx_meteor_rock', { x: cx - 75, y: 12, vx: 165, vy: 250, size: 115, scaleStart: 0.85, scaleEnd: 1.15, maxLife: 520 });
-        this._addSpriteFx('mfx_meteor_crater', { x: cx, y: cy + 16, size: 140, scaleStart: 0.85, scaleEnd: 1.1, delay: 460, maxLife: 950, add: false });
-        this._addSpriteFx('mfx_meteor_blast', { x: cx, y: cy - 12, size: 170, scaleStart: 0.6, scaleEnd: 1.35, delay: 460, maxLife: 820 });
-        this._addSpriteFx('wfx_slam_pillar', { x: cx, y: cy - 24, size: 145, scaleStart: 0.7, scaleEnd: 1.2, delay: 490, maxLife: 880 });
-      } else if (id === 'arcane_orb') {
-        this._addSpriteFx('mfx_star_sigil', { x: hx + 16, y: hy - 12, size: 115, scaleStart: 0.6, scaleEnd: 1.2, maxLife: 760 });
-        for (let i = -1; i <= 1; i++) {
-          this._addSpriteFx('mfx_orb', { x: hx + 26, y: hy - 14 + i * 16, vx: 255, vy: i * 24, size: 82, scaleStart: 0.8, scaleEnd: 1.1, rotSpeed: 6, maxLife: 860 });
-        }
-      } else if (id === 'frost_nova') {
-        this._addSpriteFx('mfx_frost_ring', { x: cx, y: cy + 10, size: 170, scaleStart: 0.45, scaleEnd: 1.35, maxLife: 920 });
-        this._addSpriteFx('mfx_frost_shard', { x: cx, y: cy - 14, size: 145, scaleStart: 0.7, scaleEnd: 1.25, maxLife: 800 });
-        this._addSpriteFx('mfx_frost_burst', { x: cx, y: cy - 6, size: 145, scaleStart: 0.6, scaleEnd: 1.3, maxLife: 840, delay: 80 });
-      } else if (id === 'void_beam') {
-        this._addSpriteFx('mfx_void_core', { x: hx + 30, y: hy - 18, size: 110, scaleStart: 0.7, scaleEnd: 1.2, maxLife: 850 });
-        this._addSpriteFx('mfx_void_beam', { x: 200, y: hy - 18, size: 195, scaleStart: 0.9, scaleEnd: 1.1, maxLife: 800 });
-        this._addSpriteFx('mfx_void_slash', { x: cx, y: cy - 10, size: 130, scaleStart: 0.7, scaleEnd: 1.25, maxLife: 740, delay: 120 });
-      } else if (id === 'mana_overload') {
-        this._addSpriteFx('nfx_overload', { x: hx + 12, y: hy - 16, size: 155, scaleStart: 0.6, scaleEnd: 1.35, maxLife: 1000 });
-        this._addSpriteFx('mfx_arcane_shield', { x: hx + 12, y: hy - 12, size: 130, scaleStart: 0.75, scaleEnd: 1.2, maxLife: 980 });
-        this._addSpriteFx('mfx_star_sigil', { x: cx, y: cy, size: 135, scaleStart: 0.6, scaleEnd: 1.25, maxLife: 900, delay: 120 });
-      } else if (id === 'chain_lightning') {
-        this._addSpriteFx('nfx_lightning', { x: 185, y: 118, size: 180, scaleStart: 0.85, scaleEnd: 1.15, rot: -0.08, maxLife: 780 });
-        this._addSpriteFx('nfx_lightning', { x: cx, y: cy - 10, size: 130, scaleStart: 0.8, scaleEnd: 1.2, rot: 0.95, maxLife: 780, delay: 100 });
-        this._addSpriteFx('mfx_spark', { x: cx, y: cy - 8, size: 120, scaleStart: 0.6, scaleEnd: 1.3, maxLife: 740 });
-      } else if (id === 'icicle_rain') {
-        this._addSpriteFx('mfx_frost_ring', { x: cx, y: cy + 14, size: 155, scaleStart: 0.6, scaleEnd: 1.25, maxLife: 980 });
-        for (let i = 0; i < 4; i++) {
-          const ox = cx - 40 + i * 26;
-          this._addSpriteFx('nfx_icicles', { x: ox, y: 22, vy: 220, size: 105, scaleStart: 0.9, scaleEnd: 1.1, delay: i * 90, maxLife: 680 });
-          this._addSpriteFx('mfx_frost_burst', { x: ox, y: cy + 6, size: 98, scaleStart: 0.5, scaleEnd: 1.2, delay: 180 + i * 90, maxLife: 620 });
-        }
-      } else {
-        // black_hole
-        this._addSpriteFx('nfx_blackhole', { x: cx, y: cy - 8, size: 160, scaleStart: 0.6, scaleEnd: 1.25, rotSpeed: -5, maxLife: 1200 });
-        this._addSpriteFx('mfx_void_core', { x: cx, y: cy - 8, size: 125, scaleStart: 0.5, scaleEnd: 1.3, rotSpeed: 4, maxLife: 1000, delay: 160 });
-      }
-    } else if (this.classId === 'paladin') {
-      if (id === 'blessed_hammer') {
-        for (let i = 0; i < 3; i++) {
-          this._addSpriteFx('pfx_hammer', {
-            size: 66,
-            scaleStart: 0.95,
-            scaleEnd: 1.1,
-            rotSpeed: 10,
-            maxLife: 1250,
-            orbit: { cx: cx - 35, cy: cy - 10, startR: 28, endR: 92, startAng: (Math.PI * 2 * i) / 3, speed: 6.2 },
-          });
-        }
-      } else if (id === 'heaven_fist') {
-        this._addSpriteFx('pfx_heaven', { x: cx, y: cy - 34, size: 150, scaleStart: 0.75, scaleEnd: 1.25, maxLife: 880 });
-        this._addSpriteFx('pfx_judgment', { x: cx, y: cy + 8, size: 140, scaleStart: 0.5, scaleEnd: 1.25, maxLife: 920, delay: 140 });
-      } else if (id === 'judgment') {
-        this._addSpriteFx('pfx_judgment', { x: cx, y: cy - 6, size: 160, scaleStart: 0.55, scaleEnd: 1.3, maxLife: 960 });
-        this._addSpriteFx('pfx_slash', { x: cx, y: cy - 12, size: 120, scaleStart: 0.7, scaleEnd: 1.2, maxLife: 720, delay: 100 });
-      } else if (id === 'divine_storm') {
-        this._addSpriteFx('pfx_storm', { x: cx - 18, y: cy - 8, size: 165, scaleStart: 0.55, scaleEnd: 1.3, rotSpeed: 4, maxLife: 980 });
-        this._addSpriteFx('pfx_slash', { x: cx, y: cy - 10, size: 130, scaleStart: 0.7, scaleEnd: 1.2, rotSpeed: -6, maxLife: 820 });
-      } else if (id === 'shield_bash') {
-        this._addSpriteFx('pfx_bash', { x: cx - 22, y: cy - 8, size: 135, scaleStart: 0.75, scaleEnd: 1.25, maxLife: 760 });
-        this._addSpriteFx('pfx_aegis', { x: 205, y: hy - 10, size: 120, scaleStart: 0.7, scaleEnd: 1.15, maxLife: 850 });
-      } else if (id === 'holy_aegis') {
-        this._addSpriteFx('pfx_aegis', { x: hx + 10, y: hy - 14, size: 150, scaleStart: 0.7, scaleEnd: 1.2, maxLife: 1150 });
-        this._addSpriteFx('pfx_consecration', { x: hx + 10, y: hy + 12, size: 140, scaleStart: 0.6, scaleEnd: 1.2, maxLife: 1050 });
-      } else if (id === 'consecration') {
-        this._addSpriteFx('pfx_consecration', { x: cx, y: cy + 12, size: 170, scaleStart: 0.65, scaleEnd: 1.2, maxLife: 1250 });
-        this._addSpriteFx('pfx_heaven', { x: cx, y: cy - 28, size: 125, scaleStart: 0.7, scaleEnd: 1.15, maxLife: 880, delay: 140 });
-      } else {
-        // radiant_aura
-        this._addSpriteFx('pfx_storm', { x: hx + 15, y: hy - 8, size: 155, scaleStart: 0.55, scaleEnd: 1.35, maxLife: 980 });
-        this._addSpriteFx('pfx_judgment', { x: cx, y: cy, size: 140, scaleStart: 0.6, scaleEnd: 1.25, maxLife: 920, delay: 100 });
-      }
-    } else if (this.classId === 'necro') {
-      if (id === 'raise_skeleton') {
-        this._addSpriteFx('sfx_skel_summon', { x: hx + 35, y: hy + 6, size: 130, scaleStart: 0.6, scaleEnd: 1.2, maxLife: 920 });
-        this._addSpriteFx('nfx_p_summon', { x: hx + 55, y: hy + 10, size: 120, scaleStart: 0.7, scaleEnd: 1.15, maxLife: 980 });
-        this._spawnSummon('skeleton', hx + 46, hy - 14, 232, 114, 2100);
-        this._spawnSummon('skeleton', hx + 54, hy + 16, 240, 152, 2100);
-        this._addSpriteFx('sfx_skel_slash', { x: cx - 10, y: cy - 8, size: 120, scaleStart: 0.7, scaleEnd: 1.25, maxLife: 720, delay: 480 });
-      } else if (id === 'blood_golem') {
-        this._addSpriteFx('sfx_golem_summon', { x: hx + 62, y: hy + 4, size: 145, scaleStart: 0.65, scaleEnd: 1.25, maxLife: 980 });
-        this._spawnSummon('golem', hx + 58, hy, 228, 134, 2200);
-        this._addSpriteFx('sfx_golem_slam', { x: cx - 12, y: cy + 8, size: 150, scaleStart: 0.6, scaleEnd: 1.3, maxLife: 820, delay: 560 });
-        this._addSpriteFx('sfx_blood_leech', { x: hx + 16, y: hy - 10, size: 105, scaleStart: 0.7, scaleEnd: 1.2, maxLife: 780, delay: 600 });
-      } else if (id === 'undead_frenzy') {
-        if (!this.summons.some((s) => s.kind !== 'wraith')) {
-          this._spawnSummon('skeleton', hx + 90, hy - 14, 234, 114, 1900, true);
-          this._spawnSummon('skeleton', hx + 96, hy + 14, 242, 150, 1900, true);
-        } else {
-          this.summons.forEach((s) => { s.frenzy = true; });
-        }
-        this._addSpriteFx('sfx_frenzy', { x: hx + 30, y: hy, size: 155, scaleStart: 0.6, scaleEnd: 1.35, maxLife: 980 });
-        this._addSpriteFx('sfx_skel_slash', { x: cx - 10, y: cy - 6, size: 135, scaleStart: 0.7, scaleEnd: 1.25, maxLife: 760, delay: 220 });
-      } else if (id === 'wraith_army') {
-        this._spawnSummon('wraith', hx + 32, hy - 22, 256, 112, 1100);
-        this._spawnSummon('wraith', hx + 38, hy, 306, 136, 1180);
-        this._spawnSummon('wraith', hx + 32, hy + 20, 266, 160, 1150);
-        this._addSpriteFx('nfx_p_summon', { x: hx + 30, y: hy, size: 120, scaleStart: 0.7, scaleEnd: 1.2, maxLife: 760 });
-        this._addSpriteFx('sfx_wraith_boom', { x: cx, y: cy - 6, size: 155, scaleStart: 0.6, scaleEnd: 1.35, maxLife: 820, delay: 480 });
-      } else if (id === 'bone_spear') {
-        for (let i = -1; i <= 1; i++) {
-          this._addSpriteFx('nfx_p_spear', { x: hx + 25, y: hy - 14 + i * 12, vx: 330, vy: i * 16, size: 92, scaleStart: 0.9, scaleEnd: 1.05, maxLife: 720 });
-        }
-        this._addSpriteFx('nfx_p_slash', { x: cx, y: cy - 10, size: 120, scaleStart: 0.7, scaleEnd: 1.2, maxLife: 680, delay: 160 });
-      } else if (id === 'corpse_explosion') {
-        this._addSpriteFx('nfx_p_corpse', { x: cx, y: cy - 6, size: 160, scaleStart: 0.55, scaleEnd: 1.35, maxLife: 920 });
-        this._addSpriteFx('sfx_wraith_boom', { x: cx, y: cy - 12, size: 140, scaleStart: 0.6, scaleEnd: 1.25, maxLife: 840, delay: 100 });
-      } else if (id === 'bone_prison') {
-        this._addSpriteFx('nfx_p_prison', { x: cx, y: cy + 6, size: 155, scaleStart: 0.7, scaleEnd: 1.15, maxLife: 1200 });
-        this._addSpriteFx('nfx_p_spear', { x: cx, y: cy - 12, size: 110, scaleStart: 0.8, scaleEnd: 1.1, maxLife: 780, delay: 180 });
-      } else {
-        // decrepify
-        this._addSpriteFx('nfx_p_curse', { x: cx, y: cy + 8, size: 165, scaleStart: 0.6, scaleEnd: 1.25, maxLife: 1150 });
-        this._addSpriteFx('sfx_blood_leech', { x: hx + 20, y: hy - 10, size: 110, scaleStart: 0.7, scaleEnd: 1.2, maxLife: 820, delay: 140 });
-      }
-    } else if (this.classId === 'assassin') {
-      if (id === 'shadow_blitz') {
-        this._addSpriteFx('afx_dash', { x: 175, y: hy - 10, size: 125, scaleStart: 0.85, scaleEnd: 1.15, maxLife: 700 });
-        this._addSpriteFx('afx_slash', { x: cx - 10, y: cy - 10, size: 140, scaleStart: 0.7, scaleEnd: 1.25, maxLife: 720, delay: 100 });
-      } else if (id === 'shadow_clones') {
-        this.clones = [
-          { x: cx - 55, y: cy - 28, life: 0, maxLife: 1350 },
-          { x: cx - 50, y: cy + 26, life: 0, maxLife: 1350 },
-        ];
-        this._addSpriteFx('afx_smoke', { x: hx + 30, y: hy, size: 125, scaleStart: 0.7, scaleEnd: 1.2, maxLife: 800, add: false });
-        this._addSpriteFx('afx_slash', { x: cx, y: cy - 12, size: 135, scaleStart: 0.75, scaleEnd: 1.2, rot: 0.4, maxLife: 720, delay: 120 });
-        this._addSpriteFx('afx_slash', { x: cx, y: cy - 6, size: 135, scaleStart: 0.75, scaleEnd: 1.2, rot: -0.4, maxLife: 720, delay: 200 });
-      } else if (id === 'blade_flurry') {
-        for (let i = 0; i < 3; i++) {
-          this._addSpriteFx('afx_flurry', { x: cx, y: cy - 6, size: 150, scaleStart: 0.7, scaleEnd: 1.25, rot: i * 0.9, rotSpeed: 6, maxLife: 780, delay: i * 110 });
-        }
-      } else if (id === 'shadow_execute') {
-        this._addSpriteFx('afx_execute', { x: cx, y: cy - 10, size: 170, scaleStart: 0.65, scaleEnd: 1.3, maxLife: 920 });
-        this._addSpriteFx('afx_slash', { x: cx, y: cy - 10, size: 135, scaleStart: 0.75, scaleEnd: 1.2, maxLife: 720, delay: 120 });
-      } else if (id === 'poison_kunai') {
-        for (let i = -2; i <= 2; i++) {
-          this._addSpriteFx('afx_kunai', { x: hx + 25, y: hy - 14 + i * 6, vx: 330, vy: i * 36, size: 65, scaleStart: 0.9, scaleEnd: 1.05, rot: i * 0.12, maxLife: 680 });
-        }
-        this._addSpriteFx('afx_venom', { x: cx, y: cy - 6, size: 125, scaleStart: 0.6, scaleEnd: 1.25, maxLife: 780, delay: 180 });
-      } else if (id === 'smoke_veil') {
-        this._addSpriteFx('afx_smoke', { x: hx + 15, y: hy, size: 155, scaleStart: 0.65, scaleEnd: 1.3, maxLife: 1000, add: false });
-        this._addSpriteFx('afx_dash', { x: cx - 25, y: cy - 8, size: 120, scaleStart: 0.75, scaleEnd: 1.2, maxLife: 760, delay: 140 });
-      } else if (id === 'venom_burst') {
-        this._addSpriteFx('afx_venom', { x: cx, y: cy - 8, size: 165, scaleStart: 0.55, scaleEnd: 1.35, maxLife: 940 });
-        this._addSpriteFx('afx_kunai', { x: cx, y: cy - 8, size: 100, scaleStart: 0.7, scaleEnd: 1.2, maxLife: 740, delay: 100 });
-      } else {
-        // lethal_fangs
-        this._addSpriteFx('afx_fangs', { x: cx - 10, y: cy - 8, size: 155, scaleStart: 0.7, scaleEnd: 1.3, maxLife: 880 });
-        this._addSpriteFx('afx_execute', { x: cx, y: cy - 8, size: 135, scaleStart: 0.65, scaleEnd: 1.2, maxLife: 820, delay: 120 });
-      }
-    }
-
-    for (const m of this.mobs) {
-      if (now < m.deadUntil) continue;
-      const dmg = Math.round(280 + Math.random() * 620);
-      m.hp -= 42;
-      m.flashUntil = now + 260;
-      m.x = m.baseX + 16;
-      this.popups.push({
-        x: m.x + (Math.random() - 0.5) * 20,
-        y: m.y - 38,
-        text: `${dmg}!`,
-        color: Math.random() < 0.5 ? '#fde047' : '#fb923c',
-        life: 0,
-        maxLife: 1000,
+      // Layer 3: Target wobble + high-contrast overhead damage numbers
+      this.targets.forEach((t, ti) => {
+        const hitAt = impactAt + ti * 75;
+        t.wobbleUntil = hitAt + 200;
+        t.flashUntil = hitAt + 110;
+        const isCrit = (ti === 0) || Math.random() < 0.45;
+        const base = 1800 + safeIdx * 620 + Math.floor(Math.random() * 1400);
+        const dmg = isCrit ? Math.round(base * 2.15) : base;
+        this.popups.push({
+          x: t.x + (Math.random() - 0.5) * 26,
+          y: t.y - 82 - ti * 6,
+          text: isCrit ? `${dmg.toLocaleString()}!` : dmg.toLocaleString(),
+          color: isCrit ? '#fde047' : (ti === 0 ? cfg.color : '#ffffff'),
+          size: isCrit ? 24 : 18,
+          isCrit,
+          bornAt: hitAt,
+          dur: 920,
+        });
       });
-      if (m.hp <= 0) {
-        m.hp = m.maxHp;
-        m.deadUntil = now + 650;
+    };
+
+    if (spec.proj) {
+      const count = spec.multiProj || 1;
+      for (let i = 0; i < count; i++) {
+        const tgt = this.targets[i % this.targets.length];
+        this.projs.push({
+          url: `./assets/fx/${spec.proj}.webp`,
+          sx: this.heroBaseX + 34,
+          sy: this.heroBaseY - 22 + (i - (count - 1) / 2) * 16,
+          tx: tgt.x,
+          ty: tgt.y - 18,
+          bornAt: now + i * 55,
+          dur: 260,
+          scale: 0.34,
+        });
       }
+      setTimeout(() => {
+        if (this.rafId) triggerImpact(performance.now());
+      }, 240);
+    } else {
+      triggerImpact(now + (spec.dash ? 120 : 40));
     }
   }
 
-  _tick(now) {
-    if (!this.ctx || !this.canvas) return;
-    const ctx = this.ctx;
-    const w = this.canvas.width;
-    const h = this.canvas.height;
-    const dt = 0.016;
-
-    const _haNow = this.atlasCache.get(`./assets/heroes/atlas_${this.classId}.png?v=66`);
-    if (_haNow?.ready && !this._heroReadyStarted) {
-      this._heroReadyStarted = true;
-      this.triggerSkill(this._pendingSkillIdx || 0);
-    } else if (_haNow?.ready && now >= this.autoSwitchAt) {
-      this.triggerSkill(this.skillIdx + 1);
-    }
-
-    this.heroX += (this.heroBaseX - this.heroX) * 0.07;
-
-    ctx.clearRect(0, 0, w, h);
-
-    // 1. 對應職業真實戰鬥背景圖
-    const bgRec = this._getImg(CLASS_BG_MAP[this.classId] || CLASS_BG_MAP.warrior);
-    if (bgRec?.ready) {
-      const iw = bgRec.img.naturalWidth || w;
-      const ih = bgRec.img.naturalHeight || h;
-      const scale = Math.max(w / iw, h / ih);
-      const dw = iw * scale;
-      const dh = ih * scale;
-      ctx.drawImage(bgRec.img, (w - dw) / 2, (h - dh) / 2, dw, dh);
-      const vig = ctx.createLinearGradient(0, 0, 0, h);
-      vig.addColorStop(0, 'rgba(6, 9, 16, 0.35)');
-      vig.addColorStop(0.6, 'rgba(6, 9, 16, 0.25)');
-      vig.addColorStop(1, 'rgba(6, 9, 16, 0.72)');
-      ctx.fillStyle = vig;
-      ctx.fillRect(0, 0, w, h);
-    } else {
-      const grad = ctx.createLinearGradient(0, 0, 0, h);
-      grad.addColorStop(0, '#090c14');
-      grad.addColorStop(1, '#161d2f');
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, w, h);
-    }
-
-    ctx.save();
-    ctx.scale(w / 360, h / 196);
-
-    // 2. 英雄角色、殘影與暗影分身
-    const heroAtlas = this.atlasCache.get(`./assets/heroes/atlas_${this.classId}.png?v=66`);
-    const pf = HERO_PREFIX[this.classId] || 'wf';
-    if (!heroAtlas?.ready) {
-      ctx.fillStyle = '#d6c39b';
-      ctx.font = 'bold 12px Noto Sans TC, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('⚔️ 載入英雄模型中...', 180, 102);
-      ctx.restore();
-      return;
-    } else {
-      const isAtk = now < this.castAnimUntil;
-      const fIdx = isAtk ? Math.floor((now / 110) % 4) : Math.floor((now / 140) % 4);
-      const fname = isAtk ? `${pf}_right_atk_${fIdx}` : `${pf}_right_walk_${fIdx}`;
-      const fr = heroAtlas.frames[fname]?.frame || heroAtlas.frames[`${pf}_right_walk_0`]?.frame;
-      if (fr) {
-        this.afterimages = this.afterimages.filter((ai) => {
-          ai.alpha -= 0.035;
-          if (ai.alpha <= 0) return false;
-          ctx.save();
-          ctx.globalAlpha = ai.alpha * 0.55;
-          ctx.drawImage(heroAtlas.img, fr.x, fr.y, fr.w, fr.h, ai.x - 54, ai.y - 76, 108, 108);
-          ctx.restore();
-          return true;
-        });
-
-        this.clones = this.clones.filter((cl) => {
-          cl.life += 16;
-          if (cl.life >= cl.maxLife) return false;
-          const af = heroAtlas.frames[`${pf}_right_atk_${Math.floor((now / 95) % 4)}`]?.frame || fr;
-          ctx.save();
-          ctx.globalAlpha = 0.68 * (1 - cl.life / cl.maxLife);
-          // v249: omit ctx.filter to prevent GPU white-box artifact on atlas drawImage
-          ctx.drawImage(heroAtlas.img, af.x, af.y, af.w, af.h, cl.x - 46, cl.y - 65, 92, 92);
-          ctx.restore();
-          return true;
-        });
-
-        ctx.save();
-        ctx.filter = 'none';
-        ctx.globalCompositeOperation = 'source-over';
-        ctx.globalAlpha = 1;
-        ctx.fillStyle = 'rgba(0,0,0,0.52)';
-        ctx.beginPath();
-        ctx.ellipse(this.heroX, this.heroY + 18, 22, 8, 0, 0, Math.PI * 2);
-        ctx.fill();
-        if (heroAtlas.img.complete && heroAtlas.img.naturalWidth > 0 && fr.w > 0 && fr.h > 0) {
-          ctx.drawImage(heroAtlas.img, fr.x, fr.y, fr.w, fr.h, this.heroX - 54, this.heroY - 76, 108, 108);
-        }
-        ctx.restore();
-      }
-    }
-
-    // 3. 死靈法師真實召喚物實體（骷髏戰士 / 鮮血魔像 / 冥界幽魂）
-    if (this.summonAtlas?.ready) {
-      this.summons = this.summons.filter((s) => {
-        s.life += 16;
-        if (s.life >= s.maxLife) return false;
-        const speed = s.kind === 'wraith' ? 0.09 : (s.frenzy ? 0.08 : 0.055);
-        s.x += (s.tx - s.x) * speed;
-        s.y += (s.ty - s.y) * speed;
-        const dist = Math.hypot(s.tx - s.x, s.ty - s.y);
-        const fIdx = Math.floor((now / (s.frenzy ? 85 : 120)) % 4);
-        let frameName = '';
-        let size = 68;
-        if (s.kind === 'wraith') {
-          frameName = dist < 24 ? `wraith_atk_${fIdx}` : `wraith_walk_${fIdx}`;
-          size = 66;
-        } else if (s.kind === 'golem') {
-          frameName = dist < 28 ? `gol_right_atk_${fIdx}` : `gol_right_walk_${fIdx}`;
-          size = 96;
-        } else {
-          frameName = dist < 26 ? `skel_right_atk_${fIdx}` : `skel_right_walk_${fIdx}`;
-          size = 70;
-        }
-        const fr = this.summonAtlas.frames[frameName]?.frame;
-        if (fr) {
-          ctx.save();
-          if (s.frenzy) ctx.filter = 'drop-shadow(0 0 6px #ef4444) saturate(1.8)';
-          ctx.fillStyle = 'rgba(0,0,0,0.42)';
-          ctx.beginPath();
-          ctx.ellipse(s.x, s.y + 12, size * 0.24, 6, 0, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.drawImage(this.summonAtlas.img, fr.x, fr.y, fr.w, fr.h, s.x - size / 2, s.y - size * 0.72, size, size);
-          ctx.restore();
-        }
-        return true;
-      });
-    }
-
-    // 4. 怪物實體
-    for (const m of this.mobs) {
-      if (now < m.deadUntil) continue;
-      m.x += (m.baseX - m.x) * 0.14;
-      if (this.mobAtlas?.ready) {
-        const mf = Math.floor((now / 180) % 4);
-        const fr = this.mobAtlas.frames[`${m.type}_walk_${mf}`]?.frame || this.mobAtlas.frames[`${m.type}_walk_0`]?.frame;
-        if (fr) {
-          ctx.fillStyle = 'rgba(0,0,0,0.48)';
-          ctx.beginPath();
-          ctx.ellipse(m.x, m.y + 12, 16, 6, 0, 0, Math.PI * 2);
-          ctx.fill();
-          ctx.save();
-          if (now < m.flashUntil) ctx.filter = 'brightness(2.4)';
-          ctx.translate(m.x, m.y);
-          ctx.scale(-1, 1);
-          ctx.drawImage(this.mobAtlas.img, fr.x, fr.y, fr.w, fr.h, -32, -50, 64, 64);
-          ctx.restore();
-        }
-      }
-      ctx.fillStyle = 'rgba(0,0,0,0.7)';
-      ctx.fillRect(m.x - 16, m.y - 44, 32, 4);
-      ctx.fillStyle = '#ef4444';
-      ctx.fillRect(m.x - 16, m.y - 44, 32 * Math.max(0, m.hp / m.maxHp), 4);
-    }
-
-    // 5. 真實 PNG 技能特效層（等待貼圖 ready 後才扣生命週期，確保不漏播）
-    this.fx = this.fx.filter((f) => {
-      if (f.delay && f.delay > 0) {
-        f.delay -= 16;
-        return true;
-      }
-      const rec = this._getFxImg(f.key);
-      if (!rec?.ready) {
-        f.waitMs += 16;
-        return f.waitMs < 2500;
-      }
-      f.life += 16;
-      const p = f.life / f.maxLife;
-      if (p >= 1) return false;
-
-      if (f.orbit) {
-        const r = f.orbit.startR + (f.orbit.endR - f.orbit.startR) * p;
-        const a = f.orbit.startAng + p * f.orbit.speed;
-        f.x = f.orbit.cx + Math.cos(a) * r;
-        f.y = f.orbit.cy + Math.sin(a) * r * 0.65;
+  _update(now) {
+    if (now >= this.nextCastAt) {
+      if (this.autoPlay) {
+        this.triggerSkill(this.skillIdx + 1);
       } else {
-        f.x += f.vx * dt;
-        f.y += f.vy * dt;
+        this.triggerSkill(this.skillIdx);
       }
-      f.rot += f.rotSpeed * dt;
+    }
+    if (now < this.dashUntil) {
+      const p = 1 - (this.dashUntil - now) / 380;
+      const arc = Math.sin(p * Math.PI);
+      this.heroX = this.heroBaseX + (this.dashTargetX - this.heroBaseX) * arc;
+    } else {
+      this.heroX = this.heroBaseX;
+    }
+    this.decals = this.decals.filter((d) => now - d.bornAt < d.dur);
+    this.seqAnims = this.seqAnims.filter((a) => ((now - a.bornAt) / 1000) * a.fps < 16);
+    this.projs = this.projs.filter((p) => now - p.bornAt < p.dur);
+    this.popups = this.popups.filter((p) => now - p.bornAt < p.dur);
+  }
 
-      const scale = f.scaleStart + (f.scaleEnd - f.scaleStart) * p;
-      const drawSize = f.size * scale;
-      const fade = p < 0.15 ? p / 0.15 : Math.max(0, 1 - Math.pow((p - 0.15) / 0.85, 1.5));
-      if (!rec.img.complete || !rec.img.naturalWidth) return true;
+  _render(now) {
+    const ctx = this.ctx;
+    if (!ctx || !this.canvas) return;
+    const W = this.canvas.width, H = this.canvas.height;
+    ctx.clearRect(0, 0, W, H);
+
+    // Background: crisp octagonal arena floor
+    const bgRec = this._loadImg('./assets/bg/arena_training_v299.webp?v=299');
+    if (bgRec.ready) {
+      ctx.drawImage(bgRec.img, 0, 0, W, H);
+      // Subtle dark vignette for VFX contrast
+      const grad = ctx.createRadialGradient(W * 0.5, H * 0.52, W * 0.14, W * 0.5, H * 0.52, W * 0.62);
+      grad.addColorStop(0, 'rgba(6,8,14,0.08)');
+      grad.addColorStop(1, 'rgba(4,5,9,0.68)');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+    } else {
+      ctx.fillStyle = '#0d1018';
+      ctx.fillRect(0, 0, W, H);
+    }
+
+    // Layer 1: Ground Decals
+    for (const d of this.decals) {
+      const rec = this._loadImg(d.url);
+      if (!rec.ready) continue;
+      const p = Math.max(0, (now - d.bornAt) / d.dur);
+      const alpha = p > 0.55 ? Math.max(0, 1 - (p - 0.55) / 0.45) : 0.85;
+      const dw = rec.img.width * d.scale;
+      const dh = rec.img.height * d.scale * 0.62;
       ctx.save();
-      ctx.filter = 'none';
-      ctx.globalCompositeOperation = f.add ? 'screen' : 'source-over';
-      ctx.globalAlpha = Math.min(f.add ? 0.78 : 0.96, fade * f.alpha);
-      ctx.translate(f.x, f.y);
-      if (f.rot) ctx.rotate(f.rot);
-      ctx.drawImage(rec.img, -drawSize / 2, -drawSize / 2, drawSize, drawSize);
+      ctx.globalAlpha = alpha;
+      ctx.drawImage(rec.img, d.x - dw / 2, d.y - dh / 2, dw, dh);
       ctx.restore();
-      return true;
-    });
+    }
 
-    // 6. 傷害浮字
-    ctx.font = 'bold 14px Noto Sans TC, sans-serif';
-    ctx.textAlign = 'center';
-    this.popups = this.popups.filter((pp) => {
-      pp.life += 16;
-      const p = pp.life / pp.maxLife;
-      if (p >= 1) return false;
-      pp.y -= 0.42;
-      ctx.globalAlpha = 1 - p;
-      ctx.fillStyle = '#000';
-      ctx.fillText(pp.text, pp.x + 1, pp.y + 1);
-      ctx.fillStyle = pp.color;
-      ctx.fillText(pp.text, pp.x, pp.y);
-      ctx.globalAlpha = 1;
-      return true;
-    });
-    ctx.restore();
+    // Targets (3 Grounded Dummies)
+    for (const t of this.targets) {
+      const rec = this._loadImg(`./assets/fx/${t.key}.webp?v=299`);
+      if (!rec.ready) continue;
+      const dw = rec.img.width * t.scale;
+      const dh = rec.img.height * t.scale;
+      const wob = now < t.wobbleUntil ? Math.sin(now * 0.06) * 0.12 : 0;
+      ctx.save();
+      ctx.translate(t.x, t.y + 18);
+      ctx.rotate(wob);
+      if (now < t.flashUntil) ctx.filter = 'brightness(1.75)';
+      ctx.drawImage(rec.img, -dw / 2, -dh + 12, dw, dh);
+      ctx.restore();
+    }
+
+    // Hero Sprite
+    const hRec = this._loadHeroAtlas(this.classId);
+    const pref = HERO_PREFIX[this.classId] || 'wf';
+    if (hRec.ready && hRec.frames) {
+      const isCast = now < this.castAnimUntil;
+      const fIdx = Math.floor(now / 100) % 4;
+      const candidates = isCast
+        ? [`${pref}_atk_right_${fIdx}`, `${pref}_atk_down_${fIdx}`, `${pref}_idle_right_0`, `${pref}_idle_down_0`]
+        : [`${pref}_idle_right_${fIdx}`, `${pref}_idle_down_${fIdx}`, `${pref}_idle_right_0`, `${pref}_idle_down_0`];
+      let fData = null;
+      for (const ck of candidates) {
+        if (hRec.frames[ck]) { fData = hRec.frames[ck].frame; break; }
+      }
+      if (!fData) {
+        const firstKey = Object.keys(hRec.frames)[0];
+        if (firstKey) fData = hRec.frames[firstKey].frame;
+      }
+      if (fData) {
+        const sc = 0.56;
+        const dw = fData.w * sc;
+        const dh = fData.h * sc;
+        ctx.drawImage(hRec.img, fData.x, fData.y, fData.w, fData.h, this.heroX - dw / 2, this.heroY - dh * 0.85, dw, dh);
+      }
+    }
+
+    // Layer 2: 4x4 16-Frame Hand-Drawn RGBA Sequences
+    for (const a of this.seqAnims) {
+      const rec = this._loadImg(a.url);
+      if (!rec.ready) continue;
+      const elapsed = Math.max(0, (now - a.bornAt) / 1000);
+      const frame = Math.min(15, Math.floor(elapsed * a.fps));
+      const fw = Math.floor(rec.img.width / 4);
+      const fh = Math.floor(rec.img.height / 4);
+      const col = frame % 4;
+      const row = Math.floor(frame / 4);
+      const dw = fw * a.scale;
+      const dh = fh * a.scale;
+      ctx.save();
+      ctx.drawImage(rec.img, col * fw, row * fh, fw, fh, a.x - dw / 2, a.y - dh / 2, dw, dh);
+      ctx.restore();
+    }
+
+    // Layer 3a: Hand-Drawn Projectiles
+    for (const p of this.projs) {
+      if (now < p.bornAt) continue;
+      const rec = this._loadImg(p.url);
+      if (!rec.ready) continue;
+      const prog = Math.min(1, (now - p.bornAt) / p.dur);
+      const px = p.sx + (p.tx - p.sx) * prog;
+      const py = p.sy + (p.ty - p.sy) * prog;
+      const ang = Math.atan2(p.ty - p.sy, p.tx - p.sx);
+      const dw = rec.img.width * p.scale;
+      const dh = rec.img.height * p.scale;
+      ctx.save();
+      ctx.translate(px, py);
+      ctx.rotate(ang);
+      ctx.drawImage(rec.img, -dw / 2, -dh / 2, dw, dh);
+      ctx.restore();
+    }
+
+    // Layer 3b: High-Contrast Overhead Combat Damage Numbers
+    for (const pop of this.popups) {
+      if (now < pop.bornAt) continue;
+      const p = (now - pop.bornAt) / pop.dur;
+      const py = pop.y - p * 44;
+      const alpha = p > 0.62 ? Math.max(0, 1 - (p - 0.62) / 0.38) : 1;
+      const sc = p < 0.16 ? (1.36 - (p / 0.16) * 0.36) : 1.0;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.translate(pop.x, py);
+      ctx.scale(sc, sc);
+      ctx.font = `900 ${pop.size}px "Noto Sans TC", "Segoe UI", sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.lineWidth = pop.isCrit ? 6 : 5;
+      ctx.strokeStyle = '#000000';
+      ctx.strokeText(pop.text, 0, 0);
+      ctx.fillStyle = pop.color;
+      ctx.fillText(pop.text, 0, 0);
+      ctx.restore();
+    }
   }
 }

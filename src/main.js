@@ -22,7 +22,7 @@ import {
   saveCloudData,
   deleteCloudSave,
 } from './auth/firebase.js?v=272';
-import { BattleScene } from './scenes/BattleScene.js?v=298';
+import { BattleScene } from './scenes/BattleScene.js?v=299';
 import { TownScene } from './scenes/TownScene.js?v=298';
 import { TOWN_SPLASHES } from './data/towns/splashes.js?v=229';
 import { DashboardUI } from './ui/DashboardUI.js?v=297';
@@ -40,7 +40,7 @@ import { ShopModal } from './ui/ShopModal.js?v=99';
 import { AchievementTowerModal } from './ui/AchievementTowerModal.js?v=99';
 import { ACHIEVEMENTS } from './data/achievements.js?v=99';
 import { rollEnhance, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEVEL } from './logic/enhanceSystem.js?v=99';
-import { HeroSkillShowcase, CLASS_SKILLS_MAP } from './ui/HeroSkillShowcase.js?v=249';
+import { HeroSkillShowcase, CLASS_SKILLS_MAP } from './ui/HeroSkillShowcase.js?v=299';
 
 let gameState = loadGame() || createInitialState('warrior');
 let computedStats = recalcPlayerStats(gameState);
@@ -2191,11 +2191,15 @@ function renderWelcomeClasses() {
     item.type = 'button';
     item.className = `theater-class-card ${isSel ? 'active' : ''}`;
     item.style.setProperty('--cls-accent', cls.color || '#f59e0b');
+    const roleShort = (CLASS_META_EXT[cls.id]?.tag || cls.title || '').split('・')[0];
     item.innerHTML = `
-      <img src="${cls.spritePath}" alt="${cls.name}" />
+      <img class="v299-card-portrait" src="./assets/ui/card_class_${cls.id}_v299.webp?v=299" onerror="this.src='${cls.spritePath}'" alt="${cls.name}" />
       <div class="tcard-meta">
-        <span class="tcard-name" style="color:${cls.color}">${cls.name}</span>
-        <span class="tcard-lv ${lv <= 1 ? 'is-lv1' : ''}">Lv.${lv}</span>
+        <div class="tcard-row">
+          <span class="tcard-name" style="color:${cls.color}">${cls.name}</span>
+          <span class="tcard-lv ${lv <= 1 ? 'is-lv1' : ''}">Lv.${lv}</span>
+        </div>
+        <span class="tcard-tag">${roleShort}</span>
       </div>
     `;
     item.onclick = () => {
@@ -2254,11 +2258,21 @@ function renderWelcomeClasses() {
     return { name: a.name, indices: picked };
   });
 
+  const CLASS_MECH_BLURB = {
+    warrior:  '⚔️ 武器庫精通：每施放 3 次技能觸發「武器過載」，下次攻擊強制壓制暴擊！',
+    ranger:   '🎯 連擊星專精：普攻累積連擊星，施放核心技能消耗全星引發爆發增傷！',
+    mage:     '✨ 雙附魔槽系統：可同時裝備兩大元素附魔（冰/火/雷），觸發連鎖元素反應！',
+    paladin:  '🛡️ 聖殿誓約光環：切換殉道／守護誓約，以護盾反傷與聖光領域鎮壓戰場！',
+    necro:    '💀 亡者之書軍團：自由配置骷髏戰士／鮮血魔像，或獻祭召喚轉化「孤高暴君」！',
+    assassin: '🌑 調毒與五星暗影：疊滿 5 星暗影印記觸發絕殺爆發，搭配劇毒塗層收割！',
+  };
   welcomeClassStage.innerHTML = `
     <div class="theater-arena-col">
       <div class="theater-canvas-wrap">
-        <canvas id="preview-skill-canvas" width="520" height="292"></canvas>
-        <div id="showcase-active-pill" class="theater-cast-pill">⚔️ 演武中</div>
+        <canvas id="preview-skill-canvas" width="768" height="432"></canvas>
+        <img class="v299-stage-frame-overlay" src="./assets/ui/lobby_stage_frame_v299.webp?v=299" alt="" />
+        <div id="showcase-active-pill" class="theater-cast-pill">⚔️ 2.5D 實戰特效演武中</div>
+        <button type="button" id="v299-btn-autoplay" class="v299-autoplay-btn">🔄 自動輪播: 開</button>
       </div>
       <div class="v243-arch-tabs">
         ${resolvedArchs.map((a, i) => `<button type="button" class="v243-arch-tab ${i === 0 ? 'active' : ''}" data-arch-idx="${i}">${a.name}</button>`).join('')}
@@ -2285,7 +2299,8 @@ function renderWelcomeClasses() {
             <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${ext.bars[i]}%;background:${cls.color};"></div></div>
           </div>`).join('')}
       </div>
-      <div class="innate-plaque" style="margin:8px 0;">
+      <div class="v299-mech-plaque"><b style="color:#f59e0b;">職業專屬機制：</b>${CLASS_MECH_BLURB[cls.id] || ''}</div>
+      <div class="innate-plaque" style="margin:4px 0;">
         <b style="color:#fde047;">🌟 天生被動：</b><span>${cls.innateBonus?.label || ''}</span>
       </div>
       <div id="stage-skill-dynamic" class="skill-lore-scroll"></div>
@@ -2301,6 +2316,14 @@ function renderWelcomeClasses() {
       b.onclick = () => heroShowcase.triggerSkill(Number(b.dataset.skIdx));
     });
   };
+  const autoBtn = document.getElementById('v299-btn-autoplay');
+  if (autoBtn) {
+    autoBtn.onclick = () => {
+      const next = !heroShowcase.autoPlay;
+      heroShowcase.setAutoPlay(next);
+      autoBtn.textContent = next ? '🔄 自動輪播: 開' : '🔁 單招循環: 開';
+    };
+  }
   welcomeClassStage.querySelectorAll('.v243-arch-tab').forEach((tb) => {
     tb.onclick = () => {
       const aIdx = Number(tb.dataset.archIdx);

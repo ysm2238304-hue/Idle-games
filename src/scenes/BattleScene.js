@@ -19,7 +19,7 @@ import { AssassinVfxDirector } from '../vfx/AssassinVfxDirector.js?v=266';
 import { PaladinVfxDirector } from '../vfx/PaladinVfxDirector.js?v=266';
 import { FloatingTextPool } from '../vfx/FloatingTextPool.js?v=298';
 import { ParticlePool } from '../vfx/ParticlePool.js?v=266';
-import { TrainingArenaController } from '../combat/TrainingArenaController.js?v=298';
+import { TrainingArenaController } from '../combat/TrainingArenaController.js?v=299';
 import { CameraZoomHelper } from './CameraZoomHelper.js?v=282';
 import { MonsterVfxDirector } from '../vfx/MonsterVfxDirector.js?v=293';
 import { MonsterSkillEngine } from '../combat/MonsterSkillEngine.js?v=278';
@@ -971,6 +971,8 @@ export class BattleScene extends Phaser.Scene {
     const buildMods = computeSkillBuildMods(this.getState(), curCid, info.id, info.level);
     this._activeBuildMods = buildMods;
     this._activeBuildModsUntil = (this.time?.now || 0) + 1200;
+    this._activeDamageSource = info?.name || info?.id || '技能';
+    this._activeDamageSourceUntil = (this.time?.now || 0) + 1100;
     const trainCdMult = (this.isTrainingMode && this.trainingArena?.fastCd) ? 0.20 : 1.0;
     const effCd = Math.max(300, Math.round(info.cooldownMs * (buildMods.cdMult || 1) * trainCdMult));
     const cdSaved = Math.max(0, info.cooldownMs - effCd);
@@ -1103,6 +1105,7 @@ export class BattleScene extends Phaser.Scene {
   clearAllMonsters() {
     this.monsters.forEach((m) => {
       m.sprite?.destroy();
+      m.shadow?.destroy();
       m.groundShadow?.destroy();
       m.castShadow?.destroy();
       m.hpBg?.destroy();
@@ -1680,6 +1683,8 @@ export class BattleScene extends Phaser.Scene {
         this.damageMonster(m, Math.max(1, m.bleedDmg || 4), false, false, '#f87171', '🩸');
         if (m.hp <= 0) continue;
       }
+      // v299: 演武場戰偶由 TrainingArenaController 獨立管理，跳過章節怪物追擊與陰影/血條更新，徹底杜絕 setPosition 崩潰
+      if (m.isTrainingDummy) continue;
       if (time < (m.stunUntil || 0)) continue;
 
       const slowFactor = time < (m.slowUntil || 0) ? 0.5 : 1.0;
@@ -1752,8 +1757,8 @@ export class BattleScene extends Phaser.Scene {
       m.sprite.setFlipX(mobFlip).setDepth(m.sprite.y)
         .setScale(m.scale * squashX, m.scale * squashY)
         .setRotation(tilt);
-      m.groundShadow.setPosition(m.sprite.x, m.sprite.y + 40);
-      m.castShadow.setPosition(m.sprite.x - 12, m.sprite.y + 26).setFlipX(mobFlip).setTexture(m.sprite.texture.key, m.sprite.frame.name);
+      m.groundShadow?.setPosition(m.sprite.x, m.sprite.y + 40);
+      m.castShadow?.setPosition(m.sprite.x - 12, m.sprite.y + 26).setFlipX(mobFlip).setTexture(m.sprite.texture.key, m.sprite.frame.name);
 
       m.dustTimer = (m.dustTimer || 0) + delta;
       if (m.dustTimer >= (m.isBoss ? 520 : 880) && dist > stopRange) {
@@ -1773,9 +1778,9 @@ export class BattleScene extends Phaser.Scene {
       }
 
       const barY = m.sprite.y - (m.isBoss ? 100 : 64);
-      m.hpBg.setPosition(m.sprite.x, barY);
-      m.hpFill.setPosition(m.sprite.x - m.barW / 2, barY);
-      m.nameText.setPosition(m.sprite.x, barY - 16);
+      m.hpBg?.setPosition(m.sprite.x, barY);
+      m.hpFill?.setPosition(m.sprite.x - m.barW / 2, barY);
+      m.nameText?.setPosition(m.sprite.x, barY - 16);
 
       if (willChase && dist <= stopRange + 28) {
         m.attackTimer += delta;
@@ -2671,14 +2676,38 @@ export class BattleScene extends Phaser.Scene {
     const lvSuppressMult = lvDiff > 3 ? Math.max(0.32, 1 - (lvDiff - 3) * 0.065) : (lvDiff < -6 ? Math.min(1.25, 1 + Math.abs(lvDiff + 6) * 0.025) : 1.0);
     const bossDrMult = 1 - (m.bossDr || 0);
     const globalPaceMult = isTap ? 0.72 : 0.62;
-    dmg = Math.max(1, Math.round(dmg * bonusMult * (1 - mobArmorMit) * bossDrMult * lvSuppressMult * globalPaceMult));
-    m.hp = Math.max(0, m.hp - dmg);
+    if (m.isTrainingDummy) {
+      const simDr = this.trainingArena?.getSimulatedDr?.() || 0;
+      dmg = Math.max(1, Math.round(dmg * bonusMult * (1 - simDr) * globalPaceMult));
+      m.hp = m.maxHp;
+    } else {
+      dmg = Math.max(1, Math.round(dmg * bonusMult * (1 - mobArmorMit) * bossDrMult * lvSuppressMult * globalPaceMult));
+      m.hp = Math.max(0, m.hp - dmg);
+    }
 
-    m.sprite.setTintFill(0xffffff);
+    m.sprite?.setTintFill(0xffffff);
     this.time.delayedCall(75, () => m.sprite && m.sprite.active && m.sprite.clearTint());
 
-    const ratio = Math.max(0, Math.min(1, m.hp / Math.max(1, m.maxHp)));
-    m.hpFill.width = m.barW * ratio;
+    if (m.hpFill) {
+      const ratio = Math.max(0, Math.min(1, m.hp / Math.max(1, m.maxHp)));
+      m.hpFill.width = (m.barW || 48) * ratio;
+    }
+
+    if (m.isTrainingDummy && this.trainingArena?.active) {
+      const srcName = (prefix === '🩸') ? '流血 DoT'
+        : (prefix === '☠️') ? '劇毒 DoT'
+        : (prefix === '🔥') ? '灼燒 DoT'
+        : (prefix === '💀' || prefix === '👻') ? '亡靈召喚物'
+        : (isTap ? '點擊攻擊' : ((nowT <= (this._activeDamageSourceUntil || 0) && this._activeDamageSource) ? this._activeDamageSource : '普通攻擊'));
+      this.trainingArena.recordHit({
+        target: m,
+        dmg,
+        isCrit,
+        isOverpower,
+        sourceName: srcName,
+        timestamp: nowT,
+      });
+    }
 
     // v298: 在怪物正頭頂血條上方顯示高對比戰鬥傷害數字
     const mobDispH = (m.sprite?.displayHeight && m.sprite.displayHeight > 20) ? m.sprite.displayHeight : 96;
@@ -2955,11 +2984,12 @@ export class BattleScene extends Phaser.Scene {
     const my = m.sprite.y;
 
     m.sprite.destroy();
-    m.groundShadow.destroy();
-    m.castShadow.destroy();
-    m.hpBg.destroy();
-    m.hpFill.destroy();
-    m.nameText.destroy();
+    m.shadow?.destroy();
+    m.groundShadow?.destroy();
+    m.castShadow?.destroy();
+    m.hpBg?.destroy();
+    m.hpFill?.destroy();
+    m.nameText?.destroy();
 
     const kStats = this.getStats();
     if ((kStats.killEssence || 0) > 0) {
