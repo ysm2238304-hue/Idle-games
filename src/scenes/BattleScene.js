@@ -1,4 +1,4 @@
-import { getClassMechanicConfig } from '../logic/classMechanics.js?v=261';
+import { getClassMechanicConfig } from '../logic/classMechanics.js?v=263';
 import { computeSkillBuildMods, checkCompoundReaction, getSmartAutoSlotOrder } from '../logic/buildEngine.js?v=261';
 import { CLASSES } from '../data/classes.js?v=99';
 import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=255';
@@ -7,7 +7,7 @@ import { MAGE_SKILLS } from '../data/mageSkills.js?v=241';
 import { PALADIN_SKILLS } from '../data/paladinSkills.js?v=263';
 import { NECRO_SKILLS } from '../data/necroSkills.js?v=251';
 import { ASSASSIN_SKILLS } from '../data/assassinSkills.js?v=261';
-import { RARITIES } from '../data/items.js?v=99';
+import { RARITIES } from '../data/items.js?v=240';
 import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta, getPetPickupRadius, getPetCodexInfo } from '../data/pets.js?v=99';
 import { createStageEncounters, spawnSingleMonster, getChapterIdx, getStageLabel, ZONE_OBSTACLES } from '../data/monsters.js?v=254';
 import { formatNum } from '../logic/statCalc.js?v=254';

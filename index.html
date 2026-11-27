@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Sans+TC:wght@400;700;900&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./style.css?v=99" />
+  <link rel="stylesheet" href="./style.css?v=311" />
   <link id="welcome-auth-v207-css" rel="stylesheet" href="./src/ui/welcomeAuth.css?v=215" />
   <link id="class-hall-v102-css" rel="stylesheet" href="./src/ui/classHall.css?v=215" />
   <link id="npc-modal-v100-css" rel="stylesheet" href="./src/ui/npcModal.css?v=231" />
@@ -106,7 +106,7 @@
       pointer-events: none !important;
     }
     #rpg-drawer {
-      z-index: 220 !important;
+      z-index: 220;
     }
     .modal-overlay,
     .npc-modal-backdrop,
@@ -118,12 +118,12 @@
     #modal-class,
     #modal-stage-clear,
     #modal-offline {
-      z-index: 230 !important;
+      z-index: 230;
     }
   </style>
   <style id="v294-multi-window-css">
     /* v294: 真正的多開彈窗並存模式 — 外層透明不攔截點擊，讓多個視窗可同時並排拖曳操作 */
-    .modal-overlay,
+    .modal-overlay:not(#modal-offline):not(#modal-stage-clear):not(#modal-class),
     .npc-modal-backdrop,
     #modal-town-facility,
     #modal-settings,
@@ -133,6 +133,14 @@
       background: transparent !important;
       backdrop-filter: none !important;
       pointer-events: none !important;
+    }
+    /* v310: 修復右上 7 顆系統按鈕擠出第 3 排破版 ＋ 過場層級高於裝備浮框 */
+    .v80-matrix-dock .matrix-row {
+      grid-template-columns: repeat(7, 36px) !important;
+      justify-content: end;
+    }
+    #cinematic-intro-overlay {
+      z-index: 10050 !important;
     }
     .modal-overlay > *,
     .npc-modal-backdrop > *,
@@ -249,7 +257,7 @@
   <!-- ========== 電影級開場動畫劇院覆蓋層 (v68) ========== -->
   <div id="cinematic-intro-overlay" class="cinematic-intro-overlay hidden">
     <div class="cinematic-letterbox top"></div>
-    <video id="cinematic-intro-video" playsinline preload="auto" src="./assets/video/intro.mp4?v=99"></video>
+    <video id="cinematic-intro-video" playsinline preload="none" src="./assets/video/intro.mp4?v=99"></video>
     <div class="cinematic-vignette"></div>
     <div id="cinematic-caption" class="cinematic-caption"></div>
     <div class="cinematic-controls">
@@ -271,8 +279,7 @@
         <span id="tower-mobs-lbl" style="color:#93c5fd;">剩餘 0 隻</span>
         <button type="button" id="btn-exit-tower" class="btn-ghost-sm" style="padding:2px 8px;font-size:11px;">撤退回城</button>
       </div>
-<div id="combo-bonus-txt" class="combo-bonus-txt">經驗 / 金幣 +0%</div>
-      </div>
+
 
       <!-- 左上角：角色名片卡 ＋ 可折疊關卡追蹤面板 -->
       <div id="hud-top-left" class="hud-corner">
@@ -644,7 +651,7 @@
   <div id="modal-ach-tower" class="modal-overlay hidden">
     <div class="modal-card settings-modal-card diablo-ornate-card" style="width:min(720px,94vw);">
       <div class="modal-header">
-        <h2>🏆 成就里程碑 & 🌀 無盡深淵爬塔 <small style="color:#94a3b8;font-size:12px;font-weight:400;">[快捷鍵 A]</small></h2>
+        <h2>🏆 成就里程碑 & 🌀 無盡深淵爬塔 <small style="color:#94a3b8;font-size:12px;font-weight:400;">[快捷鍵 J]</small></h2>
         <button id="btn-close-ach-tower" class="btn-ghost">關閉</button>
       </div>
       <div class="settings-tabs" style="grid-template-columns:1fr 1fr;">
@@ -658,7 +665,7 @@
   <div id="modal-shop" class="modal-overlay hidden">
     <div class="modal-card settings-modal-card diablo-ornate-card" style="width:min(700px,94vw);">
       <div class="modal-header">
-        <h2>🛒 暗黑深淵商城 <small style="color:#94a3b8;font-size:12px;font-weight:400;">[快捷鍵 S]</small></h2>
+        <h2>🛒 暗黑深淵商城 <small style="color:#94a3b8;font-size:12px;font-weight:400;">[快捷鍵 F]</small></h2>
         <button id="btn-close-shop" class="btn-ghost">關閉</button>
       </div>
       <div id="shop-wallet-bar" style="display:flex;flex-wrap:wrap;gap:12px;padding:7px 12px;border-radius:7px;background:rgba(14,11,14,0.88);border:1px solid rgba(154,114,54,0.4);font-size:12px;color:#e2d5be;"></div>
@@ -770,6 +777,6 @@
     </div>
   </div>
 
-  <script type="module" src="./src/main.js?v=309-all"></script>
+  <script type="module" src="./src/main.js?v=311"></script>
 </body>
 </html>

@@ -8,6 +8,8 @@ let installed = false;
 
 function classifyTexture(key) {
   if (!key || key.startsWith('__') || key === 'fx_glow') return 'skip';
+  // v311: 新版離線精細去背資產（v299/v303/v305/v306/v307+）無白底，跳過 CPU 掃描避免掉幀與誤傷高光
+  if (/_v(299|30[0-9]|31[0-9])/.test(key)) return 'skip';
   if (key.startsWith('town_bg_') || key.startsWith('map_zone_') || key.startsWith('worldmap')) return 'skip';
   if (key.startsWith('town_atlas_') || key.startsWith('obs_')) return 'building';
   if (
