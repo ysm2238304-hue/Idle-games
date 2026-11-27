@@ -40,7 +40,7 @@ import { ShopModal } from './ui/ShopModal.js?v=99';
 import { AchievementTowerModal } from './ui/AchievementTowerModal.js?v=99';
 import { ACHIEVEMENTS } from './data/achievements.js?v=99';
 import { rollEnhance, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEVEL } from './logic/enhanceSystem.js?v=99';
-import { HeroSkillShowcase, CLASS_SKILLS_MAP } from './ui/HeroSkillShowcase.js?v=299';
+import { HeroSkillShowcase, CLASS_SKILLS_MAP } from './ui/HeroSkillShowcase.js?v=300';
 
 let gameState = loadGame() || createInitialState('warrior');
 let computedStats = recalcPlayerStats(gameState);
@@ -2251,11 +2251,16 @@ function renderWelcomeClasses() {
       const foundIdx = clsSkills.findIndex((s) => s.id === sid);
       if (foundIdx !== -1 && !picked.includes(foundIdx)) picked.push(foundIdx);
     });
-    for (let k = 0; picked.length < Math.min(3, clsSkills.length) && k < clsSkills.length; k++) {
+    for (let k = 0; picked.length < Math.min(6, clsSkills.length) && k < clsSkills.length; k++) {
       const cand = (aIdx * 3 + k) % clsSkills.length;
       if (!picked.includes(cand)) picked.push(cand);
     }
-    return { name: a.name, indices: picked };
+    return { name: a.name, indices: picked, isAll: false };
+  });
+  resolvedArchs.push({
+    name: `✨ 全部技能 (${Math.min(12, clsSkills.length)})`,
+    indices: clsSkills.slice(0, 12).map((_, idx) => idx),
+    isAll: true,
   });
 
   const CLASS_MECH_BLURB = {
@@ -2282,6 +2287,12 @@ function renderWelcomeClasses() {
           const sk = clsSkills[idx];
           return `<button type="button" class="showcase-sk-btn ${pos === 0 ? 'active' : ''}" data-sk-idx="${idx}">${sk.icon ? `<img class="sk-btn-ico" src="${sk.icon}" alt="" />` : ''}<span>${sk.name}</span></button>`;
         }).join('')}
+      </div>
+      <div class="v300-build-scroll-card">
+        <div class="v300-build-row"><b>🔥 代表流派：</b>${ext.archetype || cls.title}</div>
+        <div class="v300-build-row"><b>🛡️ 核心裝備：</b>${ext.gear || '專屬職業裝備'}</div>
+        <div class="v300-build-row" style="grid-column:1 / -1;"><b>💎 屬性優先：</b>${ext.priority || '主屬性 ＞ 暴擊 ＞ 攻速'}</div>
+        <div class="v300-build-tip"><b>📜 實戰連招心法：</b>${ext.tip || cls.desc}</div>
       </div>
     </div>
 
@@ -2332,6 +2343,7 @@ function renderWelcomeClasses() {
       welcomeClassStage.querySelectorAll('.v243-arch-tab').forEach((x) => x.classList.toggle('active', x === tb));
       const grid = document.getElementById('v243-arch-skill-grid');
       if (grid) {
+        grid.classList.toggle('is-all-skills', !!arch.isAll);
         grid.innerHTML = arch.indices.map((idx, pos) => {
           const sk = clsSkills[idx];
           return `<button type="button" class="showcase-sk-btn ${pos === 0 ? 'active' : ''}" data-sk-idx="${idx}">${sk.icon ? `<img class="sk-btn-ico" src="${sk.icon}" alt="" />` : ''}<span>${sk.name}</span></button>`;

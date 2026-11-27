@@ -1,6 +1,6 @@
 /**
  * LobbyClassClarity.js (v213)
- * 1. 載入 classHall.css?v=299（去框化圖騰徽章＋16:9 舞台修正＋8 格遊戲快捷列）
+ * 1. 載入 classHall.css?v=300（去框化圖騰徽章＋16:9 舞台修正＋8 格遊戲快捷列）
  * 2. 移除會擠壓格線的 #lobby-class-indep-note
  * 3. 在左上角 #welcome-save-summary 明確標示「上次出戰：職業名 Lv.X」
  */
@@ -21,7 +21,7 @@ function ensureClassHallCss() {
   const link = document.createElement('link');
   link.id = 'class-hall-v213-css';
   link.rel = 'stylesheet';
-  link.href = './src/ui/classHall.css?v=299';
+  link.href = './src/ui/classHall.css?v=300';
   document.head.appendChild(link);
 }
 

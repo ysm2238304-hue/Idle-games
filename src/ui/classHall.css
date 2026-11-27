@@ -361,3 +361,142 @@
     grid-template-columns: 1fr !important;
   }
 }
+
+/* v300: 右上角 3 顆鍛鐵按鈕貼圖 ＋ 流派頁籤貼圖 ＋ 技能按鈕貼圖 ＋ 下方配裝捲軸卡 */
+#welcome-step-class .creation-top-actions {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+#welcome-step-class #btn-watch-intro,
+#welcome-step-class #btn-lobby-settings {
+  border: none !important;
+  background: url('../../assets/ui/lobby_btn_top_iron_v300.webp?v=300') center center / 100% 100% no-repeat !important;
+  color: #f8fafc !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  padding: 8px 18px !important;
+  min-width: 112px !important;
+  text-shadow: 0 2px 5px #000 !important;
+  cursor: pointer !important;
+  transition: transform 0.14s ease, filter 0.14s ease !important;
+}
+
+#welcome-step-class #btn-reset-character {
+  border: none !important;
+  background: url('../../assets/ui/lobby_btn_top_danger_v300.webp?v=300') center center / 100% 100% no-repeat !important;
+  color: #fecaca !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  padding: 8px 18px !important;
+  min-width: 124px !important;
+  text-shadow: 0 2px 5px #000 !important;
+  cursor: pointer !important;
+  transition: transform 0.14s ease, filter 0.14s ease !important;
+}
+
+#welcome-step-class #btn-watch-intro:hover,
+#welcome-step-class #btn-lobby-settings:hover,
+#welcome-step-class #btn-reset-character:hover {
+  transform: translateY(-1px) scale(1.03);
+  filter: brightness(1.16);
+}
+
+#welcome-step-class .v243-arch-tabs {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)) !important;
+  gap: 7px !important;
+}
+
+#welcome-step-class .v243-arch-tab {
+  border: none !important;
+  background: url('../../assets/ui/lobby_tab_arch_v300.webp?v=300') center center / 100% 100% no-repeat !important;
+  color: #cbd5e1 !important;
+  padding: 8px 10px !important;
+  font-size: 12px !important;
+  font-weight: 800 !important;
+  text-shadow: 0 2px 5px #000 !important;
+  text-align: center !important;
+  transition: transform 0.14s ease, filter 0.14s ease !important;
+}
+
+#welcome-step-class .v243-arch-tab:hover {
+  filter: brightness(1.16);
+}
+
+#welcome-step-class .v243-arch-tab.active {
+  background: url('../../assets/ui/lobby_btn_skill_active_v300.webp?v=300') center center / 100% 100% no-repeat !important;
+  color: #fef08a !important;
+  filter: brightness(1.08);
+  box-shadow: 0 0 14px rgba(245, 158, 11, 0.35) !important;
+}
+
+#welcome-step-class .v243-arch-skill-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  gap: 7px !important;
+}
+
+#welcome-step-class .v243-arch-skill-grid.is-all-skills {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 6px !important;
+}
+
+#welcome-step-class .showcase-sk-btn {
+  border: none !important;
+  background: url('../../assets/ui/lobby_btn_skill_v300.webp?v=300') center center / 100% 100% no-repeat !important;
+  padding: 9px 13px !important;
+  min-height: 44px !important;
+  color: #e2e8f0 !important;
+  text-shadow: 0 2px 5px #000 !important;
+  transition: transform 0.14s ease, filter 0.14s ease !important;
+}
+
+#welcome-step-class .showcase-sk-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.15);
+}
+
+#welcome-step-class .showcase-sk-btn.active {
+  background: url('../../assets/ui/lobby_btn_skill_active_v300.webp?v=300') center center / 100% 100% no-repeat !important;
+  color: #fef08a !important;
+  filter: brightness(1.08);
+}
+
+/* 下方實戰流派與配裝捲軸卡（填補下方空位） */
+#welcome-step-class .v300-build-scroll-card {
+  flex: 1 1 auto !important;
+  min-height: 92px !important;
+  background:
+    linear-gradient(rgba(8, 10, 16, 0.56), rgba(8, 10, 16, 0.72)),
+    url('../../assets/ui/lobby_build_strip_v300.webp?v=300') center center / 100% 100% no-repeat !important;
+  border-radius: 10px !important;
+  padding: 12px 18px !important;
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 6px 18px !important;
+  align-content: center !important;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.75) !important;
+}
+
+#welcome-step-class .v300-build-row {
+  font-size: 11.5px !important;
+  line-height: 1.45 !important;
+  color: #e2e8f0 !important;
+  text-shadow: 0 1px 4px #000 !important;
+}
+
+#welcome-step-class .v300-build-row b {
+  color: #fde68a !important;
+  margin-right: 4px;
+}
+
+#welcome-step-class .v300-build-tip {
+  grid-column: 1 / -1 !important;
+  font-size: 11.5px !important;
+  color: #cbd5e1 !important;
+  border-top: 1px solid rgba(212, 175, 55, 0.22);
+  padding-top: 6px;
+  margin-top: 2px;
+}
