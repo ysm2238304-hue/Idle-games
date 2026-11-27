@@ -22,7 +22,7 @@ import {
   saveCloudData,
   deleteCloudSave,
 } from './auth/firebase.js?v=272';
-import { BattleScene } from './scenes/BattleScene.js?v=311';
+import { BattleScene } from './scenes/BattleScene.js?v=313';
 import { TownScene } from './scenes/TownScene.js?v=312-2';
 import { TOWN_SPLASHES } from './data/towns/splashes.js?v=229';
 import { DashboardUI } from './ui/DashboardUI.js?v=301';
@@ -2082,8 +2082,10 @@ function exitTownToBattle(forceRespawn = false, forTraining = false) {
   battleScene = phaserGame.scene.getScene('BattleScene');
   if (battleScene) {
     battleScene.isPaused = false;
-    battleScene.refreshHeroClass?.(gameState.classId);
-    battleScene.syncMaxHp?.();
+    if (battleScene.hero?.active) {
+      battleScene.refreshHeroClass?.(gameState.classId);
+      battleScene.syncMaxHp?.();
+    }
   }
   battleScene?.cameras?.main?.fadeIn?.(350, 0, 0, 0);
   battleScene?.setPaused?.(false);
@@ -2319,8 +2321,16 @@ function renderWelcomeClasses() {
           </div>`).join('')}
       </div>
       <div class="v299-mech-plaque"><b style="color:#f59e0b;">職業專屬機制：</b>${CLASS_MECH_BLURB[cls.id] || ''}</div>
-      <div class="innate-plaque" style="margin:4px 0;">
+      <div class="innate-plaque" style="margin:2px 0;">
         <b style="color:#fde047;">🌟 天生被動：</b><span>${cls.innateBonus?.label || ''}</span>
+      </div>
+      <div class="v313-builds-plaque">
+        <div class="v313-builds-title">🔥 推薦流派方向</div>
+        <div class="v313-builds-grid">
+          ${resolvedArchs.filter((a) => !a.isAll).slice(0, 4).map((a) => `
+            <span class="v313-build-chip">${a.label || a.name || ''}</span>
+          `).join('')}
+        </div>
       </div>
       <div id="stage-skill-dynamic" class="skill-lore-scroll"></div>
     </div>
@@ -2807,8 +2817,27 @@ if (typeof window !== 'undefined' && window.__IDLE_ARPG_BRIDGE__) {
 }
 
 
-// v241: 暗黑 4 秘法師四大流派「一鍵套用 6 招＋雙附魔＋關鍵被動」與銘條同步
+// v241/v313: 暗黑 4 全職業快捷流派「一鍵套用 6 招（自動啟蒙至至少 Lv.2）＋職業機制＋關鍵被動」
 if (typeof document !== 'undefined') {
+  const ensurePresetSkillsLv2 = (cid, skillIds) => {
+    const bookMap = {
+      warrior: WARRIOR_SKILLS,
+      ranger: RANGER_SKILLS,
+      mage: MAGE_SKILLS,
+      paladin: PALADIN_SKILLS,
+      necro: NECRO_SKILLS,
+      assassin: ASSASSIN_SKILLS,
+    };
+    const book = bookMap[cid];
+    if (!book || !Array.isArray(skillIds)) return;
+    if (!gameState.skillTree) gameState.skillTree = {};
+    skillIds.forEach((sid) => {
+      const sk = book[sid];
+      if (sk?.treeNodeId) {
+        gameState.skillTree[sk.treeNodeId] = Math.max(2, gameState.skillTree[sk.treeNodeId] || 0);
+      }
+    });
+  };
   const applyMageD4Preset = (presetId) => {
     const preset = MAGE_D4_PRESETS.find((p) => p.id === presetId);
     if (!preset) return;
@@ -2818,6 +2847,7 @@ if (typeof document !== 'undefined') {
     }
     if (!gameState.equippedSkillsByClass) gameState.equippedSkillsByClass = {};
     gameState.equippedSkillsByClass.mage = [...preset.skills];
+    ensurePresetSkillsLv2('mage', preset.skills);
     if (!gameState.classMechanic) gameState.classMechanic = {};
     if (!gameState.classMechanic.mage) gameState.classMechanic.mage = { enchants: [] };
     gameState.classMechanic.mage.enchants = [...preset.enchants];
@@ -2841,6 +2871,7 @@ if (typeof document !== 'undefined') {
     }
     if (!gameState.equippedSkillsByClass) gameState.equippedSkillsByClass = {};
     gameState.equippedSkillsByClass.necro = [...preset.skills];
+    ensurePresetSkillsLv2('necro', preset.skills);
     if (!gameState.classMechanic) gameState.classMechanic = {};
     gameState.classMechanic.necro = { ...(gameState.classMechanic.necro || {}), ...preset.book };
     if (!gameState.activeKeystone) gameState.activeKeystone = {};
@@ -2862,6 +2893,7 @@ if (typeof document !== 'undefined') {
     }
     if (!gameState.equippedSkillsByClass) gameState.equippedSkillsByClass = {};
     gameState.equippedSkillsByClass.warrior = [...preset.skills];
+    ensurePresetSkillsLv2('warrior', preset.skills);
     if (!gameState.classMechanic) gameState.classMechanic = {};
     gameState.classMechanic.warrior = { ...(gameState.classMechanic.warrior || {}), arsenal: preset.arsenal };
     if (!gameState.activeKeystone) gameState.activeKeystone = {};
@@ -2883,6 +2915,7 @@ if (typeof document !== 'undefined') {
     }
     if (!gameState.equippedSkillsByClass) gameState.equippedSkillsByClass = {};
     gameState.equippedSkillsByClass.ranger = [...preset.skills];
+    ensurePresetSkillsLv2('ranger', preset.skills);
     if (!gameState.classMechanic) gameState.classMechanic = {};
     gameState.classMechanic.ranger = { ...(gameState.classMechanic.ranger || {}), specialization: preset.specialization };
     if (!gameState.activeKeystone) gameState.activeKeystone = {};
@@ -2904,6 +2937,7 @@ if (typeof document !== 'undefined') {
     }
     if (!gameState.equippedSkillsByClass) gameState.equippedSkillsByClass = {};
     gameState.equippedSkillsByClass.assassin = [...preset.skills];
+    ensurePresetSkillsLv2('assassin', preset.skills);
     if (!gameState.classMechanic) gameState.classMechanic = {};
     gameState.classMechanic.assassin = { ...(gameState.classMechanic.assassin || {}), ...preset.venom };
     if (!gameState.activeKeystone) gameState.activeKeystone = {};
@@ -2925,6 +2959,7 @@ if (typeof document !== 'undefined') {
     }
     if (!gameState.equippedSkillsByClass) gameState.equippedSkillsByClass = {};
     gameState.equippedSkillsByClass.paladin = [...preset.skills];
+    ensurePresetSkillsLv2('paladin', preset.skills);
     if (!gameState.classMechanic) gameState.classMechanic = {};
     gameState.classMechanic.paladin = { ...(gameState.classMechanic.paladin || {}), oath: preset.oath };
     if (!gameState.activeKeystone) gameState.activeKeystone = {};

@@ -588,8 +588,12 @@ export class MonsterSkillEngine {
     const spr = s.add.sprite(cx, cy, 'anim_e_abyss_imp', 0).setScale(0.48).setDepth(cy + 15);
     if (s.anims.exists('anim_e_abyss_imp_loop')) spr.play('anim_e_abyss_imp_loop');
     const maxHp = Math.max(40, Math.round((owner.maxHp || 300) * 0.14));
-    const hpBarBg = s.add.rectangle(cx, cy - 42, 48, 5, 0x0f172a, 0.85).setDepth(cy + 30);
-    const hpBarFill = s.add.rectangle(cx - 24, cy - 42, 48, 5, 0xf97316, 0.95).setOrigin(0, 0.5).setDepth(cy + 31);
+    const hpBarBg = s.add.rectangle(cx, cy - 42, 52, 5, 0x0f172a, 0.88).setStrokeStyle(1, 0x7f1d1d).setDepth(cy + 30);
+    const hpBarFill = s.add.rectangle(cx - 26, cy - 42, 52, 5, 0xef4444, 0.96).setOrigin(0, 0.5).setDepth(cy + 31);
+    const label = s.add.text(cx, cy - 54, '🔴 深淵小鬼', {
+      fontSize: '11px', fontFamily: 'Noto Sans TC, sans-serif', fontStyle: 'bold',
+      color: '#fca5a5', stroke: '#000000', strokeThickness: 3,
+    }).setOrigin(0.5).setDepth(cy + 32);
 
     this.dynamicEntities.push({
       kind: 'abyss_imp',
@@ -600,6 +604,7 @@ export class MonsterSkillEngine {
       sprite: spr,
       hpBarBg,
       hpBarFill,
+      label,
       hp: maxHp,
       maxHp,
       hitRadius: 34,
@@ -679,6 +684,14 @@ export class MonsterSkillEngine {
           this.dynamicEntities.splice(i, 1);
         }
       } else if (e.kind === 'abyss_imp') {
+        // v313: 召喚首領死亡時深淵小鬼同步潰散消散，不再滯留跟隨玩家
+        if (!e.owner || e.owner.hp <= 0 || !e.owner.sprite?.active) {
+          this.vfx?.spawnDebrisBurst?.(e.x, e.y - 10, 0xef4444, 6);
+          e.label?.destroy();
+          this._destroyEntityVisuals(e);
+          this.dynamicEntities.splice(i, 1);
+          continue;
+        }
         const dx = s.hero.x - e.x;
         const dy = s.hero.y - e.y;
         const d = Math.hypot(dx, dy) || 1;
@@ -688,7 +701,8 @@ export class MonsterSkillEngine {
         }
         e.sprite?.setPosition(e.x, e.y).setFlipX(dx < 0).setDepth(e.y + 15);
         e.hpBarBg?.setPosition(e.x, e.y - 42);
-        e.hpBarFill?.setPosition(e.x - 24, e.y - 42);
+        e.hpBarFill?.setPosition(e.x - 26, e.y - 42);
+        e.label?.setPosition(e.x, e.y - 54).setDepth(e.y + 32);
         e.atkTimer -= delta;
         if (e.atkTimer <= 0 && d <= 420) {
           e.atkTimer = 1950;
@@ -727,6 +741,7 @@ export class MonsterSkillEngine {
     e.beam?.destroy();
     e.hpBarBg?.destroy();
     e.hpBarFill?.destroy();
+    e.label?.destroy();
     e.ring?.destroy();
   }
 

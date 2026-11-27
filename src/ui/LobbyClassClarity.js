@@ -21,7 +21,7 @@ function ensureClassHallCss() {
   const link = document.createElement('link');
   link.id = 'class-hall-v213-css';
   link.rel = 'stylesheet';
-  link.href = './src/ui/classHall.css?v=301';
+  link.href = './src/ui/classHall.css?v=313';
   document.head.appendChild(link);
 }
 

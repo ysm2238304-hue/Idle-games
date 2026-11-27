@@ -20,11 +20,11 @@ import { PaladinVfxDirector } from '../vfx/PaladinVfxDirector.js?v=266';
 import { FloatingTextPool } from '../vfx/FloatingTextPool.js?v=298';
 import { ParticlePool } from '../vfx/ParticlePool.js?v=266';
 import { TrainingArenaController } from '../combat/TrainingArenaController.js?v=308-2';
-import { HERO_V307_READY, getHeroAtlasInfo, getSkillAnimAction, getActionAnimDurationMs, resolveHeroAnimKey, safeQueueAtlas, waitAtlasReady } from '../combat/HeroAnimRouter.js?v=309-1';
+import { HERO_V307_READY, getHeroAtlasInfo, getSkillAnimAction, getActionAnimDurationMs, resolveHeroAnimKey, isAtlasTextureReady, safeQueueAtlas, waitAtlasReady } from '../combat/HeroAnimRouter.js?v=312-2';
 import { BattleMiniDpsHud } from '../ui/BattleMiniDpsHud.js?v=302';
 import { CameraZoomHelper } from './CameraZoomHelper.js?v=282';
 import { MonsterVfxDirector } from '../vfx/MonsterVfxDirector.js?v=293';
-import { MonsterSkillEngine } from '../combat/MonsterSkillEngine.js?v=278';
+import { MonsterSkillEngine } from '../combat/MonsterSkillEngine.js?v=313';
 import { warriorCombatMethods } from '../combat/classes/warriorCombat.js?v=266';
 import { rangerCombatMethods } from '../combat/classes/rangerCombat.js?v=266';
 import { mageCombatMethods } from '../combat/classes/mageCombat.js?v=302';
@@ -697,16 +697,39 @@ export class BattleScene extends Phaser.Scene {
     this.heroGroundShadow = this.add.image(cx, cy + 44, 'fx_glow')
       .setTint(0x000000).setScale(1.7, 0.6).setAlpha(0.62).setDepth(2);
     const heroAtlas = this.getHeroAtlasKey(cid);
-    this.heroCastShadow = this.add.image(cx - 14, cy + 28, heroAtlas, texKey)
-      .setTint(0x000000).setScale(0.56, 0.25).setAlpha(0.32).setDepth(3);
+    const heroReady = isAtlasTextureReady(this, heroAtlas, texKey);
+    this.heroCastShadow = (heroReady
+      ? this.add.image(cx - 14, cy + 28, heroAtlas, texKey).setTint(0x000000).setScale(0.56, 0.25).setAlpha(0.32)
+      : this.add.image(cx - 14, cy + 28, 'fx_glow').setTint(0x000000).setScale(0.9, 0.32).setAlpha(0.28))
+      .setDepth(3);
 
-    this.hero = this.add.sprite(cx, cy, heroAtlas, texKey).setScale(0.56).setDepth(cy);
-    if (cid === 'warrior') this.hero.play('w_down_walk');
-    else if (cid === 'ranger') this.hero.play('r_down_walk');
-    else if (cid === 'mage') this.hero.play('m_down_walk');
-    else if (cid === 'paladin') this.hero.play('p_down_walk');
-    else if (cid === 'necro') this.hero.play('n_down_walk');
-    else if (cid === 'assassin') this.hero.play('a_down_walk');
+    this.hero = (heroReady
+      ? this.add.sprite(cx, cy, heroAtlas, texKey).setScale(0.56)
+      : this.add.sprite(cx, cy, 'fx_glow').setScale(0.56).setAlpha(0.01))
+      .setDepth(cy);
+    const playInitWalk = () => {
+      if (!this.hero?.active) return;
+      const wk = cid === 'warrior' ? 'w_down_walk' : (cid === 'ranger' ? 'r_down_walk' : (cid === 'mage' ? 'm_down_walk' : (cid === 'paladin' ? 'p_down_walk' : (cid === 'necro' ? 'n_down_walk' : 'a_down_walk'))));
+      if (this.anims.exists(wk)) this.hero.play(wk);
+    };
+    if (heroReady) {
+      playInitWalk();
+    } else {
+      const hInfoInit = getHeroAtlasInfo(cid);
+      const applyBsHero = () => {
+        if (!this.hero?.active || !isAtlasTextureReady(this, heroAtlas, texKey)) return;
+        this.registerClassAnims(cid);
+        this.hero.setTexture(heroAtlas, texKey).setAlpha(1);
+        if (this.heroCastShadow?.active) this.heroCastShadow.setTexture(heroAtlas, texKey).setScale(0.56, 0.25).setAlpha(0.32);
+        playInitWalk();
+      };
+      if (safeQueueAtlas(this, heroAtlas, hInfoInit.basePng, hInfoInit.baseJson)) {
+        this.load.once('complete', () => waitAtlasReady(this, heroAtlas, applyBsHero));
+        this.load.start();
+      } else {
+        waitAtlasReady(this, heroAtlas, applyBsHero);
+      }
+    }
 
     this.heroHpBg = this.add.rectangle(cx, cy - 86, 108, 10, 0x0b0e14).setStrokeStyle(1.5, 0xc89b3c).setDepth(4000);
     this.heroHpFill = this.add.rectangle(cx - 54, cy - 86, 108, 8, 0x22c55e).setOrigin(0, 0.5).setDepth(4001);
@@ -1225,6 +1248,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   _applyRefreshHeroClass() {
+    if (!this.hero || !this.hero.active) return;
     if (this.summons) {
       this.summons.forEach((s) => { s.sprite?.destroy(); s.barBg?.destroy(); s.barFill?.destroy(); s.label?.destroy(); });
       this.summons = [];
@@ -1773,6 +1797,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   updateHeroVisualPose(vx, vy, time = 0) {
+    if (!this.hero || !this.hero.active) return;
     const cid = this.getState().classId || 'warrior';
     const spd = Math.hypot(vx, vy);
     if (spd > 18) {
