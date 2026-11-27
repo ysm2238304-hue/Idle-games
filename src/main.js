@@ -23,7 +23,7 @@ import {
   deleteCloudSave,
 } from './auth/firebase.js?v=272';
 import { BattleScene } from './scenes/BattleScene.js?v=311';
-import { TownScene } from './scenes/TownScene.js?v=312';
+import { TownScene } from './scenes/TownScene.js?v=312-2';
 import { TOWN_SPLASHES } from './data/towns/splashes.js?v=229';
 import { DashboardUI } from './ui/DashboardUI.js?v=301';
 import { hookWorldMap25D, openWorldMap25D, closeWorldMap25D, toggleWorldMap25D } from './ui/WorldMap25D.js?v=253';
@@ -219,8 +219,8 @@ const ui = new DashboardUI({
     const cls = CLASSES[classId];
     ui.addLog(`切換角色為【${cls.name} Lv.${gameState.level}】，已傳送至該角色所屬主城！`, 'system');
     refreshStatsAndUI();
-    if (battleScene?.sys?.isActive() || battleScene?.sys?.isSleeping()) {
-      battleScene.refreshHeroClass(classId);
+    // v312-2: 切換職業隨即進主城時，不對休眠中 BattleScene 搶載圖集，改由出城喚醒時同步
+    if (battleScene?.sys?.isActive()) {
       battleScene.syncMaxHp();
     }
     if (phaserGame) {
@@ -856,8 +856,7 @@ function initPhaserGame() {
       phaserGame.scale.refresh();
       if (phaserGame.scene.isActive('BattleScene')) phaserGame.scene.sleep('BattleScene');
       battleScene?.setPaused?.(true);
-      if (battleScene?.sys?.isActive() || battleScene?.sys?.isSleeping()) {
-        battleScene.refreshHeroClass?.(gameState.classId);
+      if (battleScene?.sys?.isActive()) {
         battleScene.syncMaxHp?.();
       }
       isInTown = false;
@@ -2081,7 +2080,11 @@ function exitTownToBattle(forceRespawn = false, forTraining = false) {
   }
   phaserGame.scene.bringToTop('BattleScene');
   battleScene = phaserGame.scene.getScene('BattleScene');
-  if (battleScene) battleScene.isPaused = false;
+  if (battleScene) {
+    battleScene.isPaused = false;
+    battleScene.refreshHeroClass?.(gameState.classId);
+    battleScene.syncMaxHp?.();
+  }
   battleScene?.cameras?.main?.fadeIn?.(350, 0, 0, 0);
   battleScene?.setPaused?.(false);
   if (!forTraining && battleScene?.sys?.isActive()) {

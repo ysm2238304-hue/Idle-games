@@ -269,32 +269,45 @@ function _getInflightSet() {
   return new Set();
 }
 
+export function isAtlasTextureReady(scene, key, frameName = null) {
+  if (!scene || !key || !scene.textures?.exists?.(key)) return false;
+  const tex = scene.textures.get(key);
+  if (!tex || tex.key === '__MISSING') return false;
+  const src = tex.source?.[0];
+  if (!src) return false;
+  if (scene.game?.renderer?.gl && !src.glTexture) return false;
+  if (frameName && !tex.has(frameName)) return false;
+  return true;
+}
+
 export function safeQueueAtlas(scene, key, png, json) {
   if (!scene || !key) return false;
-  if (scene.textures?.exists?.(key)) return false;
+  if (isAtlasTextureReady(scene, key)) return false;
   const inflight = _getInflightSet();
   if (inflight.has(key)) return false;
   inflight.add(key);
   const cleanup = () => inflight.delete(key);
-  scene.load?.once?.(`filecomplete-atlasjson-${key}`, cleanup);
+  const safetyTimer = setTimeout(cleanup, 5000);
+  const done = () => { clearTimeout(safetyTimer); cleanup(); };
+  scene.load?.once?.(`filecomplete-atlasjson-${key}`, done);
   scene.load?.once?.('loaderror', (fileObj) => {
-    if (!fileObj || fileObj.key === key) cleanup();
+    if (!fileObj || fileObj.key === key) done();
   });
-  scene.load?.once?.('complete', cleanup);
+  scene.load?.once?.('complete', done);
   scene.load?.atlas?.(key, png, json);
   return true;
 }
 
 export function waitAtlasReady(scene, key, cb, maxWaitMs = 6000) {
   if (!cb) return;
-  if (!scene || !key || scene.textures?.exists?.(key)) {
+  if (!scene || !key || isAtlasTextureReady(scene, key)) {
     cb();
     return;
   }
   const start = Date.now();
   const poll = () => {
     if (!scene?.sys || scene.sys.isDestroyed) return;
-    if (scene.textures?.exists?.(key) || (Date.now() - start) >= maxWaitMs) {
+    if (isAtlasTextureReady(scene, key) || (Date.now() - start) >= maxWaitMs) {
       cb();
       return;
     }

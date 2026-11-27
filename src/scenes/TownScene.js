@@ -1,4 +1,4 @@
-import { getHeroAtlasInfo, safeQueueAtlas, waitAtlasReady } from '../combat/HeroAnimRouter.js?v=309-1';
+import { getHeroAtlasInfo, isAtlasTextureReady, safeQueueAtlas, waitAtlasReady } from '../combat/HeroAnimRouter.js?v=312-2';
 import { CameraZoomHelper } from './CameraZoomHelper.js?v=282';
 import { TOWN_CH1 } from '../data/towns/ch1.js?v=312';
 import { LivingNpcEngine } from '../town/LivingNpcEngine.js?v=273';
@@ -362,11 +362,31 @@ export class TownScene extends Phaser.Scene {
     this._petTrailAt = 0;
     this.heroShadow = this.add.image(td.spawn.x, td.spawn.y + 30, 'fx_glow')
       .setTint(0x000000).setScale(0.86, 0.32).setAlpha(0.50).setDepth(3);
-    this.hero = this.add.sprite(td.spawn.x, td.spawn.y, atlasKey, initFrame)
-      .setScale(0.56)
+    // v312-2: 防呆檢查 WebGL 貼圖就緒，避免切換職業競態導致 glTexture=null 黑屏崩潰
+    const heroTexReady = isAtlasTextureReady(this, atlasKey, initFrame);
+    this.hero = (heroTexReady
+      ? this.add.sprite(td.spawn.x, td.spawn.y, atlasKey, initFrame).setScale(0.56)
+      : this.add.sprite(td.spawn.x, td.spawn.y, 'fx_glow').setScale(0.56).setAlpha(0.01))
       .setDepth(td.spawn.y);
     const initIdleKey = `${this.getHeroPrefix(cid)}_down_idle`;
-    if (this.anims.exists(initIdleKey)) this.hero.play(initIdleKey, true);
+    if (heroTexReady && this.anims.exists(initIdleKey)) {
+      this.hero.play(initIdleKey, true);
+    } else if (!heroTexReady) {
+      const hInfoNow = getHeroAtlasInfo(cid);
+      const applyHeroReady = () => {
+        if (!this.hero?.active || !isAtlasTextureReady(this, atlasKey, initFrame)) return;
+        this.registerHeroAnims(cid);
+        this.hero.setTexture(atlasKey, initFrame).setAlpha(1);
+        const ik = `${this.getHeroPrefix(cid)}_down_idle`;
+        if (this.anims.exists(ik)) this.hero.play(ik, true);
+      };
+      if (safeQueueAtlas(this, atlasKey, hInfoNow.basePng, hInfoNow.baseJson)) {
+        this.load.once('complete', () => waitAtlasReady(this, atlasKey, applyHeroReady));
+        this.load.start();
+      } else {
+        waitAtlasReady(this, atlasKey, applyHeroReady);
+      }
+    }
     const initNick = (this.callbacks?.getState?.()?.nickname || window.__IDLE_ARPG_BRIDGE__?.getState?.()?.nickname || '冒險者').trim();
     this.heroNameText = this.add.text(td.spawn.x, td.spawn.y - 54, initNick, {
       fontSize: '14px',
@@ -1013,14 +1033,15 @@ export class TownScene extends Phaser.Scene {
     this.registerHeroAnims(cid);
     const dir = this.heroDir === 'left' ? 'right' : (this.heroDir || 'down');
     if (this.hero.texture.key !== atlasKey) {
-      if (this.textures.exists(atlasKey)) {
-        this.hero.setTexture(atlasKey, `${fp}_${dir}_idle_0`);
+      const targetFrame = `${fp}_${dir}_idle_0`;
+      if (isAtlasTextureReady(this, atlasKey, targetFrame)) {
+        this.hero.setTexture(atlasKey, targetFrame).setAlpha(1);
         if (this.anims.exists(`${prefix}_${dir}_idle`)) this.hero.play(`${prefix}_${dir}_idle`, true);
       } else if (this.load) {
         const applyTex = () => {
           this.registerHeroAnims(cid);
-          if (this.hero?.active && this.textures.exists(atlasKey)) {
-            this.hero.setTexture(atlasKey, `${fp}_${dir}_idle_0`);
+          if (this.hero?.active && isAtlasTextureReady(this, atlasKey, targetFrame)) {
+            this.hero.setTexture(atlasKey, targetFrame).setAlpha(1);
             if (this.anims.exists(`${prefix}_${dir}_idle`)) this.hero.play(`${prefix}_${dir}_idle`, true);
           }
         };
