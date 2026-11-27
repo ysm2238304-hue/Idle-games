@@ -16,14 +16,28 @@ export const TOWN_CH9 = {
   "particleColor": 16007006,
   "spawn": {
     "x": 2048,
-    "y": 1280
+    "y": 1340
   },
   "walkableZones": [
     {
-      "x1": 280,
-      "y1": 280,
-      "x2": 3860,
-      "y2": 2360
+      "poly": [
+        [
+          340,
+          1280
+        ],
+        [
+          2048,
+          220
+        ],
+        [
+          3740,
+          1280
+        ],
+        [
+          2048,
+          2340
+        ]
+      ]
     }
   ],
   "landmark": {
@@ -31,7 +45,7 @@ export const TOWN_CH9 = {
     "name": "垂淚聖母血泉",
     "frame": "ch9_lm_fountain",
     "x": 2048,
-    "y": 1080,
+    "y": 1120,
     "scale": 0.84,
     "imgKey": "ch9_b_beacon_v297",
     "imgUrl": "./assets/towns/ch9_b_beacon.webp?v=297",
@@ -44,8 +58,8 @@ export const TOWN_CH9 = {
       "id": "smith",
       "name": "聖光黃金錘洗煉聖台",
       "frame": "ch9_bld_smith",
-      "x": 820,
-      "y": 420,
+      "x": 1120,
+      "y": 780,
       "scale": 1.08,
       "imgKey": "ch9_b_smith_v297",
       "imgUrl": "./assets/towns/ch9_b_smith.webp?v=297",
@@ -64,16 +78,16 @@ export const TOWN_CH9 = {
       "action": "drawer_upgrade",
       "actionLabel": "開啟聖光洗煉",
       "doorOffset": {
-        "x": 20,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "alchemy",
       "name": "血薔薇蒸餾聖藥房",
       "frame": "ch9_bld_alchemy",
-      "x": 3220,
-      "y": 440,
+      "x": 2980,
+      "y": 780,
       "scale": 1.08,
       "imgKey": "ch9_b_alchemy_v297",
       "imgUrl": "./assets/towns/ch9_b_alchemy.webp?v=297",
@@ -92,16 +106,16 @@ export const TOWN_CH9 = {
       "action": "modal_alchemy",
       "actionLabel": "調配薔薇聖藥",
       "doorOffset": {
-        "x": -20,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "guild",
       "name": "修道院聖典珍寶庫",
       "frame": "ch9_bld_guild",
-      "x": 3020,
-      "y": 2020,
+      "x": 2560,
+      "y": 1560,
       "scale": 1.08,
       "imgKey": "ch9_b_guild_v297",
       "imgUrl": "./assets/towns/ch9_b_guild.webp?v=297",
@@ -120,8 +134,8 @@ export const TOWN_CH9 = {
       "action": "drawer_bag",
       "actionLabel": "打開聖典珍寶庫",
       "doorOffset": {
-        "x": -20,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
@@ -129,7 +143,7 @@ export const TOWN_CH9 = {
       "name": "聖殿十字軍演武迴廊",
       "frame": "ch9_bld_temple",
       "x": 2048,
-      "y": 420,
+      "y": 360,
       "scale": 1.06,
       "imgKey": "ch9_b_temple_v297",
       "imgUrl": "./assets/towns/ch9_b_temple.webp?v=297",
@@ -149,15 +163,15 @@ export const TOWN_CH9 = {
       "actionLabel": "配置職業技能",
       "doorOffset": {
         "x": 0,
-        "y": 87
+        "y": 82
       }
     },
     {
       "id": "bounty",
       "name": "審判庭紅蠟懸賞聖碑",
       "frame": "ch9_bld_bounty",
-      "x": 1440,
-      "y": 680,
+      "x": 1560,
+      "y": 980,
       "scale": 0.82,
       "imgKey": "ch9_b_bounty_v297",
       "imgUrl": "./assets/towns/ch9_b_bounty.webp?v=297",
@@ -176,16 +190,16 @@ export const TOWN_CH9 = {
       "action": "modal_bounty",
       "actionLabel": "接取審判懸賞",
       "doorOffset": {
-        "x": 12,
-        "y": 76
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "market",
       "name": "聖物贖罪券黑市攤",
       "frame": "ch9_bld_market",
-      "x": 560,
-      "y": 1960,
+      "x": 1540,
+      "y": 1560,
       "scale": 1.06,
       "imgKey": "ch9_b_market_v297",
       "imgUrl": "./assets/towns/ch9_b_market.webp?v=297",
@@ -204,16 +218,16 @@ export const TOWN_CH9 = {
       "action": "modal_market",
       "actionLabel": "進入聖物黑市",
       "doorOffset": {
-        "x": 20,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "altar",
       "name": "垂淚聖母輪迴祭壇",
       "frame": "ch9_bld_altar",
-      "x": 2660,
-      "y": 680,
+      "x": 2540,
+      "y": 980,
       "scale": 0.95,
       "imgKey": "ch9_b_temple_v297",
       "imgUrl": "./assets/towns/ch9_b_temple.webp?v=297",
@@ -232,16 +246,16 @@ export const TOWN_CH9 = {
       "action": "drawer_rebirth",
       "actionLabel": "開啟聖母輪迴",
       "doorOffset": {
-        "x": -12,
-        "y": 85
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "portal",
       "name": "玫瑰花窗神聖光門",
       "frame": "ch9_bld_portal",
-      "x": 1060,
-      "y": 2080,
+      "x": 1260,
+      "y": 1820,
       "scale": 0.82,
       "radius": 65,
       "npc": {
@@ -258,8 +272,8 @@ export const TOWN_CH9 = {
       "imgKey": "ch9_b_portal_v297",
       "imgUrl": "./assets/towns/ch9_b_portal.webp?v=297",
       "doorOffset": {
-        "x": 15,
-        "y": 80
+        "x": 0,
+        "y": 82
       }
     }
   ],
@@ -293,8 +307,8 @@ export const TOWN_CH9 = {
     "id": "dummy",
     "name": "審判庭聖鎧靶偶",
     "frame": "ch9_prop_dummy",
-    "x": 3320,
-    "y": 1920,
+    "x": 2860,
+    "y": 1760,
     "scale": 0.72,
     "radius": 42
   },
@@ -377,12 +391,95 @@ export const TOWN_CH9 = {
   "integratedBuildings": false,
   "modularBuildings": true,
   "portal": {
-    "x": 1060,
-    "y": 2080,
+    "x": 1260,
+    "y": 1820,
     "imgKey": "ch9_b_portal_v297",
     "imgUrl": "./assets/towns/ch9_b_portal.webp?v=297",
     "scale": 0.82,
     "name": "出城戰鬥傳送門",
     "action": "exit_battle"
-  }
+  },
+  "blockedZones": [
+    {
+      "poly": [
+        [
+          2048,
+          460
+        ],
+        [
+          2440,
+          700
+        ],
+        [
+          2048,
+          940
+        ],
+        [
+          1656,
+          700
+        ]
+      ]
+    },
+    {
+      "poly": [
+        [
+          2048,
+          1640
+        ],
+        [
+          2440,
+          1880
+        ],
+        [
+          2048,
+          2120
+        ],
+        [
+          1656,
+          1880
+        ]
+      ]
+    },
+    {
+      "poly": [
+        [
+          1080,
+          1020
+        ],
+        [
+          1480,
+          1260
+        ],
+        [
+          1080,
+          1500
+        ],
+        [
+          680,
+          1260
+        ]
+      ]
+    },
+    {
+      "poly": [
+        [
+          3016,
+          1020
+        ],
+        [
+          3416,
+          1260
+        ],
+        [
+          3016,
+          1500
+        ],
+        [
+          2616,
+          1260
+        ]
+      ]
+    }
+  ],
+  "bridgeZones": []
 };

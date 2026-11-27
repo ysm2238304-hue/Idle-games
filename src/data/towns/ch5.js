@@ -15,23 +15,45 @@ export const TOWN_CH5 = {
   "ambientColor": 15235577,
   "particleColor": 16007006,
   "spawn": {
-    "x": 1920,
-    "y": 1360
+    "x": 1880,
+    "y": 1340
   },
   "walkableZones": [
     {
-      "x1": 260,
-      "y1": 280,
-      "x2": 3880,
-      "y2": 2380
+      "poly": [
+        [
+          280,
+          2040
+        ],
+        [
+          2840,
+          240
+        ],
+        [
+          3780,
+          240
+        ],
+        [
+          3780,
+          860
+        ],
+        [
+          1240,
+          2380
+        ],
+        [
+          280,
+          2380
+        ]
+      ]
     }
   ],
   "landmark": {
     "id": "abyss_sigil",
     "name": "深淵召喚巨陣",
     "frame": "ch5_lm_sigil",
-    "x": 2340,
-    "y": 1060,
+    "x": 2160,
+    "y": 1140,
     "scale": 0.84,
     "imgKey": "ch5_b_beacon_v296",
     "imgUrl": "./assets/towns/ch5_b_beacon.webp?v=296",
@@ -44,8 +66,8 @@ export const TOWN_CH5 = {
       "id": "smith",
       "name": "血魔骨鑄鍛造殿",
       "frame": "ch5_bld_smith",
-      "x": 1240,
-      "y": 680,
+      "x": 2040,
+      "y": 1040,
       "scale": 1.08,
       "imgKey": "ch5_b_smith_v296",
       "imgUrl": "./assets/towns/ch5_b_smith.webp?v=296",
@@ -64,16 +86,16 @@ export const TOWN_CH5 = {
       "action": "drawer_upgrade",
       "actionLabel": "開啟魔火鍛造",
       "doorOffset": {
-        "x": 24,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "alchemy",
       "name": "魅魔猩紅魔藥沙龍",
       "frame": "ch5_bld_alchemy",
-      "x": 2060,
-      "y": 420,
+      "x": 2540,
+      "y": 660,
       "scale": 1.03,
       "imgKey": "ch5_b_alchemy_v296",
       "imgUrl": "./assets/towns/ch5_b_alchemy.webp?v=296",
@@ -92,16 +114,16 @@ export const TOWN_CH5 = {
       "action": "modal_alchemy",
       "actionLabel": "調配猩紅魔藥",
       "doorOffset": {
-        "x": 15,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "guild",
       "name": "深淵魔契珍寶庫",
       "frame": "ch5_bld_guild",
-      "x": 3520,
-      "y": 1120,
+      "x": 3380,
+      "y": 480,
       "scale": 1.08,
       "imgKey": "ch5_b_guild_v296",
       "imgUrl": "./assets/towns/ch5_b_guild.webp?v=296",
@@ -120,16 +142,16 @@ export const TOWN_CH5 = {
       "action": "drawer_bag",
       "actionLabel": "打開珍寶背包",
       "doorOffset": {
-        "x": -20,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "temple",
       "name": "角魔血鬥演武場",
       "frame": "ch5_bld_temple",
-      "x": 2960,
-      "y": 560,
+      "x": 2980,
+      "y": 640,
       "scale": 1.08,
       "imgKey": "ch5_b_temple_v296",
       "imgUrl": "./assets/towns/ch5_b_temple.webp?v=296",
@@ -148,16 +170,16 @@ export const TOWN_CH5 = {
       "action": "drawer_skills",
       "actionLabel": "配置職業技能",
       "doorOffset": {
-        "x": -15,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "bounty",
       "name": "魔王通緝血契柱",
       "frame": "ch5_bld_bounty",
-      "x": 1540,
-      "y": 1620,
+      "x": 1240,
+      "y": 1840,
       "scale": 0.82,
       "imgKey": "ch5_b_bounty_v296",
       "imgUrl": "./assets/towns/ch5_b_bounty.webp?v=296",
@@ -176,16 +198,16 @@ export const TOWN_CH5 = {
       "action": "modal_bounty",
       "actionLabel": "接取血契懸賞",
       "doorOffset": {
-        "x": 15,
-        "y": 76
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "market",
       "name": "深淵黑市拍賣寶座",
       "frame": "ch5_bld_market",
-      "x": 3140,
-      "y": 1760,
+      "x": 1640,
+      "y": 1480,
       "scale": 1.08,
       "imgKey": "ch5_b_market_v296",
       "imgUrl": "./assets/towns/ch5_b_market.webp?v=296",
@@ -204,16 +226,16 @@ export const TOWN_CH5 = {
       "action": "modal_market",
       "actionLabel": "進入魔王黑市",
       "doorOffset": {
-        "x": -20,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "altar",
       "name": "魔獄血祭輪迴巨陣",
       "frame": "ch5_bld_altar",
-      "x": 2540,
-      "y": 880,
+      "x": 2480,
+      "y": 960,
       "scale": 0.95,
       "imgKey": "ch5_b_temple_v296",
       "imgUrl": "./assets/towns/ch5_b_temple.webp?v=296",
@@ -232,15 +254,15 @@ export const TOWN_CH5 = {
       "action": "drawer_rebirth",
       "actionLabel": "開啟血祭輪迴",
       "doorOffset": {
-        "x": -15,
-        "y": 85
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "portal",
       "name": "懸浮鎖鏈深淵裂隙門",
       "frame": "ch5_bld_portal",
-      "x": 740,
+      "x": 780,
       "y": 2120,
       "scale": 0.82,
       "radius": 65,
@@ -258,8 +280,8 @@ export const TOWN_CH5 = {
       "imgKey": "ch5_b_portal_v296",
       "imgUrl": "./assets/towns/ch5_b_portal.webp?v=296",
       "doorOffset": {
-        "x": 20,
-        "y": 80
+        "x": 0,
+        "y": 82
       }
     }
   ],
@@ -293,8 +315,8 @@ export const TOWN_CH5 = {
     "id": "dummy",
     "name": "石像鬼魔鎧靶",
     "frame": "ch5_prop_dummy",
-    "x": 3120,
-    "y": 1940,
+    "x": 1520,
+    "y": 1680,
     "scale": 0.72,
     "radius": 42
   },
@@ -381,12 +403,14 @@ export const TOWN_CH5 = {
   "integratedBuildings": false,
   "modularBuildings": true,
   "portal": {
-    "x": 740,
+    "x": 780,
     "y": 2120,
     "imgKey": "ch5_b_portal_v296",
     "imgUrl": "./assets/towns/ch5_b_portal.webp?v=296",
     "scale": 0.82,
     "name": "出城戰鬥傳送門",
     "action": "exit_battle"
-  }
+  },
+  "blockedZones": [],
+  "bridgeZones": []
 };

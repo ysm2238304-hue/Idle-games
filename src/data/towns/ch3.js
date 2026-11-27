@@ -16,14 +16,14 @@ export const TOWN_CH3 = {
   "particleColor": 8246268,
   "spawn": {
     "x": 2048,
-    "y": 1540
+    "y": 1520
   },
   "walkableZones": [
     {
-      "x1": 340,
-      "y1": 360,
-      "x2": 3820,
-      "y2": 2360
+      "x1": 540,
+      "y1": 460,
+      "x2": 3560,
+      "y2": 2260
     }
   ],
   "landmark": {
@@ -31,7 +31,7 @@ export const TOWN_CH3 = {
     "name": "靈魂永恆火盆",
     "frame": "ch3_lm_brazier",
     "x": 2048,
-    "y": 640,
+    "y": 660,
     "scale": 0.84,
     "imgKey": "ch3_b_beacon_v295",
     "imgUrl": "./assets/towns/ch3_b_beacon.webp?v=295",
@@ -44,7 +44,7 @@ export const TOWN_CH3 = {
       "id": "smith",
       "name": "魂火附魔鍛造石台",
       "frame": "ch3_bld_smith",
-      "x": 1060,
+      "x": 920,
       "y": 820,
       "scale": 1.08,
       "imgKey": "ch3_b_smith_v295",
@@ -64,16 +64,16 @@ export const TOWN_CH3 = {
       "action": "drawer_upgrade",
       "actionLabel": "開啟魂火鍛造",
       "doorOffset": {
-        "x": 20,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "alchemy",
       "name": "骨灰聖水煉金室",
       "frame": "ch3_bld_alchemy",
-      "x": 880,
-      "y": 1760,
+      "x": 900,
+      "y": 1820,
       "scale": 1.08,
       "imgKey": "ch3_b_alchemy_v295",
       "imgUrl": "./assets/towns/ch3_b_alchemy.webp?v=295",
@@ -92,15 +92,15 @@ export const TOWN_CH3 = {
       "action": "modal_alchemy",
       "actionLabel": "調配聖水藥劑",
       "doorOffset": {
-        "x": 20,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "guild",
       "name": "守夜人聖物保管庫",
       "frame": "ch3_bld_guild",
-      "x": 3040,
+      "x": 3120,
       "y": 820,
       "scale": 1.11,
       "imgKey": "ch3_b_guild_v295",
@@ -120,8 +120,8 @@ export const TOWN_CH3 = {
       "action": "drawer_bag",
       "actionLabel": "打開聖物背包",
       "doorOffset": {
-        "x": -15,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
@@ -129,7 +129,7 @@ export const TOWN_CH3 = {
       "name": "聖骨騎士演武殿",
       "frame": "ch3_bld_temple",
       "x": 2048,
-      "y": 920,
+      "y": 1080,
       "scale": 1.11,
       "imgKey": "ch3_b_temple_v295",
       "imgUrl": "./assets/towns/ch3_b_temple.webp?v=295",
@@ -149,15 +149,15 @@ export const TOWN_CH3 = {
       "actionLabel": "配置職業技能",
       "doorOffset": {
         "x": 0,
-        "y": 87
+        "y": 82
       }
     },
     {
       "id": "bounty",
       "name": "墓園亡靈通緝碑",
       "frame": "ch3_bld_bounty",
-      "x": 1540,
-      "y": 1680,
+      "x": 1660,
+      "y": 1660,
       "scale": 0.82,
       "imgKey": "ch3_b_bounty_v295",
       "imgUrl": "./assets/towns/ch3_b_bounty.webp?v=295",
@@ -176,16 +176,16 @@ export const TOWN_CH3 = {
       "action": "modal_bounty",
       "actionLabel": "查看亡靈懸賞",
       "doorOffset": {
-        "x": 10,
-        "y": 76
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "market",
       "name": "午夜棺槨黑市攤",
       "frame": "ch3_bld_market",
-      "x": 3120,
-      "y": 1740,
+      "x": 3100,
+      "y": 1420,
       "scale": 1.08,
       "imgKey": "ch3_b_market_v295",
       "imgUrl": "./assets/towns/ch3_b_market.webp?v=295",
@@ -204,16 +204,16 @@ export const TOWN_CH3 = {
       "action": "modal_market",
       "actionLabel": "開棺賭裝黑市",
       "doorOffset": {
-        "x": -20,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "altar",
       "name": "大教堂永恆輪迴聖壇",
       "frame": "ch3_bld_altar",
-      "x": 1140,
-      "y": 1180,
+      "x": 940,
+      "y": 1320,
       "scale": 0.98,
       "imgKey": "ch3_b_temple_v295",
       "imgUrl": "./assets/towns/ch3_b_temple.webp?v=295",
@@ -232,8 +232,8 @@ export const TOWN_CH3 = {
       "action": "drawer_rebirth",
       "actionLabel": "開啟聖壇輪迴",
       "doorOffset": {
-        "x": 15,
-        "y": 85
+        "x": 0,
+        "y": 82
       }
     },
     {
@@ -241,7 +241,7 @@ export const TOWN_CH3 = {
       "name": "哥德刻文傳送墓碑門",
       "frame": "ch3_bld_portal",
       "x": 2048,
-      "y": 2180,
+      "y": 2140,
       "scale": 0.84,
       "radius": 65,
       "npc": {
@@ -259,7 +259,7 @@ export const TOWN_CH3 = {
       "imgUrl": "./assets/towns/ch3_b_portal.webp?v=295",
       "doorOffset": {
         "x": 0,
-        "y": 80
+        "y": 82
       }
     }
   ],
@@ -293,8 +293,8 @@ export const TOWN_CH3 = {
     "id": "dummy",
     "name": "骸骨騎士盔甲靶",
     "frame": "ch3_prop_dummy",
-    "x": 3360,
-    "y": 1840,
+    "x": 3340,
+    "y": 1760,
     "scale": 0.72,
     "radius": 42
   },
@@ -378,11 +378,38 @@ export const TOWN_CH3 = {
   "modularBuildings": true,
   "portal": {
     "x": 2048,
-    "y": 2180,
+    "y": 2140,
     "imgKey": "ch3_b_portal_v295",
     "imgUrl": "./assets/towns/ch3_b_portal.webp?v=295",
     "scale": 0.84,
     "name": "出城戰鬥傳送門",
     "action": "exit_battle"
-  }
+  },
+  "blockedZones": [
+    {
+      "x1": 1240,
+      "y1": 360,
+      "x2": 1440,
+      "y2": 1080
+    },
+    {
+      "x1": 1240,
+      "y1": 1620,
+      "x2": 1440,
+      "y2": 2120
+    },
+    {
+      "x1": 2580,
+      "y1": 360,
+      "x2": 2780,
+      "y2": 1080
+    },
+    {
+      "x1": 2580,
+      "y1": 1620,
+      "x2": 2780,
+      "y2": 2120
+    }
+  ],
+  "bridgeZones": []
 };

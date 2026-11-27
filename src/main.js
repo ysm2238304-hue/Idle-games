@@ -22,8 +22,8 @@ import {
   saveCloudData,
   deleteCloudSave,
 } from './auth/firebase.js?v=272';
-import { BattleScene } from './scenes/BattleScene.js?v=302';
-import { TownScene } from './scenes/TownScene.js?v=298';
+import { BattleScene } from './scenes/BattleScene.js?v=303b';
+import { TownScene } from './scenes/TownScene.js?v=303d';
 import { TOWN_SPLASHES } from './data/towns/splashes.js?v=229';
 import { DashboardUI } from './ui/DashboardUI.js?v=301';
 import { hookWorldMap25D, openWorldMap25D, closeWorldMap25D, toggleWorldMap25D } from './ui/WorldMap25D.js?v=253';
@@ -40,7 +40,7 @@ import { ShopModal } from './ui/ShopModal.js?v=99';
 import { AchievementTowerModal } from './ui/AchievementTowerModal.js?v=99';
 import { ACHIEVEMENTS } from './data/achievements.js?v=99';
 import { rollEnhance, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEVEL } from './logic/enhanceSystem.js?v=99';
-import { HeroSkillShowcase, CLASS_SKILLS_MAP } from './ui/HeroSkillShowcase.js?v=302';
+import { HeroSkillShowcase, CLASS_SKILLS_MAP } from './ui/HeroSkillShowcase.js?v=303b';
 
 let gameState = loadGame() || createInitialState('warrior');
 let computedStats = recalcPlayerStats(gameState);
@@ -2084,8 +2084,10 @@ function exitTownToBattle(forceRespawn = false, forTraining = false) {
   if (battleScene) battleScene.isPaused = false;
   battleScene?.cameras?.main?.fadeIn?.(350, 0, 0, 0);
   battleScene?.setPaused?.(false);
-  if (!forTraining && forceRespawn && battleScene?.sys?.isActive()) {
-    battleScene.spawnWaveSquad?.();
+  if (!forTraining && battleScene?.sys?.isActive()) {
+    const needFreshWave = forceRespawn || !battleScene.monsters?.some((m) => m.hp > 0 && !m.isTrainingDummy);
+    if (needFreshWave) battleScene.spawnWaveSquad?.();
+    battleScene.miniDpsHud?.show?.();
   }
   const btn = document.getElementById('btn-town-toggle');
   if (btn) {

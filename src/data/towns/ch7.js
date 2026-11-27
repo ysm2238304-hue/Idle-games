@@ -15,23 +15,105 @@ export const TOWN_CH7 = {
   "ambientColor": 4906624,
   "particleColor": 8843180,
   "spawn": {
-    "x": 1620,
+    "x": 1560,
     "y": 1440
   },
   "walkableZones": [
     {
-      "x1": 260,
-      "y1": 260,
-      "x2": 3880,
-      "y2": 2380
+      "poly": [
+        [
+          360,
+          1340
+        ],
+        [
+          1260,
+          960
+        ],
+        [
+          1820,
+          1280
+        ],
+        [
+          1760,
+          1740
+        ],
+        [
+          1040,
+          2240
+        ],
+        [
+          360,
+          2180
+        ]
+      ]
+    },
+    {
+      "poly": [
+        [
+          2620,
+          440
+        ],
+        [
+          3580,
+          440
+        ],
+        [
+          3620,
+          1120
+        ],
+        [
+          2720,
+          1120
+        ]
+      ]
+    },
+    {
+      "poly": [
+        [
+          1520,
+          1300
+        ],
+        [
+          2860,
+          560
+        ],
+        [
+          3040,
+          800
+        ],
+        [
+          1700,
+          1560
+        ]
+      ]
+    },
+    {
+      "poly": [
+        [
+          1220,
+          880
+        ],
+        [
+          2780,
+          460
+        ],
+        [
+          2840,
+          680
+        ],
+        [
+          1340,
+          1100
+        ]
+      ]
     }
   ],
   "landmark": {
     "id": "emerald_waterfall",
     "name": "翡翠毒液瀑布池",
     "frame": "ch7_lm_waterfall",
-    "x": 3080,
-    "y": 2040,
+    "x": 1320,
+    "y": 1460,
     "scale": 0.84,
     "imgKey": "ch7_b_beacon_v296",
     "imgUrl": "./assets/towns/ch7_b_beacon.webp?v=296",
@@ -45,7 +127,7 @@ export const TOWN_CH7 = {
       "name": "巨龜甲殼煉鐵工作台",
       "frame": "ch7_bld_smith",
       "x": 720,
-      "y": 1680,
+      "y": 1580,
       "scale": 1.08,
       "imgKey": "ch7_b_smith_v296",
       "imgUrl": "./assets/towns/ch7_b_smith.webp?v=296",
@@ -64,16 +146,16 @@ export const TOWN_CH7 = {
       "action": "drawer_upgrade",
       "actionLabel": "開啟甲殼鍛造",
       "doorOffset": {
-        "x": 24,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "alchemy",
       "name": "劇毒草藥樹冠煉藥屋",
       "frame": "ch7_bld_alchemy",
-      "x": 1680,
-      "y": 940,
+      "x": 1360,
+      "y": 1740,
       "scale": 1.06,
       "imgKey": "ch7_b_alchemy_v296",
       "imgUrl": "./assets/towns/ch7_b_alchemy.webp?v=296",
@@ -92,16 +174,16 @@ export const TOWN_CH7 = {
       "action": "modal_alchemy",
       "actionLabel": "調配劇毒藥劑",
       "doorOffset": {
-        "x": 15,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "guild",
       "name": "高腳竹屋贓物倉庫",
       "frame": "ch7_bld_guild",
-      "x": 3460,
-      "y": 760,
+      "x": 3360,
+      "y": 660,
       "scale": 1.08,
       "imgKey": "ch7_b_guild_v296",
       "imgUrl": "./assets/towns/ch7_b_guild.webp?v=296",
@@ -120,16 +202,16 @@ export const TOWN_CH7 = {
       "action": "drawer_bag",
       "actionLabel": "打開水寨倉庫",
       "doorOffset": {
-        "x": -20,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "temple",
       "name": "毒藤狩獵訓練樹台",
       "frame": "ch7_bld_temple",
-      "x": 2980,
-      "y": 640,
+      "x": 2920,
+      "y": 620,
       "scale": 1.06,
       "imgKey": "ch7_b_temple_v296",
       "imgUrl": "./assets/towns/ch7_b_temple.webp?v=296",
@@ -148,16 +230,16 @@ export const TOWN_CH7 = {
       "action": "drawer_skills",
       "actionLabel": "配置職業技能",
       "doorOffset": {
-        "x": -15,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "bounty",
       "name": "巫毒圖騰懸賞柱",
       "frame": "ch7_bld_bounty",
-      "x": 1460,
-      "y": 1160,
+      "x": 1440,
+      "y": 1120,
       "scale": 0.82,
       "imgKey": "ch7_b_bounty_v296",
       "imgUrl": "./assets/towns/ch7_b_bounty.webp?v=296",
@@ -176,16 +258,16 @@ export const TOWN_CH7 = {
       "action": "modal_bounty",
       "actionLabel": "接取沼澤懸賞",
       "doorOffset": {
-        "x": 12,
-        "y": 76
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "market",
       "name": "水上竹筏黑市攤",
       "frame": "ch7_bld_market",
-      "x": 1140,
-      "y": 1440,
+      "x": 1120,
+      "y": 1340,
       "scale": 1.06,
       "imgKey": "ch7_b_market_v296",
       "imgUrl": "./assets/towns/ch7_b_market.webp?v=296",
@@ -204,16 +286,16 @@ export const TOWN_CH7 = {
       "action": "modal_market",
       "actionLabel": "進入竹筏黑市",
       "doorOffset": {
-        "x": 18,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "altar",
       "name": "翡翠毒藤輪迴樹壇",
       "frame": "ch7_bld_altar",
-      "x": 2760,
-      "y": 1880,
+      "x": 2980,
+      "y": 960,
       "scale": 0.95,
       "imgKey": "ch7_b_temple_v296",
       "imgUrl": "./assets/towns/ch7_b_temple.webp?v=296",
@@ -232,16 +314,16 @@ export const TOWN_CH7 = {
       "action": "drawer_rebirth",
       "actionLabel": "開啟樹壇輪迴",
       "doorOffset": {
-        "x": 15,
-        "y": 85
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "portal",
       "name": "發光蓮花木筏渡口",
       "frame": "ch7_bld_portal",
-      "x": 640,
-      "y": 2120,
+      "x": 680,
+      "y": 2040,
       "scale": 0.82,
       "radius": 65,
       "npc": {
@@ -258,8 +340,8 @@ export const TOWN_CH7 = {
       "imgKey": "ch7_b_portal_v296",
       "imgUrl": "./assets/towns/ch7_b_portal.webp?v=296",
       "doorOffset": {
-        "x": 20,
-        "y": 80
+        "x": 0,
+        "y": 82
       }
     }
   ],
@@ -293,7 +375,7 @@ export const TOWN_CH7 = {
     "id": "dummy",
     "name": "藤蔓稻草巫毒靶",
     "frame": "ch7_prop_dummy",
-    "x": 3460,
+    "x": 3420,
     "y": 960,
     "scale": 0.72,
     "radius": 42
@@ -381,12 +463,14 @@ export const TOWN_CH7 = {
   "integratedBuildings": false,
   "modularBuildings": true,
   "portal": {
-    "x": 640,
-    "y": 2120,
+    "x": 680,
+    "y": 2040,
     "imgKey": "ch7_b_portal_v296",
     "imgUrl": "./assets/towns/ch7_b_portal.webp?v=296",
     "scale": 0.82,
     "name": "出城戰鬥傳送門",
     "action": "exit_battle"
-  }
+  },
+  "blockedZones": [],
+  "bridgeZones": []
 };

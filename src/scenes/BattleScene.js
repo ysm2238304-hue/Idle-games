@@ -19,7 +19,7 @@ import { AssassinVfxDirector } from '../vfx/AssassinVfxDirector.js?v=266';
 import { PaladinVfxDirector } from '../vfx/PaladinVfxDirector.js?v=266';
 import { FloatingTextPool } from '../vfx/FloatingTextPool.js?v=298';
 import { ParticlePool } from '../vfx/ParticlePool.js?v=266';
-import { TrainingArenaController } from '../combat/TrainingArenaController.js?v=302';
+import { TrainingArenaController } from '../combat/TrainingArenaController.js?v=303';
 import { BattleMiniDpsHud } from '../ui/BattleMiniDpsHud.js?v=302';
 import { CameraZoomHelper } from './CameraZoomHelper.js?v=282';
 import { MonsterVfxDirector } from '../vfx/MonsterVfxDirector.js?v=293';
@@ -975,11 +975,18 @@ export class BattleScene extends Phaser.Scene {
       }
       return false;
     }
-    if (this.isTrainingMode && this.trainingArena?.infiniteMp) { cost = 0; this.playerMp = this.playerMaxMp; }
-    if (!freeAstral && cost > 0) this.playerMp = Math.max(0, this.playerMp - cost);
-    if (hpCostPct > 0 && this.playerHp > 1) {
+    if (this.isTrainingMode && this.trainingArena?.infiniteMp) {
+      cost = 0;
+      this.playerMp = this.playerMaxMp;
+    }
+    if (!freeAstral && cost > 0) {
+      this.playerMp = Math.max(0, this.playerMp - cost);
+      this.updateHeroHpBar?.();
+    }
+    if (!this.isTrainingMode && hpCostPct > 0 && this.playerHp > 1) {
       const hpPaid = Math.min(this.playerHp - 1, Math.max(1, Math.round(this.playerHp * hpCostPct)));
       this.playerHp -= hpPaid;
+      this.updateHeroHpBar?.();
       this.spawnFloatingText(this.hero.x - 16, this.hero.y - 78, `🩸-${formatNum(hpPaid)} 血祭`, '#fb7185', 12);
     }
     const echoRefund = (curCid === 'mage' && this.getStats().activeEffects.has('arcane_echo') && Math.random() < 0.25);
@@ -988,6 +995,7 @@ export class BattleScene extends Phaser.Scene {
     this._activeBuildModsUntil = (this.time?.now || 0) + 1200;
     this._activeDamageSource = info?.name || info?.id || '技能';
     this._activeDamageSourceUntil = (this.time?.now || 0) + 1100;
+    this._triggerHeroSelfBuffVfx?.(info?.id);
     const trainCdMult = (this.isTrainingMode && this.trainingArena?.fastCd) ? 0.20 : 1.0;
     const effCd = Math.max(300, Math.round(info.cooldownMs * (buildMods.cdMult || 1) * trainCdMult));
     const cdSaved = Math.max(0, info.cooldownMs - effCd);
@@ -3572,6 +3580,69 @@ export class BattleScene extends Phaser.Scene {
     const list = [...this.groundLoot];
     for (const l of list) this.pickupGroundLoot(l, true);
     this.groundLoot = [];
+  }
+
+  _triggerHeroSelfBuffVfx(skillId) {
+    if (!skillId || !this.hero?.active) return;
+    const map = {
+      w_iron_skin: 'buff_w_iron_skin_v303',
+      w_challenging_shout: 'buff_w_iron_skin_v303',
+      warcry: 'buff_w_berserk_roar_v303',
+      w_rallying_cry: 'buff_w_berserk_roar_v303',
+      w_wrath_berserker: 'buff_w_berserk_roar_v303',
+      windwalk: 'buff_r_wind_step_v303',
+      r_dark_shroud: 'buff_r_shadow_shroud_v303',
+      r_shadow_imbue: 'buff_r_shadow_shroud_v303',
+      m_flame_shield: 'buff_m_flame_shield_v303',
+      m_ice_armor: 'buff_m_ice_armor_v303',
+      m_unstable_currents: 'buff_m_ice_armor_v303',
+      holy_aegis: 'buff_p_holy_aegis_v303',
+      p_redemption_prayer: 'buff_p_holy_aegis_v303',
+      p_sanctuary_ward: 'buff_p_holy_aegis_v303',
+      radiant_aura: 'buff_p_divine_aura_v303',
+      p_thorns_aura: 'buff_p_divine_aura_v303',
+      p_akarats_wrath: 'buff_p_divine_aura_v303',
+      n_bone_shield: 'buff_n_bone_shield_v303',
+      n_blood_mist: 'buff_n_blood_frenzy_v303',
+      undead_frenzy: 'buff_n_blood_frenzy_v303',
+      a_venom_imbue: 'buff_a_venom_imbue_v303',
+      lethal_fangs: 'buff_a_venom_imbue_v303',
+      smoke_veil: 'buff_a_blood_cloak_v303',
+      a_blood_cloak: 'buff_a_blood_cloak_v303',
+    };
+    const key = map[skillId];
+    if (!key) return;
+    const spawnAura = () => {
+      if (!this.hero?.active || !this.textures.exists(key)) return;
+      if (this._activeHeroBuffSpr?.active) this._activeHeroBuffSpr.destroy();
+      const spr = this.add.image(this.hero.x, this.hero.y - 20, key)
+        .setScale(0.20)
+        .setAlpha(0.92)
+        .setDepth(this.hero.y + 18);
+      this._activeHeroBuffSpr = spr;
+      this.tweens.add({ targets: spr, scale: 0.44, duration: 240, ease: 'Back.easeOut' });
+      const followEv = this.time.addEvent({
+        delay: 16,
+        repeat: 165,
+        callback: () => {
+          if (!spr.active || !this.hero?.active) return;
+          spr.setPosition(this.hero.x, this.hero.y - 20).setDepth(this.hero.y + 18);
+          spr.angle += 0.85;
+        },
+      });
+      this.time.delayedCall(2550, () => {
+        followEv?.remove?.();
+        if (!spr.active) return;
+        this.tweens.add({ targets: spr, alpha: 0, scale: 0.52, duration: 360, onComplete: () => spr.destroy() });
+      });
+    };
+    if (this.textures.exists(key)) {
+      spawnAura();
+    } else {
+      this.load.image(key, `./assets/fx/${key}.webp?v=303`);
+      this.load.once(`filecomplete-image-${key}`, spawnAura);
+      this.load.start();
+    }
   }
 
   spawnFloatingText(x, y, text, color = '#ffffff', size = 19, opts = null) {

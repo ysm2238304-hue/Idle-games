@@ -15,23 +15,125 @@ export const TOWN_CH10 = {
   "ambientColor": 12616956,
   "particleColor": 16638023,
   "spawn": {
-    "x": 1540,
-    "y": 1540
+    "x": 1620,
+    "y": 1460
   },
   "walkableZones": [
     {
-      "x1": 260,
-      "y1": 260,
-      "x2": 3880,
-      "y2": 2380
+      "poly": [
+        [
+          180,
+          2180
+        ],
+        [
+          3260,
+          160
+        ],
+        [
+          3860,
+          160
+        ],
+        [
+          3860,
+          560
+        ],
+        [
+          780,
+          2420
+        ],
+        [
+          180,
+          2420
+        ]
+      ]
+    },
+    {
+      "poly": [
+        [
+          1400,
+          1120
+        ],
+        [
+          1460,
+          580
+        ],
+        [
+          2180,
+          240
+        ],
+        [
+          2860,
+          320
+        ],
+        [
+          2920,
+          620
+        ],
+        [
+          2200,
+          520
+        ],
+        [
+          1740,
+          820
+        ],
+        [
+          1720,
+          1160
+        ]
+      ]
+    },
+    {
+      "poly": [
+        [
+          1560,
+          1580
+        ],
+        [
+          2160,
+          1860
+        ],
+        [
+          2880,
+          1740
+        ],
+        [
+          3360,
+          1280
+        ],
+        [
+          3340,
+          720
+        ],
+        [
+          3020,
+          720
+        ],
+        [
+          3000,
+          1200
+        ],
+        [
+          2620,
+          1520
+        ],
+        [
+          2080,
+          1560
+        ],
+        [
+          1780,
+          1440
+        ]
+      ]
     }
   ],
   "landmark": {
     "id": "astral_orrery",
     "name": "旋轉黑洞星象儀",
     "frame": "ch10_lm_orrery",
-    "x": 2640,
-    "y": 840,
+    "x": 2560,
+    "y": 820,
     "scale": 0.87,
     "imgKey": "ch10_b_beacon_v297",
     "imgUrl": "./assets/towns/ch10_b_beacon.webp?v=297",
@@ -44,8 +146,8 @@ export const TOWN_CH10 = {
       "id": "smith",
       "name": "黑洞重力星辰重鑄儀",
       "frame": "ch10_bld_smith",
-      "x": 1240,
-      "y": 1720,
+      "x": 1140,
+      "y": 1740,
       "scale": 1.06,
       "imgKey": "ch10_b_smith_v297",
       "imgUrl": "./assets/towns/ch10_b_smith.webp?v=297",
@@ -64,16 +166,16 @@ export const TOWN_CH10 = {
       "action": "drawer_upgrade",
       "actionLabel": "開啟星辰重鑄",
       "doorOffset": {
-        "x": 20,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "guild",
       "name": "永恆星庫與神話秘藏殿",
       "frame": "ch10_bld_guild",
-      "x": 3580,
-      "y": 360,
+      "x": 3420,
+      "y": 320,
       "scale": 1.06,
       "imgKey": "ch10_b_guild_v297",
       "imgUrl": "./assets/towns/ch10_b_guild.webp?v=297",
@@ -92,8 +194,8 @@ export const TOWN_CH10 = {
       "action": "drawer_bag",
       "actionLabel": "打開永恆星庫",
       "doorOffset": {
-        "x": -20,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
@@ -101,7 +203,7 @@ export const TOWN_CH10 = {
       "name": "星雲銀河蒸餾水晶殿",
       "frame": "ch10_bld_alchemy",
       "x": 1760,
-      "y": 740,
+      "y": 660,
       "scale": 1.03,
       "imgKey": "ch10_b_alchemy_v297",
       "imgUrl": "./assets/towns/ch10_b_alchemy.webp?v=297",
@@ -120,16 +222,16 @@ export const TOWN_CH10 = {
       "action": "modal_alchemy",
       "actionLabel": "調配星雲靈藥",
       "doorOffset": {
-        "x": 15,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "temple",
       "name": "星界熾天使演武神壇",
       "frame": "ch10_bld_temple",
-      "x": 2980,
-      "y": 680,
+      "x": 2960,
+      "y": 580,
       "scale": 1.06,
       "imgKey": "ch10_b_temple_v297",
       "imgUrl": "./assets/towns/ch10_b_temple.webp?v=297",
@@ -148,16 +250,16 @@ export const TOWN_CH10 = {
       "action": "drawer_skills",
       "actionLabel": "配置終極技能",
       "doorOffset": {
-        "x": -15,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "bounty",
       "name": "星圖天命懸賞羅盤",
       "frame": "ch10_bld_bounty",
-      "x": 1420,
-      "y": 1580,
+      "x": 1440,
+      "y": 1540,
       "scale": 0.79,
       "imgKey": "ch10_b_bounty_v297",
       "imgUrl": "./assets/towns/ch10_b_bounty.webp?v=297",
@@ -176,8 +278,8 @@ export const TOWN_CH10 = {
       "action": "modal_bounty",
       "actionLabel": "接取星圖懸賞",
       "doorOffset": {
-        "x": 12,
-        "y": 76
+        "x": 0,
+        "y": 82
       }
     },
     {
@@ -204,16 +306,16 @@ export const TOWN_CH10 = {
       "action": "modal_market",
       "actionLabel": "進入星塵黑市",
       "doorOffset": {
-        "x": -15,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "altar",
       "name": "永恆輪迴星辰轉生陣",
       "frame": "ch10_bld_altar",
-      "x": 2120,
-      "y": 1020,
+      "x": 2080,
+      "y": 1080,
       "scale": 0.95,
       "imgKey": "ch10_b_temple_v297",
       "imgUrl": "./assets/towns/ch10_b_temple.webp?v=297",
@@ -232,8 +334,8 @@ export const TOWN_CH10 = {
       "action": "drawer_rebirth",
       "actionLabel": "開啟永恆輪迴",
       "doorOffset": {
-        "x": 15,
-        "y": 85
+        "x": 0,
+        "y": 82
       }
     },
     {
@@ -241,7 +343,7 @@ export const TOWN_CH10 = {
       "name": "宇宙星門蟲洞羅盤",
       "frame": "ch10_bld_portal",
       "x": 640,
-      "y": 2220,
+      "y": 2160,
       "scale": 0.84,
       "radius": 65,
       "npc": {
@@ -258,8 +360,8 @@ export const TOWN_CH10 = {
       "imgKey": "ch10_b_portal_v297",
       "imgUrl": "./assets/towns/ch10_b_portal.webp?v=297",
       "doorOffset": {
-        "x": 20,
-        "y": 80
+        "x": 0,
+        "y": 82
       }
     }
   ],
@@ -293,8 +395,8 @@ export const TOWN_CH10 = {
     "id": "dummy",
     "name": "星界黃金構造體靶",
     "frame": "ch10_prop_dummy",
-    "x": 3680,
-    "y": 420,
+    "x": 3560,
+    "y": 360,
     "scale": 0.74,
     "radius": 42
   },
@@ -382,11 +484,13 @@ export const TOWN_CH10 = {
   "modularBuildings": true,
   "portal": {
     "x": 640,
-    "y": 2220,
+    "y": 2160,
     "imgKey": "ch10_b_portal_v297",
     "imgUrl": "./assets/towns/ch10_b_portal.webp?v=297",
     "scale": 0.84,
     "name": "出城戰鬥傳送門",
     "action": "exit_battle"
-  }
+  },
+  "blockedZones": [],
+  "bridgeZones": []
 };

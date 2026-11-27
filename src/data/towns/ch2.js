@@ -15,22 +15,22 @@ export const TOWN_CH2 = {
   "ambientColor": 11032055,
   "particleColor": 3462041,
   "spawn": {
-    "x": 1520,
-    "y": 1120
+    "x": 1420,
+    "y": 1160
   },
   "walkableZones": [
     {
-      "x1": 320,
-      "y1": 420,
-      "x2": 3860,
-      "y2": 2360
+      "x1": 480,
+      "y1": 480,
+      "x2": 3660,
+      "y2": 2220
     }
   ],
   "landmark": {
     "id": "spore_fountain",
     "name": "螢光孢子噴泉",
     "frame": "ch2_lm_fountain",
-    "x": 1240,
+    "x": 1220,
     "y": 920,
     "scale": 0.82,
     "imgKey": "ch2_b_beacon_v295",
@@ -44,7 +44,7 @@ export const TOWN_CH2 = {
       "id": "smith",
       "name": "地精蒸汽鍛造鍋爐",
       "frame": "ch2_bld_smith",
-      "x": 720,
+      "x": 680,
       "y": 1020,
       "scale": 1.08,
       "imgKey": "ch2_b_smith_v295",
@@ -64,16 +64,16 @@ export const TOWN_CH2 = {
       "action": "drawer_upgrade",
       "actionLabel": "開啟蒸汽鍛造",
       "doorOffset": {
-        "x": 24,
-        "y": 85
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "guild",
       "name": "地精金庫與贓物倉庫",
       "frame": "ch2_bld_guild",
-      "x": 3340,
-      "y": 1840,
+      "x": 3260,
+      "y": 1860,
       "scale": 1.11,
       "imgKey": "ch2_b_guild_v295",
       "imgUrl": "./assets/towns/ch2_b_guild.webp?v=295",
@@ -92,16 +92,16 @@ export const TOWN_CH2 = {
       "action": "drawer_bag",
       "actionLabel": "打開金庫背包",
       "doorOffset": {
-        "x": -20,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "bounty",
       "name": "洞窟懸賞石柱",
       "frame": "ch2_bld_bounty",
-      "x": 1140,
-      "y": 1340,
+      "x": 1080,
+      "y": 1380,
       "scale": 0.84,
       "imgKey": "ch2_b_bounty_v295",
       "imgUrl": "./assets/towns/ch2_b_bounty.webp?v=295",
@@ -120,16 +120,16 @@ export const TOWN_CH2 = {
       "action": "modal_bounty",
       "actionLabel": "接取洞窟懸賞",
       "doorOffset": {
-        "x": 12,
-        "y": 76
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "market",
       "name": "哥布林黑市拍賣棚",
       "frame": "ch2_bld_market",
-      "x": 1420,
-      "y": 1680,
+      "x": 1380,
+      "y": 1720,
       "scale": 1.08,
       "imgKey": "ch2_b_market_v295",
       "imgUrl": "./assets/towns/ch2_b_market.webp?v=295",
@@ -148,16 +148,16 @@ export const TOWN_CH2 = {
       "action": "modal_market",
       "actionLabel": "進入黑市（八折優惠）",
       "doorOffset": {
-        "x": 15,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "altar",
       "name": "地下菌絲輪迴石陣",
       "frame": "ch2_bld_altar",
-      "x": 1080,
-      "y": 720,
+      "x": 1040,
+      "y": 640,
       "scale": 0.98,
       "imgKey": "ch2_b_temple_v295",
       "imgUrl": "./assets/towns/ch2_b_temple.webp?v=295",
@@ -176,16 +176,16 @@ export const TOWN_CH2 = {
       "action": "drawer_rebirth",
       "actionLabel": "開啟菌絲輪迴",
       "doorOffset": {
-        "x": 15,
-        "y": 85
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "alchemy",
       "name": "螢光孢子煉金菇屋",
       "frame": "ch2_bld_alchemy",
-      "x": 3120,
-      "y": 1040,
+      "x": 3220,
+      "y": 960,
       "scale": 1.08,
       "imgKey": "ch2_b_alchemy_v295",
       "imgUrl": "./assets/towns/ch2_b_alchemy.webp?v=295",
@@ -204,16 +204,16 @@ export const TOWN_CH2 = {
       "action": "modal_alchemy",
       "actionLabel": "調配孢子藥水",
       "doorOffset": {
-        "x": -20,
-        "y": 85
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "temple",
       "name": "地下角鬥士訓練坑",
       "frame": "ch2_bld_temple",
-      "x": 2720,
-      "y": 1120,
+      "x": 2820,
+      "y": 980,
       "scale": 1.08,
       "imgKey": "ch2_b_temple_v295",
       "imgUrl": "./assets/towns/ch2_b_temple.webp?v=295",
@@ -233,15 +233,15 @@ export const TOWN_CH2 = {
       "actionLabel": "配置職業技能",
       "doorOffset": {
         "x": 0,
-        "y": 87
+        "y": 82
       }
     },
     {
       "id": "portal",
       "name": "地下礦車軌道升降梯",
       "frame": "ch2_bld_portal",
-      "x": 940,
-      "y": 2060,
+      "x": 920,
+      "y": 1980,
       "scale": 0.82,
       "radius": 65,
       "npc": {
@@ -258,8 +258,8 @@ export const TOWN_CH2 = {
       "imgKey": "ch2_b_portal_v295",
       "imgUrl": "./assets/towns/ch2_b_portal.webp?v=295",
       "doorOffset": {
-        "x": 20,
-        "y": 80
+        "x": 0,
+        "y": 82
       }
     }
   ],
@@ -293,7 +293,7 @@ export const TOWN_CH2 = {
     "id": "dummy",
     "name": "地精鐵皮靶人",
     "frame": "ch2_prop_dummy",
-    "x": 3520,
+    "x": 3460,
     "y": 1240,
     "scale": 0.72,
     "radius": 42
@@ -381,12 +381,100 @@ export const TOWN_CH2 = {
   "integratedBuildings": false,
   "modularBuildings": true,
   "portal": {
-    "x": 940,
-    "y": 2060,
+    "x": 920,
+    "y": 1980,
     "imgKey": "ch2_b_portal_v295",
     "imgUrl": "./assets/towns/ch2_b_portal.webp?v=295",
     "scale": 0.82,
     "name": "出城戰鬥傳送門",
     "action": "exit_battle"
-  }
+  },
+  "blockedZones": [
+    {
+      "poly": [
+        [
+          2720,
+          0
+        ],
+        [
+          3220,
+          0
+        ],
+        [
+          2620,
+          740
+        ],
+        [
+          2540,
+          1320
+        ],
+        [
+          2280,
+          1860
+        ],
+        [
+          1620,
+          2560
+        ],
+        [
+          920,
+          2560
+        ],
+        [
+          1560,
+          1720
+        ],
+        [
+          1760,
+          1140
+        ],
+        [
+          2180,
+          560
+        ]
+      ]
+    }
+  ],
+  "bridgeZones": [
+    {
+      "poly": [
+        [
+          1620,
+          500
+        ],
+        [
+          2620,
+          620
+        ],
+        [
+          2580,
+          840
+        ],
+        [
+          1580,
+          720
+        ]
+      ]
+    },
+    {
+      "poly": [
+        [
+          1580,
+          1320
+        ],
+        [
+          2620,
+          1640
+        ],
+        [
+          2540,
+          1880
+        ],
+        [
+          1500,
+          1560
+        ]
+      ]
+    }
+  ]
 };

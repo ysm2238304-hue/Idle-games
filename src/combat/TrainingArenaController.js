@@ -1,5 +1,5 @@
-// v299: 獨立 2.5D 實戰演武訓練場控制器（TrainingArenaController）
-// 搭載全新獨立玄武岩八角演武場地圖＋3款寫實貼地戰偶＋獨立 DpsMeterEngine 計算引擎＋可拖曳不遮小地圖儀表板
+// v303-1: 純淨獨立 2.5D 實戰演武訓練場控制器（TrainingArenaController）
+// 已移除木頭人攻擊；新增完整進場快照／退場還原（血條鎖死、魔耗、CD、自動手動按鈕與簡化 DPS 小彈窗無縫同步）
 import { DpsMeterEngine } from './DpsMeterEngine.js?v=299';
 
 const CH_ARMOR_DR = [0, 0.05, 0.12, 0.20, 0.28, 0.36, 0.44, 0.52, 0.60, 0.68];
@@ -10,24 +10,56 @@ export class TrainingArenaController {
     this.active = false;
     this.infiniteMp = true;
     this.fastCd = false;
-    this.formation = 'trio'; // boss | trio | pack | striker
+    this.formation = 'trio'; // boss | trio | pack
     this.autoAttack = true;
     this.simChapter = 1;     // 1..10
     this.meter = new DpsMeterEngine();
-    this._nextStrikerAt = 0;
     this._lastHudAt = 0;
     this._hudEl = null;
     this._collapsed = false;
-    this._prevMinimapLabel = null;
+    this._savedState = null;
+  }
+
+  _syncAutoBtnUi(isAuto) {
+    try {
+      const btn = document.getElementById('btn-toggle-auto');
+      if (btn) {
+        btn.classList.toggle('is-active', !!isAuto);
+        btn.classList.toggle('is-manual', !isAuto);
+        const lbl = btn.querySelector('.mmo-btn-lbl, span');
+        if (lbl && (lbl.textContent.includes('自動') || lbl.textContent.includes('手動'))) {
+          lbl.textContent = isAuto ? '自動' : '手動';
+        }
+      }
+      const hudAuto = this._hudEl?.querySelector('#v299-btn-auto');
+      if (hudAuto) {
+        hudAuto.textContent = isAuto ? '🤖 自動: 開' : '🤖 自動: 關';
+        hudAuto.classList.toggle('is-on', !!isAuto);
+      }
+    } catch {}
   }
 
   enter(onExitToTown) {
     const s = this.scene;
     this._onExitToTown = onExitToTown;
-    // v299: 進入瞬間即刻鎖定演武場模式並清場，杜絕任何章節怪物殘留或刷怪侵入
+
+    // v303-1: 保存進場前一般刷圖狀態快照，離開時 100% 還原
+    if (!this._savedState) {
+      this._savedState = {
+        autoMoveEnabled: typeof s.autoMoveEnabled === 'boolean' ? s.autoMoveEnabled : true,
+        hp: s.playerHp,
+        mp: s.playerMp,
+      };
+    }
+
     this.active = true;
     s.isTrainingMode = true;
     s.miniDpsHud?.hide?.();
+    s.collectAllGroundLoot?.();
+    if (Array.isArray(s.projectiles)) {
+      s.projectiles.forEach((p) => p?.sprite?.destroy?.());
+      s.projectiles.length = 0;
+    }
     s.clearAllMonsters?.();
     this.meter.reset();
 
@@ -35,7 +67,6 @@ export class TrainingArenaController {
       ['arena_training_v299', './assets/bg/arena_training_v299.webp?v=299'],
       ['dummy_standard_v299', './assets/fx/dummy_standard_v299.webp?v=299'],
       ['dummy_boss_v299',     './assets/fx/dummy_boss_v299.webp?v=299'],
-      ['dummy_striker_v299',  './assets/fx/dummy_striker_v299.webp?v=299'],
     ].filter(([k]) => !s.textures.exists(k));
 
     const startNow = () => {
@@ -59,13 +90,20 @@ export class TrainingArenaController {
         s.hero.setPosition(1860, 1152);
         s.cameras?.main?.centerOn(2048, 1152);
       }
+      // 進演武場滿血滿魔、重置技能冷卻為就緒狀態
       s.playerHp = s.playerMaxHp;
       s.playerMp = s.playerMaxMp;
+      if (Array.isArray(s.slotCdTimers)) {
+        for (let i = 0; i < s.slotCdTimers.length; i++) s.slotCdTimers[i] = 999999;
+      }
       s.updateHeroHpBar?.();
+
+      if (this.formation === 'striker') this.formation = 'trio';
       this.spawnFormation(this.formation);
       s.autoMoveEnabled = !!this.autoAttack;
       this._setMinimapArenaMode(true);
       this._mountHud();
+      this._syncAutoBtnUi(s.autoMoveEnabled);
     };
 
     if (needed.length > 0) {
@@ -82,7 +120,7 @@ export class TrainingArenaController {
     const s = this.scene;
     this.active = false;
     s.isTrainingMode = false;
-    this.autoAttack = false;
+    this.fastCd = false;
     this._unmountHud();
     this._setMinimapArenaMode(false);
     document.querySelectorAll('[data-v301-hidden="1"]').forEach((n) => {
@@ -90,10 +128,29 @@ export class TrainingArenaController {
       delete n.dataset.v301Hidden;
     });
     s.clearAllMonsters?.();
+    if (Array.isArray(s.projectiles)) {
+      s.projectiles.forEach((p) => p?.sprite?.destroy?.());
+      s.projectiles.length = 0;
+    }
+
+    // v303-1: 完整還原一般刷圖狀態（自動／手動、正常血條與魔力、正常技能冷卻）
+    const saved = this._savedState;
+    this._savedState = null;
+    if (saved) {
+      s.autoMoveEnabled = !!saved.autoMoveEnabled;
+    }
+    s.playerHp = s.playerMaxHp;
+    s.playerMp = s.playerMaxMp;
+    if (Array.isArray(s.slotCdTimers)) {
+      for (let i = 0; i < s.slotCdTimers.length; i++) s.slotCdTimers[i] = 999999;
+    }
+    s.updateHeroHpBar?.();
+    this._syncAutoBtnUi(s.autoMoveEnabled);
+
     if (s.bgImage?.active && s.getZoneIdx) {
       const z = s.getZoneIdx();
       if (s.textures.exists(`map_zone_${z}`)) {
-        s.bgImage.setTexture(`map_zone_${z}`).setDisplaySize(4096, 2304);
+        s.bgImage.setTexture(`map_zone_${z}`).setDisplaySize(4096, 2304).setDepth(0);
       }
     }
   }
@@ -107,7 +164,6 @@ export class TrainingArenaController {
         document.querySelector('#minimap-wrap .mm-header'),
       ].filter(Boolean);
       if (candidates.length === 0) {
-        // Fallback: find top-right pill containing '前線戰場' or '實戰演武場'
         document.querySelectorAll('div, span').forEach((node) => {
           if (node.children.length === 0) {
             const tx = (node.textContent || '').trim();
@@ -139,7 +195,7 @@ export class TrainingArenaController {
   }
 
   spawnFormation(form) {
-    this.formation = form || 'trio';
+    this.formation = (form === 'boss' || form === 'pack') ? form : 'trio';
     const s = this.scene;
     s.clearAllMonsters?.();
     const cx = 2130, cy = 1152;
@@ -148,9 +204,9 @@ export class TrainingArenaController {
       specs = [{ x: cx, y: cy, key: 'dummy_boss_v299', name: `👑 首領演武傀儡 (Ch.${this.simChapter})`, scale: 0.56, isBoss: true }];
     } else if (this.formation === 'trio') {
       specs = [
-        { x: cx + 15, y: cy - 95, key: 'dummy_boss_v299',     name: '首領傀儡・主', scale: 0.46, isElite: true },
+        { x: cx + 15,  y: cy - 95, key: 'dummy_boss_v299',     name: '首領傀儡・主', scale: 0.46, isElite: true },
         { x: cx + 115, y: cy + 55, key: 'dummy_standard_v299', name: '演武木樁・乙', scale: 0.42, isElite: true },
-        { x: cx - 75, y: cy + 65, key: 'dummy_standard_v299', name: '演武木樁・丙', scale: 0.42, isElite: true },
+        { x: cx - 75,  y: cy + 65, key: 'dummy_standard_v299', name: '演武木樁・丙', scale: 0.42, isElite: true },
       ];
     } else if (this.formation === 'pack') {
       specs = [
@@ -160,18 +216,16 @@ export class TrainingArenaController {
         { x: cx - 115, y: cy + 90, key: 'dummy_standard_v299', name: '演武木樁・前', scale: 0.38 },
         { x: cx + 115, y: cy + 90, key: 'dummy_standard_v299', name: '演武木樁・後', scale: 0.38 },
       ];
-    } else if (this.formation === 'striker') {
-      specs = [{ x: cx, y: cy, key: 'dummy_striker_v299', name: '🛡️ 反擊測試戰偶 (2.2秒紅圈)', scale: 0.54, isBoss: true, isStriker: true }];
     }
 
     for (const spc of specs) {
-      // v299: 寫實貼地石座戰偶，不加浮空黑橢圓陰影
       const spr = s.add.image(spc.x, spc.y, spc.key)
         .setOrigin(0.5, 0.86)
         .setScale(spc.scale)
         .setDepth(spc.y);
       const dispH = Math.round(spr.displayHeight || 160);
-      const nameText = s.add.text(spc.x, spc.y - Math.round(dispH * 0.90), spc.name, {
+      const nameOffY = Math.round(dispH * 0.90);
+      const nameText = s.add.text(spc.x, spc.y - nameOffY, spc.name, {
         fontFamily: '"Noto Sans TC", sans-serif',
         fontSize: '12.5px',
         fontStyle: 'bold',
@@ -180,7 +234,6 @@ export class TrainingArenaController {
         padding: { x: 6, y: 2 },
       }).setOrigin(0.5).setDepth(spc.y + 120);
 
-      const nameOffY = Math.round(dispH * 0.90);
       const m = {
         id: `dummy_${Math.random().toString(36).slice(2, 7)}`,
         name: spc.name,
@@ -204,12 +257,10 @@ export class TrainingArenaController {
         isAggressive: false,
         isProvoked: true,
         isTrainingDummy: true,
-        isStrikerDummy: !!spc.isStriker,
         _statuses: {},
       };
       s.monsters.push(m);
     }
-    this._nextStrikerAt = (s.time?.now || 0) + 1800;
   }
 
   recordHit({ target, dmg, isCrit = false, isOverpower = false, sourceName = '普通攻擊', timestamp = 0 } = {}) {
@@ -222,7 +273,6 @@ export class TrainingArenaController {
       timestamp: timestamp || this.scene.time?.now || performance.now(),
     });
 
-    // 戰偶受擊物理微晃回饋
     if (target?.sprite?.active && !target._wobbling) {
       target._wobbling = true;
       const dir = Math.random() < 0.5 ? -8 : 8;
@@ -240,7 +290,6 @@ export class TrainingArenaController {
     }
   }
 
-  // 向下相容舊介面
   onDummyHit(m, dmg, isCrit, sourceName = '技能/普攻') {
     this.recordHit({ target: m, dmg, isCrit, sourceName });
   }
@@ -249,7 +298,7 @@ export class TrainingArenaController {
     if (!this.active) return;
     const s = this.scene;
 
-    // 0. v302: 每幀強制鎖定所有演武木樁於錨點，杜絕任何聚怪/寵物拉扯/擊退位移
+    // 1. 每幀鎖定木樁座標（絕不移動）
     for (const m of s.monsters || []) {
       if (m?.isTrainingDummy && m.sprite?.active && typeof m.anchorX === 'number') {
         if (m.sprite.x !== m.anchorX || m.sprite.y !== m.anchorY) {
@@ -261,46 +310,25 @@ export class TrainingArenaController {
       }
     }
 
-    // 1. 無限能量模式鎖滿資源
-    if (this.infiniteMp) {
+    // 2. 演武場全程鎖滿血量（不掉血）；無限能量開啟時鎖滿魔力，關閉時依實戰魔耗運作
+    let barDirty = false;
+    if (s.playerHp !== s.playerMaxHp) {
+      s.playerHp = s.playerMaxHp;
+      barDirty = true;
+    }
+    if (this.infiniteMp && s.playerMp !== s.playerMaxMp) {
       s.playerMp = s.playerMaxMp;
+      barDirty = true;
+    }
+    if (barDirty) s.updateHeroHpBar?.();
+
+    // 同步自動按鈕狀態（若玩家按下方快捷鍵切換手動／自動，演武場面板同步更新）
+    if (this.autoAttack !== !!s.autoMoveEnabled) {
+      this.autoAttack = !!s.autoMoveEnabled;
+      this._syncAutoBtnUi(this.autoAttack);
     }
 
-    // 2. 反擊測試戰偶：每 2.2 秒紅圈預警攻擊
-    if (this.formation === 'striker' && s.hero?.active && time >= this._nextStrikerAt) {
-      this._nextStrikerAt = time + 2200;
-      const hx = s.hero.x, hy = s.hero.y;
-      const warn = s.add.circle(hx, hy + 8, 68, 0xef4444, 0.22)
-        .setStrokeStyle(2.5, 0xf87171, 0.92)
-        .setDepth(50);
-      s.tweens.add({
-        targets: warn,
-        scale: 1.08,
-        alpha: 0.45,
-        duration: 650,
-        onComplete: () => {
-          if (warn.active) warn.destroy();
-          if (!this.active || !s.hero?.active) return;
-          if (Phaser.Math.Distance.Between(hx, hy, s.hero.x, s.hero.y) <= 78) {
-            const testDmg = Math.max(10, Math.round(s.playerMaxHp * 0.12));
-            if ((s.mageShieldHp || 0) > 0) {
-              const abs = Math.min(s.mageShieldHp, testDmg);
-              s.mageShieldHp -= abs;
-              s.spawnFloatingText?.(s.hero.x, s.hero.y - 78, `🛡️護盾吸收 ${abs}`, '#7dd3fc', 15);
-            } else {
-              const actual = Math.min(Math.max(0, s.playerHp - Math.round(s.playerMaxHp * 0.15)), testDmg);
-              if (actual > 0) s.playerHp -= actual;
-              s.updateHeroHpBar?.();
-              s.spawnFloatingText?.(s.hero.x, s.hero.y - 78, `⚔️戰偶反擊 -${testDmg}`, '#fca5a5', 15);
-            }
-          } else {
-            s.spawnFloatingText?.(s.hero.x, s.hero.y - 78, '💨 完美走位閃避！', '#4ade80', 15);
-          }
-        },
-      });
-    }
-
-    // 3. 推進獨立 DPS 引擎（每 250ms 刷新 HUD 數字，每秒更新折線圖與計時結算）
+    // 3. 推進獨立 DPS 引擎（已完全移除木頭人紅圈反擊攻擊）
     const cid = s.getState?.()?.classId || 'warrior';
     const res = this.meter.tick(time, cid);
     if (res.justFinished && res.snapshot) {
@@ -330,27 +358,25 @@ export class TrainingArenaController {
     this._unmountHud();
     const el = document.createElement('div');
     el.id = 'v299-training-hud';
-    // v299: 預設停靠於右上角小地圖正下方（top: 242px），完全不遮擋小地圖且支援拖曳與折疊
     el.style.cssText = 'position:fixed;right:14px;top:242px;z-index:8600;width:328px;background:linear-gradient(rgba(8,10,16,0.62),rgba(8,10,16,0.78)),url("./assets/ui/lobby_panel_bg_v299.webp?v=299") center/100% 100% no-repeat;border:1.5px solid rgba(212,175,55,0.58);border-radius:12px;padding:12px 14px;color:#f3e8d2;font-family:"Noto Sans TC",sans-serif;box-shadow:0 16px 44px rgba(0,0,0,0.88);user-select:none;';
     el.innerHTML = `
       <div id="v299-hud-drag" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;cursor:move;padding-bottom:6px;border-bottom:1px solid rgba(245,158,11,0.22);">
         <b style="font-size:13.5px;color:#fde047;">⚔️ 獨立演武場・DPS 儀表</b>
         <div style="display:flex;gap:5px;align-items:center;">
-          <button id="v299-btn-fold" type="button" title="折疊/展開" style="padding:2px 7px;border-radius:5px;border:1px solid #475569;background:#1e293b;color:#cbd5e1;font-size:11px;font-weight:800;cursor:pointer;">—</button>
-          <button id="v299-btn-exit" type="button" style="padding:3px 9px;border-radius:6px;border:1px solid #f59e0b;background:#451a03;color:#fef3c7;font-size:11px;font-weight:800;cursor:pointer;">🏰 回主城</button>
+          <button id="v299-btn-fold" type="button" title="折疊/展開" style="padding:2px 7px;border-radius:5px;font-size:11px;font-weight:800;cursor:pointer;">—</button>
+          <button id="v299-btn-exit" type="button" style="padding:3px 9px;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;">🏰 回主城</button>
         </div>
       </div>
       <div id="v299-hud-body">
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:6px;">
-          <button id="v299-btn-auto" type="button" style="padding:5px 3px;border-radius:6px;border:1px solid #22c55e;background:#14532d;color:#dcfce7;font-size:11px;font-weight:800;cursor:pointer;">🤖 自動: 開</button>
-          <button id="v299-btn-mp" type="button" style="padding:5px 3px;border-radius:6px;border:1px solid #38bdf8;background:#0c4a6e;color:#e0f2fe;font-size:11px;font-weight:800;cursor:pointer;">♾️ 能量: 滿</button>
-          <button id="v299-btn-cd" type="button" style="padding:5px 3px;border-radius:6px;border:1px solid #64748b;background:#1e293b;color:#cbd5e1;font-size:11px;font-weight:800;cursor:pointer;">⏱️ 標準CD</button>
+          <button id="v299-btn-auto" type="button" style="padding:5px 3px;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;">🤖 自動: 開</button>
+          <button id="v299-btn-mp" type="button" style="padding:5px 3px;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;">♾️ 能量: 滿</button>
+          <button id="v299-btn-cd" type="button" style="padding:5px 3px;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;">⏱️ 標準CD</button>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-bottom:6px;">
-          <button data-form="boss"    style="padding:4px 2px;border-radius:5px;border:1px solid #475569;background:#1e293b;color:#cbd5e1;font-size:10.5px;font-weight:700;cursor:pointer;">👑 首領</button>
-          <button data-form="trio"    style="padding:4px 2px;border-radius:5px;border:1px solid #f59e0b;background:#78350f;color:#fef3c7;font-size:10.5px;font-weight:700;cursor:pointer;">👥 3木樁</button>
-          <button data-form="pack"    style="padding:4px 2px;border-radius:5px;border:1px solid #475569;background:#1e293b;color:#cbd5e1;font-size:10.5px;font-weight:700;cursor:pointer;">⚔️ 5群怪</button>
-          <button data-form="striker" style="padding:4px 2px;border-radius:5px;border:1px solid #475569;background:#1e293b;color:#cbd5e1;font-size:10.5px;font-weight:700;cursor:pointer;">🛡️ 反擊</button>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:6px;">
+          <button data-form="boss" style="padding:5px 3px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;">👑 單體首領</button>
+          <button data-form="trio" style="padding:5px 3px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;">👥 3 精英木樁</button>
+          <button data-form="pack" style="padding:5px 3px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;">⚔️ 5 群怪陣列</button>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:7px;font-size:11px;">
           <span style="color:#cbd5e1;">模擬首領減傷：</span>
@@ -372,14 +398,14 @@ export class TrainingArenaController {
         <canvas id="v299-dps-chart" width="292" height="64" style="width:100%;height:64px;background:#080a0f;border:1px solid #1e293b;border-radius:6px;margin-bottom:6px;"></canvas>
         <div id="v299-src-bars" style="display:flex;flex-direction:column;gap:4px;margin-bottom:7px;min-height:42px;max-height:112px;overflow-y:auto;font-size:10.5px;color:#94a3b8;">施放技能擊打戰偶以顯示傷害構成...</div>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px;">
-          <button id="v299-btn-t10"   type="button" style="padding:5px 2px;border-radius:6px;border:1px solid #b45309;background:#292018;color:#fde68a;font-size:10.5px;font-weight:700;cursor:pointer;">⏱10秒</button>
-          <button id="v299-btn-t30"   type="button" style="padding:5px 2px;border-radius:6px;border:1px solid #b45309;background:#292018;color:#fde68a;font-size:10.5px;font-weight:700;cursor:pointer;">⏱30秒</button>
-          <button id="v299-btn-t60"   type="button" style="padding:5px 2px;border-radius:6px;border:1px solid #b45309;background:#292018;color:#fde68a;font-size:10.5px;font-weight:700;cursor:pointer;">⏱60秒</button>
-          <button id="v299-btn-reset" type="button" style="padding:5px 2px;border-radius:6px;border:1px solid #475569;background:#1e293b;color:#e2e8f0;font-size:10.5px;font-weight:700;cursor:pointer;">🧹重置</button>
+          <button id="v299-btn-t10"   type="button" style="padding:5px 2px;border-radius:6px;font-size:10.5px;font-weight:700;cursor:pointer;">⏱10秒</button>
+          <button id="v299-btn-t30"   type="button" style="padding:5px 2px;border-radius:6px;font-size:10.5px;font-weight:700;cursor:pointer;">⏱30秒</button>
+          <button id="v299-btn-t60"   type="button" style="padding:5px 2px;border-radius:6px;font-size:10.5px;font-weight:700;cursor:pointer;">⏱60秒</button>
+          <button id="v299-btn-reset" type="button" style="padding:5px 2px;border-radius:6px;font-size:10.5px;font-weight:700;cursor:pointer;">🧹重置</button>
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;gap:6px;">
           <div id="v299-trial-status" style="font-size:10.5px;color:#86efac;flex:1;">自由打樁模式</div>
-          <button id="v299-btn-copy" type="button" style="padding:2px 7px;border-radius:5px;border:1px solid #475569;background:#0f172a;color:#cbd5e1;font-size:10px;cursor:pointer;">📋 複製戰報</button>
+          <button id="v299-btn-copy" type="button" style="padding:2px 7px;border-radius:5px;font-size:10px;cursor:pointer;">📋 複製戰報</button>
         </div>
       </div>
     `;
@@ -408,12 +434,12 @@ export class TrainingArenaController {
       document.head.appendChild(stEl);
     }
     document.body.appendChild(el);
-    el.querySelector('#v299-btn-auto')?.classList.add('is-on');
-    el.querySelector('#v299-btn-mp')?.classList.add('is-on');
-    el.querySelector('button[data-form="trio"]')?.classList.add('is-on');
     this._hudEl = el;
+    el.querySelector('#v299-btn-auto')?.classList.toggle('is-on', !!this.autoAttack);
+    el.querySelector('#v299-btn-mp')?.classList.toggle('is-on', !!this.infiniteMp);
+    el.querySelector('#v299-btn-cd')?.classList.toggle('is-on', !!this.fastCd);
+    el.querySelector(`button[data-form="${this.formation}"]`)?.classList.add('is-on');
 
-    // 自由拖曳標題列
     const dragBar = el.querySelector('#v299-hud-drag');
     let dragging = false, ox = 0, oy = 0;
     dragBar?.addEventListener('pointerdown', (e) => {
@@ -446,17 +472,19 @@ export class TrainingArenaController {
       this.exit();
       this._onExitToTown?.();
     });
-    el.querySelector('#v299-btn-auto')?.addEventListener('click', (ev) => {
+    el.querySelector('#v299-btn-auto')?.addEventListener('click', () => {
       this.autoAttack = !this.autoAttack;
       this.scene.autoMoveEnabled = this.autoAttack;
-      ev.currentTarget.textContent = this.autoAttack ? '🤖 自動: 開' : '🤖 自動: 關';
-      ev.currentTarget.classList.toggle('is-on', this.autoAttack);
-      ev.currentTarget.style.borderColor = this.autoAttack ? '#22c55e' : '#64748b';
+      this._syncAutoBtnUi(this.autoAttack);
     });
     el.querySelector('#v299-btn-mp')?.addEventListener('click', (ev) => {
       this.infiniteMp = !this.infiniteMp;
       ev.currentTarget.textContent = this.infiniteMp ? '♾️ 能量: 滿' : '💧 實戰耗魔';
       ev.currentTarget.classList.toggle('is-on', this.infiniteMp);
+      if (this.infiniteMp) {
+        this.scene.playerMp = this.scene.playerMaxMp;
+        this.scene.updateHeroHpBar?.();
+      }
     });
     el.querySelector('#v299-btn-cd')?.addEventListener('click', (ev) => {
       this.fastCd = !this.fastCd;
@@ -522,10 +550,9 @@ export class TrainingArenaController {
       statusEl.textContent = `🏆 結算 [${snap.grade}] 均傷 ${fmt(snap.avgDps)}/s${snap.isNewRecord ? ' (新紀錄!)' : ''}`;
     } else {
       statusEl.style.color = '#94a3b8';
-      statusEl.textContent = snap.pb > 0 ? `自由打樁｜歷史最佳 ${fmt(snap.pb)}/s` : '自由打樁模式';
+      statusEl.textContent = snap.pb > 0 ? `自由打樁｜歷史最佳 ${fmt(snap.pb)}/s` : '自由打樁模式（滿血保護）';
     }
 
-    // 繪製 30 秒雙線 DPS 折線圖（金線：每秒即時，青虛線：全程平均）
     const canvas = this._hudEl.querySelector('#v299-dps-chart');
     if (canvas) {
       const ctx = canvas.getContext('2d');
@@ -535,7 +562,6 @@ export class TrainingArenaController {
       ctx.strokeStyle = 'rgba(148,163,184,0.16)';
       ctx.beginPath(); ctx.moveTo(0, h / 2); ctx.lineTo(w, h / 2); ctx.stroke();
 
-      // 平均 DPS 虛線
       if (snap.avgDps > 0) {
         const ay = h - 5 - (snap.avgDps / maxV) * (h - 12);
         ctx.save();
@@ -546,7 +572,6 @@ export class TrainingArenaController {
         ctx.restore();
       }
 
-      // 即時 DPS 金線
       ctx.strokeStyle = '#fbbf24';
       ctx.lineWidth = 2;
       ctx.beginPath();
@@ -558,7 +583,6 @@ export class TrainingArenaController {
       ctx.stroke();
     }
 
-    // 繪製細粒度技能傷害構成
     const barsEl = this._hudEl.querySelector('#v299-src-bars');
     if (barsEl) {
       if (snap.breakdown.length === 0) {

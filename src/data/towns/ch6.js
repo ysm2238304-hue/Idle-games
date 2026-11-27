@@ -20,10 +20,36 @@ export const TOWN_CH6 = {
   },
   "walkableZones": [
     {
-      "x1": 340,
-      "y1": 300,
-      "x2": 3880,
-      "y2": 2380
+      "poly": [
+        [
+          1080,
+          740
+        ],
+        [
+          1560,
+          420
+        ],
+        [
+          3580,
+          420
+        ],
+        [
+          3720,
+          2180
+        ],
+        [
+          2020,
+          2240
+        ],
+        [
+          1620,
+          1760
+        ],
+        [
+          1260,
+          1460
+        ]
+      ]
     }
   ],
   "landmark": {
@@ -31,7 +57,7 @@ export const TOWN_CH6 = {
     "name": "永凍極光水晶塔",
     "frame": "ch6_lm_spire",
     "x": 2180,
-    "y": 1020,
+    "y": 980,
     "scale": 0.84,
     "imgKey": "ch6_b_beacon_v296",
     "imgUrl": "./assets/towns/ch6_b_beacon.webp?v=296",
@@ -44,8 +70,8 @@ export const TOWN_CH6 = {
       "id": "smith",
       "name": "永凍藍冰符文鍛造柱",
       "frame": "ch6_bld_smith",
-      "x": 1740,
-      "y": 1040,
+      "x": 1640,
+      "y": 960,
       "scale": 1.08,
       "imgKey": "ch6_b_smith_v296",
       "imgUrl": "./assets/towns/ch6_b_smith.webp?v=296",
@@ -64,16 +90,16 @@ export const TOWN_CH6 = {
       "action": "drawer_upgrade",
       "actionLabel": "開啟符文鍛造",
       "doorOffset": {
-        "x": 20,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "alchemy",
       "name": "雪松草藥與冰晶蒸餾屋",
       "frame": "ch6_bld_alchemy",
-      "x": 2060,
-      "y": 440,
+      "x": 2220,
+      "y": 580,
       "scale": 1.03,
       "imgKey": "ch6_b_alchemy_v296",
       "imgUrl": "./assets/towns/ch6_b_alchemy.webp?v=296",
@@ -92,16 +118,16 @@ export const TOWN_CH6 = {
       "action": "modal_alchemy",
       "actionLabel": "調配冰晶藥劑",
       "doorOffset": {
-        "x": 15,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "guild",
       "name": "維京毛皮與秘寶長屋",
       "frame": "ch6_bld_guild",
-      "x": 3380,
-      "y": 920,
+      "x": 3280,
+      "y": 860,
       "scale": 1.08,
       "imgKey": "ch6_b_guild_v296",
       "imgUrl": "./assets/towns/ch6_b_guild.webp?v=296",
@@ -120,16 +146,16 @@ export const TOWN_CH6 = {
       "action": "drawer_bag",
       "actionLabel": "打開長屋倉庫",
       "doorOffset": {
-        "x": -20,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "temple",
       "name": "英靈殿狂戰訓練場",
       "frame": "ch6_bld_temple",
-      "x": 2660,
-      "y": 480,
+      "x": 2760,
+      "y": 620,
       "scale": 1.06,
       "imgKey": "ch6_b_temple_v296",
       "imgUrl": "./assets/towns/ch6_b_temple.webp?v=296",
@@ -148,16 +174,16 @@ export const TOWN_CH6 = {
       "action": "drawer_skills",
       "actionLabel": "配置職業技能",
       "doorOffset": {
-        "x": -15,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "bounty",
       "name": "北歐符文懸賞巨石",
       "frame": "ch6_bld_bounty",
-      "x": 1620,
-      "y": 440,
+      "x": 1720,
+      "y": 600,
       "scale": 0.82,
       "imgKey": "ch6_b_bounty_v296",
       "imgUrl": "./assets/towns/ch6_b_bounty.webp?v=296",
@@ -176,15 +202,15 @@ export const TOWN_CH6 = {
       "action": "modal_bounty",
       "actionLabel": "接取雪原懸賞",
       "doorOffset": {
-        "x": 10,
-        "y": 76
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "market",
       "name": "極地毛皮雪橇黑市",
       "frame": "ch6_bld_market",
-      "x": 2620,
+      "x": 2560,
       "y": 1420,
       "scale": 1.08,
       "imgKey": "ch6_b_market_v296",
@@ -204,16 +230,16 @@ export const TOWN_CH6 = {
       "action": "modal_market",
       "actionLabel": "進入極地黑市",
       "doorOffset": {
-        "x": -20,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "altar",
       "name": "極光世界樹輪迴聖壇",
       "frame": "ch6_bld_altar",
-      "x": 3480,
-      "y": 1480,
+      "x": 3380,
+      "y": 1620,
       "scale": 0.95,
       "imgKey": "ch6_b_temple_v296",
       "imgUrl": "./assets/towns/ch6_b_temple.webp?v=296",
@@ -232,16 +258,16 @@ export const TOWN_CH6 = {
       "action": "drawer_rebirth",
       "actionLabel": "開啟世界樹輪迴",
       "doorOffset": {
-        "x": -15,
-        "y": 85
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "portal",
       "name": "北歐巨石陣傳送冰門",
       "frame": "ch6_bld_portal",
-      "x": 1120,
-      "y": 1640,
+      "x": 1660,
+      "y": 1520,
       "scale": 0.82,
       "radius": 65,
       "npc": {
@@ -258,8 +284,8 @@ export const TOWN_CH6 = {
       "imgKey": "ch6_b_portal_v296",
       "imgUrl": "./assets/towns/ch6_b_portal.webp?v=296",
       "doorOffset": {
-        "x": 18,
-        "y": 80
+        "x": 0,
+        "y": 82
       }
     }
   ],
@@ -293,7 +319,7 @@ export const TOWN_CH6 = {
     "id": "dummy",
     "name": "冰霜巨人木偶靶",
     "frame": "ch6_prop_dummy",
-    "x": 3520,
+    "x": 3460,
     "y": 1180,
     "scale": 0.72,
     "radius": 42
@@ -381,12 +407,14 @@ export const TOWN_CH6 = {
   "integratedBuildings": false,
   "modularBuildings": true,
   "portal": {
-    "x": 1120,
-    "y": 1640,
+    "x": 1660,
+    "y": 1520,
     "imgKey": "ch6_b_portal_v296",
     "imgUrl": "./assets/towns/ch6_b_portal.webp?v=296",
     "scale": 0.82,
     "name": "出城戰鬥傳送門",
     "action": "exit_battle"
-  }
+  },
+  "blockedZones": [],
+  "bridgeZones": []
 };

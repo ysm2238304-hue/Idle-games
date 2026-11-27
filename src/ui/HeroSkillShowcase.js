@@ -40,10 +40,10 @@ const CLASS_V301_VFX = {
       w_ancient_hammer:    { style: 'dash', seq: 'seq16_w_hammer_slam', decal: 'decal_w_lava',   scale: 1.36, trail: '#f97316' },
       w_upheaval_wave:     { style: 'proj', proj: 'proj_w_rock_shard',  decal: 'decal_w_crater', seq: 'seq16_w_earth_stomp', multiProj: 3, trail: '#f97316', scale: 1.20 },
       w_double_swing:      { style: 'dash', seq: 'seq16_w_rend_burst',  decal: 'decal_w_blood',  scale: 1.26, trail: '#ef4444' },
-      w_iron_skin:         { style: 'dash', seq: 'seq16_w_warcry',      decal: 'decal_w_rune',   scale: 1.24, trail: '#94a3b8' },
-      warcry:              { style: 'dash', seq: 'seq16_w_warcry',      decal: 'decal_w_rune',   scale: 1.28, trail: '#f59e0b' },
-      w_challenging_shout: { style: 'dash', seq: 'seq16_w_warcry',      decal: 'decal_w_rune',   scale: 1.28, trail: '#fb923c' },
-      w_rallying_cry:      { style: 'dash', seq: 'seq16_w_warcry',      decal: 'decal_w_rune',   scale: 1.26, trail: '#fde047' },
+      w_iron_skin:         { style: 'self_buff', buffMode: 'pure_defense',  buffKey: 'buff_w_iron_skin_v303',    buffText: '🛡️ 鋼鐵戰膚：護甲 +60%', trail: '#fbbf24' },
+      warcry:              { style: 'self_buff', buffMode: 'melee_empower', buffKey: 'buff_w_berserk_roar_v303', buffText: '🔥 狂戰血吼：攻擊 +35%', followSeq: 'seq16_w_rend_burst', trail: '#f97316' },
+      w_challenging_shout: { style: 'self_buff', buffMode: 'pure_defense',  buffKey: 'buff_w_iron_skin_v303',    buffText: '🛡️ 挑戰怒吼：減傷 +40%', trail: '#fb923c' },
+      w_rallying_cry:      { style: 'self_buff', buffMode: 'melee_empower', buffKey: 'buff_w_berserk_roar_v303', buffText: '⚡ 集結戰吼：怒氣與攻速提升', followSeq: 'seq16_w_execute', trail: '#fde047' },
       bloodcharge:         { style: 'dash', seq: 'seq16_w_earth_stomp', decal: 'decal_w_blood',  scale: 1.28, trail: '#ef4444' },
       earth_stomp:         { style: 'dash', seq: 'seq16_w_earth_stomp', decal: 'decal_w_crater', scale: 1.30, trail: '#f97316' },
       w_chain_grasp:       { style: 'proj', proj: 'proj_w_chain_hook',  decal: 'decal_w_crater', multiProj: 2, trail: '#94a3b8' },
@@ -53,7 +53,7 @@ const CLASS_V301_VFX = {
       volcano_totem:       { style: 'aoe',  seq: 'seq16_w_fissure',     decal: 'decal_w_lava',   scale: 1.34, trail: '#f97316' },
       w_seismic_fissure:   { style: 'aoe',  seq: 'seq16_w_fissure',     decal: 'decal_w_lava',   scale: 1.36, trail: '#f97316' },
       w_call_ancients:    { style: 'summon', summonType: 'clone', cloneCount: 3, seq: 'seq16_w_hammer_slam', decal: 'decal_w_rune', scale: 1.28, trail: '#fde047' },
-      w_wrath_berserker:   { style: 'dash', seq: 'seq16_w_maelstrom',   decal: 'decal_w_lava',   scale: 1.38, trail: '#ef4444' },
+      w_wrath_berserker:   { style: 'self_buff', buffMode: 'melee_empower', buffKey: 'buff_w_berserk_roar_v303', buffText: '🌋 狂戰神降臨：攻速+45% 爆傷+50%', followSeq: 'seq16_w_hammer_slam', trail: '#ef4444' },
       execute_cleave:      { style: 'dash', seq: 'seq16_w_execute',     decal: 'decal_w_blood',  scale: 1.36, trail: '#ef4444' },
       w_iron_maelstrom:    { style: 'dash', seq: 'seq16_w_maelstrom',   decal: 'decal_w_crater', scale: 1.38, trail: '#fb923c' },
     },
@@ -78,16 +78,16 @@ const CLASS_V301_VFX = {
       arrowrain:       { style: 'aoe',  seq: 'seq16_r_arrow_storm',   decal: 'decal_r_arrows', scale: 1.36, trail: '#4ade80' },
       r_abyss_barrage: { style: 'aoe',  seq: 'seq16_r_arrow_storm',   decal: 'decal_r_shadow', scale: 1.38, trail: '#c084fc' },
       phantombow:      { style: 'proj', proj: 'proj_r_shadow_arrow',  decal: 'decal_r_shadow', seq: 'seq16_r_phantom_beam', multiProj: 1, trail: '#c084fc', scale: 1.34 },
-      r_shadow_imbue:  { style: 'proj', proj: 'proj_r_shadow_arrow',  decal: 'decal_r_shadow', seq: 'seq16_r_shadow_boom',  multiProj: 3, trail: '#a855f7', scale: 1.26 },
+      r_shadow_imbue:  { style: 'self_buff', buffMode: 'ranged_empower', buffKey: 'buff_r_shadow_shroud_v303', buffText: '🌑 暗影灌注：箭矢附加暗影爆裂', followProj: 'proj_r_shadow_arrow', followSeq: 'seq16_r_shadow_boom', trail: '#a855f7' },
       shadowstep:      { style: 'dash', seq: 'seq16_r_smoke_bomb',    decal: 'decal_r_shadow', scale: 1.24, trail: '#a855f7' },
-      windwalk:        { style: 'proj', proj: 'proj_r_emerald_arrow', decal: 'decal_r_arrows', multiProj: 3, trail: '#34d399', burstColor: '#6ee7b7' },
+      windwalk:        { style: 'self_buff', buffMode: 'ranged_empower', buffKey: 'buff_r_wind_step_v303',     buffText: '🍃 風行疾步：攻速移速 +40%', followProj: 'proj_r_emerald_arrow', trail: '#34d399' },
       shadow_clones:   { style: 'summon', summonType: 'clone', cloneCount: 2, conjProj: 'proj_r_shadow_arrow', seq: 'seq16_r_shadow_boom', decal: 'decal_r_shadow', scale: 1.24, trail: '#a855f7' },
       death_mark:      { style: 'aoe',  seq: 'seq16_r_void_rift',     decal: 'decal_r_shadow', scale: 1.32, trail: '#c084fc' },
       r_void_hunter:   { style: 'aoe',  seq: 'seq16_r_void_rift',     decal: 'decal_r_shadow', scale: 1.36, trail: '#a855f7' },
       r_death_trap:    { style: 'aoe',  seq: 'seq16_r_death_trap',    decal: 'decal_r_trap',   scale: 1.32, trail: '#f87171' },
       r_razor_snare:   { style: 'aoe',  seq: 'seq16_r_death_trap',    decal: 'decal_r_trap',   scale: 1.26, trail: '#f87171' },
       r_smoke_decoy:   { style: 'aoe',  seq: 'seq16_r_smoke_bomb',    decal: 'decal_r_shadow', scale: 1.26, trail: '#94a3b8' },
-      r_dark_shroud:   { style: 'aoe',  seq: 'seq16_r_shadow_boom',   decal: 'decal_r_shadow', scale: 1.28, trail: '#a855f7' },
+      r_dark_shroud:   { style: 'self_buff', buffMode: 'pure_defense',   buffKey: 'buff_r_shadow_shroud_v303', buffText: '🌑 暗影帷幕：閃避減傷 +35%', trail: '#a855f7' },
     },
   },
   mage: {
@@ -105,8 +105,8 @@ const CLASS_V301_VFX = {
       chain_lightning:    { style: 'aoe',  seq: 'seq16_m_lightning_strike', decal: 'decal_m_lightning', scale: 1.34, trail: '#fde047' },
       m_frozen_orb:       { style: 'proj', proj: 'proj_m_frozen_orb', decal: 'decal_m_frost',     seq: 'seq16_m_frost_nova', multiProj: 1, trail: '#38bdf8', scale: 1.28 },
       arcane_orb:         { style: 'proj', proj: 'proj_m_frozen_orb', decal: 'decal_m_void',      seq: 'seq16_m_supernova',  multiProj: 1, trail: '#c084fc', scale: 1.28 },
-      m_flame_shield:     { style: 'dash', seq: 'seq16_m_fireball_blast', decal: 'decal_m_scorch', scale: 1.26, trail: '#fb923c' },
-      m_ice_armor:        { style: 'dash', seq: 'seq16_m_frost_nova', decal: 'decal_m_frost',     scale: 1.26, trail: '#38bdf8' },
+      m_flame_shield:     { style: 'self_buff', buffMode: 'pure_defense',   buffKey: 'buff_m_flame_shield_v303', buffText: '🔥 烈焰護盾：火焰屏障展開', trail: '#fb923c' },
+      m_ice_armor:        { style: 'self_buff', buffMode: 'pure_defense',   buffKey: 'buff_m_ice_armor_v303',    buffText: '❄️ 寒冰護甲：稜鏡冰盾展開', trail: '#38bdf8' },
       m_arcane_blink:     { style: 'dash', seq: 'seq16_m_supernova',  decal: 'decal_m_void',      scale: 1.26, trail: '#c084fc' },
       frost_nova:         { style: 'dash', seq: 'seq16_m_frost_nova', decal: 'decal_m_frost',     scale: 1.34, trail: '#38bdf8' },
       m_flame_hydra:      { style: 'summon', summonType: 'mage_conj', conjKey: 'anim_conj_hydra', conjProj: 'proj_m_fire_bolt', seq: 'seq16_m_firewall', decal: 'decal_m_scorch', scale: 1.24, trail: '#f97316' },
@@ -120,7 +120,7 @@ const CLASS_V301_VFX = {
       black_hole:         { style: 'aoe',  seq: 'seq16_m_supernova',  decal: 'decal_m_void',      scale: 1.38, trail: '#a855f7' },
       m_inferno:          { style: 'aoe',  seq: 'seq16_m_inferno',    decal: 'decal_m_scorch',    scale: 1.40, trail: '#f97316' },
       m_deep_freeze:      { style: 'aoe',  seq: 'seq16_m_blizzard',   decal: 'decal_m_frost',     scale: 1.38, trail: '#38bdf8' },
-      m_unstable_currents:{ style: 'aoe',  seq: 'seq16_m_ball_lightning', decal: 'decal_m_lightning', scale: 1.38, trail: '#fde047' },
+      m_unstable_currents:{ style: 'self_buff', buffMode: 'ranged_empower', buffKey: 'buff_m_ice_armor_v303',    buffText: '⚡ 不穩電流：施法與雷鏈加速', followProj: 'proj_m_frozen_orb', followSeq: 'seq16_m_lightning_strike', trail: '#fde047' },
       m_astral_supernova: { style: 'aoe',  seq: 'seq16_m_supernova',  decal: 'decal_m_void',      scale: 1.42, trail: '#c084fc' },
     },
   },
@@ -138,22 +138,22 @@ const CLASS_V301_VFX = {
       heaven_fist:        { style: 'aoe',  seq: 'seq16_p_heaven_pillar',  decal: 'decal_p_cross_crater', scale: 1.38, trail: '#fde047' },
       p_holy_lance:       { style: 'proj', proj: 'proj_p_holy_lance',     decal: 'decal_p_sanctuary',    multiProj: 3, trail: '#fef08a', burstColor: '#fde047' },
       divine_storm:       { style: 'dash', seq: 'seq16_p_divine_storm',   decal: 'decal_p_consecration', scale: 1.34, trail: '#fde047' },
-      holy_aegis:         { style: 'dash', seq: 'seq16_p_thorns_burst',   decal: 'decal_p_aegis_ring',   scale: 1.28, trail: '#fde047' },
-      p_redemption_prayer:{ style: 'aoe',  seq: 'seq16_p_condemn_vortex', decal: 'decal_p_sanctuary',    scale: 1.30, trail: '#fde047' },
+      holy_aegis:         { style: 'self_buff', buffMode: 'pure_defense',  buffKey: 'buff_p_holy_aegis_v303',  buffText: '🛡️ 聖光神盾：穹頂護罩展開', trail: '#fde047' },
+      p_redemption_prayer:{ style: 'self_buff', buffMode: 'pure_defense',  buffKey: 'buff_p_holy_aegis_v303',  buffText: '✨ 救贖禱言：神聖治療光環', trail: '#fde047' },
       shield_bash:        { style: 'dash', seq: 'seq16_p_shield_bash',    decal: 'decal_p_aegis_ring',   scale: 1.28, trail: '#fbbf24' },
-      p_sanctuary_ward:   { style: 'aoe',  seq: 'seq16_p_thorns_burst',   decal: 'decal_p_sanctuary',    scale: 1.30, trail: '#fde047' },
+      p_sanctuary_ward:   { style: 'self_buff', buffMode: 'pure_defense',  buffKey: 'buff_p_holy_aegis_v303',  buffText: '🛡️ 聖域結界：格擋減傷強化', trail: '#fde047' },
       p_crusader_charge:  { style: 'dash', seq: 'seq16_p_shield_bash',    decal: 'decal_p_cross_crater', scale: 1.32, trail: '#fde047' },
       judgment:           { style: 'aoe',  seq: 'seq16_p_judgment_cross', decal: 'decal_p_cross_crater', scale: 1.36, trail: '#fde047' },
       p_condemn_pull:     { style: 'aoe',  seq: 'seq16_p_condemn_vortex', decal: 'decal_p_consecration', scale: 1.34, trail: '#fde047' },
       p_falling_sword:    { style: 'aoe',  seq: 'seq16_p_verdict_sword',  decal: 'decal_p_cross_crater', scale: 1.38, trail: '#fde047' },
       consecration:       { style: 'aoe',  seq: 'seq16_p_condemn_vortex', decal: 'decal_p_consecration', scale: 1.34, trail: '#fde047' },
-      radiant_aura:       { style: 'aoe',  seq: 'seq16_p_divine_storm',   decal: 'decal_p_sanctuary',    scale: 1.30, trail: '#fde047' },
-      p_thorns_aura:      { style: 'aoe',  seq: 'seq16_p_thorns_burst',   decal: 'decal_p_aegis_ring',   scale: 1.30, trail: '#fbbf24' },
+      radiant_aura:       { style: 'self_buff', buffMode: 'pure_defense',  buffKey: 'buff_p_divine_aura_v303', buffText: '☀️ 熾光懲戒光環：持續聖光脈衝', trail: '#fde047' },
+      p_thorns_aura:      { style: 'self_buff', buffMode: 'pure_defense',  buffKey: 'buff_p_divine_aura_v303', buffText: '⚡ 荊棘復仇光環：高額反傷', trail: '#fbbf24' },
       p_solar_beacon:     { style: 'aoe',  seq: 'seq16_p_heaven_pillar',  decal: 'decal_p_consecration', scale: 1.34, trail: '#fde047' },
       p_seraph_descent:   { style: 'summon', summonType: 'clone', cloneCount: 2, conjProj: 'proj_p_holy_bolt', seq: 'seq16_p_heaven_pillar', decal: 'decal_p_cross_crater', scale: 1.30, trail: '#fde047' },
       p_heavens_verdict:  { style: 'aoe',  seq: 'seq16_p_verdict_sword',  decal: 'decal_p_cross_crater', scale: 1.40, trail: '#fde047' },
       p_valkyrie_avatar:  { style: 'summon', summonType: 'clone', cloneCount: 2, seq: 'seq16_p_divine_storm', decal: 'decal_p_sanctuary', scale: 1.28, trail: '#fde047' },
-      p_akarats_wrath:    { style: 'aoe',  seq: 'seq16_p_judgment_cross', decal: 'decal_p_cross_crater', scale: 1.38, trail: '#fde047' },
+      p_akarats_wrath:    { style: 'self_buff', buffMode: 'melee_empower', buffKey: 'buff_p_divine_aura_v303', buffText: '👑 神聖化身：全聖傷 +50%', followSeq: 'seq16_p_judgment_cross', trail: '#fde047' },
     },
   },
   necro: {
@@ -170,8 +170,8 @@ const CLASS_V301_VFX = {
       n_blood_surge:     { style: 'aoe',    seq: 'seq16_n_blood_surge', decal: 'decal_n_blood',  scale: 1.32, trail: '#ef4444' },
       n_blood_lance:     { style: 'proj',   proj: 'proj_n_blood_lance', decal: 'decal_n_blood',  multiProj: 3, trail: '#ef4444', burstColor: '#f87171' },
       n_sever:           { style: 'dash',   seq: 'seq16_n_soul_rift',   decal: 'decal_n_rift',   scale: 1.28, trail: '#2dd4bf' },
-      n_blood_mist:      { style: 'dash',   seq: 'seq16_n_blood_surge', decal: 'decal_n_blood',  scale: 1.28, trail: '#ef4444' },
-      n_bone_shield:     { style: 'aoe',    seq: 'seq16_n_bone_burst',  decal: 'decal_n_bone',   scale: 1.26, trail: '#cbd5e1' },
+      n_blood_mist:      { style: 'self_buff', buffMode: 'pure_defense',  buffKey: 'buff_n_blood_frenzy_v303', buffText: '🩸 血霧化形：短暫免疫傷害', trail: '#ef4444' },
+      n_bone_shield:     { style: 'self_buff', buffMode: 'pure_defense',  buffKey: 'buff_n_bone_shield_v303',  buffText: '💀 骸骨護盾：冥火骨環護體', trail: '#2dd4bf' },
       bone_prison:       { style: 'aoe',    seq: 'seq16_n_bone_burst',  decal: 'decal_n_bone',   scale: 1.30, trail: '#cbd5e1' },
       corpse_explosion:  { style: 'aoe',    seq: 'seq16_n_corpse_boom', decal: 'decal_n_blood',  scale: 1.38, trail: '#ef4444' },
       decrepify:         { style: 'aoe',    seq: 'seq16_n_blight_pool', decal: 'decal_n_plague', scale: 1.30, trail: '#2dd4bf' },
@@ -204,16 +204,16 @@ const CLASS_V301_VFX = {
       a_twisting_blades: { style: 'dash', seq: 'seq16_a_blade_flurry', decal: 'decal_a_blood_cross', scale: 1.32, trail: '#c084fc' },
       shadow_blitz:      { style: 'dash', seq: 'seq16_a_shadow_slash', decal: 'decal_a_eclipse',     scale: 1.32, trail: '#a855f7' },
       a_shadow_backstab: { style: 'dash', seq: 'seq16_a_execute',      decal: 'decal_a_blood_cross', scale: 1.30, trail: '#a855f7' },
-      smoke_veil:        { style: 'dash', seq: 'seq16_a_smoke_veil',   decal: 'decal_a_eclipse',     scale: 1.30, trail: '#94a3b8' },
-      a_blood_cloak:     { style: 'dash', seq: 'seq16_a_eclipse',      decal: 'decal_a_blood_cross', scale: 1.30, trail: '#f43f5e' },
+      smoke_veil:        { style: 'self_buff', buffMode: 'pure_defense',  buffKey: 'buff_a_blood_cloak_v303', buffText: '🌫️ 煙霧隱遁：閃避率 +50%', trail: '#c084fc' },
+      a_blood_cloak:     { style: 'self_buff', buffMode: 'pure_defense',  buffKey: 'buff_a_blood_cloak_v303', buffText: '🌙 血月影衣：暗影護體減傷', trail: '#f43f5e' },
       venom_burst:       { style: 'aoe',  seq: 'seq16_a_venom_nova',   decal: 'decal_a_venom_pool',  scale: 1.34, trail: '#22c55e' },
       a_crimson_mist:    { style: 'aoe',  seq: 'seq16_a_venom_nova',   decal: 'decal_a_venom_pool',  scale: 1.32, trail: '#f43f5e' },
       a_garrote_bind:    { style: 'dash', seq: 'seq16_a_garrote',      decal: 'decal_a_blood_cross', scale: 1.30, trail: '#ef4444' },
       a_shadow_decoy_bomb:{ style: 'aoe', seq: 'seq16_a_smoke_veil',   decal: 'decal_a_eclipse',     scale: 1.32, trail: '#a855f7' },
       shadow_clones:     { style: 'summon', summonType: 'clone', cloneCount: 2, seq: 'seq16_a_shadow_slash', decal: 'decal_a_eclipse', scale: 1.26, trail: '#c084fc' },
       a_death_lotus:     { style: 'aoe',  seq: 'seq16_a_reaper_dance', decal: 'decal_a_blood_cross', scale: 1.36, trail: '#f43f5e' },
-      a_venom_imbue:     { style: 'dash', seq: 'seq16_a_venom_nova',   decal: 'decal_a_venom_pool',  scale: 1.28, trail: '#22c55e' },
-      lethal_fangs:      { style: 'dash', seq: 'seq16_a_venom_nova',   decal: 'decal_a_venom_pool',  scale: 1.32, trail: '#22c55e' },
+      a_venom_imbue:     { style: 'self_buff', buffMode: 'melee_empower', buffKey: 'buff_a_venom_imbue_v303', buffText: '☠️ 劇毒淬刃：雙刃劇毒附魔', followSeq: 'seq16_a_venom_nova', trail: '#22c55e' },
+      lethal_fangs:      { style: 'self_buff', buffMode: 'melee_empower', buffKey: 'buff_a_venom_imbue_v303', buffText: '☠️ 致命毒牙：攻速 +45%', followSeq: 'seq16_a_shadow_slash', trail: '#22c55e' },
       shadow_execute:    { style: 'dash', seq: 'seq16_a_execute',      decal: 'decal_a_blood_cross', scale: 1.38, trail: '#c084fc' },
       a_thousand_shadows:{ style: 'dash', seq: 'seq16_a_reaper_dance', decal: 'decal_a_eclipse',     scale: 1.40, trail: '#a855f7' },
       a_crimson_eclipse: { style: 'aoe',  seq: 'seq16_a_eclipse',      decal: 'decal_a_eclipse',     scale: 1.38, trail: '#f43f5e' },
@@ -249,6 +249,8 @@ export class HeroSkillShowcase {
     this.projs = [];
     this.sparks = [];
     this.summons = [];
+    this.heroBuffs = [];
+    this._followTimer = null;
     this.popups = [];
     this.onSkillChange = null;
     this.targets = [
@@ -328,6 +330,15 @@ export class HeroSkillShowcase {
     cfg.seqs.forEach((k) => this._loadImg(`./assets/fx/${k}.webp`));
     cfg.decals.forEach((k) => this._loadImg(`./assets/fx/${k}.webp`));
     cfg.projs.forEach((k) => this._loadImg(`./assets/fx/${k}.webp`));
+    const buffKeysByClass = {
+      warrior:  ['buff_w_iron_skin_v303', 'buff_w_berserk_roar_v303'],
+      ranger:   ['buff_r_wind_step_v303', 'buff_r_shadow_shroud_v303'],
+      mage:     ['buff_m_flame_shield_v303', 'buff_m_ice_armor_v303'],
+      paladin:  ['buff_p_holy_aegis_v303', 'buff_p_divine_aura_v303'],
+      necro:    ['buff_n_bone_shield_v303', 'buff_n_blood_frenzy_v303'],
+      assassin: ['buff_a_venom_imbue_v303', 'buff_a_blood_cloak_v303'],
+    };
+    (buffKeysByClass[cid] || []).forEach((k) => this._loadImg(`./assets/fx/${k}.webp?v=303`));
   }
 
   setAutoPlay(flag) {
@@ -346,6 +357,8 @@ export class HeroSkillShowcase {
     this.projs = [];
     this.sparks = [];
     this.summons = [];
+    this.heroBuffs = [];
+    this._followTimer = null;
     this.popups = [];
     this.heroX = this.heroBaseX;
     this.heroY = this.heroBaseY;
@@ -363,10 +376,8 @@ export class HeroSkillShowcase {
   stop() {
     if (this.rafId) cancelAnimationFrame(this.rafId);
     this.rafId = null;
-    if (this._impactTimer) {
-      clearTimeout(this._impactTimer);
-      this._impactTimer = null;
-    }
+    if (this._impactTimer) { clearTimeout(this._impactTimer); this._impactTimer = null; }
+    if (this._followTimer) { clearTimeout(this._followTimer); this._followTimer = null; }
   }
 
   detach() {
@@ -550,9 +561,99 @@ export class HeroSkillShowcase {
       });
     };
 
-    if (this._impactTimer) {
-      clearTimeout(this._impactTimer);
-      this._impactTimer = null;
+    if (this._impactTimer) { clearTimeout(this._impactTimer); this._impactTimer = null; }
+    if (this._followTimer) { clearTimeout(this._followTimer); this._followTimer = null; }
+
+    if (this._followTimer) { clearTimeout(this._followTimer); this._followTimer = null; }
+    if (spec.style === 'self_buff') {
+      this.nextCastAt = now + 3800;
+      this.heroBuffs = [{
+        url: `./assets/fx/${spec.buffKey}.webp?v=303`,
+        color: spec.trail || cfg.color,
+        mode: spec.buffMode || 'pure_defense',
+        bornAt: now,
+        dur: 3600,
+      }];
+      // 在英雄頭頂跳出清晰自身增益浮字
+      this.popups.push({
+        x: this.heroBaseX,
+        y: this.heroBaseY - 96,
+        text: spec.buffText || '✨ 自身增益展開',
+        color: spec.trail || '#fde047',
+        size: 16,
+        isCrit: false,
+        bornAt: now + 80,
+        dur: 1450,
+      });
+      this._spawnImpactSparks(this.heroBaseX, this.heroBaseY - 36, spec.trail || cfg.color, 14);
+
+      if (spec.buffMode === 'ranged_empower' && spec.followProj) {
+        // 類型 B：原地疊加完畢後（0.70s），維持遠程站位連射強化箭矢／法球
+        this._followTimer = setTimeout(() => {
+          this._followTimer = null;
+          if (!this.rafId) return;
+          const tNow = performance.now();
+          this.castAnimUntil = tNow + 480;
+          for (let i = 0; i < 3; i++) {
+            const tgt = this.targets[i % this.targets.length];
+            this.projs.push({
+              url: `./assets/fx/${spec.followProj}.webp`,
+              sx: this.heroBaseX + 34,
+              sy: this.heroBaseY - 30 + (i - 1) * 12,
+              tx: tgt.x,
+              ty: tgt.y - 20,
+              trailColor: spec.trail || cfg.color,
+              bornAt: tNow + i * 75,
+              dur: 210,
+              scale: 0.30,
+            });
+          }
+          this._impactTimer = setTimeout(() => {
+            this._impactTimer = null;
+            if (!this.rafId) return;
+            const iAt = performance.now();
+            if (spec.followSeq) {
+              this.seqAnims.push({ url: `./assets/fx/${spec.followSeq}.webp`, x: fxX, y: fxY, scale: 1.24, bornAt: iAt, fps: 19 });
+            }
+            this._spawnImpactSparks(fxX, fxY, spec.trail || cfg.color, 14);
+            this.targets.forEach((t, ti) => {
+              t.wobbleUntil = iAt + 200;
+              t.punchUntil = iAt + 120;
+              const dmg = Math.round((3200 + Math.random() * 1600) * 1.65);
+              this.popups.push({ x: t.x, y: t.y - 56 - ti * 4, text: `${dmg.toLocaleString()}!`, color: '#fde047', size: 22, isCrit: true, bornAt: iAt + ti * 60, dur: 900 });
+            });
+          }, 210);
+        }, 700);
+      } else if (spec.buffMode === 'melee_empower') {
+        // 類型 C：原地完成戰吼／淬刃疊加（0.78s）後，帶著身上持續光環切入強化斬擊
+        this._followTimer = setTimeout(() => {
+          this._followTimer = null;
+          if (!this.rafId) return;
+          const tNow = performance.now();
+          this.castAnimUntil = tNow + 520;
+          this.dashStartAt = tNow;
+          this.dashUntil = tNow + 500;
+          this.dashTargetX = mainTgt.x - 58;
+          this.dashTargetY = mainTgt.y + 4;
+          this._impactTimer = setTimeout(() => {
+            this._impactTimer = null;
+            if (!this.rafId) return;
+            const iAt = performance.now();
+            if (spec.followSeq) {
+              this.seqAnims.push({ url: `./assets/fx/${spec.followSeq}.webp`, x: fxX, y: fxY, scale: 1.28, bornAt: iAt, fps: 19 });
+            }
+            this._spawnImpactSparks(fxX, fxY, spec.trail || cfg.color, 14);
+            this.targets.forEach((t, ti) => {
+              t.wobbleUntil = iAt + 220;
+              t.punchUntil = iAt + 130;
+              const dmg = Math.round((3600 + Math.random() * 1800) * 1.75);
+              this.popups.push({ x: t.x, y: t.y - 56 - ti * 4, text: `${dmg.toLocaleString()}!`, color: '#fde047', size: 23, isCrit: true, bornAt: iAt + ti * 60, dur: 900 });
+            });
+          }, 190);
+        }, 780);
+      }
+      // 類型 A (pure_defense)：原地完整展現三層護盾／光環，絕不衝向木頭人！
+      return;
     }
 
     if (spec.style === 'proj' && spec.proj) {
@@ -642,6 +743,20 @@ export class HeroSkillShowcase {
           dur: 820,
         });
       }
+    }
+    this.heroBuffs = this.heroBuffs.filter((b) => now - b.bornAt < b.dur);
+    if (this.heroBuffs.length > 0 && Math.random() < 0.32) {
+      const hb = this.heroBuffs[0];
+      this.sparks.push({
+        x: this.heroX + (Math.random() - 0.5) * 62,
+        y: this.heroY - 8 - Math.random() * 24,
+        vx: (Math.random() - 0.5) * 18,
+        vy: -55 - Math.random() * 45,
+        color: hb.color || '#fde047',
+        size: 2.2 + Math.random() * 2.4,
+        bornAt: now,
+        dur: 680,
+      });
     }
     this.popups = this.popups.filter((p) => now - p.bornAt < p.dur);
   }
@@ -745,6 +860,23 @@ export class HeroSkillShowcase {
       }
     }
 
+    // Layer A: 自身疊加底層・腳下 2.5D 透視旋轉符文環
+    for (const hb of this.heroBuffs) {
+      const p = (now - hb.bornAt) / hb.dur;
+      const fade = p < 0.08 ? (p / 0.08) : (p > 0.86 ? Math.max(0, (1 - p) / 0.14) : 1.0);
+      const pulse = 1 + Math.sin(now * 0.007) * 0.05;
+      ctx.save();
+      ctx.globalAlpha = fade * 0.62;
+      ctx.translate(this.heroX, this.heroY + 4);
+      ctx.scale(1.0 * pulse, 0.52 * pulse);
+      ctx.strokeStyle = hb.color || '#fde047';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(0, 0, 56, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
     const hRec = this._loadHeroAtlas(this.classId);
     const pf = HERO_PREFIX[this.classId] || 'wf';
     if (hRec.ready && hRec.frames && hRec.img.complete && hRec.img.naturalWidth > 0) {
@@ -782,6 +914,24 @@ export class HeroSkillShowcase {
         ctx.drawImage(hRec.cleanCanvas || hRec.img, fr.x, fr.y, fr.w, fr.h, this.heroX - dw / 2, this.heroY - dh + 10, dw, dh);
         ctx.restore();
       }
+    }
+
+    // Layer B: 自身疊加中層・全新 2.5D 立體護盾／氣場貼圖（跟隨英雄身軀，零白塊）
+    for (const hb of this.heroBuffs) {
+      const rec = this._loadImg(hb.url);
+      if (!rec.ready || !rec.img.complete || rec.img.naturalWidth <= 0) continue;
+      const elapsed = now - hb.bornAt;
+      const p = elapsed / hb.dur;
+      const fade = p < 0.08 ? (p / 0.08) : (p > 0.86 ? Math.max(0, (1 - p) / 0.14) : 1.0);
+      const popSc = elapsed < 240 ? (0.45 + (elapsed / 240) * 0.65) : (1.0 + Math.sin(now * 0.006) * 0.045);
+      const rot = (now - hb.bornAt) * 0.00055;
+      const size = 156 * popSc;
+      ctx.save();
+      ctx.globalAlpha = fade * 0.92;
+      ctx.translate(this.heroX, this.heroY - 40);
+      ctx.rotate(rot);
+      ctx.drawImage(rec.img, -size / 2, -size / 2, size, size);
+      ctx.restore();
     }
 
     for (const a of this.seqAnims) {

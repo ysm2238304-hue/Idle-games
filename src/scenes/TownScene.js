@@ -1,16 +1,16 @@
 import { CameraZoomHelper } from './CameraZoomHelper.js?v=282';
-import { TOWN_CH1 } from '../data/towns/ch1.js?v=298';
+import { TOWN_CH1 } from '../data/towns/ch1.js?v=303';
 import { LivingNpcEngine } from '../town/LivingNpcEngine.js?v=273';
 import { TownMultiplayerSync } from '../net/TownMultiplayerSync.js?v=274';
-import { TOWN_CH2 } from '../data/towns/ch2.js?v=298';
-import { TOWN_CH3 } from '../data/towns/ch3.js?v=298';
-import { TOWN_CH4 } from '../data/towns/ch4.js?v=298';
-import { TOWN_CH5 } from '../data/towns/ch5.js?v=298';
-import { TOWN_CH6 } from '../data/towns/ch6.js?v=298';
-import { TOWN_CH7 } from '../data/towns/ch7.js?v=298';
-import { TOWN_CH8 } from '../data/towns/ch8.js?v=298';
-import { TOWN_CH9 } from '../data/towns/ch9.js?v=298';
-import { TOWN_CH10 } from '../data/towns/ch10.js?v=298';
+import { TOWN_CH2 } from '../data/towns/ch2.js?v=303';
+import { TOWN_CH3 } from '../data/towns/ch3.js?v=303';
+import { TOWN_CH4 } from '../data/towns/ch4.js?v=303';
+import { TOWN_CH5 } from '../data/towns/ch5.js?v=303';
+import { TOWN_CH6 } from '../data/towns/ch6.js?v=303';
+import { TOWN_CH7 } from '../data/towns/ch7.js?v=303';
+import { TOWN_CH8 } from '../data/towns/ch8.js?v=303';
+import { TOWN_CH9 } from '../data/towns/ch9.js?v=303';
+import { TOWN_CH10 } from '../data/towns/ch10.js?v=303';
 import { formatNum } from '../logic/statCalc.js?v=99';
 import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta } from '../data/pets.js?v=99';
 
@@ -571,8 +571,8 @@ export class TownScene extends Phaser.Scene {
       const dispW = Math.round(spr.displayWidth || (512 * sc));
       const dispH = Math.round(spr.displayHeight || (512 * sc));
       const baseR = b.radius > 0 ? b.radius : Math.round(72 * sc);
-      const hw = Math.max(Math.round(baseR * 1.12), Math.round(dispW * 0.34));
-      const hTop = Math.max(Math.round(baseR * 1.38), Math.round(dispH * 0.48));
+      const hw = Math.max(Math.round(baseR * 0.92), Math.round(dispW * 0.26));
+      const hTop = Math.max(Math.round(baseR * 1.10), Math.round(dispH * 0.36));
       this.rectObstacles.push({
         x1: b.x - hw,
         y1: b.y - hTop,
@@ -1052,11 +1052,36 @@ export class TownScene extends Phaser.Scene {
     return { x: px, y: py };
   }
 
+  _pointInPoly(x, y, poly) {
+    let inside = false;
+    for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+      const xi = poly[i][0], yi = poly[i][1];
+      const xj = poly[j][0], yj = poly[j][1];
+      const intersect = ((yi > y) !== (yj > y)) && (x < ((xj - xi) * (y - yi)) / ((yj - yi) || 1e-9) + xi);
+      if (intersect) inside = !inside;
+    }
+    return inside;
+  }
+
+  _inAnyTerrainZone(x, y, list) {
+    if (!list || list.length === 0) return false;
+    return list.some((z) => (z.poly ? this._pointInPoly(x, y, z.poly) : this._pointInZone(x, y, z)));
+  }
+
   _isWalkable(x, y, footOff = 20) {
-    const zones = this.townData?.walkableZones;
-    if (!zones || zones.length === 0) return true;
+    const td = this.townData;
     const fy = y + footOff;
-    return zones.some((z) => this._pointInZone(x, fy, z));
+    const zones = td?.walkableZones;
+    if (zones && zones.length > 0 && !this._inAnyTerrainZone(x, fy, zones)) {
+      return false;
+    }
+    // v303: 河流／岩漿／深淵／城牆等地形禁區阻擋（橋樑白名單 bridgeZones 放行）
+    const blocked = td?.blockedZones;
+    if (blocked && blocked.length > 0 && this._inAnyTerrainZone(x, fy, blocked)) {
+      const bridges = td?.bridgeZones;
+      if (!this._inAnyTerrainZone(x, fy, bridges)) return false;
+    }
+    return true;
   }
 
   _isBlockedByObstacle(x, y, pad = 22) {
@@ -1112,23 +1137,24 @@ export class TownScene extends Phaser.Scene {
   }
 
   _clampToWalkable(x, y, footOff = 20) {
-    const zones = this.townData?.walkableZones;
     let rx = x, ry = y, clamped = false;
-    if (zones && zones.length > 0) {
-      const fy = y + footOff;
-      if (!zones.some((z) => this._pointInZone(x, fy, z))) {
-        let bx = x, by = fy, bd = Infinity;
-        for (const z of zones) {
-          const pt = this._closestInZone(x, fy, z);
-          const d = Math.hypot(x - pt.x, fy - pt.y);
-          if (d < bd) { bd = d; bx = pt.x; by = pt.y; }
-        }
-        rx = bx;
-        ry = by - footOff;
-        clamped = true;
+    if (!this._isWalkable(rx, ry, footOff)) {
+      // 沿著英雄目前站位往點擊點做二分逼近，精準停在河岸／橋邊／牆邊不穿水
+      const hx = this.hero?.x ?? this.townData?.spawn?.x ?? rx;
+      const hy = this.hero?.y ?? this.townData?.spawn?.y ?? ry;
+      let lo = 0, hi = 1;
+      for (let step = 0; step < 10; step++) {
+        const mid = (lo + hi) * 0.5;
+        const tx = hx + (rx - hx) * mid;
+        const ty = hy + (ry - hy) * mid;
+        if (this._isWalkable(tx, ty, footOff)) lo = mid;
+        else hi = mid;
       }
+      rx = hx + (rx - hx) * lo;
+      ry = hy + (ry - hy) * lo;
+      clamped = true;
     }
-    const out = this._pushOutOfObstacles(rx, ry, 24);
+    const out = this._pushOutOfObstacles(rx, ry, 22);
     return { x: out.x, y: out.y, clamped: clamped || out.pushed };
   }
 

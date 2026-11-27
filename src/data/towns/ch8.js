@@ -15,23 +15,209 @@ export const TOWN_CH8 = {
   "ambientColor": 3718648,
   "particleColor": 16436245,
   "spawn": {
-    "x": 1640,
-    "y": 1120
+    "x": 2020,
+    "y": 1780
   },
   "walkableZones": [
     {
-      "x1": 280,
-      "y1": 260,
-      "x2": 3860,
-      "y2": 2380
+      "poly": [
+        [
+          220,
+          920
+        ],
+        [
+          840,
+          740
+        ],
+        [
+          1380,
+          960
+        ],
+        [
+          1320,
+          1440
+        ],
+        [
+          720,
+          1560
+        ],
+        [
+          220,
+          1280
+        ]
+      ]
+    },
+    {
+      "poly": [
+        [
+          1540,
+          320
+        ],
+        [
+          2060,
+          180
+        ],
+        [
+          2540,
+          380
+        ],
+        [
+          2480,
+          760
+        ],
+        [
+          1980,
+          820
+        ],
+        [
+          1540,
+          640
+        ]
+      ]
+    },
+    {
+      "poly": [
+        [
+          2720,
+          860
+        ],
+        [
+          3320,
+          700
+        ],
+        [
+          3860,
+          920
+        ],
+        [
+          3800,
+          1380
+        ],
+        [
+          3220,
+          1480
+        ],
+        [
+          2720,
+          1240
+        ]
+      ]
+    },
+    {
+      "poly": [
+        [
+          1520,
+          1600
+        ],
+        [
+          2060,
+          1460
+        ],
+        [
+          2580,
+          1660
+        ],
+        [
+          2520,
+          2140
+        ],
+        [
+          1980,
+          2240
+        ],
+        [
+          1520,
+          1980
+        ]
+      ]
+    },
+    {
+      "poly": [
+        [
+          1080,
+          880
+        ],
+        [
+          1740,
+          520
+        ],
+        [
+          1860,
+          720
+        ],
+        [
+          1200,
+          1080
+        ]
+      ]
+    },
+    {
+      "poly": [
+        [
+          2280,
+          540
+        ],
+        [
+          3020,
+          820
+        ],
+        [
+          2920,
+          1020
+        ],
+        [
+          2180,
+          740
+        ]
+      ]
+    },
+    {
+      "poly": [
+        [
+          2920,
+          1180
+        ],
+        [
+          3060,
+          1340
+        ],
+        [
+          2440,
+          1780
+        ],
+        [
+          2280,
+          1620
+        ]
+      ]
+    },
+    {
+      "poly": [
+        [
+          1120,
+          1260
+        ],
+        [
+          1760,
+          1580
+        ],
+        [
+          1640,
+          1780
+        ],
+        [
+          1000,
+          1460
+        ]
+      ]
     }
   ],
   "landmark": {
     "id": "storm_core",
     "name": "聚雷磁能核心球",
     "frame": "ch8_lm_core",
-    "x": 1680,
-    "y": 960,
+    "x": 2040,
+    "y": 1640,
     "scale": 0.84,
     "imgKey": "ch8_b_beacon_v297",
     "imgUrl": "./assets/towns/ch8_b_beacon.webp?v=297",
@@ -44,8 +230,8 @@ export const TOWN_CH8 = {
       "id": "smith",
       "name": "奧術黃銅避雷針鍛造台",
       "frame": "ch8_bld_smith",
-      "x": 740,
-      "y": 560,
+      "x": 680,
+      "y": 1020,
       "scale": 1.08,
       "imgKey": "ch8_b_smith_v297",
       "imgUrl": "./assets/towns/ch8_b_smith.webp?v=297",
@@ -64,16 +250,16 @@ export const TOWN_CH8 = {
       "action": "drawer_upgrade",
       "actionLabel": "開啟電弧鍛造",
       "doorOffset": {
-        "x": 20,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "guild",
       "name": "風暴飛艇貨運金庫",
       "frame": "ch8_bld_guild",
-      "x": 2940,
-      "y": 1660,
+      "x": 3180,
+      "y": 1280,
       "scale": 1.08,
       "imgKey": "ch8_b_guild_v297",
       "imgUrl": "./assets/towns/ch8_b_guild.webp?v=297",
@@ -92,16 +278,16 @@ export const TOWN_CH8 = {
       "action": "drawer_bag",
       "actionLabel": "打開飛艇金庫",
       "doorOffset": {
-        "x": -20,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "alchemy",
       "name": "雲端星露蒸餾玻璃塔",
       "frame": "ch8_bld_alchemy",
-      "x": 2660,
-      "y": 580,
+      "x": 1820,
+      "y": 480,
       "scale": 1.08,
       "imgKey": "ch8_b_alchemy_v297",
       "imgUrl": "./assets/towns/ch8_b_alchemy.webp?v=297",
@@ -120,16 +306,16 @@ export const TOWN_CH8 = {
       "action": "modal_alchemy",
       "actionLabel": "調配雲端藥劑",
       "doorOffset": {
-        "x": -15,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "temple",
       "name": "蒼穹翼騎兵演武神殿",
       "frame": "ch8_bld_temple",
-      "x": 2980,
-      "y": 680,
+      "x": 3160,
+      "y": 960,
       "scale": 1.06,
       "imgKey": "ch8_b_temple_v297",
       "imgUrl": "./assets/towns/ch8_b_temple.webp?v=297",
@@ -148,16 +334,16 @@ export const TOWN_CH8 = {
       "action": "drawer_skills",
       "actionLabel": "配置職業技能",
       "doorOffset": {
-        "x": -15,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "bounty",
       "name": "黃銅電弧懸賞觀測塔",
       "frame": "ch8_bld_bounty",
-      "x": 1020,
-      "y": 640,
+      "x": 1040,
+      "y": 1240,
       "scale": 0.82,
       "imgKey": "ch8_b_bounty_v297",
       "imgUrl": "./assets/towns/ch8_b_bounty.webp?v=297",
@@ -176,16 +362,16 @@ export const TOWN_CH8 = {
       "action": "modal_bounty",
       "actionLabel": "接取蒼穹懸賞",
       "doorOffset": {
-        "x": 12,
-        "y": 76
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "market",
       "name": "浮空飛艇零件黑市攤",
       "frame": "ch8_bld_market",
-      "x": 2480,
-      "y": 1620,
+      "x": 2340,
+      "y": 1820,
       "scale": 1.06,
       "imgKey": "ch8_b_market_v297",
       "imgUrl": "./assets/towns/ch8_b_market.webp?v=297",
@@ -204,16 +390,16 @@ export const TOWN_CH8 = {
       "action": "modal_market",
       "actionLabel": "進入飛艇黑市",
       "doorOffset": {
-        "x": 15,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "altar",
       "name": "雷鳴雲端輪迴聖殿",
       "frame": "ch8_bld_altar",
-      "x": 1380,
-      "y": 1080,
+      "x": 2280,
+      "y": 520,
       "scale": 0.95,
       "imgKey": "ch8_b_temple_v297",
       "imgUrl": "./assets/towns/ch8_b_temple.webp?v=297",
@@ -232,16 +418,16 @@ export const TOWN_CH8 = {
       "action": "drawer_rebirth",
       "actionLabel": "開啟蒼穹輪迴",
       "doorOffset": {
-        "x": 15,
-        "y": 85
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "portal",
       "name": "高壓電弧跳躍傳送塔",
       "frame": "ch8_bld_portal",
-      "x": 1760,
-      "y": 2240,
+      "x": 1980,
+      "y": 2060,
       "scale": 0.82,
       "radius": 65,
       "npc": {
@@ -258,8 +444,8 @@ export const TOWN_CH8 = {
       "imgKey": "ch8_b_portal_v297",
       "imgUrl": "./assets/towns/ch8_b_portal.webp?v=297",
       "doorOffset": {
-        "x": 15,
-        "y": 80
+        "x": 0,
+        "y": 82
       }
     }
   ],
@@ -293,8 +479,8 @@ export const TOWN_CH8 = {
     "id": "dummy",
     "name": "黃銅發條電弧靶偶",
     "frame": "ch8_prop_dummy",
-    "x": 3340,
-    "y": 1680,
+    "x": 3560,
+    "y": 1180,
     "scale": 0.72,
     "radius": 42
   },
@@ -381,12 +567,14 @@ export const TOWN_CH8 = {
   "integratedBuildings": false,
   "modularBuildings": true,
   "portal": {
-    "x": 1760,
-    "y": 2240,
+    "x": 1980,
+    "y": 2060,
     "imgKey": "ch8_b_portal_v297",
     "imgUrl": "./assets/towns/ch8_b_portal.webp?v=297",
     "scale": 0.82,
     "name": "出城戰鬥傳送門",
     "action": "exit_battle"
-  }
+  },
+  "blockedZones": [],
+  "bridgeZones": []
 };

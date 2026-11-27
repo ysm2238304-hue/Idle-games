@@ -15,15 +15,15 @@ export const TOWN_CH4 = {
   "ambientColor": 16347926,
   "particleColor": 16486972,
   "spawn": {
-    "x": 2040,
-    "y": 1320
+    "x": 1960,
+    "y": 1280
   },
   "walkableZones": [
     {
-      "x1": 300,
-      "y1": 320,
-      "x2": 3860,
-      "y2": 2380
+      "x1": 440,
+      "y1": 420,
+      "x2": 3680,
+      "y2": 2240
     }
   ],
   "landmark": {
@@ -31,7 +31,7 @@ export const TOWN_CH4 = {
     "name": "雙頭巨龍熔岩噴泉",
     "frame": "ch4_lm_fountain",
     "x": 1840,
-    "y": 1120,
+    "y": 1020,
     "scale": 0.82,
     "imgKey": "ch4_b_beacon_v295",
     "imgUrl": "./assets/towns/ch4_b_beacon.webp?v=295",
@@ -44,7 +44,7 @@ export const TOWN_CH4 = {
       "id": "smith",
       "name": "巨龍吐息岩漿鍛造巨砧",
       "frame": "ch4_bld_smith",
-      "x": 1060,
+      "x": 1040,
       "y": 640,
       "scale": 1.11,
       "imgKey": "ch4_b_smith_v295",
@@ -64,16 +64,16 @@ export const TOWN_CH4 = {
       "action": "drawer_upgrade",
       "actionLabel": "開啟熔岩鍛造",
       "doorOffset": {
-        "x": 24,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "guild",
       "name": "矮人黑曜石金庫",
       "frame": "ch4_bld_guild",
-      "x": 3080,
-      "y": 1920,
+      "x": 3060,
+      "y": 1980,
       "scale": 1.11,
       "imgKey": "ch4_b_guild_v295",
       "imgUrl": "./assets/towns/ch4_b_guild.webp?v=295",
@@ -92,16 +92,16 @@ export const TOWN_CH4 = {
       "action": "drawer_bag",
       "actionLabel": "打開黑曜石金庫",
       "doorOffset": {
-        "x": -20,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "bounty",
       "name": "焦土戰功鐵碑",
       "frame": "ch4_bld_bounty",
-      "x": 1860,
-      "y": 1460,
+      "x": 1580,
+      "y": 1420,
       "scale": 0.82,
       "imgKey": "ch4_b_bounty_v295",
       "imgUrl": "./assets/towns/ch4_b_bounty.webp?v=295",
@@ -120,16 +120,16 @@ export const TOWN_CH4 = {
       "action": "modal_bounty",
       "actionLabel": "接取裂谷懸賞",
       "doorOffset": {
-        "x": 12,
-        "y": 76
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "altar",
       "name": "火山灰燼輪迴聖壇",
       "frame": "ch4_bld_altar",
-      "x": 2940,
-      "y": 1740,
+      "x": 3160,
+      "y": 1560,
       "scale": 0.95,
       "imgKey": "ch4_b_temple_v295",
       "imgUrl": "./assets/towns/ch4_b_temple.webp?v=295",
@@ -148,16 +148,16 @@ export const TOWN_CH4 = {
       "action": "drawer_rebirth",
       "actionLabel": "開啟灰燼輪迴",
       "doorOffset": {
-        "x": -10,
-        "y": 85
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "alchemy",
       "name": "火山硫磺煉金鍋爐房",
       "frame": "ch4_bld_alchemy",
-      "x": 2240,
-      "y": 1280,
+      "x": 2080,
+      "y": 980,
       "scale": 1.06,
       "imgKey": "ch4_b_alchemy_v295",
       "imgUrl": "./assets/towns/ch4_b_alchemy.webp?v=295",
@@ -176,16 +176,16 @@ export const TOWN_CH4 = {
       "action": "modal_alchemy",
       "actionLabel": "調配火山藥劑",
       "doorOffset": {
-        "x": -15,
-        "y": 85
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "temple",
       "name": "熔岩戰鎚演武場",
       "frame": "ch4_bld_temple",
-      "x": 1420,
-      "y": 720,
+      "x": 1540,
+      "y": 700,
       "scale": 1.06,
       "imgKey": "ch4_b_temple_v295",
       "imgUrl": "./assets/towns/ch4_b_temple.webp?v=295",
@@ -204,16 +204,16 @@ export const TOWN_CH4 = {
       "action": "drawer_skills",
       "actionLabel": "配置職業技能",
       "doorOffset": {
-        "x": 15,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "market",
       "name": "走私熔火軍火帳",
       "frame": "ch4_bld_market",
-      "x": 940,
-      "y": 1940,
+      "x": 880,
+      "y": 1920,
       "scale": 1.08,
       "imgKey": "ch4_b_market_v295",
       "imgUrl": "./assets/towns/ch4_b_market.webp?v=295",
@@ -232,16 +232,16 @@ export const TOWN_CH4 = {
       "action": "modal_market",
       "actionLabel": "進入軍火黑市",
       "doorOffset": {
-        "x": 20,
-        "y": 87
+        "x": 0,
+        "y": 82
       }
     },
     {
       "id": "portal",
       "name": "黑曜石熔岩傳送閘門",
       "frame": "ch4_bld_portal",
-      "x": 2640,
-      "y": 2080,
+      "x": 2620,
+      "y": 2060,
       "scale": 0.82,
       "radius": 65,
       "npc": {
@@ -259,7 +259,7 @@ export const TOWN_CH4 = {
       "imgUrl": "./assets/towns/ch4_b_portal.webp?v=295",
       "doorOffset": {
         "x": 0,
-        "y": 80
+        "y": 82
       }
     }
   ],
@@ -294,7 +294,7 @@ export const TOWN_CH4 = {
     "name": "黑曜石重甲靶人",
     "frame": "ch4_prop_dummy",
     "x": 3380,
-    "y": 1980,
+    "y": 1920,
     "scale": 0.74,
     "radius": 44
   },
@@ -381,12 +381,144 @@ export const TOWN_CH4 = {
   "integratedBuildings": false,
   "modularBuildings": true,
   "portal": {
-    "x": 2640,
-    "y": 2080,
+    "x": 2620,
+    "y": 2060,
     "imgKey": "ch4_b_portal_v295",
     "imgUrl": "./assets/towns/ch4_b_portal.webp?v=295",
     "scale": 0.82,
     "name": "出城戰鬥傳送門",
     "action": "exit_battle"
-  }
+  },
+  "blockedZones": [
+    {
+      "poly": [
+        [
+          2120,
+          0
+        ],
+        [
+          2680,
+          0
+        ],
+        [
+          2920,
+          920
+        ],
+        [
+          3480,
+          1280
+        ],
+        [
+          3320,
+          1660
+        ],
+        [
+          2480,
+          1680
+        ],
+        [
+          2240,
+          1060
+        ]
+      ]
+    },
+    {
+      "poly": [
+        [
+          0,
+          1260
+        ],
+        [
+          920,
+          1480
+        ],
+        [
+          1640,
+          1820
+        ],
+        [
+          1980,
+          2560
+        ],
+        [
+          1340,
+          2560
+        ],
+        [
+          1220,
+          1940
+        ],
+        [
+          720,
+          1660
+        ],
+        [
+          0,
+          1580
+        ]
+      ]
+    }
+  ],
+  "bridgeZones": [
+    {
+      "poly": [
+        [
+          2120,
+          1180
+        ],
+        [
+          3080,
+          1600
+        ],
+        [
+          2940,
+          1840
+        ],
+        [
+          1980,
+          1420
+        ]
+      ]
+    },
+    {
+      "poly": [
+        [
+          540,
+          1460
+        ],
+        [
+          1340,
+          1140
+        ],
+        [
+          1500,
+          1420
+        ],
+        [
+          720,
+          1840
+        ]
+      ]
+    },
+    {
+      "poly": [
+        [
+          2320,
+          680
+        ],
+        [
+          3040,
+          820
+        ],
+        [
+          3000,
+          1020
+        ],
+        [
+          2280,
+          880
+        ]
+      ]
+    }
+  ]
 };

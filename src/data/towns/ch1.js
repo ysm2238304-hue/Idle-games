@@ -17,15 +17,45 @@ export const TOWN_CH1 = {
   "modularBuildings": true,
   "integratedBuildings": false,
   "spawn": {
-    "x": 2120,
+    "x": 2080,
     "y": 1460
   },
   "walkableZones": [
     {
-      "x1": 440,
-      "y1": 420,
-      "x2": 3760,
-      "y2": 2280
+      "poly": [
+        [
+          780,
+          740
+        ],
+        [
+          1640,
+          260
+        ],
+        [
+          3480,
+          280
+        ],
+        [
+          3680,
+          1280
+        ],
+        [
+          3120,
+          2120
+        ],
+        [
+          1280,
+          2120
+        ],
+        [
+          920,
+          1680
+        ],
+        [
+          660,
+          1080
+        ]
+      ]
     }
   ],
   "landmark": {
@@ -35,7 +65,7 @@ export const TOWN_CH1 = {
     "imgKey": "ch1_b_beacon_v294",
     "imgUrl": "./assets/towns/ch1_b_beacon.webp?v=294",
     "x": 2080,
-    "y": 1220,
+    "y": 1140,
     "scale": 0.82,
     "radius": 65,
     "action": "gimmick_beacon",
@@ -48,13 +78,13 @@ export const TOWN_CH1 = {
       "frame": "ch1_bld_smith",
       "imgKey": "ch1_b_smith_v294",
       "imgUrl": "./assets/towns/ch1_b_smith.webp?v=294",
-      "x": 1560,
-      "y": 760,
+      "x": 1520,
+      "y": 740,
       "scale": 1.11,
       "radius": 108,
       "doorOffset": {
-        "x": 20,
-        "y": 85
+        "x": 0,
+        "y": 82
       },
       "workStyle": "forge",
       "npc": {
@@ -76,13 +106,13 @@ export const TOWN_CH1 = {
       "frame": "ch1_bld_alchemy",
       "imgKey": "ch1_b_alchemy_v294",
       "imgUrl": "./assets/towns/ch1_b_alchemy.webp?v=294",
-      "x": 1120,
-      "y": 1020,
+      "x": 1100,
+      "y": 1080,
       "scale": 1.08,
       "radius": 102,
       "doorOffset": {
-        "x": 15,
-        "y": 85
+        "x": 0,
+        "y": 82
       },
       "workStyle": "alchemy",
       "npc": {
@@ -104,13 +134,13 @@ export const TOWN_CH1 = {
       "frame": "ch1_bld_guild",
       "imgKey": "ch1_b_guild_v294",
       "imgUrl": "./assets/towns/ch1_b_guild.webp?v=294",
-      "x": 2360,
-      "y": 640,
+      "x": 2420,
+      "y": 660,
       "scale": 1.14,
       "radius": 110,
       "doorOffset": {
         "x": 0,
-        "y": 87
+        "y": 82
       },
       "workStyle": "guild",
       "npc": {
@@ -132,13 +162,13 @@ export const TOWN_CH1 = {
       "frame": "ch1_bld_temple",
       "imgKey": "ch1_b_temple_v294",
       "imgUrl": "./assets/towns/ch1_b_temple.webp?v=294",
-      "x": 3180,
-      "y": 1440,
+      "x": 3160,
+      "y": 1340,
       "scale": 1.11,
       "radius": 108,
       "doorOffset": {
-        "x": -10,
-        "y": 87
+        "x": 0,
+        "y": 82
       },
       "workStyle": "prayer",
       "npc": {
@@ -160,13 +190,13 @@ export const TOWN_CH1 = {
       "frame": "ch1_bld_market",
       "imgKey": "ch1_b_market_v294",
       "imgUrl": "./assets/towns/ch1_b_market.webp?v=294",
-      "x": 3240,
-      "y": 1820,
+      "x": 2860,
+      "y": 1840,
       "scale": 1.11,
       "radius": 105,
       "doorOffset": {
-        "x": -18,
-        "y": 87
+        "x": 0,
+        "y": 82
       },
       "workStyle": "market",
       "npc": {
@@ -188,13 +218,13 @@ export const TOWN_CH1 = {
       "frame": "ch1_bld_bounty",
       "imgKey": "ch1_b_bounty_v294",
       "imgUrl": "./assets/towns/ch1_b_bounty.webp?v=294",
-      "x": 1520,
-      "y": 1220,
+      "x": 1560,
+      "y": 1260,
       "scale": 0.82,
       "radius": 65,
       "doorOffset": {
-        "x": 10,
-        "y": 76
+        "x": 0,
+        "y": 82
       },
       "workStyle": "bounty",
       "npc": {
@@ -212,8 +242,8 @@ export const TOWN_CH1 = {
     }
   ],
   "portal": {
-    "x": 1180,
-    "y": 1760,
+    "x": 1260,
+    "y": 1780,
     "name": "出城戰鬥傳送門",
     "imgKey": "ch1_b_portal_v294",
     "imgUrl": "./assets/towns/ch1_b_portal.webp?v=294",
@@ -223,8 +253,8 @@ export const TOWN_CH1 = {
   "trainingDummy": {
     "name": "邊境演武木人樁",
     "frame": "ch1_prop_crate",
-    "x": 2660,
-    "y": 1240,
+    "x": 2720,
+    "y": 1220,
     "scale": 0.62,
     "radius": 34
   },
@@ -286,5 +316,7 @@ export const TOWN_CH1 = {
         }
       ]
     }
-  ]
+  ],
+  "blockedZones": [],
+  "bridgeZones": []
 };
