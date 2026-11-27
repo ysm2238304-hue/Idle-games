@@ -1,14 +1,14 @@
-// v286: 第 9 章主城「聖血薔薇修道院」— 三層建築重構（純淨底圖＋8棟專屬風格2.5D建築）
+// v304-4: 第 9 章主城「聖血薔薇修道院」— 全新開闊底圖＋建築／NPC／巡邏點重校
 export const TOWN_CH9 = {
   "chapterIdx": 8,
   "id": "town_ch9",
   "name": "聖血薔薇修道院",
   "subtitle": "第 9 章主城・文藝復興大理石四方迴廊與薔薇中庭",
-  "styleTag": "三層建築重構・方形封閉哥德迴廊玫瑰迷宮",
+  "styleTag": "v304開闊環形廣場・聖血薔薇哥德石砌中庭",
   "mapWidth": 4096,
   "mapHeight": 2560,
-  "bgKey": "town_bg_ch9_v297",
-  "bgUrl": "./assets/bg/town_ch9.webp?v=297",
+  "bgKey": "town_bg_ch9_v304",
+  "bgUrl": "./assets/bg/town_ch9.webp?v=304",
   "atlasKey": "town_atlas_ch9",
   "atlasPng": "./assets/towns/atlas_town_ch9.png",
   "atlasJson": "./assets/towns/atlas_town_ch9.json",
@@ -16,26 +16,26 @@ export const TOWN_CH9 = {
   "particleColor": 16007006,
   "spawn": {
     "x": 2048,
-    "y": 1340
+    "y": 1440
   },
   "walkableZones": [
     {
       "poly": [
         [
-          340,
-          1280
+          2048,
+          280
+        ],
+        [
+          3620,
+          1200
         ],
         [
           2048,
-          220
+          2240
         ],
         [
-          3740,
-          1280
-        ],
-        [
-          2048,
-          2340
+          480,
+          1200
         ]
       ]
     }
@@ -45,7 +45,7 @@ export const TOWN_CH9 = {
     "name": "垂淚聖母血泉",
     "frame": "ch9_lm_fountain",
     "x": 2048,
-    "y": 1120,
+    "y": 1080,
     "scale": 0.84,
     "imgKey": "ch9_b_beacon_v297",
     "imgUrl": "./assets/towns/ch9_b_beacon.webp?v=297",
@@ -58,8 +58,8 @@ export const TOWN_CH9 = {
       "id": "smith",
       "name": "聖光黃金錘洗煉聖台",
       "frame": "ch9_bld_smith",
-      "x": 1120,
-      "y": 780,
+      "x": 1460,
+      "y": 880,
       "scale": 1.08,
       "imgKey": "ch9_b_smith_v297",
       "imgUrl": "./assets/towns/ch9_b_smith.webp?v=297",
@@ -69,8 +69,6 @@ export const TOWN_CH9 = {
         "frame": "ch9_npc_smith",
         "name": "奧古斯",
         "title": "聖光鍛造修士",
-        "x": 840,
-        "y": 494,
         "scale": 0.62,
         "workStyle": "forge",
         "greeting": "以黃金聖錘與聖殿聖火洗煉的武器，能直接斬斷異端與惡魔的詛咒！"
@@ -86,8 +84,8 @@ export const TOWN_CH9 = {
       "id": "alchemy",
       "name": "血薔薇蒸餾聖藥房",
       "frame": "ch9_bld_alchemy",
-      "x": 2980,
-      "y": 780,
+      "x": 2640,
+      "y": 880,
       "scale": 1.08,
       "imgKey": "ch9_b_alchemy_v297",
       "imgUrl": "./assets/towns/ch9_b_alchemy.webp?v=297",
@@ -97,8 +95,6 @@ export const TOWN_CH9 = {
         "frame": "ch9_npc_alchemy",
         "name": "克萊兒",
         "title": "薔薇藥劑修女",
-        "x": 3200,
-        "y": 514,
         "scale": 0.62,
         "workStyle": "alchemy",
         "greeting": "用紅薔薇晨露與聖水蒸餾的秘藥，能讓你在血戰中立於不敗之地。"
@@ -114,8 +110,8 @@ export const TOWN_CH9 = {
       "id": "guild",
       "name": "修道院聖典珍寶庫",
       "frame": "ch9_bld_guild",
-      "x": 2560,
-      "y": 1560,
+      "x": 2048,
+      "y": 580,
       "scale": 1.08,
       "imgKey": "ch9_b_guild_v297",
       "imgUrl": "./assets/towns/ch9_b_guild.webp?v=297",
@@ -125,8 +121,6 @@ export const TOWN_CH9 = {
         "frame": "ch9_npc_guild",
         "name": "格里高利",
         "title": "典藏院長",
-        "x": 3000,
-        "y": 2094,
         "scale": 0.62,
         "workStyle": "guild",
         "greeting": "修道院地窖珍藏著歷代聖騎士的裝備聖典，請隨時整理你的背包。"
@@ -142,8 +136,8 @@ export const TOWN_CH9 = {
       "id": "temple",
       "name": "聖殿十字軍演武迴廊",
       "frame": "ch9_bld_temple",
-      "x": 2048,
-      "y": 360,
+      "x": 3080,
+      "y": 1220,
       "scale": 1.06,
       "imgKey": "ch9_b_temple_v297",
       "imgUrl": "./assets/towns/ch9_b_temple.webp?v=297",
@@ -153,8 +147,6 @@ export const TOWN_CH9 = {
         "frame": "ch9_npc_temple",
         "name": "羅蘭",
         "title": "血色聖騎士長",
-        "x": 2048,
-        "y": 494,
         "scale": 0.62,
         "workStyle": "prayer",
         "greeting": "聖戰士！踏入廢墟之前先在此調整好神聖戰技與天賦樹吧！"
@@ -170,8 +162,8 @@ export const TOWN_CH9 = {
       "id": "bounty",
       "name": "審判庭紅蠟懸賞聖碑",
       "frame": "ch9_bld_bounty",
-      "x": 1560,
-      "y": 980,
+      "x": 1020,
+      "y": 1220,
       "scale": 0.82,
       "imgKey": "ch9_b_bounty_v297",
       "imgUrl": "./assets/towns/ch9_b_bounty.webp?v=297",
@@ -181,8 +173,6 @@ export const TOWN_CH9 = {
         "frame": "ch9_npc_bounty",
         "name": "託馬斯",
         "title": "紅衣審判官",
-        "x": 1452,
-        "y": 744,
         "scale": 0.62,
         "workStyle": "bounty",
         "greeting": "背叛聖光的墮落修女與審判劊子手正在廢墟徘徊，奉命將他們淨化！"
@@ -198,8 +188,8 @@ export const TOWN_CH9 = {
       "id": "market",
       "name": "聖物贖罪券黑市攤",
       "frame": "ch9_bld_market",
-      "x": 1540,
-      "y": 1560,
+      "x": 2640,
+      "y": 1620,
       "scale": 1.06,
       "imgKey": "ch9_b_market_v297",
       "imgUrl": "./assets/towns/ch9_b_market.webp?v=297",
@@ -209,8 +199,6 @@ export const TOWN_CH9 = {
         "frame": "ch9_npc_market",
         "name": "盧卡",
         "title": "贖罪行商",
-        "x": 580,
-        "y": 2034,
         "scale": 0.62,
         "workStyle": "market",
         "greeting": "只要捐獻一點金幣購買聖物盲盒，聖光便會賜予你神話級的奇蹟！"
@@ -226,8 +214,8 @@ export const TOWN_CH9 = {
       "id": "altar",
       "name": "垂淚聖母輪迴祭壇",
       "frame": "ch9_bld_altar",
-      "x": 2540,
-      "y": 980,
+      "x": 2048,
+      "y": 1920,
       "scale": 0.95,
       "imgKey": "ch9_b_temple_v297",
       "imgUrl": "./assets/towns/ch9_b_temple.webp?v=297",
@@ -237,8 +225,6 @@ export const TOWN_CH9 = {
         "frame": "ch9_npc_altar",
         "name": "賽巴斯",
         "title": "血色大主教",
-        "x": 2648,
-        "y": 752,
         "scale": 0.62,
         "workStyle": "prayer",
         "greeting": "在聖母的垂淚注視下洗去塵埃，完成神聖的靈魂輪迴昇華。"
@@ -254,16 +240,14 @@ export const TOWN_CH9 = {
       "id": "portal",
       "name": "玫瑰花窗神聖光門",
       "frame": "ch9_bld_portal",
-      "x": 1260,
-      "y": 1820,
+      "x": 1460,
+      "y": 1620,
       "scale": 0.82,
       "radius": 65,
       "npc": {
         "frame": "ch9_npc_portal",
         "name": "米迦勒",
         "title": "黃金聖門守衛",
-        "x": 1075,
-        "y": 2148,
         "scale": 0.62,
         "greeting": "金色光門直通血色修道院廢墟深處，願聖薔薇之光護佑你凱旋！"
       },
@@ -283,8 +267,8 @@ export const TOWN_CH9 = {
       "frame": "ch9_npc_penitent",
       "name": "特蕾莎",
       "title": "苦行聖女",
-      "x": 1680,
-      "y": 560,
+      "x": 1660,
+      "y": 1260,
       "scale": 0.64,
       "greeting": "願這串薔薇念珠與 80,000 金幣聖糧，支撐你渡過最黑暗的修道院長夜。",
       "action": "modal_penitent",
@@ -295,8 +279,8 @@ export const TOWN_CH9 = {
       "frame": "ch9_prop_bell",
       "name": "聖血修道院黃金大鐘",
       "title": "聖光機關",
-      "x": 2420,
-      "y": 560,
+      "x": 2380,
+      "y": 1500,
       "scale": 0.78,
       "greeting": "敲響修道院黃金大鐘降下聖光洗禮，瞬間恢復全部生命與能量！",
       "action": "gimmick_abbey_bell",
@@ -307,8 +291,8 @@ export const TOWN_CH9 = {
     "id": "dummy",
     "name": "審判庭聖鎧靶偶",
     "frame": "ch9_prop_dummy",
-    "x": 2860,
-    "y": 1760,
+    "x": 2620,
+    "y": 1240,
     "scale": 0.72,
     "radius": 42
   },
@@ -322,20 +306,20 @@ export const TOWN_CH9 = {
       "speed": 74,
       "waypoints": [
         {
-          "x": 1020,
-          "y": 1180
+          "x": 1480,
+          "y": 1200
         },
         {
-          "x": 2048,
-          "y": 640
+          "x": 2520,
+          "y": 1200
         },
         {
-          "x": 3080,
-          "y": 1180
+          "x": 2520,
+          "y": 1480
         },
         {
-          "x": 2048,
-          "y": 1880
+          "x": 1480,
+          "y": 1480
         }
       ]
     },
@@ -346,20 +330,20 @@ export const TOWN_CH9 = {
       "speed": 62,
       "waypoints": [
         {
-          "x": 1460,
-          "y": 1180
+          "x": 1720,
+          "y": 940
         },
         {
-          "x": 2048,
-          "y": 920
+          "x": 2380,
+          "y": 940
         },
         {
-          "x": 2640,
-          "y": 1180
+          "x": 2380,
+          "y": 1620
         },
         {
-          "x": 2048,
-          "y": 1520
+          "x": 1720,
+          "y": 1620
         }
       ]
     },
@@ -370,20 +354,20 @@ export const TOWN_CH9 = {
       "speed": 62,
       "waypoints": [
         {
-          "x": 1120,
-          "y": 1860
+          "x": 1360,
+          "y": 1320
         },
         {
           "x": 2048,
-          "y": 1940
+          "y": 1620
         },
         {
-          "x": 2980,
-          "y": 1880
+          "x": 2740,
+          "y": 1320
         },
         {
           "x": 2048,
-          "y": 1820
+          "y": 920
         }
       ]
     }
@@ -391,95 +375,12 @@ export const TOWN_CH9 = {
   "integratedBuildings": false,
   "modularBuildings": true,
   "portal": {
-    "x": 1260,
-    "y": 1820,
+    "x": 1460,
+    "y": 1620,
     "imgKey": "ch9_b_portal_v297",
     "imgUrl": "./assets/towns/ch9_b_portal.webp?v=297",
     "scale": 0.82,
     "name": "出城戰鬥傳送門",
     "action": "exit_battle"
-  },
-  "blockedZones": [
-    {
-      "poly": [
-        [
-          2048,
-          460
-        ],
-        [
-          2440,
-          700
-        ],
-        [
-          2048,
-          940
-        ],
-        [
-          1656,
-          700
-        ]
-      ]
-    },
-    {
-      "poly": [
-        [
-          2048,
-          1640
-        ],
-        [
-          2440,
-          1880
-        ],
-        [
-          2048,
-          2120
-        ],
-        [
-          1656,
-          1880
-        ]
-      ]
-    },
-    {
-      "poly": [
-        [
-          1080,
-          1020
-        ],
-        [
-          1480,
-          1260
-        ],
-        [
-          1080,
-          1500
-        ],
-        [
-          680,
-          1260
-        ]
-      ]
-    },
-    {
-      "poly": [
-        [
-          3016,
-          1020
-        ],
-        [
-          3416,
-          1260
-        ],
-        [
-          3016,
-          1500
-        ],
-        [
-          2616,
-          1260
-        ]
-      ]
-    }
-  ],
-  "bridgeZones": []
+  }
 };

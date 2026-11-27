@@ -1,129 +1,41 @@
-// v286: 第 10 章主城「永恆星辰聖域」— 三層建築重構（純淨底圖＋8棟專屬風格2.5D建築）
+// v304-4: 第 10 章主城「永恆星辰聖域」— 全新開闊底圖＋建築／NPC／巡邏點重校
 export const TOWN_CH10 = {
   "chapterIdx": 9,
   "id": "town_ch10",
   "name": "永恆星辰聖域",
   "subtitle": "第 10 章終極主城・宇宙星象儀與星軌懸浮聖域",
-  "styleTag": "三層建築重構・雙螺旋星光天橋宇宙聖域",
+  "styleTag": "v304開闊雙排王道・永恆星辰紫金星盤聖域",
   "mapWidth": 4096,
   "mapHeight": 2560,
-  "bgKey": "town_bg_ch10_v297",
-  "bgUrl": "./assets/bg/town_ch10.webp?v=297",
+  "bgKey": "town_bg_ch10_v304",
+  "bgUrl": "./assets/bg/town_ch10.webp?v=304",
   "atlasKey": "town_atlas_ch10",
   "atlasPng": "./assets/towns/atlas_town_ch10.png",
   "atlasJson": "./assets/towns/atlas_town_ch10.json",
   "ambientColor": 12616956,
   "particleColor": 16638023,
   "spawn": {
-    "x": 1620,
-    "y": 1460
+    "x": 2048,
+    "y": 1280
   },
   "walkableZones": [
     {
       "poly": [
         [
-          180,
-          2180
+          540,
+          440
         ],
         [
-          3260,
-          160
+          3556,
+          440
         ],
         [
-          3860,
-          160
+          3556,
+          2080
         ],
         [
-          3860,
-          560
-        ],
-        [
-          780,
-          2420
-        ],
-        [
-          180,
-          2420
-        ]
-      ]
-    },
-    {
-      "poly": [
-        [
-          1400,
-          1120
-        ],
-        [
-          1460,
-          580
-        ],
-        [
-          2180,
-          240
-        ],
-        [
-          2860,
-          320
-        ],
-        [
-          2920,
-          620
-        ],
-        [
-          2200,
-          520
-        ],
-        [
-          1740,
-          820
-        ],
-        [
-          1720,
-          1160
-        ]
-      ]
-    },
-    {
-      "poly": [
-        [
-          1560,
-          1580
-        ],
-        [
-          2160,
-          1860
-        ],
-        [
-          2880,
-          1740
-        ],
-        [
-          3360,
-          1280
-        ],
-        [
-          3340,
-          720
-        ],
-        [
-          3020,
-          720
-        ],
-        [
-          3000,
-          1200
-        ],
-        [
-          2620,
-          1520
-        ],
-        [
-          2080,
-          1560
-        ],
-        [
-          1780,
-          1440
+          540,
+          2080
         ]
       ]
     }
@@ -132,8 +44,8 @@ export const TOWN_CH10 = {
     "id": "astral_orrery",
     "name": "旋轉黑洞星象儀",
     "frame": "ch10_lm_orrery",
-    "x": 2560,
-    "y": 820,
+    "x": 2048,
+    "y": 940,
     "scale": 0.87,
     "imgKey": "ch10_b_beacon_v297",
     "imgUrl": "./assets/towns/ch10_b_beacon.webp?v=297",
@@ -146,8 +58,8 @@ export const TOWN_CH10 = {
       "id": "smith",
       "name": "黑洞重力星辰重鑄儀",
       "frame": "ch10_bld_smith",
-      "x": 1140,
-      "y": 1740,
+      "x": 960,
+      "y": 720,
       "scale": 1.06,
       "imgKey": "ch10_b_smith_v297",
       "imgUrl": "./assets/towns/ch10_b_smith.webp?v=297",
@@ -157,8 +69,6 @@ export const TOWN_CH10 = {
         "frame": "ch10_npc_smith",
         "name": "奧利安",
         "title": "星辰鑄造師",
-        "x": 1260,
-        "y": 1794,
         "scale": 0.62,
         "workStyle": "forge",
         "greeting": "以奇異點黑洞的重力與恆星碎片重鑄的神話裝備，足以撼動宇宙法則！"
@@ -174,8 +84,8 @@ export const TOWN_CH10 = {
       "id": "guild",
       "name": "永恆星庫與神話秘藏殿",
       "frame": "ch10_bld_guild",
-      "x": 3420,
-      "y": 320,
+      "x": 3140,
+      "y": 720,
       "scale": 1.06,
       "imgKey": "ch10_b_guild_v297",
       "imgUrl": "./assets/towns/ch10_b_guild.webp?v=297",
@@ -185,8 +95,6 @@ export const TOWN_CH10 = {
         "frame": "ch10_npc_guild",
         "name": "阿斯特拉",
         "title": "星界典藏官",
-        "x": 3560,
-        "y": 434,
         "scale": 0.62,
         "workStyle": "guild",
         "greeting": "所有星際征戰得來的神話遺物皆已收錄於此，請隨時檢視你的星庫。"
@@ -202,8 +110,8 @@ export const TOWN_CH10 = {
       "id": "alchemy",
       "name": "星雲銀河蒸餾水晶殿",
       "frame": "ch10_bld_alchemy",
-      "x": 1760,
-      "y": 660,
+      "x": 1560,
+      "y": 680,
       "scale": 1.03,
       "imgKey": "ch10_b_alchemy_v297",
       "imgUrl": "./assets/towns/ch10_b_alchemy.webp?v=297",
@@ -213,8 +121,6 @@ export const TOWN_CH10 = {
         "frame": "ch10_npc_alchemy",
         "name": "賽萊斯特",
         "title": "星露煉金師",
-        "x": 1775,
-        "y": 814,
         "scale": 0.62,
         "workStyle": "alchemy",
         "greeting": "這瓶濃縮了超新星餘暉的星露靈藥，將帶給你超越極限的力量。"
@@ -230,8 +136,8 @@ export const TOWN_CH10 = {
       "id": "temple",
       "name": "星界熾天使演武神壇",
       "frame": "ch10_bld_temple",
-      "x": 2960,
-      "y": 580,
+      "x": 2540,
+      "y": 680,
       "scale": 1.06,
       "imgKey": "ch10_b_temple_v297",
       "imgUrl": "./assets/towns/ch10_b_temple.webp?v=297",
@@ -241,8 +147,6 @@ export const TOWN_CH10 = {
         "frame": "ch10_npc_temple",
         "name": "索拉里斯",
         "title": "星界戰神",
-        "x": 2965,
-        "y": 754,
         "scale": 0.62,
         "workStyle": "prayer",
         "greeting": "迎接混沌星界虛空的最終決戰前，將你的技能與天賦調整至完美吧！"
@@ -258,8 +162,8 @@ export const TOWN_CH10 = {
       "id": "bounty",
       "name": "星圖天命懸賞羅盤",
       "frame": "ch10_bld_bounty",
-      "x": 1440,
-      "y": 1540,
+      "x": 1560,
+      "y": 1800,
       "scale": 0.79,
       "imgKey": "ch10_b_bounty_v297",
       "imgUrl": "./assets/towns/ch10_b_bounty.webp?v=297",
@@ -269,8 +173,6 @@ export const TOWN_CH10 = {
         "frame": "ch10_npc_bounty",
         "name": "奧羅拉",
         "title": "星界獵手",
-        "x": 1432,
-        "y": 1644,
         "scale": 0.62,
         "workStyle": "bounty",
         "greeting": "混沌虛空裡的星界吞噬者與墮落熾天使正在擴張，完成天命懸賞吧！"
@@ -286,8 +188,8 @@ export const TOWN_CH10 = {
       "id": "market",
       "name": "虛空星塵奇珍拍賣閣",
       "frame": "ch10_bld_market",
-      "x": 2340,
-      "y": 1240,
+      "x": 3040,
+      "y": 1800,
       "scale": 1.06,
       "imgKey": "ch10_b_market_v297",
       "imgUrl": "./assets/towns/ch10_b_market.webp?v=297",
@@ -297,8 +199,6 @@ export const TOWN_CH10 = {
         "frame": "ch10_npc_market",
         "name": "維加",
         "title": "星界奇珍商",
-        "x": 2325,
-        "y": 1314,
         "scale": 0.62,
         "workStyle": "market",
         "greeting": "來自平行宇宙的神秘星塵寶箱，這裡是神話裝備出現率最高的黑市！"
@@ -314,8 +214,8 @@ export const TOWN_CH10 = {
       "id": "altar",
       "name": "永恆輪迴星辰轉生陣",
       "frame": "ch10_bld_altar",
-      "x": 2080,
-      "y": 1080,
+      "x": 2340,
+      "y": 1800,
       "scale": 0.95,
       "imgKey": "ch10_b_temple_v297",
       "imgUrl": "./assets/towns/ch10_b_temple.webp?v=297",
@@ -325,8 +225,6 @@ export const TOWN_CH10 = {
         "frame": "ch10_npc_altar",
         "name": "克羅諾斯",
         "title": "時間與星界大先知",
-        "x": 2135,
-        "y": 1092,
         "scale": 0.62,
         "workStyle": "prayer",
         "greeting": "時間在此靜止、宇宙在此重啟，踏入星陣完成你的永恆輪迴超越。"
@@ -342,16 +240,14 @@ export const TOWN_CH10 = {
       "id": "portal",
       "name": "宇宙星門蟲洞羅盤",
       "frame": "ch10_bld_portal",
-      "x": 640,
-      "y": 2160,
+      "x": 960,
+      "y": 1800,
       "scale": 0.84,
       "radius": 65,
       "npc": {
         "frame": "ch10_npc_portal",
         "name": "諾瓦",
         "title": "星門守護神",
-        "x": 660,
-        "y": 2288,
         "scale": 0.62,
         "greeting": "宇宙蟲洞已鎖定混沌星界虛空終點，隨時準備展開最後一戰！"
       },
@@ -371,8 +267,8 @@ export const TOWN_CH10 = {
       "frame": "ch10_npc_weaver",
       "name": "伊莉雅",
       "title": "星界編織者",
-      "x": 1980,
-      "y": 1340,
+      "x": 1340,
+      "y": 1260,
       "scale": 0.64,
       "greeting": "偉大的旅者，你已走完十界征途！收下這份星界編織者的終極贈禮吧！",
       "action": "modal_weaver",
@@ -383,8 +279,8 @@ export const TOWN_CH10 = {
       "frame": "ch10_prop_starwell",
       "name": "星界銀河許願泉",
       "title": "星辰聖泉",
-      "x": 2840,
-      "y": 920,
+      "x": 2660,
+      "y": 1300,
       "scale": 0.78,
       "greeting": "沐浴於流淌星塵的銀河許願泉，瞬間恢復全部生命與能量！",
       "action": "gimmick_star_well",
@@ -395,8 +291,8 @@ export const TOWN_CH10 = {
     "id": "dummy",
     "name": "星界黃金構造體靶",
     "frame": "ch10_prop_dummy",
-    "x": 3560,
-    "y": 360,
+    "x": 3100,
+    "y": 1280,
     "scale": 0.74,
     "radius": 42
   },
@@ -410,24 +306,20 @@ export const TOWN_CH10 = {
       "speed": 78,
       "waypoints": [
         {
-          "x": 960,
-          "y": 1940
+          "x": 840,
+          "y": 1220
         },
         {
-          "x": 1920,
-          "y": 1320
+          "x": 3260,
+          "y": 1220
         },
         {
-          "x": 2860,
-          "y": 880
+          "x": 3260,
+          "y": 1400
         },
         {
-          "x": 2120,
-          "y": 740
-        },
-        {
-          "x": 1920,
-          "y": 1260
+          "x": 840,
+          "y": 1400
         }
       ]
     },
@@ -438,20 +330,20 @@ export const TOWN_CH10 = {
       "speed": 64,
       "waypoints": [
         {
-          "x": 2040,
-          "y": 1380
+          "x": 1260,
+          "y": 1060
         },
         {
-          "x": 2580,
-          "y": 1860
+          "x": 2820,
+          "y": 1060
         },
         {
-          "x": 3360,
-          "y": 1540
+          "x": 2820,
+          "y": 1520
         },
         {
-          "x": 2740,
-          "y": 1260
+          "x": 1260,
+          "y": 1520
         }
       ]
     },
@@ -462,20 +354,12 @@ export const TOWN_CH10 = {
       "speed": 64,
       "waypoints": [
         {
-          "x": 1380,
-          "y": 1160
+          "x": 1560,
+          "y": 1320
         },
         {
-          "x": 1920,
-          "y": 1260
-        },
-        {
-          "x": 2440,
-          "y": 1040
-        },
-        {
-          "x": 1880,
-          "y": 1220
+          "x": 2520,
+          "y": 1320
         }
       ]
     }
@@ -483,14 +367,12 @@ export const TOWN_CH10 = {
   "integratedBuildings": false,
   "modularBuildings": true,
   "portal": {
-    "x": 640,
-    "y": 2160,
+    "x": 960,
+    "y": 1800,
     "imgKey": "ch10_b_portal_v297",
     "imgUrl": "./assets/towns/ch10_b_portal.webp?v=297",
     "scale": 0.84,
     "name": "出城戰鬥傳送門",
     "action": "exit_battle"
-  },
-  "blockedZones": [],
-  "bridgeZones": []
+  }
 };

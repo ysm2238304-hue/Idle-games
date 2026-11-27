@@ -7,8 +7,8 @@ export const TOWN_CH3 = {
   "styleTag": "三層建築重構・南北哥德教堂中殿雙翼",
   "mapWidth": 4096,
   "mapHeight": 2560,
-  "bgKey": "town_bg_ch3_v295",
-  "bgUrl": "./assets/bg/town_ch3.webp?v=295",
+  "bgKey": "town_bg_ch3_v304",
+  "bgUrl": "./assets/bg/town_ch3.webp?v=304",
   "atlasKey": "town_atlas_ch3",
   "atlasPng": "./assets/towns/atlas_town_ch3.png",
   "atlasJson": "./assets/towns/atlas_town_ch3.json",
@@ -16,14 +16,14 @@ export const TOWN_CH3 = {
   "particleColor": 8246268,
   "spawn": {
     "x": 2048,
-    "y": 1520
+    "y": 1480
   },
   "walkableZones": [
     {
-      "x1": 540,
-      "y1": 460,
-      "x2": 3560,
-      "y2": 2260
+      "x1": 460,
+      "y1": 380,
+      "x2": 3640,
+      "y2": 2200
     }
   ],
   "landmark": {
@@ -31,7 +31,7 @@ export const TOWN_CH3 = {
     "name": "靈魂永恆火盆",
     "frame": "ch3_lm_brazier",
     "x": 2048,
-    "y": 660,
+    "y": 1140,
     "scale": 0.84,
     "imgKey": "ch3_b_beacon_v295",
     "imgUrl": "./assets/towns/ch3_b_beacon.webp?v=295",
@@ -44,8 +44,8 @@ export const TOWN_CH3 = {
       "id": "smith",
       "name": "魂火附魔鍛造石台",
       "frame": "ch3_bld_smith",
-      "x": 920,
-      "y": 820,
+      "x": 960,
+      "y": 660,
       "scale": 1.08,
       "imgKey": "ch3_b_smith_v295",
       "imgUrl": "./assets/towns/ch3_b_smith.webp?v=295",
@@ -72,8 +72,8 @@ export const TOWN_CH3 = {
       "id": "alchemy",
       "name": "骨灰聖水煉金室",
       "frame": "ch3_bld_alchemy",
-      "x": 900,
-      "y": 1820,
+      "x": 960,
+      "y": 1940,
       "scale": 1.08,
       "imgKey": "ch3_b_alchemy_v295",
       "imgUrl": "./assets/towns/ch3_b_alchemy.webp?v=295",
@@ -100,8 +100,8 @@ export const TOWN_CH3 = {
       "id": "guild",
       "name": "守夜人聖物保管庫",
       "frame": "ch3_bld_guild",
-      "x": 3120,
-      "y": 820,
+      "x": 3180,
+      "y": 660,
       "scale": 1.11,
       "imgKey": "ch3_b_guild_v295",
       "imgUrl": "./assets/towns/ch3_b_guild.webp?v=295",
@@ -128,8 +128,8 @@ export const TOWN_CH3 = {
       "id": "temple",
       "name": "聖骨騎士演武殿",
       "frame": "ch3_bld_temple",
-      "x": 2048,
-      "y": 1080,
+      "x": 2600,
+      "y": 660,
       "scale": 1.11,
       "imgKey": "ch3_b_temple_v295",
       "imgUrl": "./assets/towns/ch3_b_temple.webp?v=295",
@@ -156,8 +156,8 @@ export const TOWN_CH3 = {
       "id": "bounty",
       "name": "墓園亡靈通緝碑",
       "frame": "ch3_bld_bounty",
-      "x": 1660,
-      "y": 1660,
+      "x": 940,
+      "y": 1340,
       "scale": 0.82,
       "imgKey": "ch3_b_bounty_v295",
       "imgUrl": "./assets/towns/ch3_b_bounty.webp?v=295",
@@ -184,8 +184,8 @@ export const TOWN_CH3 = {
       "id": "market",
       "name": "午夜棺槨黑市攤",
       "frame": "ch3_bld_market",
-      "x": 3100,
-      "y": 1420,
+      "x": 3160,
+      "y": 1340,
       "scale": 1.08,
       "imgKey": "ch3_b_market_v295",
       "imgUrl": "./assets/towns/ch3_b_market.webp?v=295",
@@ -212,8 +212,8 @@ export const TOWN_CH3 = {
       "id": "altar",
       "name": "大教堂永恆輪迴聖壇",
       "frame": "ch3_bld_altar",
-      "x": 940,
-      "y": 1320,
+      "x": 1520,
+      "y": 660,
       "scale": 0.98,
       "imgKey": "ch3_b_temple_v295",
       "imgUrl": "./assets/towns/ch3_b_temple.webp?v=295",
@@ -241,7 +241,7 @@ export const TOWN_CH3 = {
       "name": "哥德刻文傳送墓碑門",
       "frame": "ch3_bld_portal",
       "x": 2048,
-      "y": 2140,
+      "y": 2080,
       "scale": 0.84,
       "radius": 65,
       "npc": {
@@ -269,8 +269,8 @@ export const TOWN_CH3 = {
       "frame": "ch3_npc_chronicler",
       "name": "阿爾文",
       "title": "亡靈記錄者",
-      "x": 2340,
-      "y": 1340,
+      "x": 1660,
+      "y": 1240,
       "scale": 0.62,
       "greeting": "我用魂羽筆記錄了每一位踏入墓穴的勇者，這份聖骨補給請收下。",
       "action": "modal_chronicler",
@@ -281,8 +281,8 @@ export const TOWN_CH3 = {
       "frame": "ch3_prop_candle",
       "name": "祈禱幽藍燭台",
       "title": "教堂聖壇",
-      "x": 1680,
-      "y": 1240,
+      "x": 2440,
+      "y": 1520,
       "scale": 0.72,
       "greeting": "點燃守夜人的藍蠟禱告燭台，撫平傷痛並回復全部狀態。",
       "action": "gimmick_candle_shrine",
@@ -293,8 +293,8 @@ export const TOWN_CH3 = {
     "id": "dummy",
     "name": "骸骨騎士盔甲靶",
     "frame": "ch3_prop_dummy",
-    "x": 3340,
-    "y": 1760,
+    "x": 2740,
+    "y": 1280,
     "scale": 0.72,
     "radius": 42
   },
@@ -308,20 +308,20 @@ export const TOWN_CH3 = {
       "speed": 74,
       "waypoints": [
         {
-          "x": 2048,
-          "y": 780
+          "x": 1380,
+          "y": 1280
         },
         {
-          "x": 2048,
-          "y": 1360
+          "x": 2700,
+          "y": 1280
         },
         {
-          "x": 2048,
-          "y": 2020
+          "x": 2700,
+          "y": 1620
         },
         {
-          "x": 2048,
-          "y": 1360
+          "x": 1380,
+          "y": 1620
         }
       ]
     },
@@ -332,20 +332,12 @@ export const TOWN_CH3 = {
       "speed": 62,
       "waypoints": [
         {
-          "x": 1280,
-          "y": 1420
+          "x": 2048,
+          "y": 820
         },
         {
-          "x": 940,
-          "y": 1720
-        },
-        {
-          "x": 1580,
-          "y": 1860
-        },
-        {
-          "x": 1820,
-          "y": 1640
+          "x": 2048,
+          "y": 1760
         }
       ]
     },
@@ -356,19 +348,19 @@ export const TOWN_CH3 = {
       "speed": 58,
       "waypoints": [
         {
-          "x": 2860,
-          "y": 1280
+          "x": 1360,
+          "y": 980
         },
         {
-          "x": 3180,
-          "y": 1520
+          "x": 2680,
+          "y": 980
         },
         {
-          "x": 3080,
-          "y": 1840
+          "x": 2680,
+          "y": 1660
         },
         {
-          "x": 2560,
+          "x": 1360,
           "y": 1660
         }
       ]
@@ -378,38 +370,13 @@ export const TOWN_CH3 = {
   "modularBuildings": true,
   "portal": {
     "x": 2048,
-    "y": 2140,
+    "y": 2080,
     "imgKey": "ch3_b_portal_v295",
     "imgUrl": "./assets/towns/ch3_b_portal.webp?v=295",
     "scale": 0.84,
     "name": "出城戰鬥傳送門",
     "action": "exit_battle"
   },
-  "blockedZones": [
-    {
-      "x1": 1240,
-      "y1": 360,
-      "x2": 1440,
-      "y2": 1080
-    },
-    {
-      "x1": 1240,
-      "y1": 1620,
-      "x2": 1440,
-      "y2": 2120
-    },
-    {
-      "x1": 2580,
-      "y1": 360,
-      "x2": 2780,
-      "y2": 1080
-    },
-    {
-      "x1": 2580,
-      "y1": 1620,
-      "x2": 2780,
-      "y2": 2120
-    }
-  ],
+  "blockedZones": [],
   "bridgeZones": []
 };

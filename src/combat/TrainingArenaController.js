@@ -60,6 +60,7 @@ export class TrainingArenaController {
       s.projectiles.forEach((p) => p?.sprite?.destroy?.());
       s.projectiles.length = 0;
     }
+    s.monsterSkills?.clearAll?.();
     s.clearAllMonsters?.();
     this.meter.reset();
 
@@ -85,7 +86,8 @@ export class TrainingArenaController {
         n.dataset.v301Hidden = '1';
         n.style.display = 'none';
       });
-      s.clearAllMonsters?.();
+      s.monsterSkills?.clearAll?.();
+    s.clearAllMonsters?.();
       if (s.hero?.active) {
         s.hero.setPosition(1860, 1152);
         s.cameras?.main?.centerOn(2048, 1152);
@@ -127,6 +129,7 @@ export class TrainingArenaController {
       n.style.display = '';
       delete n.dataset.v301Hidden;
     });
+    s.monsterSkills?.clearAll?.();
     s.clearAllMonsters?.();
     if (Array.isArray(s.projectiles)) {
       s.projectiles.forEach((p) => p?.sprite?.destroy?.());
@@ -197,6 +200,7 @@ export class TrainingArenaController {
   spawnFormation(form) {
     this.formation = (form === 'boss' || form === 'pack') ? form : 'trio';
     const s = this.scene;
+    s.monsterSkills?.clearAll?.();
     s.clearAllMonsters?.();
     const cx = 2130, cy = 1152;
     let specs = [];

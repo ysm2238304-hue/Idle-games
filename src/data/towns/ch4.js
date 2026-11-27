@@ -7,30 +7,60 @@ export const TOWN_CH4 = {
   "styleTag": "三層建築重構・三層火山階梯鍛造平台",
   "mapWidth": 4096,
   "mapHeight": 2560,
-  "bgKey": "town_bg_ch4_v295",
-  "bgUrl": "./assets/bg/town_ch4.webp?v=295",
+  "bgKey": "town_bg_ch4_v304",
+  "bgUrl": "./assets/bg/town_ch4.webp?v=304",
   "atlasKey": "town_atlas_ch4",
   "atlasPng": "./assets/towns/atlas_town_ch4.png",
   "atlasJson": "./assets/towns/atlas_town_ch4.json",
   "ambientColor": 16347926,
   "particleColor": 16486972,
   "spawn": {
-    "x": 1960,
-    "y": 1280
+    "x": 2048,
+    "y": 1320
   },
   "walkableZones": [
     {
-      "x1": 440,
-      "y1": 420,
-      "x2": 3680,
-      "y2": 2240
+      "poly": [
+        [
+          440,
+          620
+        ],
+        [
+          1100,
+          380
+        ],
+        [
+          2980,
+          380
+        ],
+        [
+          3640,
+          620
+        ],
+        [
+          3640,
+          1960
+        ],
+        [
+          2980,
+          2180
+        ],
+        [
+          1100,
+          2180
+        ],
+        [
+          440,
+          1960
+        ]
+      ]
     }
   ],
   "landmark": {
     "id": "lava_fountain",
     "name": "雙頭巨龍熔岩噴泉",
     "frame": "ch4_lm_fountain",
-    "x": 1840,
+    "x": 2048,
     "y": 1020,
     "scale": 0.82,
     "imgKey": "ch4_b_beacon_v295",
@@ -44,8 +74,8 @@ export const TOWN_CH4 = {
       "id": "smith",
       "name": "巨龍吐息岩漿鍛造巨砧",
       "frame": "ch4_bld_smith",
-      "x": 1040,
-      "y": 640,
+      "x": 980,
+      "y": 720,
       "scale": 1.11,
       "imgKey": "ch4_b_smith_v295",
       "imgUrl": "./assets/towns/ch4_b_smith.webp?v=295",
@@ -72,8 +102,8 @@ export const TOWN_CH4 = {
       "id": "guild",
       "name": "矮人黑曜石金庫",
       "frame": "ch4_bld_guild",
-      "x": 3060,
-      "y": 1980,
+      "x": 3140,
+      "y": 720,
       "scale": 1.11,
       "imgKey": "ch4_b_guild_v295",
       "imgUrl": "./assets/towns/ch4_b_guild.webp?v=295",
@@ -100,8 +130,8 @@ export const TOWN_CH4 = {
       "id": "bounty",
       "name": "焦土戰功鐵碑",
       "frame": "ch4_bld_bounty",
-      "x": 1580,
-      "y": 1420,
+      "x": 1560,
+      "y": 1920,
       "scale": 0.82,
       "imgKey": "ch4_b_bounty_v295",
       "imgUrl": "./assets/towns/ch4_b_bounty.webp?v=295",
@@ -128,8 +158,8 @@ export const TOWN_CH4 = {
       "id": "altar",
       "name": "火山灰燼輪迴聖壇",
       "frame": "ch4_bld_altar",
-      "x": 3160,
-      "y": 1560,
+      "x": 2160,
+      "y": 1920,
       "scale": 0.95,
       "imgKey": "ch4_b_temple_v295",
       "imgUrl": "./assets/towns/ch4_b_temple.webp?v=295",
@@ -156,8 +186,8 @@ export const TOWN_CH4 = {
       "id": "alchemy",
       "name": "火山硫磺煉金鍋爐房",
       "frame": "ch4_bld_alchemy",
-      "x": 2080,
-      "y": 980,
+      "x": 1620,
+      "y": 680,
       "scale": 1.06,
       "imgKey": "ch4_b_alchemy_v295",
       "imgUrl": "./assets/towns/ch4_b_alchemy.webp?v=295",
@@ -184,8 +214,8 @@ export const TOWN_CH4 = {
       "id": "temple",
       "name": "熔岩戰鎚演武場",
       "frame": "ch4_bld_temple",
-      "x": 1540,
-      "y": 700,
+      "x": 2480,
+      "y": 680,
       "scale": 1.06,
       "imgKey": "ch4_b_temple_v295",
       "imgUrl": "./assets/towns/ch4_b_temple.webp?v=295",
@@ -212,7 +242,7 @@ export const TOWN_CH4 = {
       "id": "market",
       "name": "走私熔火軍火帳",
       "frame": "ch4_bld_market",
-      "x": 880,
+      "x": 2760,
       "y": 1920,
       "scale": 1.08,
       "imgKey": "ch4_b_market_v295",
@@ -240,8 +270,8 @@ export const TOWN_CH4 = {
       "id": "portal",
       "name": "黑曜石熔岩傳送閘門",
       "frame": "ch4_bld_portal",
-      "x": 2620,
-      "y": 2060,
+      "x": 920,
+      "y": 1920,
       "scale": 0.82,
       "radius": 65,
       "npc": {
@@ -269,8 +299,8 @@ export const TOWN_CH4 = {
       "frame": "ch4_npc_forgemaster",
       "name": "赫菲斯",
       "title": "火元素鍛造宗師",
-      "x": 1260,
-      "y": 840,
+      "x": 1380,
+      "y": 1280,
       "scale": 0.64,
       "greeting": "凡人，你的勇氣堪比純淨的赤炎。收下這份熔爐宗師的贈禮吧！",
       "action": "modal_forgemaster",
@@ -281,8 +311,8 @@ export const TOWN_CH4 = {
       "frame": "ch4_prop_sluice",
       "name": "熔岩閘門壓力閥",
       "title": "冷卻機關",
-      "x": 2420,
-      "y": 1480,
+      "x": 2540,
+      "y": 1340,
       "scale": 0.72,
       "greeting": "釋放高壓冷卻蒸汽，瞬間撫平熱傷並回復全部生命與能量！",
       "action": "gimmick_lava_sluice",
@@ -293,8 +323,8 @@ export const TOWN_CH4 = {
     "id": "dummy",
     "name": "黑曜石重甲靶人",
     "frame": "ch4_prop_dummy",
-    "x": 3380,
-    "y": 1920,
+    "x": 2920,
+    "y": 1320,
     "scale": 0.74,
     "radius": 44
   },
@@ -308,24 +338,20 @@ export const TOWN_CH4 = {
       "speed": 74,
       "waypoints": [
         {
-          "x": 1480,
-          "y": 980
+          "x": 860,
+          "y": 1260
         },
         {
-          "x": 2140,
-          "y": 1420
+          "x": 3240,
+          "y": 1260
         },
         {
-          "x": 2860,
-          "y": 1220
+          "x": 3240,
+          "y": 1460
         },
         {
-          "x": 2340,
-          "y": 1620
-        },
-        {
-          "x": 3140,
-          "y": 1940
+          "x": 860,
+          "y": 1460
         }
       ]
     },
@@ -336,20 +362,20 @@ export const TOWN_CH4 = {
       "speed": 62,
       "waypoints": [
         {
-          "x": 1160,
-          "y": 1980
+          "x": 1260,
+          "y": 1160
         },
         {
-          "x": 1980,
-          "y": 2180
+          "x": 2760,
+          "y": 1160
         },
         {
-          "x": 2860,
-          "y": 2080
+          "x": 2760,
+          "y": 1520
         },
         {
-          "x": 2040,
-          "y": 2160
+          "x": 1260,
+          "y": 1520
         }
       ]
     },
@@ -360,20 +386,12 @@ export const TOWN_CH4 = {
       "speed": 62,
       "waypoints": [
         {
-          "x": 2860,
-          "y": 1120
-        },
-        {
-          "x": 3320,
-          "y": 1240
-        },
-        {
-          "x": 3020,
-          "y": 1380
+          "x": 1520,
+          "y": 1340
         },
         {
           "x": 2580,
-          "y": 1320
+          "y": 1340
         }
       ]
     }
@@ -381,144 +399,14 @@ export const TOWN_CH4 = {
   "integratedBuildings": false,
   "modularBuildings": true,
   "portal": {
-    "x": 2620,
-    "y": 2060,
+    "x": 920,
+    "y": 1920,
     "imgKey": "ch4_b_portal_v295",
     "imgUrl": "./assets/towns/ch4_b_portal.webp?v=295",
     "scale": 0.82,
     "name": "出城戰鬥傳送門",
     "action": "exit_battle"
   },
-  "blockedZones": [
-    {
-      "poly": [
-        [
-          2120,
-          0
-        ],
-        [
-          2680,
-          0
-        ],
-        [
-          2920,
-          920
-        ],
-        [
-          3480,
-          1280
-        ],
-        [
-          3320,
-          1660
-        ],
-        [
-          2480,
-          1680
-        ],
-        [
-          2240,
-          1060
-        ]
-      ]
-    },
-    {
-      "poly": [
-        [
-          0,
-          1260
-        ],
-        [
-          920,
-          1480
-        ],
-        [
-          1640,
-          1820
-        ],
-        [
-          1980,
-          2560
-        ],
-        [
-          1340,
-          2560
-        ],
-        [
-          1220,
-          1940
-        ],
-        [
-          720,
-          1660
-        ],
-        [
-          0,
-          1580
-        ]
-      ]
-    }
-  ],
-  "bridgeZones": [
-    {
-      "poly": [
-        [
-          2120,
-          1180
-        ],
-        [
-          3080,
-          1600
-        ],
-        [
-          2940,
-          1840
-        ],
-        [
-          1980,
-          1420
-        ]
-      ]
-    },
-    {
-      "poly": [
-        [
-          540,
-          1460
-        ],
-        [
-          1340,
-          1140
-        ],
-        [
-          1500,
-          1420
-        ],
-        [
-          720,
-          1840
-        ]
-      ]
-    },
-    {
-      "poly": [
-        [
-          2320,
-          680
-        ],
-        [
-          3040,
-          820
-        ],
-        [
-          3000,
-          1020
-        ],
-        [
-          2280,
-          880
-        ]
-      ]
-    }
-  ]
+  "blockedZones": [],
+  "bridgeZones": []
 };

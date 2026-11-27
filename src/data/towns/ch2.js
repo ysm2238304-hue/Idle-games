@@ -7,31 +7,61 @@ export const TOWN_CH2 = {
   "styleTag": "三層建築重構・S型地下螢光河雙拱橋",
   "mapWidth": 4096,
   "mapHeight": 2560,
-  "bgKey": "town_bg_ch2_v295",
-  "bgUrl": "./assets/bg/town_ch2.webp?v=295",
+  "bgKey": "town_bg_ch2_v304",
+  "bgUrl": "./assets/bg/town_ch2.webp?v=304",
   "atlasKey": "town_atlas_ch2",
   "atlasPng": "./assets/towns/atlas_town_ch2.png",
   "atlasJson": "./assets/towns/atlas_town_ch2.json",
   "ambientColor": 11032055,
   "particleColor": 3462041,
   "spawn": {
-    "x": 1420,
-    "y": 1160
+    "x": 2048,
+    "y": 1440
   },
   "walkableZones": [
     {
-      "x1": 480,
-      "y1": 480,
-      "x2": 3660,
-      "y2": 2220
+      "poly": [
+        [
+          540,
+          620
+        ],
+        [
+          1160,
+          320
+        ],
+        [
+          2940,
+          320
+        ],
+        [
+          3560,
+          620
+        ],
+        [
+          3620,
+          1920
+        ],
+        [
+          2960,
+          2240
+        ],
+        [
+          1140,
+          2240
+        ],
+        [
+          480,
+          1920
+        ]
+      ]
     }
   ],
   "landmark": {
     "id": "spore_fountain",
     "name": "螢光孢子噴泉",
     "frame": "ch2_lm_fountain",
-    "x": 1220,
-    "y": 920,
+    "x": 2048,
+    "y": 1060,
     "scale": 0.82,
     "imgKey": "ch2_b_beacon_v295",
     "imgUrl": "./assets/towns/ch2_b_beacon.webp?v=295",
@@ -44,8 +74,8 @@ export const TOWN_CH2 = {
       "id": "smith",
       "name": "地精蒸汽鍛造鍋爐",
       "frame": "ch2_bld_smith",
-      "x": 680,
-      "y": 1020,
+      "x": 1120,
+      "y": 720,
       "scale": 1.08,
       "imgKey": "ch2_b_smith_v295",
       "imgUrl": "./assets/towns/ch2_b_smith.webp?v=295",
@@ -72,8 +102,8 @@ export const TOWN_CH2 = {
       "id": "guild",
       "name": "地精金庫與贓物倉庫",
       "frame": "ch2_bld_guild",
-      "x": 3260,
-      "y": 1860,
+      "x": 2048,
+      "y": 560,
       "scale": 1.11,
       "imgKey": "ch2_b_guild_v295",
       "imgUrl": "./assets/towns/ch2_b_guild.webp?v=295",
@@ -100,8 +130,8 @@ export const TOWN_CH2 = {
       "id": "bounty",
       "name": "洞窟懸賞石柱",
       "frame": "ch2_bld_bounty",
-      "x": 1080,
-      "y": 1380,
+      "x": 880,
+      "y": 1320,
       "scale": 0.84,
       "imgKey": "ch2_b_bounty_v295",
       "imgUrl": "./assets/towns/ch2_b_bounty.webp?v=295",
@@ -128,8 +158,8 @@ export const TOWN_CH2 = {
       "id": "market",
       "name": "哥布林黑市拍賣棚",
       "frame": "ch2_bld_market",
-      "x": 1380,
-      "y": 1720,
+      "x": 2520,
+      "y": 1940,
       "scale": 1.08,
       "imgKey": "ch2_b_market_v295",
       "imgUrl": "./assets/towns/ch2_b_market.webp?v=295",
@@ -156,8 +186,8 @@ export const TOWN_CH2 = {
       "id": "altar",
       "name": "地下菌絲輪迴石陣",
       "frame": "ch2_bld_altar",
-      "x": 1040,
-      "y": 640,
+      "x": 1740,
+      "y": 1960,
       "scale": 0.98,
       "imgKey": "ch2_b_temple_v295",
       "imgUrl": "./assets/towns/ch2_b_temple.webp?v=295",
@@ -184,8 +214,8 @@ export const TOWN_CH2 = {
       "id": "alchemy",
       "name": "螢光孢子煉金菇屋",
       "frame": "ch2_bld_alchemy",
-      "x": 3220,
-      "y": 960,
+      "x": 2980,
+      "y": 720,
       "scale": 1.08,
       "imgKey": "ch2_b_alchemy_v295",
       "imgUrl": "./assets/towns/ch2_b_alchemy.webp?v=295",
@@ -212,8 +242,8 @@ export const TOWN_CH2 = {
       "id": "temple",
       "name": "地下角鬥士訓練坑",
       "frame": "ch2_bld_temple",
-      "x": 2820,
-      "y": 980,
+      "x": 3240,
+      "y": 1320,
       "scale": 1.08,
       "imgKey": "ch2_b_temple_v295",
       "imgUrl": "./assets/towns/ch2_b_temple.webp?v=295",
@@ -240,8 +270,8 @@ export const TOWN_CH2 = {
       "id": "portal",
       "name": "地下礦車軌道升降梯",
       "frame": "ch2_bld_portal",
-      "x": 920,
-      "y": 1980,
+      "x": 1040,
+      "y": 1920,
       "scale": 0.82,
       "radius": 65,
       "npc": {
@@ -269,8 +299,8 @@ export const TOWN_CH2 = {
       "frame": "ch2_npc_smuggler",
       "name": "尼克",
       "title": "洞窟走私客",
-      "x": 1320,
-      "y": 1940,
+      "x": 1620,
+      "y": 1240,
       "scale": 0.62,
       "greeting": "噓……我剛從哥布林酋長金庫順手摸了一批貨，這份見面禮拿去用吧！",
       "action": "modal_smuggler",
@@ -281,8 +311,8 @@ export const TOWN_CH2 = {
       "frame": "ch2_prop_pipes",
       "name": "高壓蒸汽閥門",
       "title": "洞窟機關",
-      "x": 920,
-      "y": 1240,
+      "x": 2440,
+      "y": 1480,
       "scale": 0.72,
       "greeting": "轉動生鏽的紅鐵閥門釋放地底高壓蒸汽！",
       "action": "gimmick_steam_valve",
@@ -293,8 +323,8 @@ export const TOWN_CH2 = {
     "id": "dummy",
     "name": "地精鐵皮靶人",
     "frame": "ch2_prop_dummy",
-    "x": 3460,
-    "y": 1240,
+    "x": 2780,
+    "y": 1280,
     "scale": 0.72,
     "radius": 42
   },
@@ -308,24 +338,20 @@ export const TOWN_CH2 = {
       "speed": 78,
       "waypoints": [
         {
-          "x": 940,
-          "y": 1220
+          "x": 1420,
+          "y": 1160
         },
         {
-          "x": 1660,
-          "y": 940
+          "x": 2640,
+          "y": 1160
         },
         {
-          "x": 2520,
-          "y": 980
-        },
-        {
-          "x": 2140,
-          "y": 1380
+          "x": 2640,
+          "y": 1620
         },
         {
           "x": 1420,
-          "y": 1760
+          "y": 1620
         }
       ]
     },
@@ -336,20 +362,20 @@ export const TOWN_CH2 = {
       "speed": 65,
       "waypoints": [
         {
-          "x": 2680,
-          "y": 1120
+          "x": 1240,
+          "y": 1520
         },
         {
-          "x": 3320,
-          "y": 1260
+          "x": 2048,
+          "y": 1520
         },
         {
-          "x": 3120,
-          "y": 1780
+          "x": 2860,
+          "y": 1520
         },
         {
-          "x": 2760,
-          "y": 1660
+          "x": 2048,
+          "y": 1340
         }
       ]
     },
@@ -360,20 +386,20 @@ export const TOWN_CH2 = {
       "speed": 65,
       "waypoints": [
         {
-          "x": 2860,
-          "y": 1520
+          "x": 1620,
+          "y": 900
         },
         {
-          "x": 3240,
-          "y": 1640
+          "x": 2480,
+          "y": 900
         },
         {
-          "x": 3460,
-          "y": 1980
+          "x": 2480,
+          "y": 1380
         },
         {
-          "x": 2980,
-          "y": 1940
+          "x": 1620,
+          "y": 1380
         }
       ]
     }
@@ -381,100 +407,14 @@ export const TOWN_CH2 = {
   "integratedBuildings": false,
   "modularBuildings": true,
   "portal": {
-    "x": 920,
-    "y": 1980,
+    "x": 1040,
+    "y": 1920,
     "imgKey": "ch2_b_portal_v295",
     "imgUrl": "./assets/towns/ch2_b_portal.webp?v=295",
     "scale": 0.82,
     "name": "出城戰鬥傳送門",
     "action": "exit_battle"
   },
-  "blockedZones": [
-    {
-      "poly": [
-        [
-          2720,
-          0
-        ],
-        [
-          3220,
-          0
-        ],
-        [
-          2620,
-          740
-        ],
-        [
-          2540,
-          1320
-        ],
-        [
-          2280,
-          1860
-        ],
-        [
-          1620,
-          2560
-        ],
-        [
-          920,
-          2560
-        ],
-        [
-          1560,
-          1720
-        ],
-        [
-          1760,
-          1140
-        ],
-        [
-          2180,
-          560
-        ]
-      ]
-    }
-  ],
-  "bridgeZones": [
-    {
-      "poly": [
-        [
-          1620,
-          500
-        ],
-        [
-          2620,
-          620
-        ],
-        [
-          2580,
-          840
-        ],
-        [
-          1580,
-          720
-        ]
-      ]
-    },
-    {
-      "poly": [
-        [
-          1580,
-          1320
-        ],
-        [
-          2620,
-          1640
-        ],
-        [
-          2540,
-          1880
-        ],
-        [
-          1500,
-          1560
-        ]
-      ]
-    }
-  ]
+  "blockedZones": [],
+  "bridgeZones": []
 };

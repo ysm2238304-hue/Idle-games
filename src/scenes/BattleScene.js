@@ -19,7 +19,7 @@ import { AssassinVfxDirector } from '../vfx/AssassinVfxDirector.js?v=266';
 import { PaladinVfxDirector } from '../vfx/PaladinVfxDirector.js?v=266';
 import { FloatingTextPool } from '../vfx/FloatingTextPool.js?v=298';
 import { ParticlePool } from '../vfx/ParticlePool.js?v=266';
-import { TrainingArenaController } from '../combat/TrainingArenaController.js?v=303';
+import { TrainingArenaController } from '../combat/TrainingArenaController.js?v=304';
 import { BattleMiniDpsHud } from '../ui/BattleMiniDpsHud.js?v=302';
 import { CameraZoomHelper } from './CameraZoomHelper.js?v=282';
 import { MonsterVfxDirector } from '../vfx/MonsterVfxDirector.js?v=293';
@@ -1283,7 +1283,10 @@ export class BattleScene extends Phaser.Scene {
     this.trainingArena?.update(time, delta);
     this.miniDpsHud?.update(time);
     this.cameraZoom?.update(delta);
-    this.monsterSkills?.update(time, delta, this.getStats());
+    // v304-1: 演武場內徹底停用 MonsterSkillEngine，禁止木頭人施放任何主動技能或紅圈
+    if (!this.isTrainingMode && !this.trainingArena?.active) {
+      this.monsterSkills?.update(time, delta, this.getStats());
+    }
     const stForMp = this.getStats();
     const dtSec = delta / 1000;
     this.playerMaxMp = stForMp.maxMp || 100;
@@ -1860,6 +1863,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   triggerBossWarningAoe(m, stats) {
+    if (this.isTrainingMode || this.trainingArena?.active || m?.isTrainingDummy) return;
     if (!m || m.hp <= 0 || this.isTransitioning) return;
     const tx = this.hero.x;
     const ty = this.hero.y + 10;
