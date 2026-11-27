@@ -32,10 +32,10 @@ export const TOWN_CH5 = {
     "frame": "ch5_lm_sigil",
     "x": 2340,
     "y": 1060,
-    "scale": 0.64,
+    "scale": 0.84,
     "imgKey": "ch5_b_beacon_v296",
     "imgUrl": "./assets/towns/ch5_b_beacon.webp?v=296",
-    "radius": 52,
+    "radius": 65,
     "action": "gimmick_abyss_sigil",
     "tip": "啟動深淵召喚巨陣（5 分鐘 攻擊+30% / 爆傷+20% / 掉寶+25%）"
   },
@@ -46,11 +46,11 @@ export const TOWN_CH5 = {
       "frame": "ch5_bld_smith",
       "x": 1240,
       "y": 680,
-      "scale": 0.82,
+      "scale": 1.08,
       "imgKey": "ch5_b_smith_v296",
       "imgUrl": "./assets/towns/ch5_b_smith.webp?v=296",
       "workStyle": "forge",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch5_npc_smith",
         "name": "瑪門",
@@ -65,7 +65,7 @@ export const TOWN_CH5 = {
       "actionLabel": "開啟魔火鍛造",
       "doorOffset": {
         "x": 24,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -74,11 +74,11 @@ export const TOWN_CH5 = {
       "frame": "ch5_bld_alchemy",
       "x": 2060,
       "y": 420,
-      "scale": 0.78,
+      "scale": 1.03,
       "imgKey": "ch5_b_alchemy_v296",
       "imgUrl": "./assets/towns/ch5_b_alchemy.webp?v=296",
       "workStyle": "alchemy",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch5_npc_alchemy",
         "name": "莉莉絲",
@@ -93,7 +93,7 @@ export const TOWN_CH5 = {
       "actionLabel": "調配猩紅魔藥",
       "doorOffset": {
         "x": 15,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -102,11 +102,11 @@ export const TOWN_CH5 = {
       "frame": "ch5_bld_guild",
       "x": 3520,
       "y": 1120,
-      "scale": 0.82,
+      "scale": 1.08,
       "imgKey": "ch5_b_guild_v296",
       "imgUrl": "./assets/towns/ch5_b_guild.webp?v=296",
       "workStyle": "guild",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch5_npc_guild",
         "name": "貝利亞",
@@ -121,7 +121,7 @@ export const TOWN_CH5 = {
       "actionLabel": "打開珍寶背包",
       "doorOffset": {
         "x": -20,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -130,11 +130,11 @@ export const TOWN_CH5 = {
       "frame": "ch5_bld_temple",
       "x": 2960,
       "y": 560,
-      "scale": 0.82,
+      "scale": 1.08,
       "imgKey": "ch5_b_temple_v296",
       "imgUrl": "./assets/towns/ch5_b_temple.webp?v=296",
       "workStyle": "prayer",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch5_npc_temple",
         "name": "巴爾",
@@ -149,7 +149,7 @@ export const TOWN_CH5 = {
       "actionLabel": "配置職業技能",
       "doorOffset": {
         "x": -15,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -158,11 +158,11 @@ export const TOWN_CH5 = {
       "frame": "ch5_bld_bounty",
       "x": 1540,
       "y": 1620,
-      "scale": 0.62,
+      "scale": 0.82,
       "imgKey": "ch5_b_bounty_v296",
       "imgUrl": "./assets/towns/ch5_b_bounty.webp?v=296",
       "workStyle": "bounty",
-      "radius": 52,
+      "radius": 65,
       "npc": {
         "frame": "ch5_npc_bounty",
         "name": "凱恩",
@@ -177,7 +177,7 @@ export const TOWN_CH5 = {
       "actionLabel": "接取血契懸賞",
       "doorOffset": {
         "x": 15,
-        "y": 64
+        "y": 76
       }
     },
     {
@@ -186,11 +186,11 @@ export const TOWN_CH5 = {
       "frame": "ch5_bld_market",
       "x": 3140,
       "y": 1760,
-      "scale": 0.82,
+      "scale": 1.08,
       "imgKey": "ch5_b_market_v296",
       "imgUrl": "./assets/towns/ch5_b_market.webp?v=296",
       "workStyle": "market",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch5_npc_market",
         "name": "阿斯莫德",
@@ -205,7 +205,7 @@ export const TOWN_CH5 = {
       "actionLabel": "進入魔王黑市",
       "doorOffset": {
         "x": -20,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -214,11 +214,11 @@ export const TOWN_CH5 = {
       "frame": "ch5_bld_altar",
       "x": 2540,
       "y": 880,
-      "scale": 0.72,
+      "scale": 0.95,
       "imgKey": "ch5_b_temple_v296",
       "imgUrl": "./assets/towns/ch5_b_temple.webp?v=296",
       "workStyle": "prayer",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch5_npc_altar",
         "name": "馬拉基",
@@ -233,7 +233,7 @@ export const TOWN_CH5 = {
       "actionLabel": "開啟血祭輪迴",
       "doorOffset": {
         "x": -15,
-        "y": 72
+        "y": 85
       }
     },
     {
@@ -242,8 +242,8 @@ export const TOWN_CH5 = {
       "frame": "ch5_bld_portal",
       "x": 740,
       "y": 2120,
-      "scale": 0.62,
-      "radius": 52,
+      "scale": 0.82,
+      "radius": 65,
       "npc": {
         "frame": "ch5_npc_portal",
         "name": "阿撒茲勒",
@@ -259,7 +259,7 @@ export const TOWN_CH5 = {
       "imgUrl": "./assets/towns/ch5_b_portal.webp?v=296",
       "doorOffset": {
         "x": 20,
-        "y": 68
+        "y": 80
       }
     }
   ],
@@ -385,7 +385,7 @@ export const TOWN_CH5 = {
     "y": 2120,
     "imgKey": "ch5_b_portal_v296",
     "imgUrl": "./assets/towns/ch5_b_portal.webp?v=296",
-    "scale": 0.62,
+    "scale": 0.82,
     "name": "出城戰鬥傳送門",
     "action": "exit_battle"
   }

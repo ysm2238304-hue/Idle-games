@@ -32,10 +32,10 @@ export const TOWN_CH3 = {
     "frame": "ch3_lm_brazier",
     "x": 2048,
     "y": 640,
-    "scale": 0.64,
+    "scale": 0.84,
     "imgKey": "ch3_b_beacon_v295",
     "imgUrl": "./assets/towns/ch3_b_beacon.webp?v=295",
-    "radius": 52,
+    "radius": 65,
     "action": "gimmick_soul_brazier",
     "tip": "點燃靈魂永恆火盆（5 分鐘 攻擊+18% / 爆傷+25% / 掉寶+15%）"
   },
@@ -46,11 +46,11 @@ export const TOWN_CH3 = {
       "frame": "ch3_bld_smith",
       "x": 1060,
       "y": 820,
-      "scale": 0.82,
+      "scale": 1.08,
       "imgKey": "ch3_b_smith_v295",
       "imgUrl": "./assets/towns/ch3_b_smith.webp?v=295",
       "workStyle": "forge",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch3_npc_smith",
         "name": "莫德",
@@ -65,7 +65,7 @@ export const TOWN_CH3 = {
       "actionLabel": "開啟魂火鍛造",
       "doorOffset": {
         "x": 20,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -74,11 +74,11 @@ export const TOWN_CH3 = {
       "frame": "ch3_bld_alchemy",
       "x": 880,
       "y": 1760,
-      "scale": 0.82,
+      "scale": 1.08,
       "imgKey": "ch3_b_alchemy_v295",
       "imgUrl": "./assets/towns/ch3_b_alchemy.webp?v=295",
       "workStyle": "alchemy",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch3_npc_alchemy",
         "name": "薇拉",
@@ -93,7 +93,7 @@ export const TOWN_CH3 = {
       "actionLabel": "調配聖水藥劑",
       "doorOffset": {
         "x": 20,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -102,11 +102,11 @@ export const TOWN_CH3 = {
       "frame": "ch3_bld_guild",
       "x": 3040,
       "y": 820,
-      "scale": 0.84,
+      "scale": 1.11,
       "imgKey": "ch3_b_guild_v295",
       "imgUrl": "./assets/towns/ch3_b_guild.webp?v=295",
       "workStyle": "guild",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch3_npc_guild",
         "name": "賽拉斯",
@@ -121,7 +121,7 @@ export const TOWN_CH3 = {
       "actionLabel": "打開聖物背包",
       "doorOffset": {
         "x": -15,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -130,11 +130,11 @@ export const TOWN_CH3 = {
       "frame": "ch3_bld_temple",
       "x": 2048,
       "y": 920,
-      "scale": 0.84,
+      "scale": 1.11,
       "imgKey": "ch3_b_temple_v295",
       "imgUrl": "./assets/towns/ch3_b_temple.webp?v=295",
       "workStyle": "prayer",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch3_npc_temple",
         "name": "亞瑟",
@@ -149,7 +149,7 @@ export const TOWN_CH3 = {
       "actionLabel": "配置職業技能",
       "doorOffset": {
         "x": 0,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -158,11 +158,11 @@ export const TOWN_CH3 = {
       "frame": "ch3_bld_bounty",
       "x": 1540,
       "y": 1680,
-      "scale": 0.62,
+      "scale": 0.82,
       "imgKey": "ch3_b_bounty_v295",
       "imgUrl": "./assets/towns/ch3_b_bounty.webp?v=295",
       "workStyle": "bounty",
-      "radius": 52,
+      "radius": 65,
       "npc": {
         "frame": "ch3_npc_bounty",
         "name": "范倫鐵",
@@ -177,7 +177,7 @@ export const TOWN_CH3 = {
       "actionLabel": "查看亡靈懸賞",
       "doorOffset": {
         "x": 10,
-        "y": 64
+        "y": 76
       }
     },
     {
@@ -186,11 +186,11 @@ export const TOWN_CH3 = {
       "frame": "ch3_bld_market",
       "x": 3120,
       "y": 1740,
-      "scale": 0.82,
+      "scale": 1.08,
       "imgKey": "ch3_b_market_v295",
       "imgUrl": "./assets/towns/ch3_b_market.webp?v=295",
       "workStyle": "market",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch3_npc_market",
         "name": "卡隆",
@@ -205,7 +205,7 @@ export const TOWN_CH3 = {
       "actionLabel": "開棺賭裝黑市",
       "doorOffset": {
         "x": -20,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -214,11 +214,11 @@ export const TOWN_CH3 = {
       "frame": "ch3_bld_altar",
       "x": 1140,
       "y": 1180,
-      "scale": 0.74,
+      "scale": 0.98,
       "imgKey": "ch3_b_temple_v295",
       "imgUrl": "./assets/towns/ch3_b_temple.webp?v=295",
       "workStyle": "prayer",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch3_npc_altar",
         "name": "伊萊亞斯",
@@ -233,7 +233,7 @@ export const TOWN_CH3 = {
       "actionLabel": "開啟聖壇輪迴",
       "doorOffset": {
         "x": 15,
-        "y": 72
+        "y": 85
       }
     },
     {
@@ -242,8 +242,8 @@ export const TOWN_CH3 = {
       "frame": "ch3_bld_portal",
       "x": 2048,
       "y": 2180,
-      "scale": 0.64,
-      "radius": 52,
+      "scale": 0.84,
+      "radius": 65,
       "npc": {
         "frame": "ch3_npc_portal",
         "name": "加百列",
@@ -259,7 +259,7 @@ export const TOWN_CH3 = {
       "imgUrl": "./assets/towns/ch3_b_portal.webp?v=295",
       "doorOffset": {
         "x": 0,
-        "y": 68
+        "y": 80
       }
     }
   ],
@@ -381,7 +381,7 @@ export const TOWN_CH3 = {
     "y": 2180,
     "imgKey": "ch3_b_portal_v295",
     "imgUrl": "./assets/towns/ch3_b_portal.webp?v=295",
-    "scale": 0.64,
+    "scale": 0.84,
     "name": "出城戰鬥傳送門",
     "action": "exit_battle"
   }

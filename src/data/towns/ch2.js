@@ -32,10 +32,10 @@ export const TOWN_CH2 = {
     "frame": "ch2_lm_fountain",
     "x": 1240,
     "y": 920,
-    "scale": 0.62,
+    "scale": 0.82,
     "imgKey": "ch2_b_beacon_v295",
     "imgUrl": "./assets/towns/ch2_b_beacon.webp?v=295",
-    "radius": 52,
+    "radius": 65,
     "action": "gimmick_spore_fountain",
     "tip": "觸發螢光孢子噴泉（5 分鐘 攻速+20% / 爆擊+15% / 金幣+20%）"
   },
@@ -46,11 +46,11 @@ export const TOWN_CH2 = {
       "frame": "ch2_bld_smith",
       "x": 720,
       "y": 1020,
-      "scale": 0.82,
+      "scale": 1.08,
       "imgKey": "ch2_b_smith_v295",
       "imgUrl": "./assets/towns/ch2_b_smith.webp?v=295",
       "workStyle": "forge",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch2_npc_smith",
         "name": "巴克",
@@ -65,7 +65,7 @@ export const TOWN_CH2 = {
       "actionLabel": "開啟蒸汽鍛造",
       "doorOffset": {
         "x": 24,
-        "y": 72
+        "y": 85
       }
     },
     {
@@ -74,11 +74,11 @@ export const TOWN_CH2 = {
       "frame": "ch2_bld_guild",
       "x": 3340,
       "y": 1840,
-      "scale": 0.84,
+      "scale": 1.11,
       "imgKey": "ch2_b_guild_v295",
       "imgUrl": "./assets/towns/ch2_b_guild.webp?v=295",
       "workStyle": "guild",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch2_npc_guild",
         "name": "葛林",
@@ -93,7 +93,7 @@ export const TOWN_CH2 = {
       "actionLabel": "打開金庫背包",
       "doorOffset": {
         "x": -20,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -102,11 +102,11 @@ export const TOWN_CH2 = {
       "frame": "ch2_bld_bounty",
       "x": 1140,
       "y": 1340,
-      "scale": 0.64,
+      "scale": 0.84,
       "imgKey": "ch2_b_bounty_v295",
       "imgUrl": "./assets/towns/ch2_b_bounty.webp?v=295",
       "workStyle": "bounty",
-      "radius": 52,
+      "radius": 65,
       "npc": {
         "frame": "ch2_npc_bounty",
         "name": "維克斯",
@@ -121,7 +121,7 @@ export const TOWN_CH2 = {
       "actionLabel": "接取洞窟懸賞",
       "doorOffset": {
         "x": 12,
-        "y": 64
+        "y": 76
       }
     },
     {
@@ -130,11 +130,11 @@ export const TOWN_CH2 = {
       "frame": "ch2_bld_market",
       "x": 1420,
       "y": 1680,
-      "scale": 0.82,
+      "scale": 1.08,
       "imgKey": "ch2_b_market_v295",
       "imgUrl": "./assets/towns/ch2_b_market.webp?v=295",
       "workStyle": "market",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch2_npc_market",
         "name": "金牙",
@@ -149,7 +149,7 @@ export const TOWN_CH2 = {
       "actionLabel": "進入黑市（八折優惠）",
       "doorOffset": {
         "x": 15,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -158,11 +158,11 @@ export const TOWN_CH2 = {
       "frame": "ch2_bld_altar",
       "x": 1080,
       "y": 720,
-      "scale": 0.74,
+      "scale": 0.98,
       "imgKey": "ch2_b_temple_v295",
       "imgUrl": "./assets/towns/ch2_b_temple.webp?v=295",
       "workStyle": "prayer",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch2_npc_altar",
         "name": "烏爾",
@@ -177,7 +177,7 @@ export const TOWN_CH2 = {
       "actionLabel": "開啟菌絲輪迴",
       "doorOffset": {
         "x": 15,
-        "y": 72
+        "y": 85
       }
     },
     {
@@ -186,11 +186,11 @@ export const TOWN_CH2 = {
       "frame": "ch2_bld_alchemy",
       "x": 3120,
       "y": 1040,
-      "scale": 0.82,
+      "scale": 1.08,
       "imgKey": "ch2_b_alchemy_v295",
       "imgUrl": "./assets/towns/ch2_b_alchemy.webp?v=295",
       "workStyle": "alchemy",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch2_npc_alchemy",
         "name": "莫拉",
@@ -205,7 +205,7 @@ export const TOWN_CH2 = {
       "actionLabel": "調配孢子藥水",
       "doorOffset": {
         "x": -20,
-        "y": 72
+        "y": 85
       }
     },
     {
@@ -214,11 +214,11 @@ export const TOWN_CH2 = {
       "frame": "ch2_bld_temple",
       "x": 2720,
       "y": 1120,
-      "scale": 0.82,
+      "scale": 1.08,
       "imgKey": "ch2_b_temple_v295",
       "imgUrl": "./assets/towns/ch2_b_temple.webp?v=295",
       "workStyle": "prayer",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch2_npc_temple",
         "name": "斯卡",
@@ -233,7 +233,7 @@ export const TOWN_CH2 = {
       "actionLabel": "配置職業技能",
       "doorOffset": {
         "x": 0,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -242,8 +242,8 @@ export const TOWN_CH2 = {
       "frame": "ch2_bld_portal",
       "x": 940,
       "y": 2060,
-      "scale": 0.62,
-      "radius": 52,
+      "scale": 0.82,
+      "radius": 65,
       "npc": {
         "frame": "ch2_npc_portal",
         "name": "托比",
@@ -259,7 +259,7 @@ export const TOWN_CH2 = {
       "imgUrl": "./assets/towns/ch2_b_portal.webp?v=295",
       "doorOffset": {
         "x": 20,
-        "y": 68
+        "y": 80
       }
     }
   ],
@@ -385,7 +385,7 @@ export const TOWN_CH2 = {
     "y": 2060,
     "imgKey": "ch2_b_portal_v295",
     "imgUrl": "./assets/towns/ch2_b_portal.webp?v=295",
-    "scale": 0.62,
+    "scale": 0.82,
     "name": "出城戰鬥傳送門",
     "action": "exit_battle"
   }

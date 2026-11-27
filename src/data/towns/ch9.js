@@ -32,10 +32,10 @@ export const TOWN_CH9 = {
     "frame": "ch9_lm_fountain",
     "x": 2048,
     "y": 1080,
-    "scale": 0.64,
+    "scale": 0.84,
     "imgKey": "ch9_b_beacon_v297",
     "imgUrl": "./assets/towns/ch9_b_beacon.webp?v=297",
-    "radius": 52,
+    "radius": 65,
     "action": "gimmick_blood_fountain",
     "tip": "沐浴垂淚聖母血泉（5 分鐘 攻擊+35% / 爆傷+25% / 吸血+5%）"
   },
@@ -46,11 +46,11 @@ export const TOWN_CH9 = {
       "frame": "ch9_bld_smith",
       "x": 820,
       "y": 420,
-      "scale": 0.82,
+      "scale": 1.08,
       "imgKey": "ch9_b_smith_v297",
       "imgUrl": "./assets/towns/ch9_b_smith.webp?v=297",
       "workStyle": "forge",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch9_npc_smith",
         "name": "奧古斯",
@@ -65,7 +65,7 @@ export const TOWN_CH9 = {
       "actionLabel": "開啟聖光洗煉",
       "doorOffset": {
         "x": 20,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -74,11 +74,11 @@ export const TOWN_CH9 = {
       "frame": "ch9_bld_alchemy",
       "x": 3220,
       "y": 440,
-      "scale": 0.82,
+      "scale": 1.08,
       "imgKey": "ch9_b_alchemy_v297",
       "imgUrl": "./assets/towns/ch9_b_alchemy.webp?v=297",
       "workStyle": "alchemy",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch9_npc_alchemy",
         "name": "克萊兒",
@@ -93,7 +93,7 @@ export const TOWN_CH9 = {
       "actionLabel": "調配薔薇聖藥",
       "doorOffset": {
         "x": -20,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -102,11 +102,11 @@ export const TOWN_CH9 = {
       "frame": "ch9_bld_guild",
       "x": 3020,
       "y": 2020,
-      "scale": 0.82,
+      "scale": 1.08,
       "imgKey": "ch9_b_guild_v297",
       "imgUrl": "./assets/towns/ch9_b_guild.webp?v=297",
       "workStyle": "guild",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch9_npc_guild",
         "name": "格里高利",
@@ -121,7 +121,7 @@ export const TOWN_CH9 = {
       "actionLabel": "打開聖典珍寶庫",
       "doorOffset": {
         "x": -20,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -130,11 +130,11 @@ export const TOWN_CH9 = {
       "frame": "ch9_bld_temple",
       "x": 2048,
       "y": 420,
-      "scale": 0.8,
+      "scale": 1.06,
       "imgKey": "ch9_b_temple_v297",
       "imgUrl": "./assets/towns/ch9_b_temple.webp?v=297",
       "workStyle": "prayer",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch9_npc_temple",
         "name": "羅蘭",
@@ -149,7 +149,7 @@ export const TOWN_CH9 = {
       "actionLabel": "配置職業技能",
       "doorOffset": {
         "x": 0,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -158,11 +158,11 @@ export const TOWN_CH9 = {
       "frame": "ch9_bld_bounty",
       "x": 1440,
       "y": 680,
-      "scale": 0.62,
+      "scale": 0.82,
       "imgKey": "ch9_b_bounty_v297",
       "imgUrl": "./assets/towns/ch9_b_bounty.webp?v=297",
       "workStyle": "bounty",
-      "radius": 52,
+      "radius": 65,
       "npc": {
         "frame": "ch9_npc_bounty",
         "name": "託馬斯",
@@ -177,7 +177,7 @@ export const TOWN_CH9 = {
       "actionLabel": "接取審判懸賞",
       "doorOffset": {
         "x": 12,
-        "y": 64
+        "y": 76
       }
     },
     {
@@ -186,11 +186,11 @@ export const TOWN_CH9 = {
       "frame": "ch9_bld_market",
       "x": 560,
       "y": 1960,
-      "scale": 0.8,
+      "scale": 1.06,
       "imgKey": "ch9_b_market_v297",
       "imgUrl": "./assets/towns/ch9_b_market.webp?v=297",
       "workStyle": "market",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch9_npc_market",
         "name": "盧卡",
@@ -205,7 +205,7 @@ export const TOWN_CH9 = {
       "actionLabel": "進入聖物黑市",
       "doorOffset": {
         "x": 20,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -214,11 +214,11 @@ export const TOWN_CH9 = {
       "frame": "ch9_bld_altar",
       "x": 2660,
       "y": 680,
-      "scale": 0.72,
+      "scale": 0.95,
       "imgKey": "ch9_b_temple_v297",
       "imgUrl": "./assets/towns/ch9_b_temple.webp?v=297",
       "workStyle": "prayer",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch9_npc_altar",
         "name": "賽巴斯",
@@ -233,7 +233,7 @@ export const TOWN_CH9 = {
       "actionLabel": "開啟聖母輪迴",
       "doorOffset": {
         "x": -12,
-        "y": 72
+        "y": 85
       }
     },
     {
@@ -242,8 +242,8 @@ export const TOWN_CH9 = {
       "frame": "ch9_bld_portal",
       "x": 1060,
       "y": 2080,
-      "scale": 0.62,
-      "radius": 52,
+      "scale": 0.82,
+      "radius": 65,
       "npc": {
         "frame": "ch9_npc_portal",
         "name": "米迦勒",
@@ -259,7 +259,7 @@ export const TOWN_CH9 = {
       "imgUrl": "./assets/towns/ch9_b_portal.webp?v=297",
       "doorOffset": {
         "x": 15,
-        "y": 68
+        "y": 80
       }
     }
   ],
@@ -381,7 +381,7 @@ export const TOWN_CH9 = {
     "y": 2080,
     "imgKey": "ch9_b_portal_v297",
     "imgUrl": "./assets/towns/ch9_b_portal.webp?v=297",
-    "scale": 0.62,
+    "scale": 0.82,
     "name": "出城戰鬥傳送門",
     "action": "exit_battle"
   }

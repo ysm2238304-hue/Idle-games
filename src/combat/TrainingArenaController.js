@@ -34,6 +34,10 @@ export class TrainingArenaController {
   enter(onExitToTown) {
     const s = this.scene;
     this._onExitToTown = onExitToTown;
+    // v298: 進入瞬間即刻鎖定演武場模式並清場，杜絕載入貼圖空檔被章節刷怪邏輯侵入
+    this.active = true;
+    s.isTrainingMode = true;
+    s.clearAllMonsters?.();
     const needed = [
       ['arena_training_v277', './assets/bg/arena_training.webp?v=277'],
       ['ent_dummy_normal',    './assets/fx/ent_dummy_normal.webp?v=277'],

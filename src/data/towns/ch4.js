@@ -32,10 +32,10 @@ export const TOWN_CH4 = {
     "frame": "ch4_lm_fountain",
     "x": 1840,
     "y": 1120,
-    "scale": 0.62,
+    "scale": 0.82,
     "imgKey": "ch4_b_beacon_v295",
     "imgUrl": "./assets/towns/ch4_b_beacon.webp?v=295",
-    "radius": 52,
+    "radius": 65,
     "action": "gimmick_lava_fountain",
     "tip": "觸發巨龍熔岩噴泉（5 分鐘 攻擊+25% / 爆傷+20% / 技能傷+20%）"
   },
@@ -46,11 +46,11 @@ export const TOWN_CH4 = {
       "frame": "ch4_bld_smith",
       "x": 1060,
       "y": 640,
-      "scale": 0.84,
+      "scale": 1.11,
       "imgKey": "ch4_b_smith_v295",
       "imgUrl": "./assets/towns/ch4_b_smith.webp?v=295",
       "workStyle": "forge",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch4_npc_smith",
         "name": "伊格納",
@@ -65,7 +65,7 @@ export const TOWN_CH4 = {
       "actionLabel": "開啟熔岩鍛造",
       "doorOffset": {
         "x": 24,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -74,11 +74,11 @@ export const TOWN_CH4 = {
       "frame": "ch4_bld_guild",
       "x": 3080,
       "y": 1920,
-      "scale": 0.84,
+      "scale": 1.11,
       "imgKey": "ch4_b_guild_v295",
       "imgUrl": "./assets/towns/ch4_b_guild.webp?v=295",
       "workStyle": "guild",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch4_npc_guild",
         "name": "索林",
@@ -93,7 +93,7 @@ export const TOWN_CH4 = {
       "actionLabel": "打開黑曜石金庫",
       "doorOffset": {
         "x": -20,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -102,11 +102,11 @@ export const TOWN_CH4 = {
       "frame": "ch4_bld_bounty",
       "x": 1860,
       "y": 1460,
-      "scale": 0.62,
+      "scale": 0.82,
       "imgKey": "ch4_b_bounty_v295",
       "imgUrl": "./assets/towns/ch4_b_bounty.webp?v=295",
       "workStyle": "bounty",
-      "radius": 52,
+      "radius": 65,
       "npc": {
         "frame": "ch4_npc_bounty",
         "name": "卡爾",
@@ -121,7 +121,7 @@ export const TOWN_CH4 = {
       "actionLabel": "接取裂谷懸賞",
       "doorOffset": {
         "x": 12,
-        "y": 64
+        "y": 76
       }
     },
     {
@@ -130,11 +130,11 @@ export const TOWN_CH4 = {
       "frame": "ch4_bld_altar",
       "x": 2940,
       "y": 1740,
-      "scale": 0.72,
+      "scale": 0.95,
       "imgKey": "ch4_b_temple_v295",
       "imgUrl": "./assets/towns/ch4_b_temple.webp?v=295",
       "workStyle": "prayer",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch4_npc_altar",
         "name": "卡珊卓",
@@ -149,7 +149,7 @@ export const TOWN_CH4 = {
       "actionLabel": "開啟灰燼輪迴",
       "doorOffset": {
         "x": -10,
-        "y": 72
+        "y": 85
       }
     },
     {
@@ -158,11 +158,11 @@ export const TOWN_CH4 = {
       "frame": "ch4_bld_alchemy",
       "x": 2240,
       "y": 1280,
-      "scale": 0.8,
+      "scale": 1.06,
       "imgKey": "ch4_b_alchemy_v295",
       "imgUrl": "./assets/towns/ch4_b_alchemy.webp?v=295",
       "workStyle": "alchemy",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch4_npc_alchemy",
         "name": "貝爾",
@@ -177,7 +177,7 @@ export const TOWN_CH4 = {
       "actionLabel": "調配火山藥劑",
       "doorOffset": {
         "x": -15,
-        "y": 72
+        "y": 85
       }
     },
     {
@@ -186,11 +186,11 @@ export const TOWN_CH4 = {
       "frame": "ch4_bld_temple",
       "x": 1420,
       "y": 720,
-      "scale": 0.8,
+      "scale": 1.06,
       "imgKey": "ch4_b_temple_v295",
       "imgUrl": "./assets/towns/ch4_b_temple.webp?v=295",
       "workStyle": "prayer",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch4_npc_temple",
         "name": "布洛克",
@@ -205,7 +205,7 @@ export const TOWN_CH4 = {
       "actionLabel": "配置職業技能",
       "doorOffset": {
         "x": 15,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -214,11 +214,11 @@ export const TOWN_CH4 = {
       "frame": "ch4_bld_market",
       "x": 940,
       "y": 1940,
-      "scale": 0.82,
+      "scale": 1.08,
       "imgKey": "ch4_b_market_v295",
       "imgUrl": "./assets/towns/ch4_b_market.webp?v=295",
       "workStyle": "market",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch4_npc_market",
         "name": "拉茲",
@@ -233,7 +233,7 @@ export const TOWN_CH4 = {
       "actionLabel": "進入軍火黑市",
       "doorOffset": {
         "x": 20,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -242,8 +242,8 @@ export const TOWN_CH4 = {
       "frame": "ch4_bld_portal",
       "x": 2640,
       "y": 2080,
-      "scale": 0.62,
-      "radius": 52,
+      "scale": 0.82,
+      "radius": 65,
       "npc": {
         "frame": "ch4_npc_portal",
         "name": "泰坦",
@@ -259,7 +259,7 @@ export const TOWN_CH4 = {
       "imgUrl": "./assets/towns/ch4_b_portal.webp?v=295",
       "doorOffset": {
         "x": 0,
-        "y": 68
+        "y": 80
       }
     }
   ],
@@ -385,7 +385,7 @@ export const TOWN_CH4 = {
     "y": 2080,
     "imgKey": "ch4_b_portal_v295",
     "imgUrl": "./assets/towns/ch4_b_portal.webp?v=295",
-    "scale": 0.62,
+    "scale": 0.82,
     "name": "出城戰鬥傳送門",
     "action": "exit_battle"
   }

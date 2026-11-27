@@ -32,10 +32,10 @@ export const TOWN_CH6 = {
     "frame": "ch6_lm_spire",
     "x": 2180,
     "y": 1020,
-    "scale": 0.64,
+    "scale": 0.84,
     "imgKey": "ch6_b_beacon_v296",
     "imgUrl": "./assets/towns/ch6_b_beacon.webp?v=296",
-    "radius": 52,
+    "radius": 65,
     "action": "gimmick_aurora_spire",
     "tip": "共鳴永凍極光水晶塔（5 分鐘 防禦+25% / 攻速+25% / 減傷+10%）"
   },
@@ -46,11 +46,11 @@ export const TOWN_CH6 = {
       "frame": "ch6_bld_smith",
       "x": 1740,
       "y": 1040,
-      "scale": 0.82,
+      "scale": 1.08,
       "imgKey": "ch6_b_smith_v296",
       "imgUrl": "./assets/towns/ch6_b_smith.webp?v=296",
       "workStyle": "forge",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch6_npc_smith",
         "name": "布羅恩",
@@ -65,7 +65,7 @@ export const TOWN_CH6 = {
       "actionLabel": "開啟符文鍛造",
       "doorOffset": {
         "x": 20,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -74,11 +74,11 @@ export const TOWN_CH6 = {
       "frame": "ch6_bld_alchemy",
       "x": 2060,
       "y": 440,
-      "scale": 0.78,
+      "scale": 1.03,
       "imgKey": "ch6_b_alchemy_v296",
       "imgUrl": "./assets/towns/ch6_b_alchemy.webp?v=296",
       "workStyle": "alchemy",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch6_npc_alchemy",
         "name": "芙蕾雅",
@@ -93,7 +93,7 @@ export const TOWN_CH6 = {
       "actionLabel": "調配冰晶藥劑",
       "doorOffset": {
         "x": 15,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -102,11 +102,11 @@ export const TOWN_CH6 = {
       "frame": "ch6_bld_guild",
       "x": 3380,
       "y": 920,
-      "scale": 0.82,
+      "scale": 1.08,
       "imgKey": "ch6_b_guild_v296",
       "imgUrl": "./assets/towns/ch6_b_guild.webp?v=296",
       "workStyle": "guild",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch6_npc_guild",
         "name": "哈康",
@@ -121,7 +121,7 @@ export const TOWN_CH6 = {
       "actionLabel": "打開長屋倉庫",
       "doorOffset": {
         "x": -20,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -130,11 +130,11 @@ export const TOWN_CH6 = {
       "frame": "ch6_bld_temple",
       "x": 2660,
       "y": 480,
-      "scale": 0.8,
+      "scale": 1.06,
       "imgKey": "ch6_b_temple_v296",
       "imgUrl": "./assets/towns/ch6_b_temple.webp?v=296",
       "workStyle": "prayer",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch6_npc_temple",
         "name": "布倫希爾",
@@ -149,7 +149,7 @@ export const TOWN_CH6 = {
       "actionLabel": "配置職業技能",
       "doorOffset": {
         "x": -15,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -158,11 +158,11 @@ export const TOWN_CH6 = {
       "frame": "ch6_bld_bounty",
       "x": 1620,
       "y": 440,
-      "scale": 0.62,
+      "scale": 0.82,
       "imgKey": "ch6_b_bounty_v296",
       "imgUrl": "./assets/towns/ch6_b_bounty.webp?v=296",
       "workStyle": "bounty",
-      "radius": 52,
+      "radius": 65,
       "npc": {
         "frame": "ch6_npc_bounty",
         "name": "芬里爾",
@@ -177,7 +177,7 @@ export const TOWN_CH6 = {
       "actionLabel": "接取雪原懸賞",
       "doorOffset": {
         "x": 10,
-        "y": 64
+        "y": 76
       }
     },
     {
@@ -186,11 +186,11 @@ export const TOWN_CH6 = {
       "frame": "ch6_bld_market",
       "x": 2620,
       "y": 1420,
-      "scale": 0.82,
+      "scale": 1.08,
       "imgKey": "ch6_b_market_v296",
       "imgUrl": "./assets/towns/ch6_b_market.webp?v=296",
       "workStyle": "market",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch6_npc_market",
         "name": "史文",
@@ -205,7 +205,7 @@ export const TOWN_CH6 = {
       "actionLabel": "進入極地黑市",
       "doorOffset": {
         "x": -20,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -214,11 +214,11 @@ export const TOWN_CH6 = {
       "frame": "ch6_bld_altar",
       "x": 3480,
       "y": 1480,
-      "scale": 0.72,
+      "scale": 0.95,
       "imgKey": "ch6_b_temple_v296",
       "imgUrl": "./assets/towns/ch6_b_temple.webp?v=296",
       "workStyle": "prayer",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch6_npc_altar",
         "name": "阿斯特麗",
@@ -233,7 +233,7 @@ export const TOWN_CH6 = {
       "actionLabel": "開啟世界樹輪迴",
       "doorOffset": {
         "x": -15,
-        "y": 72
+        "y": 85
       }
     },
     {
@@ -242,8 +242,8 @@ export const TOWN_CH6 = {
       "frame": "ch6_bld_portal",
       "x": 1120,
       "y": 1640,
-      "scale": 0.62,
-      "radius": 52,
+      "scale": 0.82,
+      "radius": 65,
       "npc": {
         "frame": "ch6_npc_portal",
         "name": "海姆達爾",
@@ -259,7 +259,7 @@ export const TOWN_CH6 = {
       "imgUrl": "./assets/towns/ch6_b_portal.webp?v=296",
       "doorOffset": {
         "x": 18,
-        "y": 68
+        "y": 80
       }
     }
   ],
@@ -385,7 +385,7 @@ export const TOWN_CH6 = {
     "y": 1640,
     "imgKey": "ch6_b_portal_v296",
     "imgUrl": "./assets/towns/ch6_b_portal.webp?v=296",
-    "scale": 0.62,
+    "scale": 0.82,
     "name": "出城戰鬥傳送門",
     "action": "exit_battle"
   }

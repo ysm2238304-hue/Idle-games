@@ -1,16 +1,16 @@
 import { CameraZoomHelper } from './CameraZoomHelper.js?v=282';
-import { TOWN_CH1 } from '../data/towns/ch1.js?v=297';
+import { TOWN_CH1 } from '../data/towns/ch1.js?v=298';
 import { LivingNpcEngine } from '../town/LivingNpcEngine.js?v=273';
 import { TownMultiplayerSync } from '../net/TownMultiplayerSync.js?v=274';
-import { TOWN_CH2 } from '../data/towns/ch2.js?v=297';
-import { TOWN_CH3 } from '../data/towns/ch3.js?v=297';
-import { TOWN_CH4 } from '../data/towns/ch4.js?v=297';
-import { TOWN_CH5 } from '../data/towns/ch5.js?v=297';
-import { TOWN_CH6 } from '../data/towns/ch6.js?v=297';
-import { TOWN_CH7 } from '../data/towns/ch7.js?v=297';
-import { TOWN_CH8 } from '../data/towns/ch8.js?v=297';
-import { TOWN_CH9 } from '../data/towns/ch9.js?v=297';
-import { TOWN_CH10 } from '../data/towns/ch10.js?v=297';
+import { TOWN_CH2 } from '../data/towns/ch2.js?v=298';
+import { TOWN_CH3 } from '../data/towns/ch3.js?v=298';
+import { TOWN_CH4 } from '../data/towns/ch4.js?v=298';
+import { TOWN_CH5 } from '../data/towns/ch5.js?v=298';
+import { TOWN_CH6 } from '../data/towns/ch6.js?v=298';
+import { TOWN_CH7 } from '../data/towns/ch7.js?v=298';
+import { TOWN_CH8 } from '../data/towns/ch8.js?v=298';
+import { TOWN_CH9 } from '../data/towns/ch9.js?v=298';
+import { TOWN_CH10 } from '../data/towns/ch10.js?v=298';
 import { formatNum } from '../logic/statCalc.js?v=99';
 import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta } from '../data/pets.js?v=99';
 
@@ -177,8 +177,7 @@ export class TownScene extends Phaser.Scene {
         lmZone.on('pointerover', () => ring.setStrokeStyle(3.5, 0xfef08a, 1));
         lmZone.on('pointerout', () => ring.setStrokeStyle(2.5, td.ambientColor, 0.78));
       } else {
-        this.add.image(lm.x, lm.y + 38, 'fx_glow')
-          .setTint(0x000000).setScale(2.6, 0.95).setAlpha(0.5).setDepth(2);
+        // v298: 移除地標下方浮空黑橢圓陰影，讓建築底座自然貼合地面
         const lm3d = this.get3DBuildingTexKey(lm);
         const lmSpr = lm3d
           ? this.add.image(lm.x, lm.y, lm3d).setOrigin(0.5, 0.92)
@@ -195,7 +194,9 @@ export class TownScene extends Phaser.Scene {
         this.beaconGlow = this.add.image(lm.x, lm.y - 42, 'fx_glow')
           .setTint(td.ambientColor).setScale(1.8).setAlpha(0.24).setBlendMode(Phaser.BlendModes.ADD).setDepth(lm.y + 2);
         this.tweens.add({ targets: this.beaconGlow, scale: 2.2, alpha: 0.38, duration: 1300, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
-        this.obstacles.push({ x: lm.x, y: lm.y - 10, radius: lm.radius || 58 });
+        const lmHw = Math.max(Math.round((lm.radius || 64) * 1.05), Math.round((lmSpr.displayWidth || 320) * 0.30));
+        const lmHt = Math.max(Math.round((lm.radius || 64) * 1.15), Math.round((lmSpr.displayHeight || 320) * 0.36));
+        this.rectObstacles.push({ x1: lm.x - lmHw, y1: lm.y - lmHt, x2: lm.x + lmHw, y2: lm.y - 6 });
       }
       this.interactables.push({
         id: lm.id,
@@ -230,8 +231,7 @@ export class TownScene extends Phaser.Scene {
     // 6. 演武木人樁
     if (td.trainingDummy) {
       const dm = td.trainingDummy;
-      this.add.image(dm.x, dm.y + 38, 'fx_glow')
-        .setTint(0x000000).setScale(1.1, 0.42).setAlpha(0.45).setDepth(2);
+      // v298: 移除木人樁下方浮空黑橢圓陰影
       this.dummySprite = (this.textures.exists('town_dummy_v287')
         ? this.add.image(dm.x, dm.y, 'town_dummy_v287').setOrigin(0.5, 0.92).setScale(dm.scale || 0.62)
         : this.add.image(dm.x, dm.y, td.atlasKey, dm.frame).setScale(dm.scale))
@@ -560,20 +560,25 @@ export class TownScene extends Phaser.Scene {
       const tex3d = this.get3DBuildingTexKey(b);
       const useStandalone = b.imgKey && this.textures.exists(b.imgKey);
       const sc = tex3d ? Math.max(0.74, (b.scale || 0.80) * 0.96) : (b.scale || 0.78);
-      // 3D 建築接地投影
-      this.add.ellipse(b.x, b.y - 6, (b.shadowW || 250) * sc, (b.shadowH || 92) * sc, 0x000000, 0.42).setDepth(2);
+      // v298: 移除建築下方浮空黑橢圓陰影，讓寫實建築本體穩妥貼合地面
       const spr = tex3d
         ? this.add.image(b.x, b.y, tex3d).setOrigin(0.5, 0.92).setScale(sc).setDepth(b.y - 20)
         : (useStandalone
           ? this.add.image(b.x, b.y, b.imgKey).setOrigin(0.5, 0.96).setScale(sc).setDepth(b.y - 20)
           : this.add.image(b.x, b.y, atlasKey, b.frame).setOrigin(0.5, 0.92).setScale(sc).setDepth(b.y - 20));
       if (b.flipX && !tex3d) spr.setFlipX(true);
-      if (b.radius > 0) {
-        // 實體 3D 矩形地基碰撞盒，防止英雄穿牆被建築蓋住（不透明、不穿模）
-        const hw = Math.round((b.radius || 75) * 1.25);
-        const hh = Math.round((b.radius || 75) * 0.75);
-        this.rectObstacles.push({ x1: b.x - hw, y1: b.y - hh * 1.75, x2: b.x + hw, y2: b.y - 8 });
-      }
+      // v298: 依實際放大後建築貼圖寬高建立嚴格實體矩形碰撞盒，杜絕穿模與穿牆
+      const dispW = Math.round(spr.displayWidth || (512 * sc));
+      const dispH = Math.round(spr.displayHeight || (512 * sc));
+      const baseR = b.radius > 0 ? b.radius : Math.round(72 * sc);
+      const hw = Math.max(Math.round(baseR * 1.12), Math.round(dispW * 0.34));
+      const hTop = Math.max(Math.round(baseR * 1.38), Math.round(dispH * 0.48));
+      this.rectObstacles.push({
+        x1: b.x - hw,
+        y1: b.y - hTop,
+        x2: b.x + hw,
+        y2: b.y - 6,
+      });
       if (b.name && b.action) {
         const icon = this.getActionIcon(b.action);
         this.addNameplate(b.x, b.y - Math.round(285 * sc), `${icon} ${b.name}`, '#fde68a', true);
@@ -585,8 +590,9 @@ export class TownScene extends Phaser.Scene {
         spr.on('pointerdown', (pointer) => {
           if (pointer?.leftButtonDown?.()) {
             const dx = b.doorOffset?.x ?? 0;
-            const dy = b.doorOffset?.y ?? 74;
-            this.moveTarget = { x: b.x + dx, y: b.y + dy, triggerAction: b.action, triggerData: b };
+            const dy = b.doorOffset?.y ?? 88;
+            const safeDoor = this._pushOutOfObstacles(b.x + dx, b.y + dy, 22);
+            this.moveTarget = { x: safeDoor.x, y: safeDoor.y, triggerAction: b.action, triggerData: b };
           }
         });
       }
@@ -654,7 +660,7 @@ export class TownScene extends Phaser.Scene {
       return;
     }
 
-    this.add.ellipse(b.x, b.y + 28, (b.radius || 120) * 2.1, (b.radius || 120) * 0.82, 0x000000, 0.44).setDepth(2);
+    // v298: 移除備援建築黑橢圓陰影
     const useStandalone = b.imgKey && this.textures.exists(b.imgKey);
     const spr = useStandalone
       ? this.add.image(b.x, b.y, b.imgKey).setOrigin(0.5, 0.72).setScale(b.scale || 0.95).setDepth(b.y)
@@ -1053,18 +1059,77 @@ export class TownScene extends Phaser.Scene {
     return zones.some((z) => this._pointInZone(x, fy, z));
   }
 
+  _isBlockedByObstacle(x, y, pad = 22) {
+    for (const rb of this.rectObstacles || []) {
+      if (x > rb.x1 - pad && x < rb.x2 + pad && y > rb.y1 - pad && y < rb.y2 + pad) {
+        return true;
+      }
+    }
+    for (const ob of this.obstacles || []) {
+      const d = Math.hypot(x - ob.x, y - ob.y);
+      if (d < (ob.radius || 24) + pad) return true;
+    }
+    return false;
+  }
+
+  _pushOutOfObstacles(x, y, pad = 22) {
+    let cx = x, cy = y, pushed = false;
+    for (let pass = 0; pass < 3; pass++) {
+      let moved = false;
+      for (const rb of this.rectObstacles || []) {
+        const rx1 = rb.x1 - pad, ry1 = rb.y1 - pad, rx2 = rb.x2 + pad, ry2 = rb.y2 + pad;
+        if (cx > rx1 && cx < rx2 && cy > ry1 && cy < ry2) {
+          const dl = cx - rx1, dr = rx2 - cx;
+          const dt = cy - ry1, db = ry2 - cy;
+          const m = Math.min(dl, dr, dt, db);
+          if (m === db) cy = ry2;
+          else if (m === dt) cy = ry1;
+          else if (m === dl) cx = rx1;
+          else cx = rx2;
+          moved = true;
+          pushed = true;
+        }
+      }
+      for (const ob of this.obstacles || []) {
+        const dx = cx - ob.x;
+        const dy = cy - ob.y;
+        const d = Math.hypot(dx, dy);
+        const minD = (ob.radius || 24) + pad;
+        if (d < minD) {
+          if (d > 0.001) {
+            cx = ob.x + (dx / d) * minD;
+            cy = ob.y + (dy / d) * minD;
+          } else {
+            cy = ob.y + minD;
+          }
+          moved = true;
+          pushed = true;
+        }
+      }
+      if (!moved) break;
+    }
+    return { x: cx, y: cy, pushed };
+  }
+
   _clampToWalkable(x, y, footOff = 20) {
     const zones = this.townData?.walkableZones;
-    if (!zones || zones.length === 0) return { x, y, clamped: false };
-    const fy = y + footOff;
-    if (zones.some((z) => this._pointInZone(x, fy, z))) return { x, y, clamped: false };
-    let bx = x, by = fy, bd = Infinity;
-    for (const z of zones) {
-      const pt = this._closestInZone(x, fy, z);
-      const d = Math.hypot(x - pt.x, fy - pt.y);
-      if (d < bd) { bd = d; bx = pt.x; by = pt.y; }
+    let rx = x, ry = y, clamped = false;
+    if (zones && zones.length > 0) {
+      const fy = y + footOff;
+      if (!zones.some((z) => this._pointInZone(x, fy, z))) {
+        let bx = x, by = fy, bd = Infinity;
+        for (const z of zones) {
+          const pt = this._closestInZone(x, fy, z);
+          const d = Math.hypot(x - pt.x, fy - pt.y);
+          if (d < bd) { bd = d; bx = pt.x; by = pt.y; }
+        }
+        rx = bx;
+        ry = by - footOff;
+        clamped = true;
+      }
     }
-    return { x: bx, y: by - footOff, clamped: true };
+    const out = this._pushOutOfObstacles(rx, ry, 24);
+    return { x: out.x, y: out.y, clamped: clamped || out.pushed };
   }
 
   update(time, delta) {
@@ -1104,46 +1169,30 @@ export class TownScene extends Phaser.Scene {
       }
     }
 
-    let nx = Phaser.Math.Clamp(this.hero.x + vx * dt, 140, td.mapWidth - 140);
-    let ny = Phaser.Math.Clamp(this.hero.y + vy * dt, 180, td.mapHeight - 140);
-    if (td.walkableZones && td.walkableZones.length > 0 && !this._isWalkable(nx, ny, 20)) {
-      if (this._isWalkable(nx, this.hero.y, 20)) {
-        ny = this.hero.y;
-      } else if (this._isWalkable(this.hero.x, ny, 20)) {
-        nx = this.hero.x;
+    const prevX = this.hero.x;
+    const prevY = this.hero.y;
+    let nx = Phaser.Math.Clamp(prevX + vx * dt, 140, td.mapWidth - 140);
+    let ny = Phaser.Math.Clamp(prevY + vy * dt, 180, td.mapHeight - 140);
+    const canStand = (tx, ty) => {
+      const walkOk = !(td.walkableZones && td.walkableZones.length > 0) || this._isWalkable(tx, ty, 20);
+      return walkOk && !this._isBlockedByObstacle(tx, ty, 22);
+    };
+    if (!canStand(nx, ny)) {
+      if (canStand(nx, prevY)) {
+        ny = prevY;
+      } else if (canStand(prevX, ny)) {
+        nx = prevX;
       } else {
-        const res = this._clampToWalkable(nx, ny, 20);
-        nx = res.x;
-        ny = res.y;
+        nx = prevX;
+        ny = prevY;
+        if (this.moveTarget && Math.hypot(vx, vy) > 10) {
+          this.moveTarget = null;
+        }
       }
     }
-    this.hero.x = nx;
-    this.hero.y = ny;
-
-    for (const ob of this.obstacles) {
-      const dx = this.hero.x - ob.x;
-      const dy = this.hero.y - ob.y;
-      const d = Math.hypot(dx, dy);
-      const minD = ob.radius + 24;
-      if (d > 0 && d < minD) {
-        const push = minD - d;
-        this.hero.x += (dx / d) * push;
-        this.hero.y += (dy / d) * push;
-      }
-    }
-    for (const rb of this.rectObstacles || []) {
-      const pad = 22;
-      const rx1 = rb.x1 - pad, ry1 = rb.y1 - pad, rx2 = rb.x2 + pad, ry2 = rb.y2 + pad;
-      if (this.hero.x > rx1 && this.hero.x < rx2 && this.hero.y > ry1 && this.hero.y < ry2) {
-        const dl = this.hero.x - rx1, dr = rx2 - this.hero.x;
-        const dt = this.hero.y - ry1, db = ry2 - this.hero.y;
-        const m = Math.min(dl, dr, dt, db);
-        if (m === db) this.hero.y = ry2;
-        else if (m === dt) this.hero.y = ry1;
-        else if (m === dl) this.hero.x = rx1;
-        else this.hero.x = rx2;
-      }
-    }
+    const safePos = this._pushOutOfObstacles(nx, ny, 22);
+    this.hero.x = Phaser.Math.Clamp(safePos.x, 140, td.mapWidth - 140);
+    this.hero.y = Phaser.Math.Clamp(safePos.y, 180, td.mapHeight - 140);
 
     this.hero.setDepth(this.hero.y);
     if (this.heroShadow) {

@@ -32,10 +32,10 @@ export const TOWN_CH7 = {
     "frame": "ch7_lm_waterfall",
     "x": 3080,
     "y": 2040,
-    "scale": 0.64,
+    "scale": 0.84,
     "imgKey": "ch7_b_beacon_v296",
     "imgUrl": "./assets/towns/ch7_b_beacon.webp?v=296",
-    "radius": 52,
+    "radius": 65,
     "action": "gimmick_emerald_waterfall",
     "tip": "共鳴翡翠毒液瀑布（5 分鐘 攻擊+25% / 攻速+25% / 掉寶+30%）"
   },
@@ -46,11 +46,11 @@ export const TOWN_CH7 = {
       "frame": "ch7_bld_smith",
       "x": 720,
       "y": 1680,
-      "scale": 0.82,
+      "scale": 1.08,
       "imgKey": "ch7_b_smith_v296",
       "imgUrl": "./assets/towns/ch7_b_smith.webp?v=296",
       "workStyle": "forge",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch7_npc_smith",
         "name": "卡巴",
@@ -65,7 +65,7 @@ export const TOWN_CH7 = {
       "actionLabel": "開啟甲殼鍛造",
       "doorOffset": {
         "x": 24,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -74,11 +74,11 @@ export const TOWN_CH7 = {
       "frame": "ch7_bld_alchemy",
       "x": 1680,
       "y": 940,
-      "scale": 0.8,
+      "scale": 1.06,
       "imgKey": "ch7_b_alchemy_v296",
       "imgUrl": "./assets/towns/ch7_b_alchemy.webp?v=296",
       "workStyle": "alchemy",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch7_npc_alchemy",
         "name": "薇拉莉",
@@ -93,7 +93,7 @@ export const TOWN_CH7 = {
       "actionLabel": "調配劇毒藥劑",
       "doorOffset": {
         "x": 15,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -102,11 +102,11 @@ export const TOWN_CH7 = {
       "frame": "ch7_bld_guild",
       "x": 3460,
       "y": 760,
-      "scale": 0.82,
+      "scale": 1.08,
       "imgKey": "ch7_b_guild_v296",
       "imgUrl": "./assets/towns/ch7_b_guild.webp?v=296",
       "workStyle": "guild",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch7_npc_guild",
         "name": "巴圖",
@@ -121,7 +121,7 @@ export const TOWN_CH7 = {
       "actionLabel": "打開水寨倉庫",
       "doorOffset": {
         "x": -20,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -130,11 +130,11 @@ export const TOWN_CH7 = {
       "frame": "ch7_bld_temple",
       "x": 2980,
       "y": 640,
-      "scale": 0.8,
+      "scale": 1.06,
       "imgKey": "ch7_b_temple_v296",
       "imgUrl": "./assets/towns/ch7_b_temple.webp?v=296",
       "workStyle": "prayer",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch7_npc_temple",
         "name": "佐拉",
@@ -149,7 +149,7 @@ export const TOWN_CH7 = {
       "actionLabel": "配置職業技能",
       "doorOffset": {
         "x": -15,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -158,11 +158,11 @@ export const TOWN_CH7 = {
       "frame": "ch7_bld_bounty",
       "x": 1460,
       "y": 1160,
-      "scale": 0.62,
+      "scale": 0.82,
       "imgKey": "ch7_b_bounty_v296",
       "imgUrl": "./assets/towns/ch7_b_bounty.webp?v=296",
       "workStyle": "bounty",
-      "radius": 52,
+      "radius": 65,
       "npc": {
         "frame": "ch7_npc_bounty",
         "name": "莫格",
@@ -177,7 +177,7 @@ export const TOWN_CH7 = {
       "actionLabel": "接取沼澤懸賞",
       "doorOffset": {
         "x": 12,
-        "y": 64
+        "y": 76
       }
     },
     {
@@ -186,11 +186,11 @@ export const TOWN_CH7 = {
       "frame": "ch7_bld_market",
       "x": 1140,
       "y": 1440,
-      "scale": 0.8,
+      "scale": 1.06,
       "imgKey": "ch7_b_market_v296",
       "imgUrl": "./assets/towns/ch7_b_market.webp?v=296",
       "workStyle": "market",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch7_npc_market",
         "name": "斯萊",
@@ -205,7 +205,7 @@ export const TOWN_CH7 = {
       "actionLabel": "進入竹筏黑市",
       "doorOffset": {
         "x": 18,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -214,11 +214,11 @@ export const TOWN_CH7 = {
       "frame": "ch7_bld_altar",
       "x": 2760,
       "y": 1880,
-      "scale": 0.72,
+      "scale": 0.95,
       "imgKey": "ch7_b_temple_v296",
       "imgUrl": "./assets/towns/ch7_b_temple.webp?v=296",
       "workStyle": "prayer",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch7_npc_altar",
         "name": "納茲",
@@ -233,7 +233,7 @@ export const TOWN_CH7 = {
       "actionLabel": "開啟樹壇輪迴",
       "doorOffset": {
         "x": 15,
-        "y": 72
+        "y": 85
       }
     },
     {
@@ -242,8 +242,8 @@ export const TOWN_CH7 = {
       "frame": "ch7_bld_portal",
       "x": 640,
       "y": 2120,
-      "scale": 0.62,
-      "radius": 52,
+      "scale": 0.82,
+      "radius": 65,
       "npc": {
         "frame": "ch7_npc_portal",
         "name": "卡隆",
@@ -259,7 +259,7 @@ export const TOWN_CH7 = {
       "imgUrl": "./assets/towns/ch7_b_portal.webp?v=296",
       "doorOffset": {
         "x": 20,
-        "y": 68
+        "y": 80
       }
     }
   ],
@@ -385,7 +385,7 @@ export const TOWN_CH7 = {
     "y": 2120,
     "imgKey": "ch7_b_portal_v296",
     "imgUrl": "./assets/towns/ch7_b_portal.webp?v=296",
-    "scale": 0.62,
+    "scale": 0.82,
     "name": "出城戰鬥傳送門",
     "action": "exit_battle"
   }

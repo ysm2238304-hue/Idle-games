@@ -32,10 +32,10 @@ export const TOWN_CH8 = {
     "frame": "ch8_lm_core",
     "x": 1680,
     "y": 960,
-    "scale": 0.64,
+    "scale": 0.84,
     "imgKey": "ch8_b_beacon_v297",
     "imgUrl": "./assets/towns/ch8_b_beacon.webp?v=297",
-    "radius": 52,
+    "radius": 65,
     "action": "gimmick_storm_core",
     "tip": "共鳴聚雷磁能核心（5 分鐘 攻速+30% / 技能傷+25% / 爆擊+20%）"
   },
@@ -46,11 +46,11 @@ export const TOWN_CH8 = {
       "frame": "ch8_bld_smith",
       "x": 740,
       "y": 560,
-      "scale": 0.82,
+      "scale": 1.08,
       "imgKey": "ch8_b_smith_v297",
       "imgUrl": "./assets/towns/ch8_b_smith.webp?v=297",
       "workStyle": "forge",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch8_npc_smith",
         "name": "特斯拉",
@@ -65,7 +65,7 @@ export const TOWN_CH8 = {
       "actionLabel": "開啟電弧鍛造",
       "doorOffset": {
         "x": 20,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -74,11 +74,11 @@ export const TOWN_CH8 = {
       "frame": "ch8_bld_guild",
       "x": 2940,
       "y": 1660,
-      "scale": 0.82,
+      "scale": 1.08,
       "imgKey": "ch8_b_guild_v297",
       "imgUrl": "./assets/towns/ch8_b_guild.webp?v=297",
       "workStyle": "guild",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch8_npc_guild",
         "name": "巴洛",
@@ -93,7 +93,7 @@ export const TOWN_CH8 = {
       "actionLabel": "打開飛艇金庫",
       "doorOffset": {
         "x": -20,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -102,11 +102,11 @@ export const TOWN_CH8 = {
       "frame": "ch8_bld_alchemy",
       "x": 2660,
       "y": 580,
-      "scale": 0.82,
+      "scale": 1.08,
       "imgKey": "ch8_b_alchemy_v297",
       "imgUrl": "./assets/towns/ch8_b_alchemy.webp?v=297",
       "workStyle": "alchemy",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch8_npc_alchemy",
         "name": "賽琳",
@@ -121,7 +121,7 @@ export const TOWN_CH8 = {
       "actionLabel": "調配雲端藥劑",
       "doorOffset": {
         "x": -15,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -130,11 +130,11 @@ export const TOWN_CH8 = {
       "frame": "ch8_bld_temple",
       "x": 2980,
       "y": 680,
-      "scale": 0.8,
+      "scale": 1.06,
       "imgKey": "ch8_b_temple_v297",
       "imgUrl": "./assets/towns/ch8_b_temple.webp?v=297",
       "workStyle": "prayer",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch8_npc_temple",
         "name": "伊莉絲",
@@ -149,7 +149,7 @@ export const TOWN_CH8 = {
       "actionLabel": "配置職業技能",
       "doorOffset": {
         "x": -15,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -158,11 +158,11 @@ export const TOWN_CH8 = {
       "frame": "ch8_bld_bounty",
       "x": 1020,
       "y": 640,
-      "scale": 0.62,
+      "scale": 0.82,
       "imgKey": "ch8_b_bounty_v297",
       "imgUrl": "./assets/towns/ch8_b_bounty.webp?v=297",
       "workStyle": "bounty",
-      "radius": 52,
+      "radius": 65,
       "npc": {
         "frame": "ch8_npc_bounty",
         "name": "艾克",
@@ -177,7 +177,7 @@ export const TOWN_CH8 = {
       "actionLabel": "接取蒼穹懸賞",
       "doorOffset": {
         "x": 12,
-        "y": 64
+        "y": 76
       }
     },
     {
@@ -186,11 +186,11 @@ export const TOWN_CH8 = {
       "frame": "ch8_bld_market",
       "x": 2480,
       "y": 1620,
-      "scale": 0.8,
+      "scale": 1.06,
       "imgKey": "ch8_b_market_v297",
       "imgUrl": "./assets/towns/ch8_b_market.webp?v=297",
       "workStyle": "market",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch8_npc_market",
         "name": "吉茲",
@@ -205,7 +205,7 @@ export const TOWN_CH8 = {
       "actionLabel": "進入飛艇黑市",
       "doorOffset": {
         "x": 15,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -214,11 +214,11 @@ export const TOWN_CH8 = {
       "frame": "ch8_bld_altar",
       "x": 1380,
       "y": 1080,
-      "scale": 0.72,
+      "scale": 0.95,
       "imgKey": "ch8_b_temple_v297",
       "imgUrl": "./assets/towns/ch8_b_temple.webp?v=297",
       "workStyle": "prayer",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch8_npc_altar",
         "name": "宙斯頓",
@@ -233,7 +233,7 @@ export const TOWN_CH8 = {
       "actionLabel": "開啟蒼穹輪迴",
       "doorOffset": {
         "x": 15,
-        "y": 72
+        "y": 85
       }
     },
     {
@@ -242,8 +242,8 @@ export const TOWN_CH8 = {
       "frame": "ch8_bld_portal",
       "x": 1760,
       "y": 2240,
-      "scale": 0.62,
-      "radius": 52,
+      "scale": 0.82,
+      "radius": 65,
       "npc": {
         "frame": "ch8_npc_portal",
         "name": "洛克",
@@ -259,7 +259,7 @@ export const TOWN_CH8 = {
       "imgUrl": "./assets/towns/ch8_b_portal.webp?v=297",
       "doorOffset": {
         "x": 15,
-        "y": 68
+        "y": 80
       }
     }
   ],
@@ -385,7 +385,7 @@ export const TOWN_CH8 = {
     "y": 2240,
     "imgKey": "ch8_b_portal_v297",
     "imgUrl": "./assets/towns/ch8_b_portal.webp?v=297",
-    "scale": 0.62,
+    "scale": 0.82,
     "name": "出城戰鬥傳送門",
     "action": "exit_battle"
   }

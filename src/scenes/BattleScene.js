@@ -17,9 +17,9 @@ import { WarriorVfxDirector } from '../vfx/WarriorVfxDirector.js?v=266';
 import { RangerVfxDirector } from '../vfx/RangerVfxDirector.js?v=266';
 import { AssassinVfxDirector } from '../vfx/AssassinVfxDirector.js?v=266';
 import { PaladinVfxDirector } from '../vfx/PaladinVfxDirector.js?v=266';
-import { FloatingTextPool } from '../vfx/FloatingTextPool.js?v=266';
+import { FloatingTextPool } from '../vfx/FloatingTextPool.js?v=298';
 import { ParticlePool } from '../vfx/ParticlePool.js?v=266';
-import { TrainingArenaController } from '../combat/TrainingArenaController.js?v=293';
+import { TrainingArenaController } from '../combat/TrainingArenaController.js?v=298';
 import { CameraZoomHelper } from './CameraZoomHelper.js?v=282';
 import { MonsterVfxDirector } from '../vfx/MonsterVfxDirector.js?v=293';
 import { MonsterSkillEngine } from '../combat/MonsterSkillEngine.js?v=278';
@@ -362,7 +362,7 @@ export class BattleScene extends Phaser.Scene {
   create() {
     this.generateFxTextures();
     this.createClassAnims();
-    this.floatingTextPool = new FloatingTextPool(this, 48);
+    this.floatingTextPool = new FloatingTextPool(this, 96);
     this.particlePool = new ParticlePool(this, 96);
     this.trainingArena = new TrainingArenaController(this);
     this.monsterVfx = new MonsterVfxDirector(this);
@@ -432,7 +432,23 @@ export class BattleScene extends Phaser.Scene {
     this.playerHp = stats.maxHp;
     this.playerMaxMp = stats.maxMp || 100;
     this.playerMp = Math.min(this.playerMaxMp, this.playerMp + Math.round(this.playerMaxMp * 0.30));
-    this.spawnWaveSquad();
+    // v298: 監聽 wake 事件接管待進入演武場請求，避免轉場競態誤刷章節怪
+    this.events.on('wake', () => {
+      if (window.__PENDING_TRAINING_ARENA__) {
+        const req = window.__PENDING_TRAINING_ARENA__;
+        window.__PENDING_TRAINING_ARENA__ = null;
+        this.isTrainingMode = true;
+        this.enterTrainingArena(req.onExit);
+      }
+    });
+    if (window.__PENDING_TRAINING_ARENA__) {
+      const req = window.__PENDING_TRAINING_ARENA__;
+      window.__PENDING_TRAINING_ARENA__ = null;
+      this.isTrainingMode = true;
+      this.enterTrainingArena(req.onExit);
+    } else {
+      this.spawnWaveSquad();
+    }
   }
 
   createClassAnims() {
@@ -1150,6 +1166,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   spawnWaveSquad() {
+    if (this.isTrainingMode || this.trainingArena?.active || window.__PENDING_TRAINING_ARENA__) return;
     this.collectAllGroundLoot?.();
     const zoneIdx = this.getZoneIdx();
     this.ensureChapterLoaded(zoneIdx, () => {
@@ -1158,6 +1175,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   _applySpawnWaveSquad() {
+    if (this.isTrainingMode || this.trainingArena?.active || window.__PENDING_TRAINING_ARENA__) return;
     this.updateZoneBackground();
     this.clearAllMonsters();
 
@@ -1327,6 +1345,7 @@ export class BattleScene extends Phaser.Scene {
     this.updateSummons(dt, stats);
 
     const TARGET_MOBS = 29;
+    if (!this.isTrainingMode && !this.trainingArena?.active && !window.__PENDING_TRAINING_ARENA__) {
     this.rollingSpawnTimer = (this.rollingSpawnTimer || 0) + delta;
     if (this.rollingSpawnTimer >= 850) {
       this.rollingSpawnTimer = 0;
@@ -1347,6 +1366,7 @@ export class BattleScene extends Phaser.Scene {
           this.spawnMonsterInstance(mob, ang, rx, ry);
         }
       }
+    }
     }
 
     const nearest = this.findNearestMonster(this.hero.x, this.hero.y);
@@ -2660,10 +2680,24 @@ export class BattleScene extends Phaser.Scene {
     const ratio = Math.max(0, Math.min(1, m.hp / Math.max(1, m.maxHp)));
     m.hpFill.width = m.barW * ratio;
 
-    const color = customColor || (isTap ? '#fde047' : (isCrit ? '#facc15' : '#ffffff'));
-    const size = isCrit ? 20 : (isTap ? 14 : 15);
-    const label = `${prefix}${isCrit ? '💥' : ''}-${formatNum(dmg)}${isCrit ? '!' : ''}`;
-    this.spawnFloatingText(m.sprite.x + Phaser.Math.Between(-18, 18), m.sprite.y - 54, label, color, size);
+    // v298: 在怪物正頭頂血條上方顯示高對比戰鬥傷害數字
+    const mobDispH = (m.sprite?.displayHeight && m.sprite.displayHeight > 20) ? m.sprite.displayHeight : 96;
+    const headY = m.sprite.y - Math.max(66, Math.round(mobDispH * 0.78));
+    const isDot = (prefix === '🩸' || prefix === '☠️' || prefix === '🔥');
+    const color = isOverpower
+      ? '#38bdf8'
+      : (isCrit ? '#fde047' : (customColor || (isTap ? '#fef08a' : '#ffffff')));
+    const size = isCrit ? 27 : (isOverpower ? 24 : (isDot ? 16 : (customColor ? 21 : 19)));
+    const numStr = formatNum(dmg);
+    const label = isCrit ? `${numStr}!` : (isOverpower ? `${numStr}` : (isDot ? `${prefix}${numStr}` : `${numStr}`));
+    this.spawnFloatingText(
+      m.sprite.x + Phaser.Math.Between(-14, 14),
+      headY,
+      label,
+      color,
+      size,
+      { isCrit: isCrit || isOverpower },
+    );
 
     if (isCrit) {
       window.__battleSfx?.playCrit?.();
@@ -3010,6 +3044,12 @@ export class BattleScene extends Phaser.Scene {
   }
 
   handleHeroDefeat(reason) {
+    if (this.isTrainingMode || this.trainingArena?.active) {
+      this.playerHp = this.playerMaxHp;
+      this.playerMp = this.playerMaxMp;
+      this.updateHeroHpBar();
+      return;
+    }
     this.isTransitioning = true;
     this.playerHp = this.playerMaxHp;
     this.updateHeroHpBar();
@@ -3159,23 +3199,7 @@ export class BattleScene extends Phaser.Scene {
       vig.classList.toggle('hidden', !low);
     }
 
-    // 2. 連斬計數更新
-    const cBox = document.getElementById('hud-combo-box');
-    if (cBox) {
-      if (this.comboCount > 0 && time > (this.comboExpireAt || 0)) {
-        this.comboCount = 0;
-      }
-      if (this.comboCount >= 3) {
-        cBox.classList.remove('hidden');
-        const cNum = document.getElementById('combo-count');
-        const cTxt = document.getElementById('combo-bonus-txt');
-        if (cNum) cNum.textContent = String(this.comboCount);
-        const pct = this.comboCount >= 100 ? 30 : (this.comboCount >= 60 ? 18 : (this.comboCount >= 30 ? 10 : (this.comboCount >= 15 ? 5 : 0)));
-        if (cTxt) cTxt.textContent = pct > 0 ? `經驗 / 金幣 +${pct}%` : '持續連斬觸發加成';
-      } else {
-        cBox.classList.add('hidden');
-      }
-    }
+    // v298: 已移除連斬浮動框（改以怪物頭頂戰鬥傷害數字呈現）
 
     // 2.5 無盡深淵爬塔計時與通關判定
     if (this.towerMode) {
@@ -3491,9 +3515,9 @@ export class BattleScene extends Phaser.Scene {
     this.groundLoot = [];
   }
 
-  spawnFloatingText(x, y, text, color = '#ffffff', size = 15) {
+  spawnFloatingText(x, y, text, color = '#ffffff', size = 19, opts = null) {
     if (this.floatingTextPool) {
-      return this.floatingTextPool.spawn(x, y, text, color, size);
+      return this.floatingTextPool.spawn(x, y, text, color, size, opts);
     }
     return null;
   }

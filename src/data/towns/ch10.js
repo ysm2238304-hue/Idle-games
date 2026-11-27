@@ -32,10 +32,10 @@ export const TOWN_CH10 = {
     "frame": "ch10_lm_orrery",
     "x": 2640,
     "y": 840,
-    "scale": 0.66,
+    "scale": 0.87,
     "imgKey": "ch10_b_beacon_v297",
     "imgUrl": "./assets/towns/ch10_b_beacon.webp?v=297",
-    "radius": 52,
+    "radius": 65,
     "action": "gimmick_astral_orrery",
     "tip": "校準黑洞星象儀（5 分鐘 攻擊+45% / 爆傷+35% / 攻速+30% / 掉寶+40%）"
   },
@@ -46,11 +46,11 @@ export const TOWN_CH10 = {
       "frame": "ch10_bld_smith",
       "x": 1240,
       "y": 1720,
-      "scale": 0.8,
+      "scale": 1.06,
       "imgKey": "ch10_b_smith_v297",
       "imgUrl": "./assets/towns/ch10_b_smith.webp?v=297",
       "workStyle": "forge",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch10_npc_smith",
         "name": "奧利安",
@@ -65,7 +65,7 @@ export const TOWN_CH10 = {
       "actionLabel": "開啟星辰重鑄",
       "doorOffset": {
         "x": 20,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -74,11 +74,11 @@ export const TOWN_CH10 = {
       "frame": "ch10_bld_guild",
       "x": 3580,
       "y": 360,
-      "scale": 0.8,
+      "scale": 1.06,
       "imgKey": "ch10_b_guild_v297",
       "imgUrl": "./assets/towns/ch10_b_guild.webp?v=297",
       "workStyle": "guild",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch10_npc_guild",
         "name": "阿斯特拉",
@@ -93,7 +93,7 @@ export const TOWN_CH10 = {
       "actionLabel": "打開永恆星庫",
       "doorOffset": {
         "x": -20,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -102,11 +102,11 @@ export const TOWN_CH10 = {
       "frame": "ch10_bld_alchemy",
       "x": 1760,
       "y": 740,
-      "scale": 0.78,
+      "scale": 1.03,
       "imgKey": "ch10_b_alchemy_v297",
       "imgUrl": "./assets/towns/ch10_b_alchemy.webp?v=297",
       "workStyle": "alchemy",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch10_npc_alchemy",
         "name": "賽萊斯特",
@@ -121,7 +121,7 @@ export const TOWN_CH10 = {
       "actionLabel": "調配星雲靈藥",
       "doorOffset": {
         "x": 15,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -130,11 +130,11 @@ export const TOWN_CH10 = {
       "frame": "ch10_bld_temple",
       "x": 2980,
       "y": 680,
-      "scale": 0.8,
+      "scale": 1.06,
       "imgKey": "ch10_b_temple_v297",
       "imgUrl": "./assets/towns/ch10_b_temple.webp?v=297",
       "workStyle": "prayer",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch10_npc_temple",
         "name": "索拉里斯",
@@ -149,7 +149,7 @@ export const TOWN_CH10 = {
       "actionLabel": "配置終極技能",
       "doorOffset": {
         "x": -15,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -158,11 +158,11 @@ export const TOWN_CH10 = {
       "frame": "ch10_bld_bounty",
       "x": 1420,
       "y": 1580,
-      "scale": 0.6,
+      "scale": 0.79,
       "imgKey": "ch10_b_bounty_v297",
       "imgUrl": "./assets/towns/ch10_b_bounty.webp?v=297",
       "workStyle": "bounty",
-      "radius": 52,
+      "radius": 65,
       "npc": {
         "frame": "ch10_npc_bounty",
         "name": "奧羅拉",
@@ -177,7 +177,7 @@ export const TOWN_CH10 = {
       "actionLabel": "接取星圖懸賞",
       "doorOffset": {
         "x": 12,
-        "y": 64
+        "y": 76
       }
     },
     {
@@ -186,11 +186,11 @@ export const TOWN_CH10 = {
       "frame": "ch10_bld_market",
       "x": 2340,
       "y": 1240,
-      "scale": 0.8,
+      "scale": 1.06,
       "imgKey": "ch10_b_market_v297",
       "imgUrl": "./assets/towns/ch10_b_market.webp?v=297",
       "workStyle": "market",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch10_npc_market",
         "name": "維加",
@@ -205,7 +205,7 @@ export const TOWN_CH10 = {
       "actionLabel": "進入星塵黑市",
       "doorOffset": {
         "x": -15,
-        "y": 74
+        "y": 87
       }
     },
     {
@@ -214,11 +214,11 @@ export const TOWN_CH10 = {
       "frame": "ch10_bld_altar",
       "x": 2120,
       "y": 1020,
-      "scale": 0.72,
+      "scale": 0.95,
       "imgKey": "ch10_b_temple_v297",
       "imgUrl": "./assets/towns/ch10_b_temple.webp?v=297",
       "workStyle": "prayer",
-      "radius": 82,
+      "radius": 102,
       "npc": {
         "frame": "ch10_npc_altar",
         "name": "克羅諾斯",
@@ -233,7 +233,7 @@ export const TOWN_CH10 = {
       "actionLabel": "開啟永恆輪迴",
       "doorOffset": {
         "x": 15,
-        "y": 72
+        "y": 85
       }
     },
     {
@@ -242,8 +242,8 @@ export const TOWN_CH10 = {
       "frame": "ch10_bld_portal",
       "x": 640,
       "y": 2220,
-      "scale": 0.64,
-      "radius": 52,
+      "scale": 0.84,
+      "radius": 65,
       "npc": {
         "frame": "ch10_npc_portal",
         "name": "諾瓦",
@@ -259,7 +259,7 @@ export const TOWN_CH10 = {
       "imgUrl": "./assets/towns/ch10_b_portal.webp?v=297",
       "doorOffset": {
         "x": 20,
-        "y": 68
+        "y": 80
       }
     }
   ],
@@ -385,7 +385,7 @@ export const TOWN_CH10 = {
     "y": 2220,
     "imgKey": "ch10_b_portal_v297",
     "imgUrl": "./assets/towns/ch10_b_portal.webp?v=297",
-    "scale": 0.64,
+    "scale": 0.84,
     "name": "出城戰鬥傳送門",
     "action": "exit_battle"
   }

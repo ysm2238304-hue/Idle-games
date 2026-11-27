@@ -36,8 +36,8 @@ export const TOWN_CH1 = {
     "imgUrl": "./assets/towns/ch1_b_beacon.webp?v=294",
     "x": 2080,
     "y": 1220,
-    "scale": 0.62,
-    "radius": 52,
+    "scale": 0.82,
+    "radius": 65,
     "action": "gimmick_beacon",
     "tip": "點燃曙光烽火台（全城共享曙光祝福 5 分鐘）"
   },
@@ -50,11 +50,11 @@ export const TOWN_CH1 = {
       "imgUrl": "./assets/towns/ch1_b_smith.webp?v=294",
       "x": 1560,
       "y": 760,
-      "scale": 0.84,
-      "radius": 86,
+      "scale": 1.11,
+      "radius": 108,
       "doorOffset": {
         "x": 20,
-        "y": 72
+        "y": 85
       },
       "workStyle": "forge",
       "npc": {
@@ -78,11 +78,11 @@ export const TOWN_CH1 = {
       "imgUrl": "./assets/towns/ch1_b_alchemy.webp?v=294",
       "x": 1120,
       "y": 1020,
-      "scale": 0.82,
-      "radius": 82,
+      "scale": 1.08,
+      "radius": 102,
       "doorOffset": {
         "x": 15,
-        "y": 72
+        "y": 85
       },
       "workStyle": "alchemy",
       "npc": {
@@ -106,11 +106,11 @@ export const TOWN_CH1 = {
       "imgUrl": "./assets/towns/ch1_b_guild.webp?v=294",
       "x": 2360,
       "y": 640,
-      "scale": 0.86,
-      "radius": 88,
+      "scale": 1.14,
+      "radius": 110,
       "doorOffset": {
         "x": 0,
-        "y": 74
+        "y": 87
       },
       "workStyle": "guild",
       "npc": {
@@ -134,11 +134,11 @@ export const TOWN_CH1 = {
       "imgUrl": "./assets/towns/ch1_b_temple.webp?v=294",
       "x": 3180,
       "y": 1440,
-      "scale": 0.84,
-      "radius": 86,
+      "scale": 1.11,
+      "radius": 108,
       "doorOffset": {
         "x": -10,
-        "y": 74
+        "y": 87
       },
       "workStyle": "prayer",
       "npc": {
@@ -162,11 +162,11 @@ export const TOWN_CH1 = {
       "imgUrl": "./assets/towns/ch1_b_market.webp?v=294",
       "x": 3240,
       "y": 1820,
-      "scale": 0.84,
-      "radius": 84,
+      "scale": 1.11,
+      "radius": 105,
       "doorOffset": {
         "x": -18,
-        "y": 74
+        "y": 87
       },
       "workStyle": "market",
       "npc": {
@@ -190,11 +190,11 @@ export const TOWN_CH1 = {
       "imgUrl": "./assets/towns/ch1_b_bounty.webp?v=294",
       "x": 1520,
       "y": 1220,
-      "scale": 0.62,
-      "radius": 52,
+      "scale": 0.82,
+      "radius": 65,
       "doorOffset": {
         "x": 10,
-        "y": 64
+        "y": 76
       },
       "workStyle": "bounty",
       "npc": {
@@ -217,7 +217,7 @@ export const TOWN_CH1 = {
     "name": "出城戰鬥傳送門",
     "imgKey": "ch1_b_portal_v294",
     "imgUrl": "./assets/towns/ch1_b_portal.webp?v=294",
-    "scale": 0.62,
+    "scale": 0.82,
     "action": "exit_battle"
   },
   "trainingDummy": {

@@ -1,6 +1,6 @@
-// v266: 高頻傷害浮字物件池（FloatingTextPool）— 預分配 48 個可複用 Text，零 GC 波動、無 Tween 堆積
+// v298: 高對比怪物頭頂戰鬥傷害數字物件池（FloatingTextPool）— 96 槽預分配、depth 5000 永不被技能特效遮擋、彈跳回彈動效
 export class FloatingTextPool {
-  constructor(scene, maxSize = 48) {
+  constructor(scene, maxSize = 96) {
     this.scene = scene;
     this.maxSize = maxSize;
     this.pool = [];
@@ -10,52 +10,74 @@ export class FloatingTextPool {
 
     for (let i = 0; i < maxSize; i++) {
       const t = scene.add.text(-9999, -9999, '', {
-        fontFamily: '"Noto Sans TC", "Microsoft JhengHei", sans-serif',
-        fontSize: '15px',
+        fontFamily: '"Noto Sans TC", "Microsoft JhengHei", "Segoe UI", sans-serif',
+        fontSize: '19px',
         fontStyle: 'bold',
         color: '#ffffff',
         stroke: '#000000',
-        strokeThickness: 4,
+        strokeThickness: 5,
+        shadow: {
+          offsetX: 1,
+          offsetY: 2,
+          color: '#000000',
+          blur: 3,
+          stroke: true,
+          fill: true,
+        },
       })
-        .setOrigin(0.5)
-        .setDepth(2400)
+        .setOrigin(0.5, 0.5)
+        .setDepth(5000)
         .setActive(false)
         .setVisible(false);
-      this.pool.push({ obj: t, bornAt: 0, durationMs: 760, vy: -52, startY: 0 });
+      this.pool.push({
+        obj: t,
+        bornAt: 0,
+        durationMs: 820,
+        vx: 0,
+        vy: -64,
+        baseScale: 1.0,
+        peakScale: 1.25,
+      });
     }
   }
 
-  spawn(x, y, text, color = '#ffffff', size = 15) {
+  spawn(x, y, text, color = '#ffffff', size = 19, opts = null) {
     const s = this.scene;
     const now = s.time?.now || performance.now();
     if (now - this._lastFrameTime > 14) {
       this._lastFrameTime = now;
       this._frameCount = 0;
     }
-    // 單幀節流上限 8 筆，防止大範圍 AOE 瞬間洗版造成 WebGL 文字紋理上傳尖峰
-    if (this._frameCount >= 8) return null;
+    // 單幀節流上限提升至 20 筆，大範圍 AOE 也能讓每隻怪頭上清楚跳出數字
+    if (this._frameCount >= 20) return null;
     this._frameCount++;
 
     let slot = this.pool.find((p) => !p.obj.active);
     if (!slot) {
-      // 全滿時回收最舊的浮字槽
       slot = this.active.shift() || this.pool[0];
     }
-    const jitterX = (Math.random() - 0.5) * 22;
-    const jitterY = -((this._frameCount % 3) * 10);
+    const isCrit = !!(opts && opts.isCrit) || size >= 24;
+    const jitterX = (Math.random() - 0.5) * 28;
+    const jitterY = -((this._frameCount % 4) * 12);
     const t = slot.obj;
     t.setPosition(x + jitterX, y + jitterY);
     t.setText(String(text));
     t.setColor(color);
     t.setFontSize(`${size}px`);
+    t.setStroke('#000000', isCrit ? 6 : 5);
     t.setAlpha(1);
-    t.setScale(size >= 18 ? 1.12 : 1.0);
-    t.setActive(true).setVisible(true);
+    t.setDepth(isCrit ? 5010 : 5000);
 
     slot.bornAt = now;
-    slot.durationMs = size >= 18 ? 860 : 720;
-    slot.vy = size >= 18 ? -58 : -48;
-    slot.startY = y + jitterY;
+    slot.durationMs = isCrit ? 960 : 780;
+    slot.vx = (Math.random() - 0.5) * (isCrit ? 26 : 16);
+    slot.vy = isCrit ? -78 : -58;
+    slot.baseScale = 1.0;
+    slot.peakScale = isCrit ? 1.42 : 1.18;
+
+    t.setScale(slot.peakScale);
+    t.setActive(true).setVisible(true);
+
     if (!this.active.includes(slot)) this.active.push(slot);
     return t;
   }
@@ -73,9 +95,18 @@ export class FloatingTextPool {
         continue;
       }
       const p = elapsed / slot.durationMs;
-      slot.obj.y += slot.vy * dt * (1 - p * 0.45);
-      if (p > 0.55) {
-        slot.obj.setAlpha(Math.max(0, 1 - (p - 0.55) / 0.45));
+      slot.obj.x += slot.vx * dt * (1 - p * 0.5);
+      slot.obj.y += slot.vy * dt * (1 - p * 0.55);
+      // 前 18% 時間做彈跳回彈縮放（Pop-in），增加打擊辨識度
+      if (p < 0.18) {
+        const sp = p / 0.18;
+        const sc = slot.peakScale + (slot.baseScale - slot.peakScale) * sp;
+        slot.obj.setScale(sc);
+      } else {
+        slot.obj.setScale(slot.baseScale);
+      }
+      if (p > 0.62) {
+        slot.obj.setAlpha(Math.max(0, 1 - (p - 0.62) / 0.38));
       }
     }
   }

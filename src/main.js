@@ -22,8 +22,8 @@ import {
   saveCloudData,
   deleteCloudSave,
 } from './auth/firebase.js?v=272';
-import { BattleScene } from './scenes/BattleScene.js?v=293';
-import { TownScene } from './scenes/TownScene.js?v=297';
+import { BattleScene } from './scenes/BattleScene.js?v=298';
+import { TownScene } from './scenes/TownScene.js?v=298';
 import { TOWN_SPLASHES } from './data/towns/splashes.js?v=229';
 import { DashboardUI } from './ui/DashboardUI.js?v=297';
 import { hookWorldMap25D, openWorldMap25D, closeWorldMap25D, toggleWorldMap25D } from './ui/WorldMap25D.js?v=253';
@@ -1294,14 +1294,7 @@ function enterTown(chapterIdx = 0, instant = false) {
 
     if (phaserGame.scene.isActive('BattleScene')) phaserGame.scene.sleep('BattleScene');
   const townCallbacks = {
-    onEnterTrainingArena: () => {
-      if (typeof exitTownToBattle === 'function') exitTownToBattle();
-      setTimeout(() => {
-        battleScene?.enterTrainingArena?.(() => {
-          if (typeof enterTown === 'function') enterTown();
-        });
-      }, 180);
-    },
+    onEnterTrainingArena: () => enterTrainingArenaFromTown(),
     getState: () => gameState,
     getComputedStats: () => computedStats,
     onTownLoadProgress: (val) => ui.updateTownSplashProgress(val),
@@ -1451,14 +1444,7 @@ function enterTown(chapterIdx = 0, instant = false) {
         const modalData = { ...(data || {}), chapterIdx };
         ui.openTownFacilityModal(modalAction, modalData, {
           onRefreshAll: () => { refreshStatsAndUI(); persistAll(); },
-          onEnterTrainingArena: () => {
-            if (typeof exitTownToBattle === 'function') exitTownToBattle();
-            setTimeout(() => {
-              battleScene?.enterTrainingArena?.(() => {
-                if (typeof enterTown === 'function') enterTown();
-              });
-            }, 180);
-          },
+          onEnterTrainingArena: () => enterTrainingArenaFromTown(),
           onBrewAllCombat: (totalCost) => {
             if ((gameState.gold || 0) < totalCost) return;
             gameState.gold -= totalCost;
@@ -2050,11 +2036,42 @@ function enterTown(chapterIdx = 0, instant = false) {
   }
 }
 
-function exitTownToBattle(forceRespawn = false) {
+function enterTrainingArenaFromTown() {
+  if (!phaserGame) return;
+  const onExit = () => {
+    if (typeof enterTown === 'function') enterTown(Math.min(9, getChapterIdx(gameState.stage)));
+  };
+  window.__PENDING_TRAINING_ARENA__ = { onExit };
+  const bsPre = phaserGame.scene.getScene('BattleScene');
+  if (bsPre) bsPre.isTrainingMode = true;
+  if (isInTown) {
+    exitTownToBattle(false, true);
+  } else {
+    if (phaserGame.scene.isSleeping('BattleScene')) phaserGame.scene.wake('BattleScene');
+    else if (!phaserGame.scene.isActive('BattleScene')) phaserGame.scene.start('BattleScene');
+    phaserGame.scene.bringToTop('BattleScene');
+  }
+  const bs = phaserGame.scene.getScene('BattleScene');
+  battleScene = bs;
+  if (bs && bs.trainingArena && bs.sys?.isActive?.()) {
+    window.__PENDING_TRAINING_ARENA__ = null;
+    bs.enterTrainingArena(onExit);
+  }
+}
+
+function exitTownToBattle(forceRespawn = false, forTraining = false) {
   if (!phaserGame || !isInTown) return;
   isInTown = false;
   ui.hideTownSplash();
+  if (!forTraining) {
+    window.__PENDING_TRAINING_ARENA__ = null;
+  }
   if (phaserGame.scene.isActive('TownScene')) phaserGame.scene.sleep('TownScene');
+  const existingBs = phaserGame.scene.getScene('BattleScene');
+  if (existingBs) {
+    if (forTraining) existingBs.isTrainingMode = true;
+    else if (existingBs.trainingArena?.active) existingBs.exitTrainingArena();
+  }
   if (phaserGame.scene.isSleeping('BattleScene')) {
     phaserGame.scene.wake('BattleScene');
   } else if (!phaserGame.scene.isActive('BattleScene')) {
@@ -2065,7 +2082,7 @@ function exitTownToBattle(forceRespawn = false) {
   if (battleScene) battleScene.isPaused = false;
   battleScene?.cameras?.main?.fadeIn?.(350, 0, 0, 0);
   battleScene?.setPaused?.(false);
-  if (forceRespawn && battleScene?.sys?.isActive()) {
+  if (!forTraining && forceRespawn && battleScene?.sys?.isActive()) {
     battleScene.spawnWaveSquad?.();
   }
   const btn = document.getElementById('btn-town-toggle');
@@ -2079,7 +2096,7 @@ function exitTownToBattle(forceRespawn = false) {
   if (wpBtn) { wpBtn.classList.remove('in-town'); wpBtn.classList.add('is-disabled'); }
   townBgm.stop();
   ui.updateTargetFrameTown?.(null);
-  ui.addLog('⚔️ 已離開主城重返前線戰鬥！', 'system');
+  ui.addLog(forTraining ? '🎯 已傳送至 2.5D 實戰演武場！' : '⚔️ 已離開主城重返前線戰鬥！', 'system');
 }
 
 document.getElementById('btn-town-toggle')?.addEventListener('click', () => {
