@@ -19,7 +19,7 @@ import { AssassinVfxDirector } from '../vfx/AssassinVfxDirector.js?v=266';
 import { PaladinVfxDirector } from '../vfx/PaladinVfxDirector.js?v=266';
 import { FloatingTextPool } from '../vfx/FloatingTextPool.js?v=298';
 import { ParticlePool } from '../vfx/ParticlePool.js?v=266';
-import { TrainingArenaController } from '../combat/TrainingArenaController.js?v=304';
+import { TrainingArenaController } from '../combat/TrainingArenaController.js?v=305';
 import { BattleMiniDpsHud } from '../ui/BattleMiniDpsHud.js?v=302';
 import { CameraZoomHelper } from './CameraZoomHelper.js?v=282';
 import { MonsterVfxDirector } from '../vfx/MonsterVfxDirector.js?v=293';
@@ -154,6 +154,7 @@ export class BattleScene extends Phaser.Scene {
     this.enlightenmentLastElem = '';
     this.enlightenmentUntil = 0;
 
+    this.autoMode = 'move'; // 'move' (自動巡航) | 'stand' (自動站樁不移動) | 'manual' (純手動)
     this.autoMoveEnabled = true;
     this.manualOverrideTimer = 0;
     this.basicComboStep = 0;
@@ -639,7 +640,7 @@ export class BattleScene extends Phaser.Scene {
     this._perfectDodgeUntil = 0;
     this.comboCount = 0;
     this.comboExpireAt = 0;
-    this.heroAfkText = this.add.text(cx, cy - 117, this.autoMoveEnabled ? '★ 自動狩獵' : '手動', {
+    this.heroAfkText = this.add.text(cx, cy - 117, this.autoMode === 'move' ? '★ 自動巡航' : (this.autoMode === 'stand' ? '🎯 自動站樁' : '手動'), {
       fontSize: '11px', color: this.autoMoveEnabled ? '#fde047' : '#cbd5e1',
       fontFamily: 'sans-serif', fontStyle: 'bold',
       stroke: '#000000', strokeThickness: 3,
@@ -695,14 +696,47 @@ export class BattleScene extends Phaser.Scene {
     g.fillCircle(hx, hy, 3.8);
   }
 
-  toggleAutoMove() {
-    this.autoMoveEnabled = !this.autoMoveEnabled;
-    if (this.autoMoveEnabled) this.manualOverrideTimer = 0;
-    if (this.heroAfkText) {
-      this.heroAfkText.setText(this.autoMoveEnabled ? '★ 自動狩獵' : '手動');
-      this.heroAfkText.setColor(this.autoMoveEnabled ? '#fde047' : '#cbd5e1');
+  isAutoAttackEnabled() {
+    return this.autoMode === 'move' || this.autoMode === 'stand';
+  }
+
+  isAutoMoveAllowed() {
+    return this.autoMode === 'move' && !this.isTrainingMode && !this.trainingArena?.active;
+  }
+
+  setAutoMode(mode) {
+    let next = (mode === 'move' || mode === 'stand' || mode === 'manual') ? mode : 'move';
+    // 演武場內開啟自動攻擊時強制鎖定為「原地站樁」，絕不自動移動
+    if ((this.isTrainingMode || this.trainingArena?.active) && next === 'move') {
+      next = 'stand';
     }
-    return this.autoMoveEnabled;
+    this.autoMode = next;
+    this.autoMoveEnabled = (next === 'move');
+    if (next === 'move') this.manualOverrideTimer = 0;
+    if (this.heroAfkText) {
+      if (next === 'move') {
+        this.heroAfkText.setText('★ 自動巡航');
+        this.heroAfkText.setColor('#fde047');
+      } else if (next === 'stand') {
+        this.heroAfkText.setText('🎯 自動站樁');
+        this.heroAfkText.setColor('#38bdf8');
+      } else {
+        this.heroAfkText.setText('手動');
+        this.heroAfkText.setColor('#cbd5e1');
+      }
+    }
+    return this.autoMode;
+  }
+
+  toggleAutoMove() {
+    if (this.isTrainingMode || this.trainingArena?.active) {
+      const next = this.autoMode === 'manual' ? 'stand' : 'manual';
+      return this.setAutoMode(next);
+    }
+    const order = ['move', 'stand', 'manual'];
+    const idx = order.indexOf(this.autoMode);
+    const next = order[(idx + 1) % order.length];
+    return this.setAutoMode(next);
   }
 
   getZoneIdx() {
@@ -975,10 +1009,7 @@ export class BattleScene extends Phaser.Scene {
       }
       return false;
     }
-    if (this.isTrainingMode && this.trainingArena?.infiniteMp) {
-      cost = 0;
-      this.playerMp = this.playerMaxMp;
-    }
+    // v305: 演武場遵循實戰正常魔力消耗
     if (!freeAstral && cost > 0) {
       this.playerMp = Math.max(0, this.playerMp - cost);
       this.updateHeroHpBar?.();
@@ -996,7 +1027,7 @@ export class BattleScene extends Phaser.Scene {
     this._activeDamageSource = info?.name || info?.id || '技能';
     this._activeDamageSourceUntil = (this.time?.now || 0) + 1100;
     this._triggerHeroSelfBuffVfx?.(info?.id);
-    const trainCdMult = (this.isTrainingMode && this.trainingArena?.fastCd) ? 0.20 : 1.0;
+    const trainCdMult = 1.0; // v305: 演武場遵循實戰正常技能冷卻
     const effCd = Math.max(300, Math.round(info.cooldownMs * (buildMods.cdMult || 1) * trainCdMult));
     const cdSaved = Math.max(0, info.cooldownMs - effCd);
     this.slotCdTimers[slotIdx] = freeAstral ? Math.round(info.cooldownMs * 0.3) : (echoRefund ? Math.round(info.cooldownMs * 0.5) : cdSaved);
@@ -1298,7 +1329,7 @@ export class BattleScene extends Phaser.Scene {
         this.potionCharges += 1;
       }
     }
-    if (this.autoMoveEnabled && this.potionCharges > 0 && this.playerHp > 0 && this.playerHp < this.playerMaxHp * 0.35) {
+    if (this.isAutoAttackEnabled() && this.potionCharges > 0 && this.playerHp > 0 && this.playerHp < this.playerMaxHp * 0.35) {
       this.usePotion(false);
     }
     if (this.callbacks?.onSkillTicks) {
@@ -1405,7 +1436,8 @@ export class BattleScene extends Phaser.Scene {
       const dist = Phaser.Math.Distance.Between(this.hero.x, this.hero.y, nearest.sprite.x, nearest.sprite.y);
 
       // v302: 嚴格區分「自動」與「手動」— 手動模式下絕不自動施放技能（也不會誤放傳送術拉回中間）或自動普攻
-      if (this.autoMoveEnabled && dist <= Math.max(260, atkRange)) {
+      const autoCastRange = this.isTrainingMode ? Math.max(520, atkRange) : Math.max(260, atkRange);
+      if (this.isAutoAttackEnabled() && dist <= autoCastRange) {
         const eqIds = this.getState()?.equippedSkillsByClass?.[cid] || [];
         const smartOrder = getSmartAutoSlotOrder(eqIds, this.monsters, time);
         const orderToTry = smartOrder.length ? smartOrder : [0, 1, 2, 3, 4, 5];
@@ -1419,7 +1451,8 @@ export class BattleScene extends Phaser.Scene {
       const lowBloodKey = cid === 'warrior' && (tree.w_key_blood || 0) > 0 && this.playerHp < this.playerMaxHp * 0.55;
       const spdMult = (time < this.warcryUntil ? 1.35 : 1) * (time < this.windwalkUntil ? 1.40 : 1) * (time < (this.lethalFangsUntil || 0) ? 1.45 : 1) * (lowBloodKey ? 1.45 : 1);
       const effInterval = Math.max(180, Math.round(stats.atkIntervalMs / spdMult));
-      if (this.autoMoveEnabled && this.heroAttackTimer >= effInterval && dist <= atkRange) {
+      const autoAtkRange = this.isTrainingMode ? Math.max(atkRange, 220) : atkRange;
+      if (this.isAutoAttackEnabled() && this.heroAttackTimer >= effInterval && dist <= autoAtkRange) {
         this.heroAttackTimer = 0;
         this.performHeroAttack(time, stats, cid, nearest);
       }
@@ -1468,7 +1501,7 @@ export class BattleScene extends Phaser.Scene {
           vx = (ldx / ld) * stats.moveSpeed * 1.15;
           vy = (ldy / ld) * stats.moveSpeed * 1.15;
         }
-      } else if (this.autoMoveEnabled && this.manualOverrideTimer <= 0) {
+      } else if (this.isAutoMoveAllowed() && this.manualOverrideTimer <= 0) {
         const nearestLoot = this.findNearestGroundLoot?.(this.hero.x, this.hero.y);
         const nearest = this.findNearestMonster(this.hero.x, this.hero.y);
         const nearDist = nearest ? Math.hypot(nearest.sprite.x - this.hero.x, nearest.sprite.y - this.hero.y) : Infinity;
@@ -1841,6 +1874,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   fireEnemyBolt(m) {
+    if (this.isTrainingMode || this.trainingArena?.active || m?.isTrainingDummy) return;
     const ang = Math.atan2(this.hero.y - m.sprite.y, this.hero.x - m.sprite.x);
     const isImp = m.atkStyle === 'imp_fire';
     const prefKey = isImp ? 'proj_e_fireball' : (m.atkStyle === 'venom' ? 'proj_e_venom_spit' : 'proj_e_soul_bolt');
@@ -3223,6 +3257,7 @@ export class BattleScene extends Phaser.Scene {
   }
 
   castBossRedCircle(boss) {
+    if (this.isTrainingMode || this.trainingArena?.active || boss?.isTrainingDummy) return;
     if (!boss || boss.hp <= 0 || !this.hero) return;
     const tx = this.hero.x;
     const ty = this.hero.y + 12;
@@ -3246,7 +3281,7 @@ export class BattleScene extends Phaser.Scene {
         if (!this.scene?.isActive?.() || !boss || boss.hp <= 0 || !this.hero) return;
         const burst = this.add.circle(tx, ty, radius, 0xf97316, 0.55).setBlendMode(Phaser.BlendModes.ADD).setDepth(4510);
         this.tweens.add({ targets: burst, scale: 1.25, alpha: 0, duration: 280, onComplete: () => burst.destroy() });
-        if (window.__gameSettings?.graphics?.screenShake !== false) this.cameras.main.shake(180, 0.01);
+        // v305: zero screen shake
 
         const dist = Math.hypot(this.hero.x - tx, (this.hero.y + 12) - ty);
         if (dist <= radius) {
@@ -3291,9 +3326,9 @@ export class BattleScene extends Phaser.Scene {
       }
     }
 
-    // 3. 首領每 6.5 秒施放地面紅圈預警重擊
-    if (time >= (this._bossTelegraphAt || 0) && this.monsters?.length) {
-      const aliveBoss = this.monsters.find((m) => m.hp > 0 && m.isBoss);
+    // 3. 首領每 6.5 秒施放地面紅圈預警重擊（演武場與木頭人全程禁止）
+    if (!this.isTrainingMode && !this.trainingArena?.active && time >= (this._bossTelegraphAt || 0) && this.monsters?.length) {
+      const aliveBoss = this.monsters.find((m) => m.hp > 0 && m.isBoss && !m.isTrainingDummy);
       if (aliveBoss && Math.hypot(aliveBoss.sprite.x - this.hero.x, aliveBoss.sprite.y - this.hero.y) < 620) {
         this._bossTelegraphAt = time + 6500;
         this.castBossRedCircle(aliveBoss);

@@ -22,7 +22,7 @@ import {
   saveCloudData,
   deleteCloudSave,
 } from './auth/firebase.js?v=272';
-import { BattleScene } from './scenes/BattleScene.js?v=304';
+import { BattleScene } from './scenes/BattleScene.js?v=305';
 import { TownScene } from './scenes/TownScene.js?v=304-all';
 import { TOWN_SPLASHES } from './data/towns/splashes.js?v=229';
 import { DashboardUI } from './ui/DashboardUI.js?v=301';
@@ -2139,6 +2139,7 @@ function openTownWaypointUI() {
 document.getElementById('btn-top-waypoint')?.addEventListener('click', openTownWaypointUI);
 document.getElementById('btn-town-bgm')?.addEventListener('click', (e) => {
   const muted = townBgm.toggleMute();
+  e.currentTarget.classList.toggle('is-muted', !!muted);
   const lbl = e.currentTarget.querySelector('.mmo-lbl');
   if (lbl) lbl.textContent = muted ? '靜音' : '音樂';
 });
@@ -2567,18 +2568,27 @@ document.getElementById('btn-cloud-logout')?.addEventListener('click', async () 
 function toggleAutoMoveMode() {
   if (!battleScene) return;
   if (!battleScene?.sys?.isActive()) return;
-  const isAuto = battleScene.toggleAutoMove();
+  const mode = battleScene.toggleAutoMove();
+  const isAuto = mode !== 'manual';
   const label = document.getElementById('auto-mode-label');
   const btn = document.getElementById('btn-toggle-auto');
   const pill = document.getElementById('hud-afk-pill');
-  if (label) label.textContent = isAuto ? '自動' : '手動';
-  if (btn) btn.classList.toggle('active', isAuto);
+  if (label) label.textContent = mode === 'move' ? '巡航' : (mode === 'stand' ? '站樁' : '手動');
+  if (btn) {
+    btn.classList.toggle('active', isAuto);
+    btn.classList.toggle('is-stand', mode === 'stand');
+    btn.classList.toggle('is-manual', !isAuto);
+  }
   if (pill) {
-    pill.textContent = isAuto ? '★ AFK 自動掛機中' : '🎮 手動走位模式';
-    pill.classList.toggle('active', isAuto);
+    pill.textContent = mode === 'move' ? '★ 自動巡航中' : (mode === 'stand' ? '🎯 自動站樁中' : '✋ 手動模式');
     pill.classList.toggle('manual', !isAuto);
   }
-  ui.addLog(isAuto ? '切換為【自動巡邏模式】(按 WASD 可隨時介入走位)' : '切換為【純手動走位模式】(WASD / 方向鍵移動)', 'system');
+  const msg = mode === 'move'
+    ? '切換為【自動巡航模式】(自動移動追怪＋自動施放技能，WASD 可隨時介入)'
+    : (mode === 'stand'
+      ? '切換為【自動站樁模式】(原地自動施放技能與普攻，絕不自動移動)'
+      : '切換為【純手動模式】(完全由玩家手動移動與施放技能)');
+  ui.addLog(msg, 'system');
 }
 
 document.getElementById('btn-toggle-auto')?.addEventListener('click', toggleAutoMoveMode);

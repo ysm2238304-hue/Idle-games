@@ -81,6 +81,19 @@
       text-shadow: 0 1px 3px rgba(0, 0, 0, 0.96) !important;
       padding: 0 4px !important;
     }
+    /* v305: 雙模式自動攻擊（站樁青光）與靜音圖示淡化 */
+    #btn-toggle-auto.is-stand {
+      border-color: rgba(56, 189, 248, 0.85) !important;
+      box-shadow: 0 0 12px rgba(56, 189, 248, 0.42), inset 0 0 8px rgba(56, 189, 248, 0.22) !important;
+    }
+    #btn-toggle-auto.is-stand #auto-mode-label {
+      background: rgba(14, 116, 144, 0.92) !important;
+      color: #e0f2fe !important;
+    }
+    #btn-town-bgm.is-muted .mmo-ui-img {
+      opacity: 0.36;
+      filter: grayscale(0.85);
+    }
   </style>
 <style id="v291-zindex-and-drag-css">
     /* v291: 修復圖1任務清單與角色裝備抽屜/彈窗重疊問題，並強化可拖曳標題列視覺 */
@@ -322,11 +335,11 @@
             <div class="matrix-row" data-group="世界系統">
               <button id="btn-world-map" class="mmo-micro-btn" data-tip="世界大地圖選關 [M]"><img class="mmo-ui-img" src="./assets/ui/ui_worldmap.png" alt="地圖" /><span class="mmo-hk">M</span></button>
               <button id="btn-top-waypoint" class="mmo-micro-btn mmo-waypoint-btn" data-tip="主城快速傳送陣 [Y]"><img class="mmo-ui-img" src="./assets/ui/ui_waypoint.png?v=99" alt="傳送" /><span class="mmo-hk">Y</span></button>
-              <button class="mmo-micro-btn" data-drawer="pets" data-tip="技能變異寵物 [P]"><span class="mmo-emoji">🐾</span><span class="mmo-hk">P</span></button>
-              <button id="btn-open-ach-tower" class="mmo-micro-btn" data-tip="成就稱號與無盡爬塔 [J]"><span class="mmo-emoji">🏆</span><span id="ach-dot" class="notify-dot hidden"></span><span class="mmo-hk">J</span></button>
-              <button id="btn-open-shop" class="mmo-micro-btn" data-tip="暗黑深淵商城 (基礎/裝備/寵物/藥水) [F]"><span class="mmo-emoji">🛒</span><span class="mmo-hk">F</span></button>
-              <button id="btn-town-bgm" class="mmo-micro-btn" data-tip="開啟 / 靜音主城 BGM [X]"><span class="mmo-emoji">🎵</span><span class="mmo-hk">X</span></button>
-              <button id="btn-open-settings" class="mmo-micro-btn" data-tip="系統設定 (UI/聲音/畫質/遊戲) [O]"><span class="mmo-emoji">⚙️</span><span class="mmo-hk">O</span></button>
+              <button class="mmo-micro-btn" data-drawer="pets" data-tip="技能變異寵物 [P]"><img class="mmo-ui-img" src="./assets/ui/ui_pets_v305.webp?v=305" alt="寵物" /><span class="mmo-hk">P</span></button>
+              <button id="btn-open-ach-tower" class="mmo-micro-btn" data-tip="成就稱號與無盡爬塔 [J]"><img class="mmo-ui-img" src="./assets/ui/ui_trophy_v305.webp?v=305" alt="成就" /><span id="ach-dot" class="notify-dot hidden"></span><span class="mmo-hk">J</span></button>
+              <button id="btn-open-shop" class="mmo-micro-btn" data-tip="暗黑深淵商城 (基礎/裝備/寵物/藥水) [F]"><img class="mmo-ui-img" src="./assets/ui/ui_shop_v305.webp?v=305" alt="商城" /><span class="mmo-hk">F</span></button>
+              <button id="btn-town-bgm" class="mmo-micro-btn" data-tip="開啟 / 靜音主城 BGM [X]"><img class="mmo-ui-img" src="./assets/ui/ui_bgm_v305.webp?v=305" alt="音樂" /><span class="mmo-hk">X</span></button>
+              <button id="btn-open-settings" class="mmo-micro-btn" data-tip="系統設定 (UI/聲音/畫質/遊戲) [O]"><img class="mmo-ui-img" src="./assets/ui/ui_settings_v305.webp?v=305" alt="設定" /><span class="mmo-hk">O</span></button>
             </div>
           </div>
           <button id="btn-collapse-topmenu" class="mmo-micro-btn mmo-collapse-btn" data-tip="收合 / 展開功能矩陣"><span class="mmo-lbl" style="font-size:14px;">◀</span></button>
@@ -579,10 +592,10 @@
             <span class="mmo-mp-cost"></span>
           </button>
 
-          <button id="btn-toggle-auto" class="mmo-slot mmo-auto active" data-tip="自動狩獵／手動控制切換 [T]（可隨時移動介入）">
+          <button id="btn-toggle-auto" class="mmo-slot mmo-auto active" data-tip="自動攻擊模式切換 [T]：巡航（會移動）→ 站樁（不移動）→ 手動">
             <span class="mmo-hotkey">T</span>
             <img class="mmo-ui-img" src="./assets/ui/ui_auto.png" alt="自動" />
-            <span class="mmo-badge-br" id="auto-mode-label">自動</span>
+            <span class="mmo-badge-br" id="auto-mode-label">巡航</span>
           </button>
         </div>
       </section>
@@ -757,6 +770,6 @@
     </div>
   </div>
 
-  <script type="module" src="./src/main.js?v=304-all"></script>
+  <script type="module" src="./src/main.js?v=305"></script>
 </body>
 </html>

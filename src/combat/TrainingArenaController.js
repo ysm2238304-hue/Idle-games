@@ -8,7 +8,7 @@ export class TrainingArenaController {
   constructor(scene) {
     this.scene = scene;
     this.active = false;
-    this.infiniteMp = true;
+    this.infiniteMp = false;
     this.fastCd = false;
     this.formation = 'trio'; // boss | trio | pack
     this.autoAttack = true;
@@ -20,21 +20,32 @@ export class TrainingArenaController {
     this._savedState = null;
   }
 
-  _syncAutoBtnUi(isAuto) {
+  _syncAutoBtnUi(isAutoOrMode) {
     try {
+      const mode = (typeof isAutoOrMode === 'string')
+        ? isAutoOrMode
+        : (isAutoOrMode ? (this.active ? 'stand' : 'move') : 'manual');
+      const isAuto = mode !== 'manual';
       const btn = document.getElementById('btn-toggle-auto');
       if (btn) {
-        btn.classList.toggle('is-active', !!isAuto);
+        btn.classList.toggle('active', isAuto);
+        btn.classList.toggle('is-active', isAuto);
+        btn.classList.toggle('is-stand', mode === 'stand');
         btn.classList.toggle('is-manual', !isAuto);
-        const lbl = btn.querySelector('.mmo-btn-lbl, span');
-        if (lbl && (lbl.textContent.includes('自動') || lbl.textContent.includes('手動'))) {
-          lbl.textContent = isAuto ? '自動' : '手動';
-        }
+      }
+      const lbl = document.getElementById('auto-mode-label');
+      if (lbl) {
+        lbl.textContent = mode === 'move' ? '巡航' : (mode === 'stand' ? '站樁' : '手動');
+      }
+      const pill = document.getElementById('hud-afk-pill');
+      if (pill) {
+        pill.textContent = mode === 'move' ? '★ 自動巡航中' : (mode === 'stand' ? '🎯 自動站樁中' : '✋ 手動模式');
+        pill.classList.toggle('manual', !isAuto);
       }
       const hudAuto = this._hudEl?.querySelector('#v299-btn-auto');
       if (hudAuto) {
-        hudAuto.textContent = isAuto ? '🤖 自動: 開' : '🤖 自動: 關';
-        hudAuto.classList.toggle('is-on', !!isAuto);
+        hudAuto.textContent = isAuto ? '🎯 自動站樁: 開（僅施放技能・不移動）' : '✋ 純手動模式（不自動施放）';
+        hudAuto.classList.toggle('is-on', isAuto);
       }
     } catch {}
   }
@@ -47,6 +58,7 @@ export class TrainingArenaController {
     if (!this._savedState) {
       this._savedState = {
         autoMoveEnabled: typeof s.autoMoveEnabled === 'boolean' ? s.autoMoveEnabled : true,
+        autoMode: s.autoMode || (s.autoMoveEnabled ? 'move' : 'manual'),
         hp: s.playerHp,
         mp: s.playerMp,
       };
@@ -102,10 +114,14 @@ export class TrainingArenaController {
 
       if (this.formation === 'striker') this.formation = 'trio';
       this.spawnFormation(this.formation);
-      s.autoMoveEnabled = !!this.autoAttack;
+      this.infiniteMp = false;
+      this.fastCd = false;
+      const arenaMode = this.autoAttack ? 'stand' : 'manual';
+      if (s.setAutoMode) s.setAutoMode(arenaMode);
+      else s.autoMoveEnabled = false;
       this._setMinimapArenaMode(true);
       this._mountHud();
-      this._syncAutoBtnUi(s.autoMoveEnabled);
+      this._syncAutoBtnUi(arenaMode);
     };
 
     if (needed.length > 0) {
@@ -140,7 +156,9 @@ export class TrainingArenaController {
     const saved = this._savedState;
     this._savedState = null;
     if (saved) {
-      s.autoMoveEnabled = !!saved.autoMoveEnabled;
+      const prevMode = saved.autoMode || (saved.autoMoveEnabled ? 'move' : 'manual');
+      if (s.setAutoMode) s.setAutoMode(prevMode);
+      else s.autoMoveEnabled = !!saved.autoMoveEnabled;
     }
     s.playerHp = s.playerMaxHp;
     s.playerMp = s.playerMaxMp;
@@ -148,7 +166,7 @@ export class TrainingArenaController {
       for (let i = 0; i < s.slotCdTimers.length; i++) s.slotCdTimers[i] = 999999;
     }
     s.updateHeroHpBar?.();
-    this._syncAutoBtnUi(s.autoMoveEnabled);
+    this._syncAutoBtnUi(s.autoMode || (s.autoMoveEnabled ? 'move' : 'manual'));
 
     if (s.bgImage?.active && s.getZoneIdx) {
       const z = s.getZoneIdx();
@@ -314,22 +332,20 @@ export class TrainingArenaController {
       }
     }
 
-    // 2. 演武場全程鎖滿血量（不掉血）；無限能量開啟時鎖滿魔力，關閉時依實戰魔耗運作
-    let barDirty = false;
+    // 2. 演武場僅鎖滿血量（不掉血）；魔力與冷卻完全依實戰正常運作
     if (s.playerHp !== s.playerMaxHp) {
       s.playerHp = s.playerMaxHp;
-      barDirty = true;
+      s.updateHeroHpBar?.();
     }
-    if (this.infiniteMp && s.playerMp !== s.playerMaxMp) {
-      s.playerMp = s.playerMaxMp;
-      barDirty = true;
-    }
-    if (barDirty) s.updateHeroHpBar?.();
 
-    // 同步自動按鈕狀態（若玩家按下方快捷鍵切換手動／自動，演武場面板同步更新）
-    if (this.autoAttack !== !!s.autoMoveEnabled) {
-      this.autoAttack = !!s.autoMoveEnabled;
-      this._syncAutoBtnUi(this.autoAttack);
+    // 同步自動按鈕狀態（演武場內開啟自動強制鎖定原地站樁，不移動）
+    if (s.autoMode === 'move' && s.setAutoMode) {
+      s.setAutoMode('stand');
+    }
+    const curAuto = s.isAutoAttackEnabled ? s.isAutoAttackEnabled() : (s.autoMode === 'stand');
+    if (this.autoAttack !== curAuto) {
+      this.autoAttack = curAuto;
+      this._syncAutoBtnUi(curAuto ? 'stand' : 'manual');
     }
 
     // 3. 推進獨立 DPS 引擎（已完全移除木頭人紅圈反擊攻擊）
@@ -372,10 +388,8 @@ export class TrainingArenaController {
         </div>
       </div>
       <div id="v299-hud-body">
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:6px;">
-          <button id="v299-btn-auto" type="button" style="padding:5px 3px;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;">🤖 自動: 開</button>
-          <button id="v299-btn-mp" type="button" style="padding:5px 3px;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;">♾️ 能量: 滿</button>
-          <button id="v299-btn-cd" type="button" style="padding:5px 3px;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;">⏱️ 標準CD</button>
+        <div style="display:grid;grid-template-columns:1fr;gap:4px;margin-bottom:6px;">
+          <button id="v299-btn-auto" type="button" style="padding:6px 8px;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;">🎯 自動站樁: 開（僅施放技能・不移動）</button>
         </div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px;margin-bottom:6px;">
           <button data-form="boss" style="padding:5px 3px;border-radius:5px;font-size:11px;font-weight:700;cursor:pointer;">👑 單體首領</button>
@@ -440,8 +454,6 @@ export class TrainingArenaController {
     document.body.appendChild(el);
     this._hudEl = el;
     el.querySelector('#v299-btn-auto')?.classList.toggle('is-on', !!this.autoAttack);
-    el.querySelector('#v299-btn-mp')?.classList.toggle('is-on', !!this.infiniteMp);
-    el.querySelector('#v299-btn-cd')?.classList.toggle('is-on', !!this.fastCd);
     el.querySelector(`button[data-form="${this.formation}"]`)?.classList.add('is-on');
 
     const dragBar = el.querySelector('#v299-hud-drag');
@@ -478,22 +490,10 @@ export class TrainingArenaController {
     });
     el.querySelector('#v299-btn-auto')?.addEventListener('click', () => {
       this.autoAttack = !this.autoAttack;
-      this.scene.autoMoveEnabled = this.autoAttack;
-      this._syncAutoBtnUi(this.autoAttack);
-    });
-    el.querySelector('#v299-btn-mp')?.addEventListener('click', (ev) => {
-      this.infiniteMp = !this.infiniteMp;
-      ev.currentTarget.textContent = this.infiniteMp ? '♾️ 能量: 滿' : '💧 實戰耗魔';
-      ev.currentTarget.classList.toggle('is-on', this.infiniteMp);
-      if (this.infiniteMp) {
-        this.scene.playerMp = this.scene.playerMaxMp;
-        this.scene.updateHeroHpBar?.();
-      }
-    });
-    el.querySelector('#v299-btn-cd')?.addEventListener('click', (ev) => {
-      this.fastCd = !this.fastCd;
-      ev.currentTarget.textContent = this.fastCd ? '⚡ 極速-80%' : '⏱️ 標準CD';
-      ev.currentTarget.classList.toggle('is-on', this.fastCd);
+      const nextMode = this.autoAttack ? 'stand' : 'manual';
+      if (this.scene.setAutoMode) this.scene.setAutoMode(nextMode);
+      else this.scene.autoMoveEnabled = false;
+      this._syncAutoBtnUi(nextMode);
     });
     el.querySelectorAll('button[data-form]').forEach((btn) => {
       btn.addEventListener('click', () => {
