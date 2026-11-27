@@ -1,4 +1,4 @@
-import { getHeroAtlasInfo } from '../combat/HeroAnimRouter.js?v=307';
+import { getHeroAtlasInfo, safeQueueAtlas, waitAtlasReady } from '../combat/HeroAnimRouter.js?v=309-1';
 import { CameraZoomHelper } from './CameraZoomHelper.js?v=282';
 import { TOWN_CH1 } from '../data/towns/ch1.js?v=303';
 import { LivingNpcEngine } from '../town/LivingNpcEngine.js?v=273';
@@ -76,9 +76,7 @@ export class TownScene extends Phaser.Scene {
     const td = this.townData;
     const cid = (this.callbacks?.getState?.()?.classId || window.__IDLE_ARPG_BRIDGE__?.getState?.()?.classId || 'warrior');
     const hInfo = getHeroAtlasInfo(cid);
-    if (!this.textures.exists(hInfo.baseKey)) {
-      this.load.atlas(hInfo.baseKey, hInfo.basePng, hInfo.baseJson);
-    }
+    safeQueueAtlas(this, hInfo.baseKey, hInfo.basePng, hInfo.baseJson);
     if (!this.textures.exists('town_waypoint_circle')) {
       this.load.image('town_waypoint_circle', './assets/ui/town_waypoint_circle.png?v=227');
     }
@@ -948,15 +946,19 @@ export class TownScene extends Phaser.Scene {
         this.hero.setTexture(atlasKey, `${fp}_${dir}_idle_0`);
         if (this.anims.exists(`${prefix}_${dir}_idle`)) this.hero.play(`${prefix}_${dir}_idle`, true);
       } else if (this.load) {
-        this.load.atlas(atlasKey, hInfo.basePng, hInfo.baseJson);
-        this.load.once('complete', () => {
+        const applyTex = () => {
           this.registerHeroAnims(cid);
-          if (this.hero && this.textures.exists(atlasKey)) {
+          if (this.hero?.active && this.textures.exists(atlasKey)) {
             this.hero.setTexture(atlasKey, `${fp}_${dir}_idle_0`);
             if (this.anims.exists(`${prefix}_${dir}_idle`)) this.hero.play(`${prefix}_${dir}_idle`, true);
           }
-        });
-        this.load.start();
+        };
+        if (safeQueueAtlas(this, atlasKey, hInfo.basePng, hInfo.baseJson)) {
+          this.load.once('complete', () => waitAtlasReady(this, atlasKey, applyTex));
+          this.load.start();
+        } else {
+          waitAtlasReady(this, atlasKey, applyTex);
+        }
       }
     }
   }

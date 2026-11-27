@@ -20,7 +20,7 @@ import { PaladinVfxDirector } from '../vfx/PaladinVfxDirector.js?v=266';
 import { FloatingTextPool } from '../vfx/FloatingTextPool.js?v=298';
 import { ParticlePool } from '../vfx/ParticlePool.js?v=266';
 import { TrainingArenaController } from '../combat/TrainingArenaController.js?v=308-2';
-import { HERO_V307_READY, getHeroAtlasInfo, getSkillAnimAction, getActionAnimDurationMs, resolveHeroAnimKey } from '../combat/HeroAnimRouter.js?v=307';
+import { HERO_V307_READY, getHeroAtlasInfo, getSkillAnimAction, getActionAnimDurationMs, resolveHeroAnimKey, safeQueueAtlas, waitAtlasReady } from '../combat/HeroAnimRouter.js?v=309-1';
 import { BattleMiniDpsHud } from '../ui/BattleMiniDpsHud.js?v=302';
 import { CameraZoomHelper } from './CameraZoomHelper.js?v=282';
 import { MonsterVfxDirector } from '../vfx/MonsterVfxDirector.js?v=293';
@@ -196,13 +196,13 @@ export class BattleScene extends Phaser.Scene {
     this.isLoadingAssets = false;
 
     const initHeroInfo = getHeroAtlasInfo(initCid);
-    this.load.atlas(initHeroInfo.baseKey, initHeroInfo.basePng, initHeroInfo.baseJson);
+    safeQueueAtlas(this, initHeroInfo.baseKey, initHeroInfo.basePng, initHeroInfo.baseJson);
     if (initHeroInfo.skillsReady) {
-      this.load.atlas(initHeroInfo.skillsKey, initHeroInfo.skillsPng, initHeroInfo.skillsJson);
+      safeQueueAtlas(this, initHeroInfo.skillsKey, initHeroInfo.skillsPng, initHeroInfo.skillsJson);
     }
     if (initCid === 'necro') {
       this.loadedSummons = true;
-      this.load.atlas('atlas_summons', './assets/heroes/atlas_summons.png', './assets/heroes/atlas_summons.json');
+      safeQueueAtlas(this, 'atlas_summons', './assets/heroes/atlas_summons.png', './assets/heroes/atlas_summons.json');
     window.__petTexQueued = window.__petTexQueued || new Set();
     PET_CATALOG.forEach((p) => {
       const k = `pet_${p.id}`;
@@ -218,8 +218,8 @@ export class BattleScene extends Phaser.Scene {
       this.loadedSummons = false;
     }
 
-    this.load.atlas(`atlas_ch${initCh}`, `./assets/monsters/atlas_ch${initCh}.png`, `./assets/monsters/atlas_ch${initCh}.json`);
-    this.load.atlas('atlas_legacy', './assets/monsters/atlas_legacy.png', './assets/monsters/atlas_legacy.json');
+    safeQueueAtlas(this, `atlas_ch${initCh}`, `./assets/monsters/atlas_ch${initCh}.png`, `./assets/monsters/atlas_ch${initCh}.json`);
+    safeQueueAtlas(this, 'atlas_legacy', './assets/monsters/atlas_legacy.png', './assets/monsters/atlas_legacy.json');
     this.load.image(`map_zone_${initZone}`, `./assets/bg/map_${initZone}.jpg`);
 
     for (let i = 0; i < 8; i++) {
@@ -312,38 +312,50 @@ export class BattleScene extends Phaser.Scene {
       return;
     }
     this.isLoadingAssets = true;
+    let queuedAny = false;
     if (needClass) {
-      if (!this.textures.exists(hInfo.baseKey)) {
-        this.load.atlas(hInfo.baseKey, hInfo.basePng, hInfo.baseJson);
-      }
-      if (hInfo.skillsReady && !this.textures.exists(hInfo.skillsKey)) {
-        this.load.atlas(hInfo.skillsKey, hInfo.skillsPng, hInfo.skillsJson);
-      }
+      if (safeQueueAtlas(this, hInfo.baseKey, hInfo.basePng, hInfo.baseJson)) queuedAny = true;
+      if (hInfo.skillsReady && safeQueueAtlas(this, hInfo.skillsKey, hInfo.skillsPng, hInfo.skillsJson)) queuedAny = true;
     }
     if (needSummons) {
-      this.load.atlas('atlas_summons', './assets/heroes/atlas_summons.png', './assets/heroes/atlas_summons.json');
+      if (safeQueueAtlas(this, 'atlas_summons', './assets/heroes/atlas_summons.png', './assets/heroes/atlas_summons.json')) queuedAny = true;
       ['skel_summon', 'skel_slash', 'frenzy', 'wraith_boom', 'golem_summon', 'golem_slam', 'blood_leech', 'bone_shield'].forEach((k) => {
-        if (!this.textures.exists(`sfx_${k}`)) this.load.image(`sfx_${k}`, `./assets/fx/sfx_${k}.png`);
+        if (!this.textures.exists(`sfx_${k}`)) {
+          this.load.image(`sfx_${k}`, `./assets/fx/sfx_${k}.png`);
+          queuedAny = true;
+        }
       });
     }
     if (needVfx) {
       this.preloadClassVfx(cid);
+      queuedAny = true;
     }
-    this.load.once('complete', () => {
-      this.loadedClasses.add(cid);
-      this.registerClassAnims(cid);
-      if (needSummons) {
-        this.loadedSummons = true;
-        this.registerSummonAnims();
-      }
-      if (needVfx) {
-        this.registerClassVfxAnims(cid);
-      }
-      this.unloadOtherClassVfx(cid);
-      this.isLoadingAssets = false;
-      if (cb) cb();
-    });
-    this.load.start();
+    const finishClassLoad = () => {
+      waitAtlasReady(this, hInfo.baseKey, () => {
+        const doneAll = () => {
+          this.loadedClasses.add(cid);
+          this.registerClassAnims(cid);
+          if (needSummons && this.textures.exists('atlas_summons')) {
+            this.loadedSummons = true;
+            this.registerSummonAnims();
+          }
+          if (needVfx) {
+            this.registerClassVfxAnims(cid);
+          }
+          this.unloadOtherClassVfx(cid);
+          this.isLoadingAssets = false;
+          if (cb) cb();
+        };
+        if (hInfo.skillsReady) waitAtlasReady(this, hInfo.skillsKey, doneAll);
+        else doneAll();
+      });
+    };
+    if (queuedAny) {
+      this.load.once('complete', finishClassLoad);
+      this.load.start();
+    } else {
+      finishClassLoad();
+    }
   }
 
   ensureChapterLoaded(zoneIdx, cb) {
@@ -357,19 +369,28 @@ export class BattleScene extends Phaser.Scene {
       return;
     }
     this.isLoadingAssets = true;
+    let queued = false;
     if (needAtlas) {
-      this.load.atlas(ak, `./assets/monsters/${ak}.png`, `./assets/monsters/${ak}.json`);
+      if (safeQueueAtlas(this, ak, `./assets/monsters/${ak}.png`, `./assets/monsters/${ak}.json`)) queued = true;
     }
     if (needMap) {
       this.load.image(mk, `./assets/bg/map_${zoneIdx}.jpg`);
+      queued = true;
     }
-    this.load.once('complete', () => {
-      this.loadedChapters.add(chNum);
-      this.registerChapterAnims(chNum);
-      this.isLoadingAssets = false;
-      if (cb) cb();
-    });
-    this.load.start();
+    const finishChap = () => {
+      waitAtlasReady(this, ak, () => {
+        this.loadedChapters.add(chNum);
+        this.registerChapterAnims(chNum);
+        this.isLoadingAssets = false;
+        if (cb) cb();
+      });
+    };
+    if (queued) {
+      this.load.once('complete', finishChap);
+      this.load.start();
+    } else {
+      finishChap();
+    }
   }
 
   create() {
@@ -1257,6 +1278,14 @@ export class BattleScene extends Phaser.Scene {
   }
 
   spawnMonsterInstance(data, angle, fixedX = null, fixedY = null) {
+    const reqAtlas = this.getMobAtlasKey(data?.id);
+    if (reqAtlas && !this.textures.exists(reqAtlas)) {
+      const mCh = String(reqAtlas).match(/^atlas_ch(\d+)$/);
+      if (mCh) {
+        this.ensureChapterLoaded(Math.max(0, Number(mCh[1]) - 1));
+      }
+      return null;
+    }
     const dist = data.isBoss ? 480 : Phaser.Math.Between(380, 650);
     const sx = fixedX !== null ? Phaser.Math.Clamp(fixedX, 220, MAP_W - 220)
       : Phaser.Math.Clamp(this.hero.x + Math.cos(angle) * dist, 220, MAP_W - 220);

@@ -22,8 +22,8 @@ import {
   saveCloudData,
   deleteCloudSave,
 } from './auth/firebase.js?v=272';
-import { BattleScene } from './scenes/BattleScene.js?v=308-all';
-import { TownScene } from './scenes/TownScene.js?v=308-all';
+import { BattleScene } from './scenes/BattleScene.js?v=309-all';
+import { TownScene } from './scenes/TownScene.js?v=309-all';
 import { TOWN_SPLASHES } from './data/towns/splashes.js?v=229';
 import { DashboardUI } from './ui/DashboardUI.js?v=301';
 import { hookWorldMap25D, openWorldMap25D, closeWorldMap25D, toggleWorldMap25D } from './ui/WorldMap25D.js?v=253';
@@ -987,7 +987,7 @@ function initPhaserGame() {
       welcomeAuthStep.classList.add('hidden');
       welcomeClassStep.classList.remove('hidden');
       welcomeScreen.classList.remove('hidden');
-      refreshLobbyState?.();
+      if (typeof renderWelcomeClasses === 'function') renderWelcomeClasses();
     },
     exitGameToAuth: async () => {
       persistAll(true);

@@ -228,8 +228,8 @@ export function getHeroAtlasInfo(classId) {
     baseReady: !!ready.base,
     skillsReady: !!ready.skills,
     baseKey: ready.base ? `atlas_${cid}_base_v307` : `atlas_${cid}`,
-    basePng: ready.base ? `./assets/heroes/atlas_${cid}_base_v307.png?v=307` : `./assets/heroes/atlas_${cid}.png?v=66`,
-    baseJson: ready.base ? `./assets/heroes/atlas_${cid}_base_v307.json?v=307` : `./assets/heroes/atlas_${cid}.json?v=66`,
+    basePng: ready.base ? `./assets/heroes/atlas_${cid}_base_v307.png?v=309` : `./assets/heroes/atlas_${cid}.png?v=66`,
+    baseJson: ready.base ? `./assets/heroes/atlas_${cid}_base_v307.json?v=309` : `./assets/heroes/atlas_${cid}.json?v=66`,
     skillsKey: `atlas_${cid}_skills_v307`,
     skillsPng: `./assets/heroes/atlas_${cid}_skills_v307.png?v=307`,
     skillsJson: `./assets/heroes/atlas_${cid}_skills_v307.json?v=307`,
@@ -257,4 +257,48 @@ export function resolveHeroAnimKey(scene, classId, dir = 'down', action = 'idle'
     if (scene?.anims?.exists?.(k)) return k;
   }
   return `${short}_${d}_atk`;
+}
+
+
+// v309-1: 全域圖集防重載鎖（避免 BattleScene 與 TownScene 切換職業時並發 load.atlas 造成 Texture key already in use 與 WebGL isGLTexture 崩潰）
+function _getInflightSet() {
+  if (typeof window !== 'undefined') {
+    if (!window.__PHASER_ATLAS_INFLIGHT__) window.__PHASER_ATLAS_INFLIGHT__ = new Set();
+    return window.__PHASER_ATLAS_INFLIGHT__;
+  }
+  return new Set();
+}
+
+export function safeQueueAtlas(scene, key, png, json) {
+  if (!scene || !key) return false;
+  if (scene.textures?.exists?.(key)) return false;
+  const inflight = _getInflightSet();
+  if (inflight.has(key)) return false;
+  inflight.add(key);
+  const cleanup = () => inflight.delete(key);
+  scene.load?.once?.(`filecomplete-atlasjson-${key}`, cleanup);
+  scene.load?.once?.('loaderror', (fileObj) => {
+    if (!fileObj || fileObj.key === key) cleanup();
+  });
+  scene.load?.once?.('complete', cleanup);
+  scene.load?.atlas?.(key, png, json);
+  return true;
+}
+
+export function waitAtlasReady(scene, key, cb, maxWaitMs = 6000) {
+  if (!cb) return;
+  if (!scene || !key || scene.textures?.exists?.(key)) {
+    cb();
+    return;
+  }
+  const start = Date.now();
+  const poll = () => {
+    if (!scene?.sys || scene.sys.isDestroyed) return;
+    if (scene.textures?.exists?.(key) || (Date.now() - start) >= maxWaitMs) {
+      cb();
+      return;
+    }
+    setTimeout(poll, 60);
+  };
+  setTimeout(poll, 60);
 }
