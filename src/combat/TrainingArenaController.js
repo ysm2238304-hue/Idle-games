@@ -1,6 +1,6 @@
 // v303-1: 純淨獨立 2.5D 實戰演武訓練場控制器（TrainingArenaController）
 // 已移除木頭人攻擊；新增完整進場快照／退場還原（血條鎖死、魔耗、CD、自動手動按鈕與簡化 DPS 小彈窗無縫同步）
-import { DpsMeterEngine } from './DpsMeterEngine.js?v=317';
+import { DpsMeterEngine } from './DpsMeterEngine.js?v=318';
 
 const CH_ARMOR_DR = [0, 0.05, 0.12, 0.20, 0.28, 0.36, 0.44, 0.52, 0.60, 0.68];
 

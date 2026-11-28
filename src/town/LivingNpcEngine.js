@@ -1,6 +1,8 @@
 // v273: 主城活體 NPC 自然行為狀態機（LivingNpcEngine）
 // 單一控制權同步角色、腳底陰影、頭頂名牌、互動圖示與互動座標，徹底消除雙系統互搶與名牌分離
 
+import { npcFlipX } from './npcFacing.js?v=318';
+
 const CLASS_CN = {
   warrior: '狂戰士',
   ranger: '遊俠',
@@ -34,6 +36,8 @@ export class LivingNpcEngine {
       homeX,
       homeY,
       name: cfg.name || '城鎮居民',
+      frame: cfg.frame || null,
+      stuckT: 0,
       workStyle: cfg.workStyle || 'idle',
       greeting: cfg.greeting || '歡迎光臨！',
       baseScale: sprite.scaleX || 0.62,
@@ -48,6 +52,15 @@ export class LivingNpcEngine {
     };
     this.agents.push(agent);
     return agent;
+  }
+
+  // v317: 依狀態切換 idle／walk 動畫（之前散步時只位移、不播走路動畫，看起來像滑行）
+  _setAnim(agent, kind) {
+    const sp = agent.sprite;
+    if (!agent.frame || !sp?.anims) return;
+    const key = `${agent.frame}_${kind}`;
+    if (!this.scene.anims.exists(key)) return;
+    if (sp.anims.currentAnim?.key !== key) sp.play(key, true);
   }
 
   triggerTownBlessingWave(x, y, color = 0xfde047) {
@@ -121,7 +134,8 @@ export class LivingNpcEngine {
 
       if (distHero <= 175) {
         a.state = 'greet';
-        if (sp.setFlipX) sp.setFlipX(hero.x < sp.x);
+        if (sp.setFlipX) sp.setFlipX(npcFlipX(a.frame, hero.x < sp.x));
+        this._setAnim(a, 'idle');
         a.ring.setPosition(sp.x, sp.y + 4).setAlpha(0.30 + Math.sin(time * 0.008) * 0.14);
         a.ring.setStrokeStyle(1.8, 0xfde047, 0.80);
         if (time - a.lastGreetAt > 9500) {
@@ -143,10 +157,12 @@ export class LivingNpcEngine {
           } else if (r < 0.82) {
             a.state = 'stroll';
             a.stateUntil = time + 2200 + Math.random() * 1800;
-            const ang = Math.random() * Math.PI * 2;
-            const rad = 18 + Math.random() * 32;
-            a.targetX = a.homeX + Math.cos(ang) * rad;
-            a.targetY = a.homeY + Math.sin(ang) * rad * 0.65;
+            // v317: NPC 只有正面圖，沿垂直方向走會像倒退；散步改為以水平方向為主
+            const dirX = Math.random() < 0.5 ? -1 : 1;
+            const rad = 22 + Math.random() * 34;
+            a.targetX = a.homeX + dirX * rad;
+            a.targetY = a.homeY + (Math.random() - 0.5) * 10;
+            a.stuckT = 0;
           } else {
             a.state = 'idle';
             a.stateUntil = time + 1800 + Math.random() * 1800;
@@ -158,14 +174,29 @@ export class LivingNpcEngine {
           const d = Math.hypot(dx, dy);
           if (d > 3) {
             const step = Math.min(d, 44 * dt);
-            sp.x += (dx / d) * step;
-            sp.y += (dy / d) * step;
-            if (sp.setFlipX) sp.setFlipX(dx < -2);
-            sp.setDepth(sp.y);
+            const nx = sp.x + (dx / d) * step;
+            const ny = sp.y + (dy / d) * step;
+            // v317: 散步也要避開地形與建築碰撞盒，卡住就停下來
+            const res = s.clampNpcToTerrain ? s.clampNpcToTerrain(nx, ny) : { x: nx, y: ny, hitWall: false };
+            const moved = Math.hypot(res.x - sp.x, res.y - sp.y);
+            a.stuckT = (res.hitWall || moved < 0.2) ? a.stuckT + dt : 0;
+            if (a.stuckT > 0.35) {
+              a.state = 'idle';
+              a.stateUntil = time + 1200 + Math.random() * 1200;
+              a.stuckT = 0;
+            } else {
+              sp.x = res.x;
+              sp.y = res.y;
+              if (sp.setFlipX && Math.abs(dx) > 2) sp.setFlipX(npcFlipX(a.frame, dx < 0));
+              sp.setDepth(sp.y);
+              this._setAnim(a, 'walk');
+            }
           } else {
             a.state = 'idle';
           }
+          if (a.state !== 'stroll') this._setAnim(a, 'idle');
         } else if (a.state === 'work') {
+          this._setAnim(a, 'idle');
           const pulse = Math.sin(time * 0.007) * 0.025;
           sp.setScale(a.baseScale, a.baseScale * (1 + pulse));
           if (time - a.lastWorkFxAt > 1200 + Math.random() * 600) {
@@ -173,6 +204,7 @@ export class LivingNpcEngine {
             this._spawnWorkMote(a);
           }
         } else {
+          this._setAnim(a, 'idle');
           sp.setScale(a.baseScale, a.baseScale * (1 + Math.sin(time * 0.003) * 0.012));
         }
       }

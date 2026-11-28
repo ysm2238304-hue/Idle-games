@@ -1,5 +1,5 @@
 // v275: 暗黑 4 級深度城鎮設施介面（鐵匠鍛造台 4 分頁＋祕法煉金工坊 3 分頁）
-import { resolveItemIconUniversal } from './UniversalTooltip.js?v=317';
+import { resolveItemIconUniversal } from './UniversalTooltip.js?v=318';
 
 const RARITY_COLOR = {
   common: '#cbd5e1',

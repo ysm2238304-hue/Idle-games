@@ -1,6 +1,6 @@
 // v274: 公測專用多人共享主城即時同步引擎（TownMultiplayerSync）
 // 移除所有假 AI 冒險者，純粹同步 Firebase 真實線上玩家；同屏角色縮放統一為 0.42，附可折疊主城表情喊話條
-import { publishTownPresence, subscribeTownPresence, getCurrentUser } from '../auth/firebase.js?v=317';
+import { publishTownPresence, subscribeTownPresence, getCurrentUser } from '../auth/firebase.js?v=318';
 
 const CLASS_META = {
   warrior:  { badge: '⚔️', label: '狂戰士', color: '#f97316' },

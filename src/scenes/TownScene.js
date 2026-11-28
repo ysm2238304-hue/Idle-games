@@ -1,19 +1,20 @@
-import { getHeroAtlasInfo, isAtlasTextureReady, safeQueueAtlas, waitAtlasReady } from '../combat/HeroAnimRouter.js?v=317';
-import { CameraZoomHelper } from './CameraZoomHelper.js?v=317';
-import { TOWN_CH1 } from '../data/towns/ch1.js?v=317';
-import { LivingNpcEngine } from '../town/LivingNpcEngine.js?v=317';
-import { TownMultiplayerSync } from '../net/TownMultiplayerSync.js?v=317';
-import { TOWN_CH2 } from '../data/towns/ch2.js?v=317';
-import { TOWN_CH3 } from '../data/towns/ch3.js?v=317';
-import { TOWN_CH4 } from '../data/towns/ch4.js?v=317';
-import { TOWN_CH5 } from '../data/towns/ch5.js?v=317';
-import { TOWN_CH6 } from '../data/towns/ch6.js?v=317';
-import { TOWN_CH7 } from '../data/towns/ch7.js?v=317';
-import { TOWN_CH8 } from '../data/towns/ch8.js?v=317';
-import { TOWN_CH9 } from '../data/towns/ch9.js?v=317';
-import { TOWN_CH10 } from '../data/towns/ch10.js?v=317';
-import { formatNum } from '../logic/statCalc.js?v=317';
-import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta } from '../data/pets.js?v=317';
+import { getHeroAtlasInfo, isAtlasTextureReady, safeQueueAtlas, waitAtlasReady } from '../combat/HeroAnimRouter.js?v=318';
+import { CameraZoomHelper } from './CameraZoomHelper.js?v=318';
+import { TOWN_CH1 } from '../data/towns/ch1.js?v=318';
+import { LivingNpcEngine } from '../town/LivingNpcEngine.js?v=318';
+import { npcFlipX } from '../town/npcFacing.js?v=318';
+import { TownMultiplayerSync } from '../net/TownMultiplayerSync.js?v=318';
+import { TOWN_CH2 } from '../data/towns/ch2.js?v=318';
+import { TOWN_CH3 } from '../data/towns/ch3.js?v=318';
+import { TOWN_CH4 } from '../data/towns/ch4.js?v=318';
+import { TOWN_CH5 } from '../data/towns/ch5.js?v=318';
+import { TOWN_CH6 } from '../data/towns/ch6.js?v=318';
+import { TOWN_CH7 } from '../data/towns/ch7.js?v=318';
+import { TOWN_CH8 } from '../data/towns/ch8.js?v=318';
+import { TOWN_CH9 } from '../data/towns/ch9.js?v=318';
+import { TOWN_CH10 } from '../data/towns/ch10.js?v=318';
+import { formatNum } from '../logic/statCalc.js?v=318';
+import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta } from '../data/pets.js?v=318';
 
 const TOWN_REGISTRY = {
   0: TOWN_CH1,
@@ -205,7 +206,19 @@ export class TownScene extends Phaser.Scene {
         this.tweens.add({ targets: this.beaconGlow, scale: 2.2, alpha: 0.38, duration: 1300, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' });
         const lmHw = Math.max(Math.round((lm.radius || 64) * 1.05), Math.round((lmSpr.displayWidth || 320) * 0.30));
         const lmHt = Math.max(Math.round((lm.radius || 64) * 1.15), Math.round((lmSpr.displayHeight || 320) * 0.36));
-        this.rectObstacles.push({ x1: lm.x - lmHw, y1: lm.y - lmHt, x2: lm.x + lmHw, y2: lm.y - 6 });
+        let lmX1 = lm.x - lmHw;
+        let lmX2 = lm.x + lmHw;
+        let lmY2 = lm.y - 6;
+        if (td.modularBuildings && !lm3d && lm.imgKey && this.textures.exists(lm.imgKey)) {
+          // v317: 地標也依貼圖真實地基校準碰撞、陰影與 Y 排序
+          const fp = this._buildingFootprint(lmSpr, lm.imgKey, 0.92);
+          lmX1 = Math.min(lmX1, fp.x1);
+          lmX2 = Math.max(lmX2, fp.x2);
+          lmY2 = Math.max(lmY2, fp.y2);
+          lmSpr.setDepth(fp.bottomY - 2);
+          this._addBuildingShadow(fp);
+        }
+        this.rectObstacles.push({ x1: lmX1, y1: lm.y - lmHt, x2: lmX2, y2: lmY2 });
       }
       this.interactables.push({
         id: lm.id,
@@ -254,7 +267,16 @@ export class TownScene extends Phaser.Scene {
         const dispH = Math.round(this.dummySprite.displayHeight || (420 * arenaScale));
         const hw = Math.max(75, Math.round(dispW * 0.25));
         const hTop = Math.max(70, Math.round(dispH * 0.34));
-        this.rectObstacles.push({ x1: dm.x - hw, y1: dm.y - hTop, x2: dm.x + hw, y2: dm.y - 6 });
+        // v317: 演武場依貼圖真實地基校準碰撞、陰影與 Y 排序
+        const dfp = this._buildingFootprint(this.dummySprite, arenaKey, 0.94);
+        this.rectObstacles.push({
+          x1: Math.min(dm.x - hw, dfp.x1),
+          y1: dm.y - hTop,
+          x2: Math.max(dm.x + hw, dfp.x2),
+          y2: Math.max(dm.y - 6, dfp.y2),
+        });
+        this.dummySprite.setDepth(dfp.bottomY - 2);
+        this._addBuildingShadow(dfp);
         this.dummySprite.setInteractive({ useHandCursor: true });
         this.dummySprite.on('pointerover', () => this.dummySprite.setTint(0xfff1c9));
         this.dummySprite.on('pointerout', () => this.dummySprite.clearTint());
@@ -435,7 +457,16 @@ export class TownScene extends Phaser.Scene {
       const dispH = Math.round(wpSpr.displayHeight || 280);
       const hw = Math.max(58, Math.round(dispW * 0.23));
       const hTop = Math.max(56, Math.round(dispH * 0.30));
-      this.rectObstacles.push({ x1: wpX - hw, y1: wpY - hTop, x2: wpX + hw, y2: wpY - 6 });
+      // v317: 傳送點建築依貼圖真實地基校準碰撞、陰影與 Y 排序
+      const wfp = this._buildingFootprint(wpSpr, wpBldKey, 0.94);
+      this.rectObstacles.push({
+        x1: Math.min(wpX - hw, wfp.x1),
+        y1: wpY - hTop,
+        x2: Math.max(wpX + hw, wfp.x2),
+        y2: Math.max(wpY - 6, wfp.y2),
+      });
+      wpSpr.setDepth(wfp.bottomY - 2);
+      this._addBuildingShadow(wfp);
       wpSpr.setInteractive({ useHandCursor: true });
       wpSpr.on('pointerover', () => wpSpr.setTint(0xfff3c4));
       wpSpr.on('pointerout', () => wpSpr.clearTint());
@@ -628,6 +659,73 @@ export class TownScene extends Phaser.Scene {
     return null;
   }
 
+  // v317: 依貼圖「實際不透明像素」量出建築地基（左右邊界取下半部、底邊取最低像素），
+  // 讓碰撞盒、接地陰影與 Y 排序都對齊真實地基，而不是用固定比例猜測。
+  _artBounds(key) {
+    if (!this._boundsCache) this._boundsCache = {};
+    if (this._boundsCache[key]) return this._boundsCache[key];
+    let res = { fl: 0.2, fr: 0.8, b: 0.98 };
+    try {
+      const src = this.textures.get(key).getSourceImage();
+      const w = src.width;
+      const h = src.height;
+      const c = document.createElement('canvas');
+      c.width = w;
+      c.height = h;
+      const g = c.getContext('2d', { willReadFrequently: true });
+      g.drawImage(src, 0, 0);
+      const data = g.getImageData(0, 0, w, h).data;
+      // 忽略貼圖底部孤立的殘點像素：一整排要有足夠多不透明像素才算建築本體
+      const rowMin = Math.max(8, Math.round(w * 0.04));
+      const solid = (x, y) => data[(y * w + x) * 4 + 3] > 64;
+      let maxY = -1;
+      for (let y = h - 1; y >= 0 && maxY < 0; y--) {
+        let cnt = 0;
+        for (let x = 0; x < w; x++) if (solid(x, y)) cnt++;
+        if (cnt >= rowMin) maxY = y;
+      }
+      if (maxY > 0) {
+        const footTop = Math.floor(maxY * 0.62);
+        const colCnt = new Array(w).fill(0);
+        for (let y = footTop; y <= maxY; y++) {
+          for (let x = 0; x < w; x++) if (solid(x, y)) colCnt[x]++;
+        }
+        let minX = 0;
+        while (minX < w && colCnt[minX] < 3) minX++;
+        let maxX = w - 1;
+        while (maxX > minX && colCnt[maxX] < 3) maxX--;
+        if (maxX > minX) res = { fl: minX / w, fr: (maxX + 1) / w, b: (maxY + 1) / h };
+      }
+    } catch (e) { /* 取像素失敗時沿用保守預設值 */ }
+    this._boundsCache[key] = res;
+    return res;
+  }
+
+  // 回傳 { x1, x2, y2, cx, bottomY, footW }：地基左右界、碰撞盒底邊、地基中心與底邊世界座標
+  _buildingFootprint(spr, key, originY) {
+    const bd = this._artBounds(key);
+    const W = spr.displayWidth;
+    const H = spr.displayHeight;
+    const fl = spr.flipX ? 1 - bd.fr : bd.fl;
+    const fr = spr.flipX ? 1 - bd.fl : bd.fr;
+    const left = spr.x + (fl - 0.5) * W;
+    const right = spr.x + (fr - 0.5) * W;
+    const bottomY = spr.y + (bd.b - originY) * H;
+    const inset = W * 0.03;
+    return { x1: left + inset, x2: right - inset, y2: bottomY - 6, cx: (left + right) / 2, bottomY, footW: right - left };
+  }
+
+  // 接地陰影：貼在建築地基底邊，深度低於建築，只在地基邊緣露出柔邊，避免像貼紙浮在地上
+  _addBuildingShadow(fp) {
+    if (!this.textures.exists('fx_glow')) return null;
+    // fx_glow 為中心最濃、向外淡出的放射漸層：中心放在地基底邊上方，外圈柔邊才會從建築下緣露出來
+    return this.add.image(fp.cx, fp.bottomY - 12, 'fx_glow')
+      .setTint(0x000000)
+      .setScale((fp.footW * 1.15) / 64, (fp.footW * 0.30) / 64)
+      .setAlpha(0.7)
+      .setDepth(3);
+  }
+
   placeBuilding(atlasKey, b) {
     // v283: 正統 2.5D 三層分離式主城建築（純淨地基底圖 ＋ 獨立風格化 2.5D 建築本體 ＋ doorOffset 門口綁定 NPC，完全廢除粗糙發光圓陣）
     if (this.townData?.modularBuildings) {
@@ -647,11 +745,23 @@ export class TownScene extends Phaser.Scene {
       const baseR = b.radius > 0 ? b.radius : Math.round(72 * sc);
       const hw = Math.max(Math.round(baseR * 0.92), Math.round(dispW * 0.26));
       const hTop = Math.max(Math.round(baseR * 1.10), Math.round(dispH * 0.36));
+      let obX1 = b.x - hw;
+      let obX2 = b.x + hw;
+      let obY2 = b.y - 6;
+      if (useStandalone && !tex3d) {
+        // v317: 碰撞盒與 Y 排序改依貼圖真實地基；陰影貼合地基底邊
+        const fp = this._buildingFootprint(spr, b.imgKey, 0.96);
+        obX1 = Math.min(obX1, fp.x1);
+        obX2 = Math.max(obX2, fp.x2);
+        obY2 = Math.max(obY2, fp.y2);
+        spr.setDepth(fp.bottomY - 2);
+        this._addBuildingShadow(fp);
+      }
       this.rectObstacles.push({
-        x1: b.x - hw,
+        x1: obX1,
         y1: b.y - hTop,
-        x2: b.x + hw,
-        y2: b.y - 6,
+        x2: obX2,
+        y2: obY2,
       });
       if (b.name && b.action) {
         const icon = this.getActionIcon(b.action);
@@ -886,6 +996,7 @@ export class TownScene extends Phaser.Scene {
     this.interactables.push(interactObj);
     if (!action.startsWith('gimmick_')) {
       this.livingNpcs?.registerNpc(spr, {
+        frame: hasAnim ? npc.frame : null,
         name: npc.name,
         workStyle: npc.workStyle || 'idle',
         greeting: npc.greeting,
@@ -1621,6 +1732,15 @@ export class TownScene extends Phaser.Scene {
         y += (dy / d) * push;
       }
     }
+    // v317: 巡邏／踱步 NPC 也要避開建築矩形碰撞盒，不再走進建築圖裡
+    if (this.rectObstacles?.length) {
+      const pushed = this._pushOutOfObstacles(x, y, 14);
+      if (pushed.pushed) {
+        x = pushed.x;
+        y = pushed.y;
+        hitWall = true;
+      }
+    }
     return { x, y, hitWall };
   }
 
@@ -1629,7 +1749,7 @@ export class TownScene extends Phaser.Scene {
       const distHero = this.hero ? Phaser.Math.Distance.Between(this.hero.x, this.hero.y, p.spr.x, p.spr.y) : 999;
       let isMoving = false;
       if (distHero < 145 && this.hero) {
-        p.spr.setFlipX(this.hero.x < p.spr.x);
+        p.spr.setFlipX(npcFlipX(p.frame, this.hero.x < p.spr.x));
       } else if (time < (p.pauseUntil || 0)) {
         isMoving = false;
       } else {
@@ -1661,7 +1781,7 @@ export class TownScene extends Phaser.Scene {
             p.wpIdx = (p.wpIdx + 1) % p.waypoints.length;
           }
           const stepX = res.x - prevX;
-          if (Math.abs(stepX) > 0.12) p.spr.setFlipX(stepX < 0);
+          if (Math.abs(stepX) > 0.12) p.spr.setFlipX(npcFlipX(p.frame, stepX < 0));
           if (time >= (p.dustAt || 0)) {
             p.dustAt = time + 260;
             this.spawnFootstepDust(p.spr.x, p.spr.y - 30);
@@ -1688,7 +1808,7 @@ export class TownScene extends Phaser.Scene {
       const distHero = this.hero ? Phaser.Math.Distance.Between(this.hero.x, this.hero.y, r.spr.x, r.spr.y) : 999;
       let isMoving = false;
       if (distHero < 195 && this.hero) {
-        r.spr.setFlipX(this.hero.x < r.spr.x);
+        r.spr.setFlipX(npcFlipX(r.frame, this.hero.x < r.spr.x));
       } else if (time >= r.waitUntil) {
         const dx = r.targetX - r.spr.x;
         const dy = r.targetY - r.spr.y;
@@ -1721,7 +1841,7 @@ export class TownScene extends Phaser.Scene {
             r.targetY = r.homeY + Phaser.Math.Between(-12, 12);
           }
           const stepX = res.x - prevX;
-          if (Math.abs(stepX) > 0.08) r.spr.setFlipX(stepX < 0);
+          if (Math.abs(stepX) > 0.08) r.spr.setFlipX(npcFlipX(r.frame, stepX < 0));
           if (time >= (r.dustAt || 0)) {
             r.dustAt = time + 320;
             this.spawnFootstepDust(r.spr.x, r.spr.y - 30);

@@ -1,12 +1,12 @@
-import { getHeroAtlasInfo, getSkillAnimAction } from '../combat/HeroAnimRouter.js?v=317';
+import { getHeroAtlasInfo, getSkillAnimAction } from '../combat/HeroAnimRouter.js?v=318';
 // v301: 創角大廳 2.5D 三層景深實戰技能演武引擎（HeroSkillShowcase）
 // 徹底廢除 ctx.filter 杜絕白色色塊、對齊英雄真實動畫幀名、全 6 職業精準元素配對＋4 種真實演出模式
-import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=317';
-import { RANGER_SKILLS } from '../data/rangerSkills.js?v=317';
-import { MAGE_SKILLS } from '../data/mageSkills.js?v=317';
-import { PALADIN_SKILLS } from '../data/paladinSkills.js?v=317';
-import { NECRO_SKILLS } from '../data/necroSkills.js?v=317';
-import { ASSASSIN_SKILLS } from '../data/assassinSkills.js?v=317';
+import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=318';
+import { RANGER_SKILLS } from '../data/rangerSkills.js?v=318';
+import { MAGE_SKILLS } from '../data/mageSkills.js?v=318';
+import { PALADIN_SKILLS } from '../data/paladinSkills.js?v=318';
+import { NECRO_SKILLS } from '../data/necroSkills.js?v=318';
+import { ASSASSIN_SKILLS } from '../data/assassinSkills.js?v=318';
 
 export const CLASS_SKILLS_MAP = {
   warrior: WARRIOR_SKILLS,
