@@ -3,12 +3,12 @@
  * 暗黑 4 風格「4 階技能專精樹（Lv.2 / Lv.4 三選一 / Lv.6 屬性轉化 / Lv.8 幸運一擊）」＋「5 格快捷列配置」視窗
  */
 
-import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=235';
-import { RANGER_SKILLS } from '../data/rangerSkills.js?v=236';
-import { MAGE_SKILLS } from '../data/mageSkills.js?v=241';
-import { PALADIN_SKILLS } from '../data/paladinSkills.js?v=235';
-import { NECRO_SKILLS } from '../data/necroSkills.js?v=236';
-import { ASSASSIN_SKILLS } from '../data/assassinSkills.js?v=235';
+import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=317';
+import { RANGER_SKILLS } from '../data/rangerSkills.js?v=317';
+import { MAGE_SKILLS } from '../data/mageSkills.js?v=317';
+import { PALADIN_SKILLS } from '../data/paladinSkills.js?v=317';
+import { NECRO_SKILLS } from '../data/necroSkills.js?v=317';
+import { ASSASSIN_SKILLS } from '../data/assassinSkills.js?v=317';
 import {
   SKILL_BUILD_SPECS,
   STATUS_META,
@@ -16,7 +16,7 @@ import {
   getSkillSpecChoice,
   KEYSTONE_PASSIVES,
   getActiveKeystone,
-} from '../logic/buildEngine.js?v=241';
+} from '../logic/buildEngine.js?v=317';
 
 const CLASS_SKILL_MAPS = {
   warrior: WARRIOR_SKILLS,

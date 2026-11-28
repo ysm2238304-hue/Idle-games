@@ -1,5 +1,5 @@
-import {createWaveSquad, calcLevelGapExpMult } from '../data/monsters.js?v=232';
-import { generateLoot } from './lootGen.js?v=99';
+import {createWaveSquad, calcLevelGapExpMult } from '../data/monsters.js?v=317';
+import { generateLoot } from './lootGen.js?v=317';
 
 const SAVE_KEY = 'desk_diablo_idle_save_v1';
 

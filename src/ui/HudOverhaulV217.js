@@ -1,4 +1,4 @@
-import { UniversalTooltip } from './UniversalTooltip.js?v=240';
+import { UniversalTooltip } from './UniversalTooltip.js?v=317';
 /**
  * HudOverhaulV217.js (v217)
  * 1. 右上功能列移至右下角橫排 + 放大圖示 + 直覺縮放小圖示
@@ -6,7 +6,7 @@ import { UniversalTooltip } from './UniversalTooltip.js?v=240';
  * 3. 左下角多頻道可輸入聊天室（一般 / 世界 / 隊伍 / 私訊 / 系統 / 掉落）+ Firestore 世界頻道即時同步
  */
 
-import { subscribeWorldChat, sendWorldChatMessage } from '../auth/firebase.js?v=218';
+import { subscribeWorldChat, sendWorldChatMessage } from '../auth/firebase.js?v=317';
 
 const QUESTS_BY_CH = {
   1:  [

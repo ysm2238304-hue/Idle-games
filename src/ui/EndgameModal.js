@@ -12,8 +12,8 @@ import {
   getUnlockedParagonNodes,
   canUnlockParagonNode,
   getGlyphUpgradeCost,
-} from '../logic/endgameSystems.js?v=237';
-import { formatNum } from '../logic/statCalc.js?v=237';
+} from '../logic/endgameSystems.js?v=317';
+import { formatNum } from '../logic/statCalc.js?v=317';
 
 export class EndgameModal {
   constructor({ getState, onChanged }) {

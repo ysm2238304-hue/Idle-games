@@ -5,7 +5,7 @@
  * 2. 若背包無符合裝備或全數被保險箱規則鎖定，明確跳出系統提示，不再靜默無反應
  */
 
-import { getSalvageReward } from '../logic/lootGen.js?v=99';
+import { getSalvageReward } from '../logic/lootGen.js?v=317';
 
 function isProtectedItem(item, st) {
   if (!item) return true;

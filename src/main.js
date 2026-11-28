@@ -1,18 +1,18 @@
-import { initAllDraggableModals } from './ui/DraggableModalHelper.js?v=297';
-import { CLASSES } from './data/classes.js?v=99';
-import { getStageLabel, getSubStage, getChapterIdx, calcLevelGapExpMult } from './data/monsters.js?v=254';
-import { WARRIOR_SKILLS } from './data/warriorSkills.js?v=255';
-import { RANGER_SKILLS } from './data/rangerSkills.js?v=259';
-import { MAGE_SKILLS } from './data/mageSkills.js?v=241';
-import { PALADIN_SKILLS } from './data/paladinSkills.js?v=263';
-import { NECRO_SKILLS } from './data/necroSkills.js?v=251';
-import { ASSASSIN_SKILLS } from './data/assassinSkills.js?v=261';
-import { RARITIES } from './data/items.js?v=240';
-import { PET_CATALOG, rollPetDrop, getPetDef } from './data/pets.js?v=99';
-import { SKILL_TREE_NODES, isNodeUnlocked } from './data/skillTree.js?v=99';
-import { generateLoot, calcItemPower, getSalvageReward, rerollItemAffixes, generateBlackMarketItem } from './logic/lootGen.js?v=240';
-import { recalcPlayerStats, getExpToNext, getUpgradeCost, calcRebirthCrystals, formatNum } from './logic/statCalc.js?v=254';
-import { createInitialState, loadGame, saveGame, calcOfflineProgress } from './logic/saveSystem.js?v=232';
+import { initAllDraggableModals } from './ui/DraggableModalHelper.js?v=317';
+import { CLASSES } from './data/classes.js?v=317';
+import { getStageLabel, getSubStage, getChapterIdx, calcLevelGapExpMult } from './data/monsters.js?v=317';
+import { WARRIOR_SKILLS } from './data/warriorSkills.js?v=317';
+import { RANGER_SKILLS } from './data/rangerSkills.js?v=317';
+import { MAGE_SKILLS } from './data/mageSkills.js?v=317';
+import { PALADIN_SKILLS } from './data/paladinSkills.js?v=317';
+import { NECRO_SKILLS } from './data/necroSkills.js?v=317';
+import { ASSASSIN_SKILLS } from './data/assassinSkills.js?v=317';
+import { RARITIES } from './data/items.js?v=317';
+import { PET_CATALOG, rollPetDrop, getPetDef } from './data/pets.js?v=317';
+import { SKILL_TREE_NODES, isNodeUnlocked } from './data/skillTree.js?v=317';
+import { generateLoot, calcItemPower, getSalvageReward, rerollItemAffixes, generateBlackMarketItem } from './logic/lootGen.js?v=317';
+import { recalcPlayerStats, getExpToNext, getUpgradeCost, calcRebirthCrystals, formatNum } from './logic/statCalc.js?v=317';
+import { createInitialState, loadGame, saveGame, calcOfflineProgress } from './logic/saveSystem.js?v=317';
 import {
   initCloudAuth,
   signInWithGoogle,
@@ -21,26 +21,26 @@ import {
   loadCloudSave,
   saveCloudData,
   deleteCloudSave,
-} from './auth/firebase.js?v=272';
-import { BattleScene } from './scenes/BattleScene.js?v=313';
-import { TownScene } from './scenes/TownScene.js?v=312-2';
-import { TOWN_SPLASHES } from './data/towns/splashes.js?v=229';
-import { DashboardUI } from './ui/DashboardUI.js?v=301';
-import { hookWorldMap25D, openWorldMap25D, closeWorldMap25D, toggleWorldMap25D } from './ui/WorldMap25D.js?v=253';
-import { initHudOverhaulV217 } from './ui/HudOverhaulV217.js?v=257';
-import { UniversalTooltip } from './ui/UniversalTooltip.js?v=240';
-import { SkillSpecModal } from './ui/SkillSpecModal.js?v=241';
-import { ClassMechanicModal } from './ui/ClassMechanicModal.js?v=241';
-import { MAGE_D4_PRESETS, NECRO_D4_PRESETS, WARRIOR_D4_PRESETS, RANGER_D4_PRESETS, ASSASSIN_D4_PRESETS, PALADIN_D4_PRESETS } from './logic/classMechanics.js?v=263';
-import { EndgameModal } from './ui/EndgameModal.js?v=237';
-import { TownBgmEngine } from './audio/TownBgmEngine.js?v=99';
-import { BattleSfxEngine } from './audio/BattleSfxEngine.js?v=99';
-import { HudSettingsManager } from './ui/HudSettingsManager.js?v=312';
-import { ShopModal } from './ui/ShopModal.js?v=99';
-import { AchievementTowerModal } from './ui/AchievementTowerModal.js?v=99';
-import { ACHIEVEMENTS } from './data/achievements.js?v=99';
-import { rollEnhance, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEVEL } from './logic/enhanceSystem.js?v=99';
-import { HeroSkillShowcase, CLASS_SKILLS_MAP } from './ui/HeroSkillShowcase.js?v=308-all';
+} from './auth/firebase.js?v=317';
+import { BattleScene } from './scenes/BattleScene.js?v=317';
+import { TownScene } from './scenes/TownScene.js?v=317';
+import { TOWN_SPLASHES } from './data/towns/splashes.js?v=317';
+import { DashboardUI } from './ui/DashboardUI.js?v=317';
+import { hookWorldMap25D, openWorldMap25D, closeWorldMap25D, toggleWorldMap25D } from './ui/WorldMap25D.js?v=317';
+import { initHudOverhaulV217 } from './ui/HudOverhaulV217.js?v=317';
+import { UniversalTooltip } from './ui/UniversalTooltip.js?v=317';
+import { SkillSpecModal } from './ui/SkillSpecModal.js?v=317';
+import { ClassMechanicModal } from './ui/ClassMechanicModal.js?v=317';
+import { MAGE_D4_PRESETS, NECRO_D4_PRESETS, WARRIOR_D4_PRESETS, RANGER_D4_PRESETS, ASSASSIN_D4_PRESETS, PALADIN_D4_PRESETS } from './logic/classMechanics.js?v=317';
+import { EndgameModal } from './ui/EndgameModal.js?v=317';
+import { TownBgmEngine } from './audio/TownBgmEngine.js?v=317';
+import { BattleSfxEngine } from './audio/BattleSfxEngine.js?v=317';
+import { HudSettingsManager } from './ui/HudSettingsManager.js?v=317';
+import { ShopModal } from './ui/ShopModal.js?v=317';
+import { AchievementTowerModal } from './ui/AchievementTowerModal.js?v=317';
+import { ACHIEVEMENTS } from './data/achievements.js?v=317';
+import { rollEnhance, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEVEL } from './logic/enhanceSystem.js?v=317';
+import { HeroSkillShowcase, CLASS_SKILLS_MAP } from './ui/HeroSkillShowcase.js?v=317';
 
 let gameState = loadGame() || createInitialState('warrior');
 let computedStats = recalcPlayerStats(gameState);
@@ -2680,6 +2680,10 @@ window.addEventListener('keydown', (e) => {
     ui.closeDrawer();
     document.getElementById('modal-class')?.classList.add('hidden');
     document.getElementById('modal-world-map')?.classList.add('hidden');
+    // v317: Esc 一併關閉終局／技能專精／職業機制視窗
+    ['modal-endgame-hub', 'modal-skill-spec', 'modal-class-mechanic'].forEach((id) => {
+      document.getElementById(id)?.classList.add('hidden');
+    });
     shopModal.close();
     achTowerModal.close();
     hudSettings.closeModal();

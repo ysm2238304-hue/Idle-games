@@ -1,24 +1,24 @@
-import { renderTownFacilityModal } from './NpcModalRenderer.js?v=301';
-import { TEMPERING_MANUALS } from '../data/items.js?v=240';
-import { temperItem } from '../logic/lootGen.js?v=240';
-import { SKILL_BUILD_SPECS, KEYSTONE_PASSIVES, getActiveKeystone } from '../logic/buildEngine.js?v=263';
-import { UniversalTooltip } from './UniversalTooltip.js?v=240';
-import { TOWN_SPLASHES } from '../data/towns/splashes.js?v=99';
-import { CLASSES } from '../data/classes.js?v=99';
-import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=255';
-import { RANGER_SKILLS } from '../data/rangerSkills.js?v=259';
-import { MAGE_SKILLS } from '../data/mageSkills.js?v=241';
-import { PALADIN_SKILLS } from '../data/paladinSkills.js?v=263';
-import { NECRO_SKILLS } from '../data/necroSkills.js?v=251';
-import { ASSASSIN_SKILLS } from '../data/assassinSkills.js?v=261';
-import { EQUIP_SLOTS, CLASS_REQ_LABELS, RARITIES, BASE_ITEMS, SET_DEFINITIONS } from '../data/items.js?v=240';
-import { PET_CATALOG, PET_SCHOOLS, getPetDef, getPetRarityMeta, getPetPickupRadius, getPetCodexInfo } from '../data/pets.js?v=99';
-import { getClaimableAchievementCount } from '../data/achievements.js?v=99';
-import { getEnhanceRate, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEVEL } from '../logic/enhanceSystem.js?v=99';
-import { MONSTER_TEMPLATES, STAGE_ZONES, ZONE_POOLS, getZoneName, getStageLabel, getSubStage, getChapterIdx } from '../data/monsters.js?v=99';
-import { CLASS_BUILD_INFO, SKILL_TREE_NODES, getTreeSpentPoints, isNodeBlockedByMutex, isNodeUnlocked } from '../data/skillTree.js?v=99';
-import { calcItemPower, getSalvageReward } from '../logic/lootGen.js?v=240';
-import { formatNum, getExpToNext, getUpgradeCost, calcRebirthCrystals } from '../logic/statCalc.js?v=240';
+import { renderTownFacilityModal } from './NpcModalRenderer.js?v=317';
+import { TEMPERING_MANUALS } from '../data/items.js?v=317';
+import { temperItem } from '../logic/lootGen.js?v=317';
+import { SKILL_BUILD_SPECS, KEYSTONE_PASSIVES, getActiveKeystone } from '../logic/buildEngine.js?v=317';
+import { UniversalTooltip } from './UniversalTooltip.js?v=317';
+import { TOWN_SPLASHES } from '../data/towns/splashes.js?v=317';
+import { CLASSES } from '../data/classes.js?v=317';
+import { WARRIOR_SKILLS } from '../data/warriorSkills.js?v=317';
+import { RANGER_SKILLS } from '../data/rangerSkills.js?v=317';
+import { MAGE_SKILLS } from '../data/mageSkills.js?v=317';
+import { PALADIN_SKILLS } from '../data/paladinSkills.js?v=317';
+import { NECRO_SKILLS } from '../data/necroSkills.js?v=317';
+import { ASSASSIN_SKILLS } from '../data/assassinSkills.js?v=317';
+import { EQUIP_SLOTS, CLASS_REQ_LABELS, RARITIES, BASE_ITEMS, SET_DEFINITIONS } from '../data/items.js?v=317';
+import { PET_CATALOG, PET_SCHOOLS, getPetDef, getPetRarityMeta, getPetPickupRadius, getPetCodexInfo } from '../data/pets.js?v=317';
+import { getClaimableAchievementCount } from '../data/achievements.js?v=317';
+import { getEnhanceRate, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEVEL } from '../logic/enhanceSystem.js?v=317';
+import { MONSTER_TEMPLATES, STAGE_ZONES, ZONE_POOLS, getZoneName, getStageLabel, getSubStage, getChapterIdx } from '../data/monsters.js?v=317';
+import { CLASS_BUILD_INFO, SKILL_TREE_NODES, getTreeSpentPoints, isNodeBlockedByMutex, isNodeUnlocked } from '../data/skillTree.js?v=317';
+import { calcItemPower, getSalvageReward } from '../logic/lootGen.js?v=317';
+import { formatNum, getExpToNext, getUpgradeCost, calcRebirthCrystals } from '../logic/statCalc.js?v=317';
 
 const STAT_LABELS = {
   atkFlat: '攻擊力',
@@ -259,12 +259,6 @@ export class DashboardUI {
       const body = document.getElementById('tracker-body');
       if (!body) return;
       const col = body.classList.toggle('collapsed');
-      e.currentTarget.textContent = col ? '▸' : '▾';
-    });
-    document.getElementById('btn-toggle-flog')?.addEventListener('click', (e) => {
-      const entries = document.getElementById('floating-log-entries');
-      if (!entries) return;
-      const col = entries.classList.toggle('collapsed');
       e.currentTarget.textContent = col ? '▸' : '▾';
     });
     document.querySelectorAll('.flog-tab').forEach((tab) => {

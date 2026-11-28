@@ -8,11 +8,11 @@
  * 5. 經驗條懸停即時顯示 EXP/hr 與預估升級剩餘時間
  */
 
-import { RARITIES, EQUIP_SLOTS, BASE_ITEMS, SET_DEFINITIONS } from '../data/items.js?v=240';
-import { getPetDef, getPetRarityMeta, PET_SCHOOLS } from '../data/pets.js?v=99';
-import { calcItemPower } from '../logic/lootGen.js?v=240';
-import { getExpToNext, formatNum } from '../logic/statCalc.js?v=240';
-import { SKILL_BUILD_SPECS, STATUS_META, getSkillSpecChoice } from '../logic/buildEngine.js?v=236';
+import { RARITIES, EQUIP_SLOTS, BASE_ITEMS, SET_DEFINITIONS } from '../data/items.js?v=317';
+import { getPetDef, getPetRarityMeta, PET_SCHOOLS } from '../data/pets.js?v=317';
+import { calcItemPower } from '../logic/lootGen.js?v=317';
+import { getExpToNext, formatNum } from '../logic/statCalc.js?v=317';
+import { SKILL_BUILD_SPECS, STATUS_META, getSkillSpecChoice } from '../logic/buildEngine.js?v=317';
 
 const STAT_LABELS = {
   atk: '攻擊力',
