@@ -1,7 +1,8 @@
 // v273: 主城活體 NPC 自然行為狀態機（LivingNpcEngine）
 // 單一控制權同步角色、腳底陰影、頭頂名牌、互動圖示與互動座標，徹底消除雙系統互搶與名牌分離
 
-import { npcFlipX } from './npcFacing.js?v=318';
+import { npcFlipX } from './npcFacing.js?v=319';
+import { npcGaitStep } from './npcGait.js?v=319';
 
 const CLASS_CN = {
   warrior: '狂戰士',
@@ -131,6 +132,9 @@ export class LivingNpcEngine {
       const sp = a.sprite;
       if (!sp?.active) continue;
       const distHero = Phaser.Math.Distance.Between(hero.x, hero.y, sp.x, sp.y);
+      const prevX = sp.x;
+      const prevY = sp.y;
+      let breath = 1; // v319: 待機呼吸倍率（有步態的 NPC 由 npcGaitStep 統一套用）
 
       if (distHero <= 175) {
         a.state = 'greet';
@@ -198,15 +202,23 @@ export class LivingNpcEngine {
         } else if (a.state === 'work') {
           this._setAnim(a, 'idle');
           const pulse = Math.sin(time * 0.007) * 0.025;
-          sp.setScale(a.baseScale, a.baseScale * (1 + pulse));
+          if (a.frame) breath = 1 + pulse;
+          else sp.setScale(a.baseScale, a.baseScale * (1 + pulse));
           if (time - a.lastWorkFxAt > 1200 + Math.random() * 600) {
             a.lastWorkFxAt = time;
             this._spawnWorkMote(a);
           }
         } else {
           this._setAnim(a, 'idle');
-          sp.setScale(a.baseScale, a.baseScale * (1 + Math.sin(time * 0.003) * 0.012));
+          const idleBreath = 1 + Math.sin(time * 0.003) * 0.012;
+          if (a.frame) breath = idleBreath;
+          else sp.setScale(a.baseScale, a.baseScale * idleBreath);
         }
+      }
+
+      // v319: 走路步態（起伏／微擺／前傾／影子縮放），停下時自動緩動回正
+      if (a.frame) {
+        npcGaitStep(sp, a.frame, dt, Math.hypot(sp.x - prevX, sp.y - prevY), sp.x - prevX, { breath, shadow: a.shadow });
       }
 
       // 完整同步陰影、名牌、圖示與互動判定點，杜絕分離或錯亂

@@ -5,7 +5,7 @@
  * - 優化歡迎頁背景影片：移除模糊消耗、進遊戲自動暫停、緩衝卡頓超過 2.5 秒自動降級為靜態暗黑背景
  */
 
-import { signInWithEmail, registerWithEmail, resetPasswordEmail } from '../auth/firebase.js?v=318';
+import { signInWithEmail, registerWithEmail, resetPasswordEmail } from '../auth/firebase.js?v=319';
 
 function ensureAuthCss() {
   if (typeof document === 'undefined') return;

@@ -3,8 +3,8 @@
  * 六大職業專屬機制互動設定介面（狂戰武器庫 / 遊俠三專精 / 法師雙附魔槽 / 聖騎三誓約 / 死靈亡者之書 / 刺客雙極調毒）
  */
 
-import { CLASSES } from '../data/classes.js?v=318';
-import { CLASS_MECHANIC_DEFS, getClassMechanicConfig } from '../logic/classMechanics.js?v=318';
+import { CLASSES } from '../data/classes.js?v=319';
+import { CLASS_MECHANIC_DEFS, getClassMechanicConfig } from '../logic/classMechanics.js?v=319';
 
 export class ClassMechanicModal {
   constructor({ getState, onChanged }) {

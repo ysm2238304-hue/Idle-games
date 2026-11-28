@@ -1,8 +1,8 @@
-import { calcEndgameBonuses } from './endgameSystems.js?v=318';
-import { getActiveKeystone } from './buildEngine.js?v=318';
-import { getClassMechanicStatBonuses } from './classMechanics.js?v=318';
-import { CLASSES } from '../data/classes.js?v=318';
-import { SET_DEFINITIONS } from '../data/items.js?v=318';
+import { calcEndgameBonuses } from './endgameSystems.js?v=319';
+import { getActiveKeystone } from './buildEngine.js?v=319';
+import { getClassMechanicStatBonuses } from './classMechanics.js?v=319';
+import { CLASSES } from '../data/classes.js?v=319';
+import { SET_DEFINITIONS } from '../data/items.js?v=319';
 
 export function formatNum(num) {
   const n = Math.floor(num);

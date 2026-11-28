@@ -1,18 +1,18 @@
-import { initAllDraggableModals } from './ui/DraggableModalHelper.js?v=318';
-import { CLASSES } from './data/classes.js?v=318';
-import { getStageLabel, getSubStage, getChapterIdx, calcLevelGapExpMult } from './data/monsters.js?v=318';
-import { WARRIOR_SKILLS } from './data/warriorSkills.js?v=318';
-import { RANGER_SKILLS } from './data/rangerSkills.js?v=318';
-import { MAGE_SKILLS } from './data/mageSkills.js?v=318';
-import { PALADIN_SKILLS } from './data/paladinSkills.js?v=318';
-import { NECRO_SKILLS } from './data/necroSkills.js?v=318';
-import { ASSASSIN_SKILLS } from './data/assassinSkills.js?v=318';
-import { RARITIES } from './data/items.js?v=318';
-import { PET_CATALOG, rollPetDrop, getPetDef } from './data/pets.js?v=318';
-import { SKILL_TREE_NODES, isNodeUnlocked } from './data/skillTree.js?v=318';
-import { generateLoot, calcItemPower, getSalvageReward, rerollItemAffixes, generateBlackMarketItem } from './logic/lootGen.js?v=318';
-import { recalcPlayerStats, getExpToNext, getUpgradeCost, calcRebirthCrystals, formatNum } from './logic/statCalc.js?v=318';
-import { createInitialState, loadGame, saveGame, calcOfflineProgress } from './logic/saveSystem.js?v=318';
+import { initAllDraggableModals } from './ui/DraggableModalHelper.js?v=319';
+import { CLASSES } from './data/classes.js?v=319';
+import { getStageLabel, getSubStage, getChapterIdx, calcLevelGapExpMult } from './data/monsters.js?v=319';
+import { WARRIOR_SKILLS } from './data/warriorSkills.js?v=319';
+import { RANGER_SKILLS } from './data/rangerSkills.js?v=319';
+import { MAGE_SKILLS } from './data/mageSkills.js?v=319';
+import { PALADIN_SKILLS } from './data/paladinSkills.js?v=319';
+import { NECRO_SKILLS } from './data/necroSkills.js?v=319';
+import { ASSASSIN_SKILLS } from './data/assassinSkills.js?v=319';
+import { RARITIES } from './data/items.js?v=319';
+import { PET_CATALOG, rollPetDrop, getPetDef } from './data/pets.js?v=319';
+import { SKILL_TREE_NODES, isNodeUnlocked } from './data/skillTree.js?v=319';
+import { generateLoot, calcItemPower, getSalvageReward, rerollItemAffixes, generateBlackMarketItem } from './logic/lootGen.js?v=319';
+import { recalcPlayerStats, getExpToNext, getUpgradeCost, calcRebirthCrystals, formatNum } from './logic/statCalc.js?v=319';
+import { createInitialState, loadGame, saveGame, calcOfflineProgress } from './logic/saveSystem.js?v=319';
 import {
   initCloudAuth,
   signInWithGoogle,
@@ -21,26 +21,26 @@ import {
   loadCloudSave,
   saveCloudData,
   deleteCloudSave,
-} from './auth/firebase.js?v=318';
-import { BattleScene } from './scenes/BattleScene.js?v=318';
-import { TownScene } from './scenes/TownScene.js?v=318';
-import { TOWN_SPLASHES } from './data/towns/splashes.js?v=318';
-import { DashboardUI } from './ui/DashboardUI.js?v=318';
-import { hookWorldMap25D, openWorldMap25D, closeWorldMap25D, toggleWorldMap25D } from './ui/WorldMap25D.js?v=318';
-import { initHudOverhaulV217 } from './ui/HudOverhaulV217.js?v=318';
-import { UniversalTooltip } from './ui/UniversalTooltip.js?v=318';
-import { SkillSpecModal } from './ui/SkillSpecModal.js?v=318';
-import { ClassMechanicModal } from './ui/ClassMechanicModal.js?v=318';
-import { MAGE_D4_PRESETS, NECRO_D4_PRESETS, WARRIOR_D4_PRESETS, RANGER_D4_PRESETS, ASSASSIN_D4_PRESETS, PALADIN_D4_PRESETS } from './logic/classMechanics.js?v=318';
-import { EndgameModal } from './ui/EndgameModal.js?v=318';
-import { TownBgmEngine } from './audio/TownBgmEngine.js?v=318';
-import { BattleSfxEngine } from './audio/BattleSfxEngine.js?v=318';
-import { HudSettingsManager } from './ui/HudSettingsManager.js?v=318';
-import { ShopModal } from './ui/ShopModal.js?v=318';
-import { AchievementTowerModal } from './ui/AchievementTowerModal.js?v=318';
-import { ACHIEVEMENTS } from './data/achievements.js?v=318';
-import { rollEnhance, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEVEL } from './logic/enhanceSystem.js?v=318';
-import { HeroSkillShowcase, CLASS_SKILLS_MAP } from './ui/HeroSkillShowcase.js?v=318';
+} from './auth/firebase.js?v=319';
+import { BattleScene } from './scenes/BattleScene.js?v=319';
+import { TownScene } from './scenes/TownScene.js?v=319';
+import { TOWN_SPLASHES } from './data/towns/splashes.js?v=319';
+import { DashboardUI } from './ui/DashboardUI.js?v=319';
+import { hookWorldMap25D, openWorldMap25D, closeWorldMap25D, toggleWorldMap25D } from './ui/WorldMap25D.js?v=319';
+import { initHudOverhaulV217 } from './ui/HudOverhaulV217.js?v=319';
+import { UniversalTooltip } from './ui/UniversalTooltip.js?v=319';
+import { SkillSpecModal } from './ui/SkillSpecModal.js?v=319';
+import { ClassMechanicModal } from './ui/ClassMechanicModal.js?v=319';
+import { MAGE_D4_PRESETS, NECRO_D4_PRESETS, WARRIOR_D4_PRESETS, RANGER_D4_PRESETS, ASSASSIN_D4_PRESETS, PALADIN_D4_PRESETS } from './logic/classMechanics.js?v=319';
+import { EndgameModal } from './ui/EndgameModal.js?v=319';
+import { TownBgmEngine } from './audio/TownBgmEngine.js?v=319';
+import { BattleSfxEngine } from './audio/BattleSfxEngine.js?v=319';
+import { HudSettingsManager } from './ui/HudSettingsManager.js?v=319';
+import { ShopModal } from './ui/ShopModal.js?v=319';
+import { AchievementTowerModal } from './ui/AchievementTowerModal.js?v=319';
+import { ACHIEVEMENTS } from './data/achievements.js?v=319';
+import { rollEnhance, getEquipEnhanceCost, getPetEnhanceCost, MAX_ENHANCE_LEVEL } from './logic/enhanceSystem.js?v=319';
+import { HeroSkillShowcase, CLASS_SKILLS_MAP } from './ui/HeroSkillShowcase.js?v=319';
 
 let gameState = loadGame() || createInitialState('warrior');
 let computedStats = recalcPlayerStats(gameState);

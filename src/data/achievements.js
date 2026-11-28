@@ -1,5 +1,5 @@
 // 24 項分階段成就里程碑與專屬稱號系統 (v97)
-import { getPetCodexInfo } from './pets.js?v=318';
+import { getPetCodexInfo } from './pets.js?v=319';
 
 export const ACHIEVEMENTS = [
   // === 狩獵征途 (6) ===

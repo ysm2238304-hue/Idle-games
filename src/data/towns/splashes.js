@@ -116,16 +116,16 @@ if (typeof window !== 'undefined' && typeof document !== 'undefined') {
   queueMicrotask(async () => {
     try {
       const [{ DashboardUI }, { renderTownFacilityModal }, monsters, { initLobbyClassClarity }, { initWelcomeAuthUI }, { initBagSalvageFix }, { initBattleStuckGuard }, { initHudOverhaulV217 }, { hookWorldMap25D }, { initSpriteWhiteCleaner }] = await Promise.all([
-        import('../../ui/DashboardUI.js?v=318'),
-        import('../../ui/NpcModalRenderer.js?v=318'),
-        import('../monsters.js?v=318'),
-        import('../../ui/LobbyClassClarity.js?v=318'),
-        import('../../ui/WelcomeAuthUI.js?v=318'),
-        import('../../ui/BagFixEnhancer.js?v=318'),
-        import('../../ui/BattleStuckGuard.js?v=318'),
-        import('../../ui/HudOverhaulV217.js?v=318'),
-        import('../../ui/WorldMap25D.js?v=318'),
-        import('../../ui/SpriteWhiteCleaner.js?v=318'),
+        import('../../ui/DashboardUI.js?v=319'),
+        import('../../ui/NpcModalRenderer.js?v=319'),
+        import('../monsters.js?v=319'),
+        import('../../ui/LobbyClassClarity.js?v=319'),
+        import('../../ui/WelcomeAuthUI.js?v=319'),
+        import('../../ui/BagFixEnhancer.js?v=319'),
+        import('../../ui/BattleStuckGuard.js?v=319'),
+        import('../../ui/HudOverhaulV217.js?v=319'),
+        import('../../ui/WorldMap25D.js?v=319'),
+        import('../../ui/SpriteWhiteCleaner.js?v=319'),
       ]);
       initLobbyClassClarity();
       initWelcomeAuthUI();

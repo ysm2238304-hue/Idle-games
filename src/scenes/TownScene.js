@@ -1,20 +1,21 @@
-import { getHeroAtlasInfo, isAtlasTextureReady, safeQueueAtlas, waitAtlasReady } from '../combat/HeroAnimRouter.js?v=318';
-import { CameraZoomHelper } from './CameraZoomHelper.js?v=318';
-import { TOWN_CH1 } from '../data/towns/ch1.js?v=318';
-import { LivingNpcEngine } from '../town/LivingNpcEngine.js?v=318';
-import { npcFlipX } from '../town/npcFacing.js?v=318';
-import { TownMultiplayerSync } from '../net/TownMultiplayerSync.js?v=318';
-import { TOWN_CH2 } from '../data/towns/ch2.js?v=318';
-import { TOWN_CH3 } from '../data/towns/ch3.js?v=318';
-import { TOWN_CH4 } from '../data/towns/ch4.js?v=318';
-import { TOWN_CH5 } from '../data/towns/ch5.js?v=318';
-import { TOWN_CH6 } from '../data/towns/ch6.js?v=318';
-import { TOWN_CH7 } from '../data/towns/ch7.js?v=318';
-import { TOWN_CH8 } from '../data/towns/ch8.js?v=318';
-import { TOWN_CH9 } from '../data/towns/ch9.js?v=318';
-import { TOWN_CH10 } from '../data/towns/ch10.js?v=318';
-import { formatNum } from '../logic/statCalc.js?v=318';
-import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta } from '../data/pets.js?v=318';
+import { getHeroAtlasInfo, isAtlasTextureReady, safeQueueAtlas, waitAtlasReady } from '../combat/HeroAnimRouter.js?v=319';
+import { CameraZoomHelper } from './CameraZoomHelper.js?v=319';
+import { TOWN_CH1 } from '../data/towns/ch1.js?v=319';
+import { LivingNpcEngine } from '../town/LivingNpcEngine.js?v=319';
+import { npcFlipX } from '../town/npcFacing.js?v=319';
+import { npcGaitStep } from '../town/npcGait.js?v=319';
+import { TownMultiplayerSync } from '../net/TownMultiplayerSync.js?v=319';
+import { TOWN_CH2 } from '../data/towns/ch2.js?v=319';
+import { TOWN_CH3 } from '../data/towns/ch3.js?v=319';
+import { TOWN_CH4 } from '../data/towns/ch4.js?v=319';
+import { TOWN_CH5 } from '../data/towns/ch5.js?v=319';
+import { TOWN_CH6 } from '../data/towns/ch6.js?v=319';
+import { TOWN_CH7 } from '../data/towns/ch7.js?v=319';
+import { TOWN_CH8 } from '../data/towns/ch8.js?v=319';
+import { TOWN_CH9 } from '../data/towns/ch9.js?v=319';
+import { TOWN_CH10 } from '../data/towns/ch10.js?v=319';
+import { formatNum } from '../logic/statCalc.js?v=319';
+import { PET_CATALOG, getPetDef, PET_SCHOOLS, getPetRarityMeta } from '../data/pets.js?v=319';
 
 const TOWN_REGISTRY = {
   0: TOWN_CH1,
@@ -1747,6 +1748,8 @@ export class TownScene extends Phaser.Scene {
   updatePatrols(dt, time = 0) {
     for (const p of this.patrolActors) {
       const distHero = this.hero ? Phaser.Math.Distance.Between(this.hero.x, this.hero.y, p.spr.x, p.spr.y) : 999;
+      const gaitPX = p.spr.x;
+      const gaitPY = p.spr.y;
       let isMoving = false;
       if (distHero < 145 && this.hero) {
         p.spr.setFlipX(npcFlipX(p.frame, this.hero.x < p.spr.x));
@@ -1792,10 +1795,15 @@ export class TownScene extends Phaser.Scene {
         const targetAnim = `${p.frame}_${isMoving ? 'walk' : 'idle'}`;
         if (p.spr.anims.currentAnim?.key !== targetAnim) p.spr.play(targetAnim, true);
       }
-      p.spr.setRotation(0);
-      p.spr.setDepth(p.spr.y);
       p.shadow.setPosition(p.spr.x, p.spr.y + 2);
-      p.shadow.setScale(isMoving ? 0.95 + Math.sin(time * 0.014) * 0.08 : 0.95, 0.34);
+      if (p.hasAnim && p.frame) {
+        // v319: 步態（起伏／微擺／前傾／影子縮放），停下自動緩動回正
+        npcGaitStep(p.spr, p.frame, dt, Math.hypot(p.spr.x - gaitPX, p.spr.y - gaitPY), p.spr.x - gaitPX, { shadow: p.shadow });
+      } else {
+        p.spr.setRotation(0);
+        p.shadow.setScale(isMoving ? 0.95 + Math.sin(time * 0.014) * 0.08 : 0.95, 0.34);
+      }
+      p.spr.setDepth(p.spr.y);
       if (p.plate) p.plate.setPosition(p.spr.x, p.spr.y - 108);
       if (p.interactObj) {
         p.interactObj.x = p.spr.x;
@@ -1806,6 +1814,8 @@ export class TownScene extends Phaser.Scene {
     // 設施 NPC 小範圍踱步（貼合地形與障礙物，靠近自動面向玩家）
     for (const r of this.roamNpcs) {
       const distHero = this.hero ? Phaser.Math.Distance.Between(this.hero.x, this.hero.y, r.spr.x, r.spr.y) : 999;
+      const gaitRX = r.spr.x;
+      const gaitRY = r.spr.y;
       let isMoving = false;
       if (distHero < 195 && this.hero) {
         r.spr.setFlipX(npcFlipX(r.frame, this.hero.x < r.spr.x));
@@ -1852,9 +1862,13 @@ export class TownScene extends Phaser.Scene {
         const targetAnim = `${r.frame}_${isMoving ? 'walk' : 'idle'}`;
         if (r.spr.anims.currentAnim?.key !== targetAnim) r.spr.play(targetAnim, true);
       }
-      r.spr.setRotation(0);
-      r.spr.setDepth(r.spr.y);
       r.shadow.setPosition(r.spr.x, r.spr.y + 2);
+      if (r.hasAnim && r.frame) {
+        npcGaitStep(r.spr, r.frame, dt, Math.hypot(r.spr.x - gaitRX, r.spr.y - gaitRY), r.spr.x - gaitRX, { shadow: r.shadow });
+      } else {
+        r.spr.setRotation(0);
+      }
+      r.spr.setDepth(r.spr.y);
       if (r.plate) r.plate.setPosition(r.spr.x, r.spr.y - 112);
       if (r.icon) r.icon.x = r.spr.x;
       if (r.interactObj) {

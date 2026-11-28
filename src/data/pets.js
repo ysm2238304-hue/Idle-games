@@ -1,5 +1,5 @@
 // 30 隻「技能特效&衍生型」寵物資料庫 (v214 - 掉率與裝備 10 章硬核曲線同步)
-import { RARITIES } from './items.js?v=318';
+import { RARITIES } from './items.js?v=319';
 
 export const PET_SCHOOLS = {
   fire:      { id: 'fire',      label: '熾炎衍生', color: '#f97316', fxKey: 'mfx_meteor_flame', derivative: 'fire_wave' },

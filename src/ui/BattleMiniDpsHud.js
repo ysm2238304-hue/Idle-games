@@ -1,6 +1,6 @@
 // v302: 一般刷圖專用「簡化版即時 DPS 小彈窗」（BattleMiniDpsHud）
 // 複用獨立 DpsMeterEngine，預設停靠右上角小地圖下方，支援拖曳、收合、重置；進主城或演武場時自動隱藏
-import { DpsMeterEngine } from '../combat/DpsMeterEngine.js?v=318';
+import { DpsMeterEngine } from '../combat/DpsMeterEngine.js?v=319';
 
 export class BattleMiniDpsHud {
   constructor(scene) {
